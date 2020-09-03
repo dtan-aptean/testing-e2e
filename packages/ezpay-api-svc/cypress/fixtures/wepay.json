@@ -1,0 +1,27 @@
+{
+  "appId": "596464",
+  "appToken": "stage_MzI0NV81MDhjMWZmMC1mYjMyLTQxMDEtOWFjZi00ZThkZmYyYzlmNGE",
+  "apiVersion": "3.0",
+  "apiBaseUrl": "https://stage-api.wepay.com",
+  "creditCardTokenReqBody": {
+    "resource": "payment_methods",
+    "payment_methods": {
+      "type": "credit_card",
+      "credit_card": {
+        "card_holder": {
+          "holder_name": "John Snow",
+          "email": "bortbort@snortgort.com",
+          "address": {
+            "country": "US",
+            "postal_code": "94025"
+          }
+        },
+        "card_number": "5496198584584769",
+        "expiration_month": 11,
+        "expiration_year": 2030,
+        "cvv": "007",
+        "auto_update": false
+      }
+    }
+  }
+}
