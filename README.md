@@ -1,20 +1,34 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+# Automation Tests
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+Testing guidelines
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+## Tech
+- [Cypress](https://www.cypress.io/)
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+## Getting started
+1. Install cypress - the package will be in the dependencies of the project. Run yarn install at root level of repo.
+
+```
+yarn install
+```
+
+2. Open cypress launcher to view tests available and run them with the UI.
+
+```
+yarn cypress
+```
+
+3. Run the tests from the command line.
+```
+yarn cypress run
+```
+
+## Adding tests
+1. Within the project, there will be a root level cypress folder, within this folder there exists an integration folder; this is where the cypress tests will live. Add any new tests here.
+
+## CI/CD Integration
+- [Cypress with React App in CI/CD](https://www.codewithkarma.com/2019/09/create-react-app-functional-automation.html)
+
+## Debugging
+- [Debugging with cypress](https://docs.cypress.io/guides/guides/debugging.html#Using-debugger)

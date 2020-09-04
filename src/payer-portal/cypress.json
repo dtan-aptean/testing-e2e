@@ -1,0 +1,20 @@
+{
+  "baseUrl": "#{PAYER_PORTAL_BASE_URL}#",
+  "clientId": "#{MSAL_CLIENTID_PAYER_PORTAL}#",
+  "username": "#{EZPAY_TOKEN_USER}#",
+  "password": "#{EZPAY_TOKEN_PASS}#",
+  "authority": "#{MSAL_AUTHORITY}#",
+  "scopes": "#{READ_SCOPE}# #{WRITE_SCOPE}#",
+  "homeAccountIdentifier": "#{HOME_ACCOUNT_IDENTIFIER}#",
+  "env": {
+    "api-svc-url": "#{EZPAY_API_URL}#", 
+    "authorization": "bearer --BEARER_TOKEN--", 
+    "x-aptean-apim": "#{X_APTEAN_APIM}#", 
+    "x-aptean-tenant": "#{X_APTEAN_TENANT}#", 
+    "x-ezpay": "#{X_EZPAY}#",
+    "x-ezpay-pmt": "#{X_EZPAY_PMT}#"
+  },
+  "chromeWebSecurity": false,
+  "defaultCommandTimeout": 10000,
+  "supportFile": "cypress/support/index.ts"
+}
