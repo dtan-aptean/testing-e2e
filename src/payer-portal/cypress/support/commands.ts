@@ -1,31 +1,22 @@
-// Azure AD Auth - https://mechanicalrock.github.io/2020/05/05/azure-ad-authentication-cypress.html
-Cypress.Commands.add("login", () => {
-  cy.request({
-    method: "POST",
-    url: `https://login.microsoftonline.com/${Cypress.config(
-      "tenantId"
-    )}/oauth2/token`,
-    form: true,
-    body: {
-      grant_type: "client_credentials",
-      client_id: Cypress.config("clientId"),
-      client_secret: Cypress.config("clientSecret"),
-      resource: Cypress.config("clientId"),
-    },
-  }).then((response) => {
-    const ADALToken = response.body.access_token;
-    const expiresOn = response.body.expires_on;
+Cypress.Commands.add('login', () => {
+  sessionStorage.clear();
 
-    localStorage.setItem("adal.token.keys", `${Cypress.config("clientId")}|`);
-    localStorage.setItem(
-      `adal.access.token.key${Cypress.config("clientId")}`,
-      ADALToken
-    );
-    localStorage.setItem(
-      `adal.expiration.key${Cypress.config("clientId")}`,
-      expiresOn
-    );
-    localStorage.setItem("adal.idtoken", ADALToken);
+  cy.visit('/');
+
+  cy.get('body').then(($body) => {
+    if ($body.find('[data-cy=sign-in]').length) {
+      cy.get('[data-cy=sign-in]').click();
+      cy.wait(4000);
+    
+      // check if clicking sign in automatically logs you in, else enter credentials on B2C page
+      cy.get('body').then(($body) => {
+        if ($body.find("input[id=logonIdentifier]").length) {
+          cy.get("input[id=logonIdentifier]").type(Cypress.config("username"));
+          cy.get("input[id=password]").type(Cypress.config("password"));
+          cy.get("button[id=next]").click();
+        };
+      });
+    };
   });
 });
 
