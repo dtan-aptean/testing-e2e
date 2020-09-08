@@ -1,59 +1,590 @@
 /// <reference types="cypress" />
 
-describe('Merchant portal', function() {
+describe("Merchant portal", function () {
   before(() => {
     sessionStorage.clear();
     // navigate to home screen
     cy.login();
-  })
-  
-  context('Disputes', () => {
+  });
+
+  context("Disputes", () => {
     beforeEach(() => {
       //navigate to home screen
-      cy.visit('/');
+      cy.visit("/");
       // Onbaord if necessary
       cy.onboard({
-        entityType: 'business',
-        structure: 'corporation',
+        entityType: "business",
+        structure: "corporation",
         industryCategory: 0,
         industryType: 0,
-        businessName: 'Aqueas',
-        businessEIN: '121212121',
-        businessDescription: 'Aqueas Description',
-        businessWebsite: 'a.co.uk',
-        businessAddress: '123 St',
-        businessCity: 'Atlanta',
-        businessRegion: 'GA',
-        businessPostal: '30338',
-        businessPhone: '4045675678',
-        controllerFirstName: 'Aqueas',
-        controllerLastName: 'Ocean',
-        controllerTitle: 'Owner',
-        controllerAddress: '123 St',
-        controllerCity: 'Atlanta',
-        controllerRegion: 'GA',
-        controllerPostal: '30338',
-        controllerCountryCode: '1',
-        controllerPhone: '4045675678',
-        controllerDOBMonth: 'March',
-        controllerDOBDay: '6',
-        controllerDOBYear: '1990',
-        controllerSSNLastFour: '1234',
+        businessName: "Aqueas",
+        businessEIN: "121212121",
+        businessDescription: "Aqueas Description",
+        businessWebsite: "a.co.uk",
+        businessAddress: "123 St",
+        businessCity: "Atlanta",
+        businessRegion: "GA",
+        businessPostal: "30338",
+        businessPhone: "4045675678",
+        controllerFirstName: "Aqueas",
+        controllerLastName: "Ocean",
+        controllerTitle: "Owner",
+        controllerAddress: "123 St",
+        controllerCity: "Atlanta",
+        controllerRegion: "GA",
+        controllerPostal: "30338",
+        controllerCountryCode: "1",
+        controllerPhone: "4045675678",
+        controllerDOBMonth: "March",
+        controllerDOBDay: "6",
+        controllerDOBYear: "1990",
+        controllerSSNLastFour: "1234",
         controllerOwn25orMore: true,
-        accountName: 'Aqueas',
-        accountDescription: 'Aqueas Ocean Corp',
-        accountStatementDescription: 'aqueas-pay',
-        refundPolicy: 'No refunds',
-        tosName: 'Mike Riehlman',
+        accountName: "Aqueas",
+        accountDescription: "Aqueas Ocean Corp",
+        accountStatementDescription: "aqueas-pay",
+        refundPolicy: "No refunds",
+        tosName: "Mike Riehlman",
+      });
+      // Get the disputes
+      cy.get("[data-cy=payment-disputes-tab]", { timeout: 20000 }).click();
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(1000);
+      cy.get("[data-cy=dispute-table-body]").find("tr").as("rows");
+    });
+
+    it("View disputes table on dispute tab", () => {
+      cy.visit("/");
+      // Visit the tab as if going to it for the first time
+      cy.get("[data-cy=payment-disputes-tab]", { timeout: 20000 }).click();
+      // Make sure the table exists and is visible
+      cy.get("[data-cy=dispute-table-body]").should("exist").and("be.visible");
+      cy.get("[data-cy=dispute-table-body]").find("tr").as("disputeRows");
+      cy.get("@disputeRows").then(($rows) => {
+        // If we have disputes available, make sure the user can see them
+        if ($rows.length >= 1) {
+          cy.wrap($rows[0]).as("firstRow");
+          cy.get("@firstRow").should("exist").and("be.visible");
+        }
       });
     });
 
-    it('should pass if able to make a dispute', () => {
-      const referenceNumber = '1111';
-      // get payment by reference number
-      cy.getInput('search')
-        .type(referenceNumber)
-        .should('have.value', referenceNumber.toString());
+    it("Details modal shows after clicking details button", () => {
+      cy.get("@rows").should("have.length.gte", 1);
+      const detailsArray = [];
+      // Find the disputes that aren't active
+      // Only none active disputes show the details button
+      cy.get("@rows")
+        .each(($el, index, $list) => {
+          let status = undefined;
+          cy.wrap($el)
+            .find("td")
+            .eq(0)
+            .then(($cell) => {
+              status = $cell.text();
+              if (status !== "Action Needed") {
+                detailsArray.push($el);
+              }
+            });
+        })
+        .then(($list) => {
+          // Find the cell that holds the button
+          cy.wrap(detailsArray[0]).find("td").eq(4).as("actionsCell");
+          cy.get("@actionsCell").scrollIntoView().should("be.visible");
+          // Trigger the mouseover that will show the button
+          cy.wrap(detailsArray[0]).trigger("mouseover");
+          cy.get("@actionsCell").should("not.be.empty");
+          // Click the button and open the modal
+          cy.get("@actionsCell").within(() => {
+            cy.get("[data-cy=view-dispute]")
+              .scrollIntoView()
+              .should("be.visible");
+            cy.get("[data-cy=view-dispute]").click();
+          });
+          // Check that the modal is visible
+          cy.get("[data-cy=dispute-information]")
+            .should("exist")
+            .and("be.visible");
+          cy.get("[data-cy=close-dispute]").should("exist").and("be.visible");
+          cy.get("[data-cy=close-dispute]").click();
+        });
+    });
+
+    it("Details modal is closes and the user is returned to dispute table", () => {
+      cy.get("@rows").should("have.length.gte", 1);
+      const detailsArray = [];
+      // Find the disputes that aren't active
+      // Only none active disputes show the details button
+      cy.get("@rows")
+        .each(($el, index, $list) => {
+          let status = undefined;
+          cy.wrap($el)
+            .find("td")
+            .eq(0)
+            .then(($cell) => {
+              status = $cell.text();
+              if (status !== "Action Needed") {
+                detailsArray.push($el);
+              }
+            });
+        })
+        .then(($list) => {
+          // Find the cell that holds the button
+          cy.wrap(detailsArray[0]).find("td").eq(4).as("actionsCell");
+          cy.get("@actionsCell").scrollIntoView().should("be.visible");
+          // Trigger the mouseover that will show the button
+          cy.wrap(detailsArray[0]).trigger("mouseover");
+          cy.get("@actionsCell").should("not.be.empty");
+          // Click the button and open the modal
+          cy.get("@actionsCell").within(() => {
+            cy.get("[data-cy=view-dispute]")
+              .scrollIntoView()
+              .should("be.visible");
+            cy.get("[data-cy=view-dispute]").click({ force: true });
+          });
+          cy.get("[data-cy=dispute-information]")
+            .should("exist")
+            .and("be.visible");
+          // Close modal with the close button
+          cy.get("[data-cy=close-dispute]").should("exist").and("be.visible");
+          cy.get("[data-cy=close-dispute]").click();
+          // Make sure modal is closed
+          cy.get("[data-cy=dispute-information]")
+            .should("not.exist")
+            .and("not.be.visible");
+          // Open the modal again
+          cy.get("@actionsCell").scrollIntoView().should("be.visible");
+          cy.wrap(detailsArray[0]).trigger("mouseover");
+          cy.get("@actionsCell").should("not.be.empty");
+          cy.get("@actionsCell").within(() => {
+            cy.get("[data-cy=view-dispute]")
+              .scrollIntoView()
+              .should("be.visible");
+            cy.get("[data-cy=view-dispute]").click({ force: true });
+          });
+          cy.get("[data-cy=dispute-information]")
+            .should("exist")
+            .and("be.visible");
+          // Close the modal via the backdrop
+          cy.get("div.MuiDialog-root")
+            .find(".MuiBackdrop-root")
+            .should("exist");
+          cy.get("div.MuiDialog-root")
+            .find(".MuiBackdrop-root")
+            .click({ force: true }); // Force the click because Cypress considers the backdrop not visible, and thus unclickable
+          cy.get("[data-cy=dispute-information]").should("not.exist");
+        });
+    });
+
+    it("The href for the invoice download is correct", () => {
+      cy.get("@rows").should("have.length.gte", 1);
+      cy.get("@rows").eq(0).as("firstRow");
+      // Just get the first row, there's an invoice regardless of status
+      cy.get("@firstRow").find("td").eq(4).as("actionsCell");
+      cy.get("@actionsCell").scrollIntoView().should("be.visible");
+      cy.get("@firstRow").trigger("mouseover");
+      cy.get("@actionsCell").within(() => {
+        // Both the review button and the details button have the same data-cy
+        cy.get("[data-cy=view-dispute]").scrollIntoView().should("be.visible");
+        cy.get("[data-cy=view-dispute]").click({ force: true });
+      });
+      cy.wait(1000);
+      cy.get("[data-cy=dispute-information]").should("exist").and("be.visible");
+      cy.get("[data-cy=download-dispute-invoice]")
+        .should("exist")
+        .and("be.visible");
+      // Checks for the download link
+      cy.get("[data-cy=download-dispute-invoice]").should("have.attr", "href");
+      // Checks that the download link is to the correct location
+      cy.get("[data-cy=download-dispute-invoice]").then(($el) => {
+        const href = $el.attr("href");
+        const correctLocation = href?.includes("invoice-uploads/");
+        cy.expect(correctLocation).to.equal(true);
+      });
+    });
+
+    it("Sorting the table by date reverses the order of enteries", () => {
+      cy.get("@rows").should("have.length.gte", 1);
+      // Get the current value of the date
+      cy.get("@rows")
+        .eq(0)
+        .find("td")
+        .eq(2)
+        .then((el) => {
+          const originalDate = el.text();
+
+          // Change the date ordering
+          cy.get("[data-cy=payment-disputes-panel]")
+            .find("table>thead>tr>th")
+            .eq(2)
+            .as("date");
+          cy.get("@date").click();
+          cy.wait(5000);
+
+          // Check the value of the new first row
+          cy.get("[data-cy=dispute-table-body]")
+            .find("tr")
+            .eq(0)
+            .find("td")
+            .eq(2)
+            .then((newEl) => {
+              // Confirm that the new value is different than the previous value
+              cy.expect(newEl.text()).to.not.equal(originalDate);
+
+              // Click again and make sure it goes back to the original
+              cy.get("@date").click();
+              cy.wait(5000);
+              cy.get("[data-cy=dispute-table-body]")
+                .find("tr")
+                .eq(0)
+                .find("td")
+                .eq(2)
+                .then((finalEl) => {
+                  cy.expect(finalEl.text()).to.equal(originalDate);
+                });
+            });
+        });
+    });
+
+    it("The refund button and search bar are disabled while on the disputes tab", () => {
+      cy.get("[data-cy=refund]").should("be.disabled");
+      cy.get("[data-cy=search]").find("input").should("be.disabled");
+    });
+
+    it("The review button is showing for a row that needs action", () => {
+      cy.get("@rows").should("have.length.gte", 1);
+      const activeArray = [];
+      // Get the rows with active disputes
+      cy.get("@rows")
+        .each(($el, index, $list) => {
+          let status = undefined;
+          cy.wrap($el)
+            .find("td")
+            .eq(0)
+            .then(($cell) => {
+              status = $cell.text();
+              if (status === "Action Needed") {
+                activeArray.push($el);
+              }
+            });
+        })
+        .then(($list) => {
+          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.get("@actionsCell").scrollIntoView().should("be.visible");
+          cy.get("@actionsCell").should("not.be.empty");
+          cy.get("@actionsCell").within(() => {
+            cy.get("[data-cy=view-dispute]")
+              .scrollIntoView()
+              .should("be.visible");
+            cy.get("[data-cy=view-dispute]").should("have.text", "Review");
+          });
+        });
+    });
+
+    it("Clicking the review button opens the chargeback modal", () => {
+      cy.get("@rows").should("have.length.gte", 1);
+      const activeArray = [];
+      // Get the rows with active disputes
+      cy.get("@rows")
+        .each(($el, index, $list) => {
+          let status = undefined;
+          cy.wrap($el)
+            .find("td")
+            .eq(0)
+            .then(($cell) => {
+              status = $cell.text();
+              if (status === "Action Needed") {
+                activeArray.push($el);
+              }
+            });
+        })
+        .then(($list) => {
+          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.get("@actionsCell").scrollIntoView().should("be.visible");
+          cy.get("@actionsCell").should("not.be.empty");
+          // Click the review button
+          cy.get("@actionsCell").within(() => {
+            cy.get("[data-cy=view-dispute]")
+              .scrollIntoView()
+              .should("be.visible");
+            cy.get("[data-cy=view-dispute]").should("have.text", "Review");
+            cy.get("[data-cy=view-dispute]").click();
+          });
+          // Check that the modal is open
+          cy.get("[data-cy=chargeback-review]")
+            .should("exist")
+            .and("be.visible");
+          cy.get("[data-cy=close-dispute]").should("exist").and("be.visible");
+          cy.get("[data-cy=close-dispute]").click();
+        });
+    });
+
+    // CONCEDE TESTING
+    it("Clicking ethe Concede button should open the concede modal and close the chargeback modal", () => {
+      cy.get("@rows").should("have.length.gte", 1);
+      const activeArray = [];
+      // Get the rows with active disputes
+      cy.get("@rows")
+        .each(($el, index, $list) => {
+          let status = undefined;
+          cy.wrap($el)
+            .find("td")
+            .eq(0)
+            .then(($cell) => {
+              status = $cell.text();
+              if (status === "Action Needed") {
+                activeArray.push($el);
+              }
+            });
+        })
+        .then(($list) => {
+          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.get("@actionsCell").scrollIntoView().should("be.visible");
+          cy.get("@actionsCell").should("not.be.empty");
+          // Open the modal
+          cy.get("@actionsCell").within(() => {
+            cy.get("[data-cy=view-dispute]")
+              .scrollIntoView()
+              .should("be.visible");
+            cy.get("[data-cy=view-dispute]").should("have.text", "Review");
+            cy.get("[data-cy=view-dispute]").click();
+          });
+          cy.get("[data-cy=chargeback-review]")
+            .should("exist")
+            .and("be.visible");
+          // Check for the concede button
+          cy.get("[data-cy=concede]").should("exist");
+          cy.get("[data-cy=concede]").click();
+          // Makes sure the chargeback modal has closed and concede modal opens
+          cy.get("[data-cy=chargeback-review]")
+            .should("not.exist")
+            .and("not.be.visible");
+          cy.get("[data-cy=concede-modal]").should("exist").and("be.visible");
+        });
+    });
+
+    it("Clicking the back button should open the chargeback modal and close the concede modal", () => {
+      cy.get("@rows").should("have.length.gte", 1);
+      const activeArray = [];
+      // Get the rows with active disputes
+      cy.get("@rows")
+        .each(($el, index, $list) => {
+          let status = undefined;
+          cy.wrap($el)
+            .find("td")
+            .eq(0)
+            .then(($cell) => {
+              status = $cell.text();
+              if (status === "Action Needed") {
+                activeArray.push($el);
+              }
+            });
+        })
+        .then(($list) => {
+          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.get("@actionsCell").scrollIntoView().should("be.visible");
+          cy.get("@actionsCell").should("not.be.empty");
+          // Open the chargeback modal
+          cy.get("@actionsCell").within(() => {
+            cy.get("[data-cy=view-dispute]")
+              .scrollIntoView()
+              .should("be.visible");
+            cy.get("[data-cy=view-dispute]").should("have.text", "Review");
+            cy.get("[data-cy=view-dispute]").click();
+          });
+          cy.get("[data-cy=chargeback-review]")
+            .should("exist")
+            .and("be.visible");
+          // Open the concede modal
+          cy.get("[data-cy=concede]").should("exist");
+          cy.get("[data-cy=concede]").click();
+          cy.get("[data-cy=chargeback-review]")
+            .should("not.exist")
+            .and("not.be.visible");
+          cy.get("[data-cy=concede-modal]").should("exist").and("be.visible");
+          // Find the back button
+          cy.get("[data-cy=back-concede]").should("exist").and("be.visible");
+          cy.get("[data-cy=back-concede]").click();
+          // Make sure chargeback modal has opened and concede modal has closed
+          cy.get("[data-cy=concede-modal]")
+            .should("not.exist")
+            .and("not.be.visible");
+          cy.get("[data-cy=chargeback-review]")
+            .should("exist")
+            .and("be.visible");
+        });
+    });
+
+    it("Clicking the gray area around the concede modal should not close the modal", () => {
+      cy.get("@rows").should("have.length.gte", 1);
+      const activeArray = [];
+      // Get the rows with active disputes
+      cy.get("@rows")
+        .each(($el, index, $list) => {
+          let status = undefined;
+          cy.wrap($el)
+            .find("td")
+            .eq(0)
+            .then(($cell) => {
+              status = $cell.text();
+              if (status === "Action Needed") {
+                activeArray.push($el);
+              }
+            });
+        })
+        .then(($list) => {
+          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.get("@actionsCell").scrollIntoView().should("be.visible");
+          cy.get("@actionsCell").should("not.be.empty");
+          // Open the chargeback modal
+          cy.get("@actionsCell").within(() => {
+            cy.get("[data-cy=view-dispute]")
+              .scrollIntoView()
+              .should("be.visible");
+            cy.get("[data-cy=view-dispute]").should("have.text", "Review");
+            cy.get("[data-cy=view-dispute]").click();
+          });
+          cy.get("[data-cy=chargeback-review]")
+            .should("exist")
+            .and("be.visible");
+          // Open the concede modal
+          cy.get("[data-cy=concede]").should("exist");
+          cy.get("[data-cy=concede]").click();
+          cy.get("[data-cy=chargeback-review]")
+            .should("not.exist")
+            .and("not.be.visible");
+          cy.get("[data-cy=concede-modal]").should("exist").and("be.visible");
+          // Find the gray backdrop and click it
+          cy.get("div.MuiDialog-root")
+            .find(".MuiBackdrop-root")
+            .should("exist");
+          cy.get("div.MuiDialog-root")
+            .find(".MuiBackdrop-root")
+            .click({ force: true });
+          // Make sure modal is still open
+          cy.get("[data-cy=concede-modal]").should("exist").and("be.visible");
+        });
+    });
+
+    it("Not entering a concede reason displays a warning", () => {
+      cy.get("@rows").should("have.length.gte", 1);
+      const activeArray = [];
+      // Get the rows with active disputes
+      cy.get("@rows")
+        .each(($el, index, $list) => {
+          let status = undefined;
+          cy.wrap($el)
+            .find("td")
+            .eq(0)
+            .then(($cell) => {
+              status = $cell.text();
+              if (status === "Action Needed") {
+                activeArray.push($el);
+              }
+            });
+        })
+        .then(($list) => {
+          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.get("@actionsCell").scrollIntoView().should("be.visible");
+          cy.get("@actionsCell").should("not.be.empty");
+          // Open chargeback review modal
+          cy.get("@actionsCell").within(() => {
+            cy.get("[data-cy=view-dispute]")
+              .scrollIntoView()
+              .should("be.visible");
+            cy.get("[data-cy=view-dispute]").should("have.text", "Review");
+            cy.get("[data-cy=view-dispute]").click();
+          });
+          cy.get("[data-cy=chargeback-review]")
+            .should("exist")
+            .and("be.visible");
+          // Open the concede modal
+          cy.get("[data-cy=concede]").should("exist");
+          cy.get("[data-cy=concede]").click();
+          cy.get("[data-cy=chargeback-review]")
+            .should("not.exist")
+            .and("not.be.visible");
+          cy.get("[data-cy=concede-modal]").should("exist").and("be.visible");
+          cy.get("[data-cy=submit-concede]").should("exist").and("be.visible");
+          // Submit the concede without entering an explanation
+          cy.get("[data-cy=submit-concede]").click();
+          // Look for the error message
+          cy.get("[data-cy=concede-error-message]").should(
+            "contain.text",
+            "This field is required"
+          );
+        });
+    });
+
+    it("Conceding a dispute updates that dispute in the table", () => {
+      cy.get("@rows").should("have.length.gte", 1);
+      const activeArray = [];
+      // We need to grab the original index of the dispute since we can't search for it
+      let relevantIndex = 0;
+      // Get the rows with active disputes
+      cy.get("@rows")
+        .each(($el, index, $list) => {
+          let status = undefined;
+          cy.wrap($el)
+            .find("td")
+            .eq(0)
+            .then(($cell) => {
+              status = $cell.text();
+              if (status === "Action Needed") {
+                if (activeArray.length === 0) {
+                  relevantIndex = index;
+                }
+                activeArray.push($el);
+              }
+            });
+        })
+        .then(($list) => {
+          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.get("@actionsCell").scrollIntoView().should("be.visible");
+          cy.get("@actionsCell").should("not.be.empty");
+          // Open chargeback review modal
+          cy.get("@actionsCell").within(() => {
+            cy.get("[data-cy=view-dispute]")
+              .scrollIntoView()
+              .should("be.visible");
+            cy.get("[data-cy=view-dispute]").should("have.text", "Review");
+            cy.get("[data-cy=view-dispute]").click();
+          });
+          cy.get("[data-cy=chargeback-review]")
+            .should("exist")
+            .and("be.visible");
+          // Open the concede modal
+          cy.get("[data-cy=concede]").should("exist");
+          cy.get("[data-cy=concede]").click();
+          cy.get("[data-cy=chargeback-review]")
+            .should("not.exist")
+            .and("not.be.visible");
+          cy.get("[data-cy=concede-modal]").should("exist").and("be.visible");
+          cy.get("[data-cy=submit-concede]").should("exist").and("be.visible");
+          // Enter an explanation
+          cy.get("[data-cy=concede-explanation-input]")
+            .find("textarea")
+            .type("Merchant requested incorrect amount");
+          // Submit the concede
+          cy.get("[data-cy=submit-concede]").click();
+          // Watch the concede button become disabled
+          cy.get("[data-cy=submit-concede]").should("be.disabled");
+          // Modal should close
+          cy.get("[data-cy=concede-modal]")
+            .should("not.exist")
+            .and("not.be.visible");
+          // Wait for table to refresh
+          cy.wait(5000);
+          // Get table rows
+          cy.get("[data-cy=dispute-table-body]").find("tr").as("updatedRows");
+          // Find the original row and check its status
+          cy.get("@updatedRows").then(($rowList) => {
+            cy.wrap($rowList[relevantIndex])
+              .find("td")
+              .eq(0)
+              .should("have.text", "Conceded (Processing)");
+          });
+        });
     });
   });
 });
