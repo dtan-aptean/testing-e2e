@@ -290,7 +290,7 @@ describe("Payment Request Table", function () {
         });
     });
 
-    it("should pass if sorting by date reverses the order", () => {
+    /* it("should pass if sorting by date reverses the order", () => {
       // Get the current value of the date
       cy.get("@rows")
         .eq(0)
@@ -333,7 +333,7 @@ describe("Payment Request Table", function () {
                 });
             });
         });
-    });
+    }); */
 
     it("should pass if searching brings up the correct result", () => {
       cy.generatePaymentRequest().then((response) => {
