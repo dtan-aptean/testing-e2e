@@ -211,3 +211,29 @@ Cypress.Commands.add('generatePaymentRequest', () => {
       });
     });
 });
+
+Cypress.Commands.add('getViewerUser', (email) => {
+  const gqlQuery = `query {
+    person (email: "${email}") {
+      id
+      firstName
+      lastName
+      email
+      relationship {
+        role
+      }
+      owner {
+        tenantId
+      }
+    }
+  }`
+
+  cy.postGQL(gqlQuery).then(response => {
+    // should be 200 ok
+    cy.expect(response.isOkStatusCode).to.be.equal(true);
+
+    const data = response.body.data.person;
+
+    return data;
+  })
+})
