@@ -27,7 +27,7 @@ describe('Merchant portal', function() {
         .find('span')
         .should(($span) => {
           expect($span).to.contain(`${viewerUser.firstName.substring(0, 1)}${viewerUser.lastName.substring(0, 1)}`);
-        }
+        });
     });
 
     it('should show the user settings menu when the account button is clicked', () => {
