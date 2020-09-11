@@ -62,10 +62,13 @@ Cypress.Commands.add('fromCheckoutAsGuest_FillForm', (profile) => {
     },
   ];
   contactDetails.forEach(detail => {
-    cy.get(detail.key).type(detail.value);
+    cy.get(detail.key)
+    .type(detail.value)
+    .should('have.value', detail.value);
   });
   dropDowns.forEach(detail => {
-    cy.get(detail.key).select(detail.value);
+    cy.get(detail.key)
+    .select(detail.value);
   });
 
 });

@@ -3,13 +3,13 @@
 describe('Ecommerce Portal', function() {
     context('PublicStore', () => {
         before(() => {
-        })
-
-        beforeEach(() => {
-            cy.visit('/');
             cy.fixture('payment.json').then((data) => {
                 this.PaymentFixture = data;
             });
+        })
+
+        beforeEach(() => {            
+            cy.visit('/');
         })
 
         it('GuestSubmitsOrder', () => {  
@@ -41,13 +41,16 @@ describe('Ecommerce Portal', function() {
                 .type(cardProfile.creditCard);
             cy.getIframeBody('#credit-card-iframe_iframe')
                 .find('#text-input-expiration-month')
-                .type(cardProfile.expirationMonth);
+                .type(cardProfile.expirationMonth)
+                .should('have.value', cardProfile.expirationMonth);
             cy.getIframeBody('#credit-card-iframe_iframe')
                 .find('#text-input-expiration-year')
-                .type(cardProfile.expirationYear);
+                .type(cardProfile.expirationYear)
+                .should('have.value', cardProfile.expirationYear);
             cy.getIframeBody('#credit-card-iframe_iframe')
                 .find('#text-input-cvv-number')
-                .type(cardProfile.cvv);
+                .type(cardProfile.cvv)
+                .should('have.value', cardProfile.cvv);
 
             cy.get('#submit-credit-card-button')
                 .click()

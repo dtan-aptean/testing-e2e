@@ -1,6 +1,5 @@
 {
   "baseUrl": "#{ECOMM_PORTAL_BASE_URL}#",
-  "scopes": "#{READ_SCOPE}# #{WRITE_SCOPE}#",
   "env": {
   },
   "chromeWebSecurity": false,
