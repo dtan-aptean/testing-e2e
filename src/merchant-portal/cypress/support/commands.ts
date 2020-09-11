@@ -333,6 +333,13 @@ Cypress.Commands.add("makePayment", (count) => {
     },
   });
 
+  // Make sure count is a vaild number
+  expect(count).to.not.be.null;
+  expect(count).to.not.be.undefined;
+  assert.isNotNaN(count);
+  assert.isNumber(count);
+  expect(count).to.be.greaterThan(0);
+
   cy.get("body").then(($body) => {
     const appWindow = $body[0].ownerDocument.defaultView;
     // TODO - switch this to work in all environments
