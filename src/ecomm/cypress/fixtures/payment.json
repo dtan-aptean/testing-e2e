@@ -1,0 +1,27 @@
+{
+  "users": {
+    "admin": {
+      "username": "admin@testenvironment.com",
+      "password": "admin"
+    }
+  },
+  "guestProfile": {
+    "firstName": "first-name",
+    "lastName": "last-name",
+    "email": "bhargava.deshpande@aptean.com",
+    "phone": "1234567890",
+    "address": "sweet home",
+    "city": "Alabama",
+    "state": "Alabama",
+    "zipcode": "50002",
+    "country": "United States"
+  },
+  "cardProfiles": [
+    {
+      "creditCard": "4111111111111111",
+      "expirationMonth": "12",
+      "expirationYear": "30",
+      "cvv": "007"
+    }
+  ]
+}

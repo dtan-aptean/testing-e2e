@@ -1,0 +1,9 @@
+{
+  "baseUrl": "#{ECOMM_PORTAL_BASE_URL}#",
+  "scopes": "#{READ_SCOPE}# #{WRITE_SCOPE}#",
+  "env": {
+  },
+  "chromeWebSecurity": false,
+  "defaultCommandTimeout": 10000,
+  "supportFile": "cypress/support/index.ts"
+}
