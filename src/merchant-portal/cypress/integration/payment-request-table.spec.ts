@@ -13,7 +13,9 @@ describe("Payment Request Table", function () {
       // navigate to help center screen
       cy.get("[data-cy=payment-requests-tab]", { timeout: 20000 }).click();
       cy.get("[data-cy=refresh]").click();
-      cy.get("[data-cy=payment-request-table-body]").find("tr").as("rows");
+      cy.get("[data-cy=payment-request-table-body]")
+        .invoke("children")
+        .as("rows");
     });
 
     it("should pass if able to access the table row", () => {
