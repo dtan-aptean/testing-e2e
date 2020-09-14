@@ -9,12 +9,19 @@ Cypress.Commands.add('fromPublicStore_loginAsUser', (userProfile) => {
     .click()
 });
 
+Cypress.Commands.add('fromPublicStore_logout', () => {  
+  cy.get('.ico-logout').click()
+});
+
 Cypress.Commands.add('fromPublicStore_QuickCheckout', (profileName) => {  
   cy.get('.ico-cart')
+    .should('be.visible')
     .click();
 
   cy.get('#termsofservice')
-    .check()
+    .should('be.visible')
+    .check()    
+    .should('be.visible')
     .get('#checkout')
     .click()
 });
@@ -54,11 +61,11 @@ Cypress.Commands.add('fromCheckoutAsGuest_FillForm', (profile) => {
   var dropDowns = [    
     {
       key: '#BillingNewAddress_CountryId',
-      value: profile.country
+      value: profile.countryId
     },
     {
       key: '#BillingNewAddress_StateProvinceId',
-      value: profile.state
+      value: profile.stateId
     },
   ];
   contactDetails.forEach(detail => {
@@ -68,7 +75,8 @@ Cypress.Commands.add('fromCheckoutAsGuest_FillForm', (profile) => {
   });
   dropDowns.forEach(detail => {
     cy.get(detail.key)
-    .select(detail.value);
+    .select(detail.value)
+    .should('have.value', detail.value);
   });
 
 });

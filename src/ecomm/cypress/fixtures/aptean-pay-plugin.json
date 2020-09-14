@@ -12,13 +12,14 @@
     "phone": "1234567890",
     "address": "sweet home",
     "city": "Alabama",
-    "state": "Alabama",
+    "stateId": "3",
     "zipcode": "50002",
-    "country": "United States"
+    "countryId": "1"
   },
   "cardProfiles": [
     {
-      "creditCard": "4111111111111111",
+      "creditCardNumber": "4111111111111111",
+      "creditCardFormattedNumber": "4111 1111 1111 1111",
       "expirationMonth": "12",
       "expirationYear": "30",
       "cvv": "007"
