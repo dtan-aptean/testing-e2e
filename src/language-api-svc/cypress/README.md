@@ -18,7 +18,7 @@ cypress.json in the root of the project folders.
 3. Open cypress launcher to view tests available and run them with the UI.
 
 ```
-yarn cypress open -P ./src/ecomm
+yarn cypress open -P ./src/language-api-svc
 ```
 
 ## Adding tests
