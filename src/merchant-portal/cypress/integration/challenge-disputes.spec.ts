@@ -14,6 +14,60 @@ describe("Merchant Portal", function () {
       cy.get("[data-cy=payment-disputes-tab]", { timeout: 20000 }).click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(1000);
+      // Make sure that we have enough active disputes
+      cy.get("[data-cy=dispute-table-body]")
+        .invoke("children")
+        .then(($el) => {
+          const originalLength = $el.length;
+          if (originalLength === 0) {
+            cy.createAndPay(2, "1.09", "challenge");
+            cy.get("[data-cy=payment-disputes-tab]", {
+              timeout: 20000,
+            }).click();
+            cy.get("[data-cy=refresh]").click();
+            cy.wait(2000);
+            cy.get("[data-cy=dispute-table-body]")
+              .invoke("children")
+              .then(($children) => {
+                expect($children.length).to.be.greaterThan(originalLength);
+              });
+          } else {
+            // Make sure there are active disputes available
+            cy.get("[data-cy=dispute-table-body]").find("tr").as("currentRows");
+            const activeArray = [];
+            cy.get("@currentRows")
+              .each(($row, index, $list) => {
+                let status = undefined;
+                cy.wrap($row)
+                  .find("td")
+                  .eq(0)
+                  .then(($cell) => {
+                    status = $cell.text();
+                    if (status === "Action Needed") {
+                      activeArray.push($row);
+                    }
+                  });
+              })
+              .then(() => {
+                if (activeArray.length === 0) {
+                  cy.createAndPay(1, "1.09", "challenge");
+                  cy.get("[data-cy=payment-disputes-tab]", {
+                    timeout: 20000,
+                  }).click();
+                  cy.get("[data-cy=refresh]").click();
+                  cy.wait(2000);
+                  cy.get("[data-cy=dispute-table-body]")
+                    .invoke("children")
+                    .then(($children) => {
+                      expect($children.length).to.be.greaterThan(
+                        originalLength
+                      );
+                    });
+                }
+              });
+          }
+        });
+
       // Get the first active dispute
       cy.get("[data-cy=dispute-table-body]")
         .find("tr")

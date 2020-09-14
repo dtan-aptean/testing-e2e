@@ -50,7 +50,56 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=payment-disputes-tab]", { timeout: 20000 }).click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(1000);
-      cy.get("[data-cy=dispute-table-body]").find("tr").as("rows");
+      cy.get("[data-cy=dispute-table-body]").invoke("children").as("rows");
+    });
+
+    it("Create a new dispute if there are none or there are no active disputes", () => {
+      cy.get("@rows").then(($el) => {
+        const originalLength = $el.length;
+        if (originalLength === 0) {
+          cy.createAndPay(1, "1.09", "disputes");
+          cy.get("[data-cy=payment-disputes-tab]", { timeout: 20000 }).click();
+          cy.get("[data-cy=refresh]").click();
+          cy.wait(2000);
+          cy.get("[data-cy=dispute-table-body]")
+            .invoke("children")
+            .then(($children) => {
+              expect($children.length).to.be.greaterThan(originalLength);
+            });
+        } else {
+          // Make sure there are active disputes available
+          cy.get("[data-cy=dispute-table-body]").find("tr").as("currentRows");
+          const activeArray = [];
+          cy.get("@currentRows")
+            .each(($row, index, $list) => {
+              let status = undefined;
+              cy.wrap($row)
+                .find("td")
+                .eq(0)
+                .then(($cell) => {
+                  status = $cell.text();
+                  if (status === "Action Needed") {
+                    activeArray.push($row);
+                  }
+                });
+            })
+            .then(() => {
+              if (activeArray.length === 0) {
+                cy.createAndPay(1, "1.09", "disputes");
+                cy.get("[data-cy=payment-disputes-tab]", {
+                  timeout: 20000,
+                }).click();
+                cy.get("[data-cy=refresh]").click();
+                cy.wait(2000);
+                cy.get("[data-cy=dispute-table-body]")
+                  .invoke("children")
+                  .then(($children) => {
+                    expect($children.length).to.be.greaterThan(originalLength);
+                  });
+              }
+            });
+        }
+      });
     });
 
     it("View disputes table on dispute tab", () => {
