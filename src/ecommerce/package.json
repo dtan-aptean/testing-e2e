@@ -1,0 +1,11 @@
+{
+  "name": "@testing-e2e/ecommerce",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {},
+  "scripts": {
+    "cypress": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:verify": "cypress verify"
+  }
+}
