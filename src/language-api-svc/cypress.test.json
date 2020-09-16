@@ -1,0 +1,8 @@
+{
+    "baseUrl": "http://localhost:1880/",
+    "env": {
+    },
+    "chromeWebSecurity": false,
+    "defaultCommandTimeout": 10000,
+    "supportFile": "cypress/support/index.ts"
+  }

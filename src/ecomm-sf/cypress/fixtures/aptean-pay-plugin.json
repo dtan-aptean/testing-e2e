@@ -1,0 +1,28 @@
+{
+  "users": {
+    "admin": {
+      "username": "admin@testenvironment.com",
+      "password": "admin"
+    }
+  },
+  "guestProfile": {
+    "firstName": "first-name",
+    "lastName": "last-name",
+    "email": "cypressuser2@aptean.cypress.com",
+    "phone": "1234567890",
+    "address": "sweet home",
+    "city": "Alabama",
+    "stateId": "3",
+    "zipcode": "50002",
+    "countryId": "1"
+  },
+  "cardProfiles": [
+    {
+      "creditCardNumber": "4111111111111111",
+      "creditCardFormattedNumber": "4111 1111 1111 1111",
+      "expirationMonth": "12",
+      "expirationYear": "30",
+      "cvv": "007"
+    }
+  ]
+}
