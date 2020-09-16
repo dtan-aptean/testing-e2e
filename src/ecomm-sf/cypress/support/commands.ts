@@ -109,6 +109,23 @@ Cypress.Commands.add("goToCart", () => {
   cy.wait(500);
 });
 
+// Empty the cart
+Cypress.Commands.add("clearCart", () => {
+  Cypress.log({
+    name: "clearCart",
+  });
+  cy.visit("/en/cart");
+  cy.get(".cart > tbody")
+    .find("tr")
+    .each(($tr, $i, $all) => {
+      cy.wrap($tr).find("td").eq(0).find("input").check();
+    })
+    .then(() => {
+      cy.get(".update-cart-button").click();
+      cy.wait(500);
+    });
+});
+
 // Go to a catgory page. Will go to the Cypress Trees page unless another category is specified
 Cypress.Commands.add("goToCategory", (categoryName) => {
   Cypress.log({
