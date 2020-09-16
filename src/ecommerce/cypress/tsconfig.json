@@ -7,6 +7,6 @@
         "types": ["cypress"]
     },
     "include": [
-        "**/*.ts"
+        "**/*.ts", "../../ecomm-sf/cypress/integration/checkout/registered-checkout.spec.ts", "../../ecomm-sf/cypress/integration/checkout/guest-checkout.spec.ts"
     ]
 }

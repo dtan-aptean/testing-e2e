@@ -1,7 +1,8 @@
 {
   "baseUrl": "#{ECOMM_PORTAL_BASE_URL}#",
-  "env": {
-  },
+  "username": "#{USERNAME}#",
+  "password": "#{PASSWORD}#",
+  "env": {},
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
   "supportFile": "cypress/support/index.ts"

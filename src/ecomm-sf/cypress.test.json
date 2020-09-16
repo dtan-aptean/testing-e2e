@@ -1,8 +1,9 @@
 {
-    "baseUrl": "https://test1.apteanecommerce.com/",
-    "env": {
-    },
-    "chromeWebSecurity": false,
-    "defaultCommandTimeout": 10000,
-    "supportFile": "cypress/support/index.ts"
-  }
+  "baseUrl": "https://test1.apteanecommerce.com/",
+  "username": "cypress.tester@testenvironment.com",
+  "password": "CypressTester1",
+  "env": {},
+  "chromeWebSecurity": false,
+  "defaultCommandTimeout": 10000,
+  "supportFile": "cypress/support/index.ts"
+}
