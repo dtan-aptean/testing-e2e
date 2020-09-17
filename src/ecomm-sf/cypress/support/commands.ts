@@ -126,11 +126,11 @@ Cypress.Commands.add("clearCart", () => {
     });
 });
 
-// Go to a catgory page. Will go to the Cypress Trees page unless another category is specified
+// Go to a catgory page. Will go to the default category page unless another category is specified
 Cypress.Commands.add("goToCategory", (categoryName) => {
   Cypress.log({
     name: "goToCategory",
-    message: `${categoryName || "Cypress Trees"}`,
+    message: `${categoryName || Cypress.config("defaultCategory")}`,
     consoleProps: () => {
       return {
         "Category Name": categoryName,
@@ -143,12 +143,12 @@ Cypress.Commands.add("goToCategory", (categoryName) => {
       cy.wait(500);
       cy.get(".top-menu.mobile")
         .find("li")
-        .contains(categoryName || "Cypress Trees")
+        .contains(categoryName || Cypress.config("defaultCategory"))
         .click();
     } else {
       cy.wrap($el)
         .find("li")
-        .contains(categoryName || "Cypress Trees")
+        .contains(categoryName || Cypress.config("defaultCategory"))
         .click();
     }
     cy.wait(500);
@@ -157,7 +157,7 @@ Cypress.Commands.add("goToCategory", (categoryName) => {
 
 /**
  * Goes to a specific product page.
- * Assumes that the product is under the Cypress Trees category,
+ * Assumes that the product is under the default category,
  * unless a category name is specified
  */
 Cypress.Commands.add("goToProduct", (productName, categoryName) => {
@@ -171,7 +171,7 @@ Cypress.Commands.add("goToProduct", (productName, categoryName) => {
       };
     },
   });
-  cy.goToCategory(categoryName || "Cypress Trees");
+  cy.goToCategory(categoryName || Cypress.config("defaultCategory"));
 
   cy.get(".item-box")
     .filter((index, item) => {

@@ -2,6 +2,7 @@
   "baseUrl": "#{ECOMM_PORTAL_BASE_URL}#",
   "username": "#{USERNAME}#",
   "password": "#{PASSWORD}#",
+  "defaultCategory": "Cypress Trees",
   "env": {},
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
