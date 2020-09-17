@@ -114,7 +114,7 @@ Cypress.Commands.add("clearCart", () => {
   Cypress.log({
     name: "clearCart",
   });
-  cy.visit("/en/cart");
+  cy.goToCart();
   cy.get(".cart > tbody")
     .find("tr")
     .each(($tr, $i, $all) => {
@@ -184,4 +184,152 @@ Cypress.Commands.add("goToProduct", (productName, categoryName) => {
     .should("be.visible");
   cy.get("@targetProduct").find(".product-title").find("a").click();
   cy.wait(500);
+});
+
+// Adds a product to the cart, go to cart, agree with TOS, and click checkout
+Cypress.Commands.add("addToCartAndCheckout", () => {
+  cy.goToProduct("Bald Cypress");
+  cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
+  cy.get(".add-to-cart-button").click();
+  cy.goToCart();
+  cy.get("#termsofservice").click();
+  cy.get(".checkout-button").click();
+  cy.wait(500);
+});
+
+// COMMANDS FOR TESTS THAT ARE THE SAME BETWEEN REGISTERED USERS AND GUESTS
+
+// Test going to a category
+Cypress.Commands.add("testCategory", () => {
+  cy.get(".top-menu.notmobile").then(($el) => {
+    if ($el.css("display") === "none") {
+      cy.get(".menu-toggle").click();
+      cy.wait(500);
+      cy.get(".top-menu.mobile")
+        .find("li")
+        .contains(Cypress.config("defaultCategory"))
+        .as("category");
+    } else {
+      cy.wrap($el)
+        .find("li")
+        .contains(Cypress.config("defaultCategory"))
+        .as("category");
+    }
+    cy.get("@category").should("be.visible").and("have.attr", "href");
+    cy.get("@category").then(($li) => {
+      const href = $li.attr("href");
+      const correctLocation = href?.includes(
+        `/en/${Cypress.config("defaultCategoryUrl")}`
+      );
+      cy.expect(correctLocation).to.equal(true);
+      cy.wrap($li).click();
+    });
+    cy.wait(500);
+    cy.location("pathname").should(
+      "eq",
+      `/en/${Cypress.config("defaultCategoryUrl")}`
+    );
+    cy.get(".page.category-page").should(
+      "contain.text",
+      Cypress.config("defaultCategory")
+    );
+  });
+});
+
+// Test going to product via Image
+Cypress.Commands.add("testProductImage", () => {
+  Cypress.log({
+    name: "testProductImage",
+  });
+  cy.goToCategory();
+  cy.location("pathname").should("eq", "/en/cypress");
+  cy.get(".page.category-page").should(
+    "contain.text",
+    Cypress.config("defaultCategory")
+  );
+  cy.get(".item-box").eq(0).as("targetProduct");
+  cy.get("@targetProduct")
+    .find(".picture")
+    .scrollIntoView()
+    .should("be.visible");
+  cy.get("@targetProduct")
+    .find(".picture")
+    .find("a")
+    .then(($link) => {
+      const href = $link.attr("href");
+      cy.get("@targetProduct").find(".picture").click();
+      cy.wait(500);
+      cy.location("pathname").should("eq", href);
+    });
+});
+
+// Tests going to product via Title
+Cypress.Commands.add("testProductTitle", () => {
+  Cypress.log({
+    name: "testProductTitle",
+  });
+  cy.goToCategory();
+  cy.location("pathname").should(
+    "eq",
+    `/en/${Cypress.config("defaultCategoryUrl")}`
+  );
+  cy.get(".page.category-page").should(
+    "contain.text",
+    Cypress.config("defaultCategory")
+  );
+  cy.get(".item-box").eq(0).as("targetProduct");
+  cy.get("@targetProduct")
+    .find(".details")
+    .scrollIntoView()
+    .should("be.visible");
+  cy.get("@targetProduct")
+    .find(".product-title")
+    .find("a")
+    .then(($link) => {
+      const href = $link.attr("href");
+      cy.wrap($link).click();
+      cy.wait(500);
+      cy.location("pathname").should("eq", href);
+    });
+});
+
+// Test adding an item to the cart
+Cypress.Commands.add("testAddToCart", () => {
+  Cypress.log({
+    name: "testAddToCart",
+  });
+  cy.goToProduct("Bald Cypress");
+  // Get the name of the product
+  cy.get(".product-name").then(($h1) => {
+    const product = $h1.text();
+    // Get current amount of shopping cart
+    cy.get(".header-links")
+      .find(".cart-qty")
+      .then(($amt) => {
+        const quantity = $amt.text().replace("(", "").replace(")", "");
+        cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
+        cy.get(".add-to-cart-button").click();
+        // Check for the success banner
+        cy.wait(500);
+        cy.get(".bar-notification.success")
+          .find(".content")
+          .should(
+            "contain.text",
+            "The product has been added to your shopping cart"
+          );
+        cy.get(".header-links")
+          .find(".ico-cart")
+          .then(($cartLink) => {
+            const qty = $cartLink
+              .children()[1]
+              .innerText.replace("(", "")
+              .replace(")", "");
+            expect(parseInt(qty)).to.be.greaterThan(parseFloat(quantity));
+            cy.wrap($cartLink).click();
+            cy.wait(500);
+            // Check and see if the item's in the cart
+            cy.get(".cart").should("contain.text", product);
+          });
+      });
+  });
 });

@@ -3,6 +3,7 @@
   "username": "#{USERNAME}#",
   "password": "#{PASSWORD}#",
   "defaultCategory": "Cypress Trees",
+  "defaultCategoryUrl": "cypress",
   "env": {},
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
