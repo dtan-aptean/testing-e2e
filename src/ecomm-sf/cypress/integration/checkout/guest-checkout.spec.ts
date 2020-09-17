@@ -253,7 +253,106 @@ describe("Ecommerce", function () {
       cy.clearCart();
     });
 
-    // TODO: Make validation its own test
+    it("Empty fields show errors during checkout", () => {
+      cy.goToProduct("Bald Cypress");
+      cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
+      cy.get(".add-to-cart-button").click();
+      cy.goToCart();
+      cy.get("#termsofservice").click();
+      cy.get(".checkout-button").click();
+      cy.get(".checkout-as-guest-button").click();
+      cy.wait(500);
+
+      cy.get("#ShipToSameAddress").uncheck();
+      // Test Billing Validation, should get errors
+      cy.get(".new-address-next-step-button").eq(0).click();
+      cy.get(".field-validation-error").should("have.length", 8);
+      // Input billing info, using Aptean's Alpharetta address
+      cy.get("#BillingNewAddress_FirstName").type("Cypress");
+      cy.get("#BillingNewAddress_LastName").type("Guest");
+      cy.get("#BillingNewAddress_Email").type(
+        "cypress.guest@testenvironment.com"
+      );
+      cy.get("#BillingNewAddress_CountryId").select("United States");
+      cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
+      cy.get("#BillingNewAddress_City").type("Alpharetta");
+      cy.get("#BillingNewAddress_Address1").type("4325 Alexander Dr #100");
+      cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
+      cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
+      cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
+      // Check to see if errors clear
+      cy.get(".field-validation-error").should("have.length", 0);
+      cy.get(".new-address-next-step-button").eq(0).click();
+      cy.wait(200);
+
+      // Test Shipping validation, should get errors
+      cy.get("#shipping-address-select").select("New Address");
+      cy.wait(200);
+      // Test Validation
+      cy.get(".new-address-next-step-button").eq(1).click();
+      cy.get(".field-validation-error").should("have.length", 8);
+      // Input shipping info, using Lenox Mall's addresss
+      cy.get("#ShippingNewAddress_FirstName").type("Other");
+      cy.get("#ShippingNewAddress_LastName").type("Guest");
+      cy.get("#ShippingNewAddress_Email").type(
+        "other.guest@testenvironment.com"
+      );
+      cy.get("#ShippingNewAddress_CountryId").select("United States");
+      cy.get("#ShippingNewAddress_StateProvinceId").select("Georgia");
+      cy.get("#ShippingNewAddress_City").type("Atlanta");
+      cy.get("#ShippingNewAddress_Address1").type("3393 Peachtree Rd NE");
+      cy.get("#ShippingNewAddress_ZipPostalCode").type("30326");
+      cy.get("#ShippingNewAddress_PhoneNumber").type("5555556666");
+      cy.get("#ShippingNewAddress_FaxNumber").type("8888889999");
+      // Shipping validation errors don't seem to clear or update, but this line can be uncommented if that ever changes
+      // cy.get(".field-validation-error").should("have.length", 0);
+      cy.get(".new-address-next-step-button").eq(1).click();
+      cy.wait(200);
+      cy.get(".shipping-method-next-step-button").click();
+      cy.wait(1000);
+      // Payment Information
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .scrollIntoView()
+        .should("be.visible");
+      // Test Credit card validation, should get errors
+      cy.get("#submit-credit-card-button").click();
+      cy.wait(200);
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-expiration-month")
+        .type("03")
+        .clear();
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-expiration-year")
+        .type("24")
+        .clear();
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find(".error-text")
+        .should("have.length", 3);
+      // Input credit card info, test validation along the way
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-cc-number")
+        .type("6011111111111117");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find(".error-text")
+        .should("have.length", 2);
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-expiration-month")
+        .type("03");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-expiration-year")
+        .type("24");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find(".error-text")
+        .should("have.length", 1);
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-cvv-number")
+        .type("123");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find(".error-text")
+        .should("have.length", 0);
+
+      cy.clearCart();
+    });
 
     it("Different billing and shipping address should be correct at confirmation", () => {
       cy.goToProduct("Bald Cypress");
@@ -266,13 +365,12 @@ describe("Ecommerce", function () {
       cy.wait(500);
 
       cy.get("#ShipToSameAddress").uncheck();
-      // Input billing info
+      // Input billing info, using Aptean's address
       cy.get("#BillingNewAddress_FirstName").type("Cypress");
       cy.get("#BillingNewAddress_LastName").type("Guest");
       cy.get("#BillingNewAddress_Email").type(
         "cypress.guest@testenvironment.com"
       );
-      // Inputting Aptean's address
       cy.get("#BillingNewAddress_CountryId").select("United States");
       cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
       cy.get("#BillingNewAddress_City").type("Alpharetta");
@@ -280,22 +378,19 @@ describe("Ecommerce", function () {
       cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
       cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
       cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
+      cy.get(".field-validation-error").should("have.length", 0);
       cy.get(".new-address-next-step-button").eq(0).click();
       cy.wait(200);
 
       // Select a different shipping address
       cy.get("#shipping-address-select").select("New Address");
       cy.wait(200);
-      // Test Validation
-      cy.get(".new-address-next-step-button").eq(1).click();
-      cy.get(".field-validation-error").should("have.length", 8);
-      // Input shipping info
+      // Input shipping info, using Lenox Mall's address
       cy.get("#ShippingNewAddress_FirstName").type("Other");
       cy.get("#ShippingNewAddress_LastName").type("Guest");
       cy.get("#ShippingNewAddress_Email").type(
         "other.guest@testenvironment.com"
       );
-      // Inputting Lenox Mall's address
       cy.get("#ShippingNewAddress_CountryId").select("United States");
       cy.get("#ShippingNewAddress_StateProvinceId").select("Georgia");
       cy.get("#ShippingNewAddress_City").type("Atlanta");
@@ -303,6 +398,7 @@ describe("Ecommerce", function () {
       cy.get("#ShippingNewAddress_ZipPostalCode").type("30326");
       cy.get("#ShippingNewAddress_PhoneNumber").type("5555556666");
       cy.get("#ShippingNewAddress_FaxNumber").type("8888889999");
+      cy.get(".field-validation-error").should("have.length", 0);
       cy.get(".new-address-next-step-button").eq(1).click();
       cy.wait(200);
 
@@ -310,22 +406,24 @@ describe("Ecommerce", function () {
       cy.wait(1000);
 
       // Payment Information
-      const getIframeBody = () => {
-        return cy
-          .get("#credit-card-iframe_iframe")
-          .its("0.contentDocument.body")
-          .should("not.be.empty")
-          .then(cy.wrap);
-      };
-      getIframeBody().scrollIntoView().should("be.visible");
-      // Check validation
-      cy.get("#submit-credit-card-button").click();
-      getIframeBody().find(".error-text").should("have.length", 2);
-      // Input card info
-      getIframeBody().find("#text-input-cc-number").type("6011111111111117");
-      getIframeBody().find("#text-input-expiration-month").type("03");
-      getIframeBody().find("#text-input-expiration-year").type("24");
-      getIframeBody().find("#text-input-cvv-number").type("123");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .scrollIntoView()
+        .should("be.visible");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-cc-number")
+        .type("6011111111111117");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-expiration-month")
+        .type("03");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-expiration-year")
+        .type("24");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-cvv-number")
+        .type("123");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find(".error-text")
+        .should("have.length", 0);
       cy.get("#submit-credit-card-button").click();
       cy.wait(2000);
       cy.get("#payment-success").should(
@@ -371,23 +469,19 @@ describe("Ecommerce", function () {
       cy.get(".checkout-as-guest-button").click();
       cy.wait(500);
 
-      // Input billing info
-      // Test validation
-      cy.get(".new-address-next-step-button").eq(0).click();
-      cy.get(".field-validation-error").should("have.length", 8);
+      // Input billing info, using Aptean's address
       cy.get("#BillingNewAddress_FirstName").type("Cypress");
       cy.get("#BillingNewAddress_LastName").type("Guest");
       cy.get("#BillingNewAddress_Email").type(
         "cypress.guest@testenvironment.com"
       );
-      // Inputting Aptean's address
       cy.get("#BillingNewAddress_CountryId").select("United States");
       cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
       cy.get("#BillingNewAddress_City").type("Alpharetta");
       cy.get("#BillingNewAddress_Address1").type("4325 Alexander Dr #100");
       cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
       cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
-      cy.get("#BillingNewAddress_FaxNumber").click(); // To make the validation update
+      cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
       cy.get(".field-validation-error").should("have.length", 0);
       cy.get(".new-address-next-step-button").eq(0).click();
       cy.wait(200);
@@ -398,22 +492,24 @@ describe("Ecommerce", function () {
       cy.wait(1000);
 
       // Payment Information
-      const getIframeBody = () => {
-        return cy
-          .get("#credit-card-iframe_iframe")
-          .its("0.contentDocument.body")
-          .should("not.be.empty")
-          .then(cy.wrap);
-      };
-      getIframeBody().scrollIntoView().should("be.visible");
-      // Check validation
-      cy.get("#submit-credit-card-button").click();
-      getIframeBody().find(".error-text").should("have.length", 2);
-      // Input card info
-      getIframeBody().find("#text-input-cc-number").type("6011111111111117");
-      getIframeBody().find("#text-input-expiration-month").type("03");
-      getIframeBody().find("#text-input-expiration-year").type("24");
-      getIframeBody().find("#text-input-cvv-number").type("123");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .scrollIntoView()
+        .should("be.visible");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-cc-number")
+        .type("6011111111111117");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-expiration-month")
+        .type("03");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-expiration-year")
+        .type("24");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find("#text-input-cvv-number")
+        .type("123");
+      cy.getIframeBody("#credit-card-iframe_iframe")
+        .find(".error-text")
+        .should("have.length", 0);
       cy.get("#submit-credit-card-button").click();
       cy.wait(2000);
       cy.get("#payment-success").should(
