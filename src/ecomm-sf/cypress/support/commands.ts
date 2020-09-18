@@ -188,6 +188,9 @@ Cypress.Commands.add("goToProduct", (productName, categoryName) => {
 
 // Adds a product to the cart, go to cart, agree with TOS, and click checkout
 Cypress.Commands.add("addToCartAndCheckout", () => {
+  Cypress.log({
+    name: "addToCartAndCheckout",
+  });
   cy.goToProduct("Bald Cypress");
   cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
   cy.get(".add-to-cart-button").click();
@@ -195,6 +198,57 @@ Cypress.Commands.add("addToCartAndCheckout", () => {
   cy.get("#termsofservice").click();
   cy.get(".checkout-button").click();
   cy.wait(500);
+});
+
+/**
+ * Switches the language to the provided one.
+ * Works for both public and admin stores
+ * If not provided a language, automatically switches to English
+ */
+Cypress.Commands.add("switchLanguage", (newLanguage) => {
+  Cypress.log({
+    name: "switchLanguage",
+    message: `${newLanguage || "English"}`,
+    consoleProps: () => {
+      return {
+        "New Language": newLanguage || "Not provided. Defaulted to English",
+      };
+    },
+  });
+  if (window.location.pathname.includes("Admin")) {
+    cy.get(".navbar-nav")
+      .find("li")
+      .eq(0)
+      .find("select")
+      .select(newLanguage || "English");
+  } else {
+    cy.get("#customerlanguage").select(newLanguage || "English");
+  }
+  cy.wait(1000);
+});
+
+// Goes to the admin site. Assumes user is logged in
+Cypress.Commands.add("goToAdmin", () => {
+  Cypress.log({
+    name: "goToAdmin",
+  });
+  // Admin site has undefined Globalize, causes Cypress to autofail tests
+  cy.on("uncaught:exception", (err, runnable) => {
+    return false;
+  });
+  cy.get(".administration").click();
+  cy.wait(1000);
+  cy.location("pathname").should("eq", "/Admin");
+});
+
+// Goes to public site
+Cypress.Commands.add("goToPublic", () => {
+  Cypress.log({
+    name: "goToPublic",
+  });
+  cy.get(".navbar-nav").find("li").eq(4).find("a").click();
+  cy.wait(1000);
+  cy.location("pathname").should("not.contain", "Admin");
 });
 
 // COMMANDS FOR TESTS THAT ARE THE SAME BETWEEN REGISTERED USERS AND GUESTS
