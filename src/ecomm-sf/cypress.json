@@ -1,7 +1,10 @@
 {
   "baseUrl": "#{ECOMM_PORTAL_BASE_URL}#",
-  "env": {
-  },
+  "username": "#{USERNAME}#",
+  "password": "#{PASSWORD}#",
+  "defaultCategory": "Cypress Trees",
+  "defaultCategoryUrl": "cypress",
+  "env": {},
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
   "supportFile": "cypress/support/index.ts"
