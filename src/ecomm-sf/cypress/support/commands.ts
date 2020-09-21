@@ -126,6 +126,16 @@ Cypress.Commands.add("clearCart", () => {
     });
 });
 
+// Get the visible top-menu. Cypress may display the mobile or desktop top-menu depending on screen size.
+Cypress.Commands.add("getVisibleMenu", () => {
+  if (Cypress.$(".menu-toggle:visible").length === 0) {
+    return cy.get(".top-menu.notmobile").then(cy.wrap);
+  } else {
+    cy.get(".menu-toggle").click();
+    return cy.get(".top-menu.mobile").then(cy.wrap);
+  }
+});
+
 // Go to a catgory page. Will go to the default category page unless another category is specified
 Cypress.Commands.add("goToCategory", (categoryName) => {
   Cypress.log({
@@ -137,22 +147,11 @@ Cypress.Commands.add("goToCategory", (categoryName) => {
       };
     },
   });
-  cy.get(".top-menu.notmobile").then(($el) => {
-    if ($el.css("display") === "none") {
-      cy.get(".menu-toggle").click();
-      cy.wait(500);
-      cy.get(".top-menu.mobile")
-        .find("li")
-        .contains(categoryName || Cypress.config("defaultCategory"))
-        .click();
-    } else {
-      cy.wrap($el)
-        .find("li")
-        .contains(categoryName || Cypress.config("defaultCategory"))
-        .click();
-    }
-    cy.wait(500);
-  });
+  cy.getVisibleMenu()
+    .find("li")
+    .contains(categoryName || Cypress.config("defaultCategory"))
+    .click();
+  cy.wait(500);
 });
 
 /**
@@ -251,43 +250,52 @@ Cypress.Commands.add("goToPublic", () => {
   cy.location("pathname").should("not.contain", "Admin");
 });
 
+// Goes to the languages page under configurations in admin store
+Cypress.Commands.add("goToLanguages", () => {
+  Cypress.log({
+    name: "goToLanguages",
+  });
+  cy.get(".sidebar-menu.tree")
+    .find("li")
+    .contains("Configuration")
+    .as("sidebar");
+  cy.get("@sidebar").click();
+  cy.get(".sidebar-menu.tree")
+    .find("li")
+    .find(".treeview-menu")
+    .find("li")
+    .contains("Languages")
+    .as("languages");
+  cy.get("@languages").click();
+  cy.wait(500);
+});
+
 // COMMANDS FOR TESTS THAT ARE THE SAME BETWEEN REGISTERED USERS AND GUESTS
 
 // Test going to a category
 Cypress.Commands.add("testCategory", () => {
-  cy.get(".top-menu.notmobile").then(($el) => {
-    if ($el.css("display") === "none") {
-      cy.get(".menu-toggle").click();
-      cy.wait(500);
-      cy.get(".top-menu.mobile")
-        .find("li")
-        .contains(Cypress.config("defaultCategory"))
-        .as("category");
-    } else {
-      cy.wrap($el)
-        .find("li")
-        .contains(Cypress.config("defaultCategory"))
-        .as("category");
-    }
-    cy.get("@category").should("be.visible").and("have.attr", "href");
-    cy.get("@category").then(($li) => {
-      const href = $li.attr("href");
-      const correctLocation = href?.includes(
-        `/en/${Cypress.config("defaultCategoryUrl")}`
-      );
-      cy.expect(correctLocation).to.equal(true);
-      cy.wrap($li).click();
-    });
-    cy.wait(500);
-    cy.location("pathname").should(
-      "eq",
+  cy.getVisibleMenu()
+    .find("li")
+    .contains(Cypress.config("defaultCategory"))
+    .as("category");
+  cy.get("@category").should("be.visible").and("have.attr", "href");
+  cy.get("@category").then(($li) => {
+    const href = $li.attr("href");
+    const correctLocation = href?.includes(
       `/en/${Cypress.config("defaultCategoryUrl")}`
     );
-    cy.get(".page.category-page").should(
-      "contain.text",
-      Cypress.config("defaultCategory")
-    );
+    cy.expect(correctLocation).to.equal(true);
+    cy.wrap($li).click();
   });
+  cy.wait(500);
+  cy.location("pathname").should(
+    "eq",
+    `/en/${Cypress.config("defaultCategoryUrl")}`
+  );
+  cy.get(".page.category-page").should(
+    "contain.text",
+    Cypress.config("defaultCategory")
+  );
 });
 
 // Test going to product via Image
