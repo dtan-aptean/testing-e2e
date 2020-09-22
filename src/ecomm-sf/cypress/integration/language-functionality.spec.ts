@@ -51,6 +51,28 @@ describe("Ecommerce", function () {
       });
     });
 
+    it("Changing the language updates the currency", () => {
+      cy.goToProduct("Bald Cypress");
+      cy.get(".product-price").then(($div) => {
+        const orgPrice = $div[0].innerText;
+        cy.changeDefaultCurrency("Deutsch", "Euro").then(($orgVal) => {
+          debugger;
+          cy.goToPublic();
+          cy.goToProduct("Bald Cypress");
+          cy.switchLanguage("Deutsch");
+          cy.wait(200);
+          cy.get(".product-price").then(($newDiv) => {
+            const price = $newDiv[0].innerText;
+            expect(price).to.not.eq(orgPrice);
+            expect($newDiv[0]).to.not.contain.text(orgPrice.substring(0, 1));
+            expect($newDiv[0]).to.contain.text("€");
+            cy.switchLanguage("English");
+            cy.changeDefaultCurrency("Deutsch", $orgVal);
+          });
+        });
+      });
+    });
+
     it("Changing from any language to any other language in the public store", () => {
       cy.getVisibleMenu().then(($en) => {
         const enMenu = $en.text();

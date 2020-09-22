@@ -638,6 +638,7 @@ Cypress.Commands.add("publishLanguage", (language) => {
   });
 });
 
+// Gets the seo codes for 4 languages
 Cypress.Commands.add("getSeoCodes", () => {
   Cypress.log({
     name: "getSeoCodes",
@@ -693,5 +694,35 @@ Cypress.Commands.add("getSeoCodes", () => {
                 });
             });
         });
+    });
+});
+
+/**
+ * Change the default currency of a language
+ * Mandatory to pass in a language name.
+ * Currency can be left blank to select the currency as ---
+ */
+Cypress.Commands.add("changeDefaultCurrency", (language, currency) => {
+  Cypress.log({
+    name: "changeDefaultCurrency",
+  });
+  cy.goToAdmin();
+  cy.goToLanguages();
+  cy.get("#languages-grid")
+    .find("tbody")
+    .find("tr")
+    .then(($rows) => {
+      const row = $rows.filter((index, item) => {
+        return item.cells[0].innerText === language;
+      });
+      cy.wrap(row).find("td").contains("Edit").click();
+      const value = !currency || currency === "default" ? 0 : currency;
+      cy.get("#DefaultCurrencyId").then(($select) => {
+        const orgVal = $select.val();
+        cy.get("#DefaultCurrencyId").select(value);
+        cy.get('button[name="save"]').click();
+        cy.wait(500);
+        cy.wrap(orgVal).as("originalValue");
+      });
     });
 });
