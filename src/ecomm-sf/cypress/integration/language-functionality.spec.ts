@@ -7,7 +7,24 @@ describe("Ecommerce", function () {
       cy.login();
     });
 
-    it("Changigng language overrides the standard", () => {
+    it("Changing the language updates the url in the public store", () => {
+      cy.getSeoCodes();
+      cy.get("@seoCodes").then(($codes) => {
+        expect($codes.length).to.eq(4);
+        cy.goToPublic();
+        cy.switchLanguage("English");
+        cy.location("pathname").should("eq", `/${$codes[0]}/`);
+        cy.switchLanguage("English, Australia");
+        cy.location("pathname").should("eq", `/${$codes[1]}/`);
+        cy.switchLanguage("Hindi");
+        cy.location("pathname").should("eq", `/${$codes[2]}/`);
+        cy.switchLanguage("Deutsch");
+        cy.location("pathname").should("eq", `/${$codes[3]}/`);
+        cy.switchLanguage();
+      });
+    });
+
+    it("Changing language overrides the standard", () => {
       cy.getVisibleMenu().should("contain.text", "Cypress Trees");
       cy.switchLanguage("Deutsch");
       cy.getVisibleMenu()

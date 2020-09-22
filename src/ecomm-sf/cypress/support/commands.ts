@@ -210,7 +210,9 @@ Cypress.Commands.add("switchLanguage", (newLanguage) => {
     message: `${newLanguage || Cypress.config("defaultLanguage")}`,
     consoleProps: () => {
       return {
-        "New Language": newLanguage || "Not provided. Defaulted to English",
+        "New Language":
+          newLanguage ||
+          `Not provided. Defaulted to ${Cypress.config("defaultLanguage")}`,
       };
     },
   });
@@ -634,4 +636,62 @@ Cypress.Commands.add("publishLanguage", (language) => {
         cy.wait(500);
       });
   });
+});
+
+Cypress.Commands.add("getSeoCodes", () => {
+  Cypress.log({
+    name: "getSeoCodes",
+  });
+  cy.goToAdmin();
+  cy.goToLanguages();
+  const codes = [];
+  function getToCode(row) {
+    cy.wrap(row).find("td").contains("Edit").click();
+    cy.get("#UniqueSeoCode").then(($el) => {
+      codes.push($el.val());
+      cy.get(".content-header")
+        .find(".pull-left")
+        .find("small")
+        .find("a")
+        .click();
+      cy.wait(500);
+    });
+  }
+  cy.get("#languages-grid")
+    .find("tbody")
+    .find("tr")
+    .then(($rows) => {
+      const english = $rows.filter((index, item) => {
+        return item.cells[0].innerText === "English";
+      });
+      getToCode(english);
+      cy.get("#languages-grid")
+        .find("tbody")
+        .find("tr")
+        .then(($rows2) => {
+          const aussie = $rows2.filter((index, item) => {
+            return item.cells[0].innerText === "English, Australia";
+          });
+          getToCode(aussie);
+          cy.get("#languages-grid")
+            .find("tbody")
+            .find("tr")
+            .then(($rows3) => {
+              const hindi = $rows3.filter((index, item) => {
+                return item.cells[0].innerText === "Hindi";
+              });
+              getToCode(hindi);
+              cy.get("#languages-grid")
+                .find("tbody")
+                .find("tr")
+                .then(($rows4) => {
+                  const german = $rows4.filter((index, item) => {
+                    return item.cells[0].innerText === "Deutsch";
+                  });
+                  getToCode(german);
+                  cy.wrap(codes).as("seoCodes");
+                });
+            });
+        });
+    });
 });
