@@ -207,22 +207,16 @@ Cypress.Commands.add("addToCartAndCheckout", () => {
 Cypress.Commands.add("switchLanguage", (newLanguage) => {
   Cypress.log({
     name: "switchLanguage",
-    message: `${newLanguage || "English"}`,
+    message: `${newLanguage || Cypress.config("defaultLanguage")}`,
     consoleProps: () => {
       return {
         "New Language": newLanguage || "Not provided. Defaulted to English",
       };
     },
   });
-  if (window.location.pathname.includes("Admin")) {
-    cy.get(".navbar-nav")
-      .find("li")
-      .eq(0)
-      .find("select")
-      .select(newLanguage || "English");
-  } else {
-    cy.get("#customerlanguage").select(newLanguage || "English");
-  }
+  cy.get("#customerlanguage").select(
+    newLanguage || Cypress.config("defaultLanguage")
+  );
   cy.wait(1000);
 });
 

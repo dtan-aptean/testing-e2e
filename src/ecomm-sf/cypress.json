@@ -4,6 +4,7 @@
   "password": "#{PASSWORD}#",
   "defaultCategory": "Cypress Trees",
   "defaultCategoryUrl": "cypress",
+  "defaultLanguage": "English",
   "env": {},
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
