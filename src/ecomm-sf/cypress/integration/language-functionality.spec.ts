@@ -234,11 +234,9 @@ describe("Ecommerce", function () {
         });
     });
 
-    it("Unpublished languages no longer show in dropdowns", () => {
+    it("Publishing and unpublishing a language updates the table", () => {
       cy.goToAdmin();
       cy.goToLanguages();
-      cy.wait(1000);
-      // Find published rows
       cy.get("#languages-grid")
         .find("tbody")
         .find("tr")
@@ -247,68 +245,65 @@ describe("Ecommerce", function () {
           const eligibleRows = $el.filter((index, item) => {
             return item.innerHTML.includes("true-icon");
           });
-          // It's assumed there will always be one published language
           expect(eligibleRows.length).to.be.gte(1);
           // Find a random row to unpublish
           const index = Cypress._.random(0, eligibleRows.length - 1);
           const trueIndex = eligibleRows[index].rowIndex - 1; // The index of the row in the full table
-          cy.wrap(eligibleRows[index])
-            .find("td")
-            .then(($cells) => {
-              // Grab the language name and unpublish it
-              const language = $cells[0].innerText;
-              cy.wrap($cells[5]).click();
-              cy.wait(500);
-              cy.get("#Published").should("have.attr", "checked");
-              cy.get("#Published").uncheck();
-              cy.get('button[name="save"]').click();
-              cy.wait(500);
-              // Check that the table updated
-              cy.get("#languages-grid")
-                .find("tbody")
-                .find("tr")
-                .eq(trueIndex)
-                .should("contain.html", "false-icon")
-                .and("not.contain.html", "true-icon");
-              // Check that this language doesn't show up in dropdowns
-              cy.get("#customerlanguage")
-                .find("option")
-                .should("not.contain.text", language);
-              cy.goToPublic();
-              cy.get("#customerlanguage")
-                .find("option")
-                .should("not.contain.text", language);
-              // Now re-publish the language
-              cy.goToAdmin();
-              cy.goToLanguages();
-              cy.get("#languages-grid")
-                .find("tbody")
-                .find("tr")
-                .eq(trueIndex)
-                .find("td")
-                .contains("Edit")
-                .click();
-              cy.get("#Published").should("not.have.attr", "checked");
-              cy.get("#Published").check();
-              cy.get('button[name="save"]').click();
-              cy.wait(500);
-              // Check that the table updated
-              cy.get("#languages-grid")
-                .find("tbody")
-                .find("tr")
-                .eq(trueIndex)
-                .should("contain.html", "true-icon")
-                .and("not.contain.html", "false-icon");
-              // Check that the dropdowns updated
-              cy.get("#customerlanguage")
-                .find("option")
-                .should("contain.text", language);
-              cy.goToPublic();
-              cy.get("#customerlanguage")
-                .find("option")
-                .should("contain.text", language);
-            });
+          cy.unpublishLanguage(trueIndex);
+          // Check that the table has updated.
+          cy.get("#languages-grid")
+            .find("tbody")
+            .find("tr")
+            .eq(trueIndex)
+            .should("contain.html", "false-icon")
+            .and("not.contain.html", "true-icon");
+          // Republish the language
+          cy.get("@languageName").then((languageName) => {
+            cy.publishLanguage(languageName);
+            // Check that the table updated
+            cy.get("#languages-grid")
+              .find("tbody")
+              .find("tr")
+              .eq(trueIndex)
+              .should("contain.html", "true-icon")
+              .and("not.contain.html", "false-icon");
+          });
         });
+    });
+
+    it("Unpublished languages no longer show in admin store dropdowns", () => {
+      cy.goToAdmin();
+      cy.unpublishLanguage();
+      cy.get("@languageName").then((languageName) => {
+        cy.get("#customerlanguage")
+          .find("option")
+          .each(($el, index, $list) => {
+            cy.wrap($el).should("not.have.text", languageName);
+          });
+        // Republish the language
+        cy.publishLanguage(languageName);
+        cy.get("#customerlanguage")
+          .find("option")
+          .should("contain.text", languageName);
+      });
+    });
+
+    it("Unpublished languages no longer show in public store dropdowns", () => {
+      cy.unpublishLanguage();
+      cy.goToPublic();
+      cy.get("@languageName").then((languageName) => {
+        cy.get("#customerlanguage")
+          .find("option")
+          .each(($el, index, $list) => {
+            cy.wrap($el).should("not.have.text", languageName);
+          });
+        // Republish the language
+        cy.publishLanguage(languageName);
+        cy.goToPublic();
+        cy.get("#customerlanguage")
+          .find("option")
+          .should("contain.text", languageName);
+      });
     });
   });
 });

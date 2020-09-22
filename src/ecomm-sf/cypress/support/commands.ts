@@ -249,19 +249,23 @@ Cypress.Commands.add("goToLanguages", () => {
   Cypress.log({
     name: "goToLanguages",
   });
-  cy.get(".sidebar-menu.tree")
-    .find("li")
-    .contains("Configuration")
-    .as("sidebar");
-  cy.get("@sidebar").click();
-  cy.get(".sidebar-menu.tree")
-    .find("li")
-    .find(".treeview-menu")
-    .find("li")
-    .contains("Languages")
-    .as("languages");
-  cy.get("@languages").click();
-  cy.wait(500);
+  cy.location().then((loc) => {
+    if (!loc.pathname.includes("Language/List")) {
+      cy.get(".sidebar-menu.tree")
+        .find("li")
+        .contains("Configuration")
+        .as("sidebar");
+      cy.get("@sidebar").click();
+    }
+    cy.get(".sidebar-menu.tree")
+      .find("li")
+      .find(".treeview-menu")
+      .find("li")
+      .contains("Languages")
+      .as("languages");
+    cy.get("@languages").click();
+    cy.wait(500);
+  });
 });
 
 // COMMANDS FOR TESTS THAT ARE THE SAME BETWEEN REGISTERED USERS AND GUESTS
@@ -386,6 +390,108 @@ Cypress.Commands.add("testAddToCart", () => {
             // Check and see if the item's in the cart
             cy.get(".cart").should("contain.text", product);
           });
+      });
+  });
+});
+
+// COMMANDS FOR LANGUAGE FUNCTIONALITY TESTS
+/**
+ * Unpublishes a random language.
+ * Can get the language name calling cy.get('@languageName') after calling this command
+ * Can provide a specific index to unpublish a specific language
+ */
+Cypress.Commands.add("unpublishLanguage", (removalIndex) => {
+  Cypress.log({
+    name: "unpublishLanguage",
+  });
+  // Make sure that removalIndex is a valid argument if included
+  if (removalIndex) {
+    assert.isNotNaN(removalIndex);
+    assert.isNumber(removalIndex);
+  }
+  // Broken up into functions that we then wrap
+  // In order to be able to grab the language name
+  function changePublicity(eligibleRows, index) {
+    cy.wrap(eligibleRows[index])
+      .find("td")
+      .then(($cells) => {
+        // Grab the language name and unpublish it
+        const language = $cells[0].innerText;
+        cy.wrap($cells[5]).click();
+        cy.wait(500);
+        cy.get("#Published").should("have.attr", "checked");
+        cy.get("#Published").uncheck();
+        cy.get('button[name="save"]').click();
+        cy.wait(500);
+        cy.wrap(language).as("languageName");
+      });
+  }
+  function accessLanguages() {
+    cy.location().then((loc) => {
+      if (!loc.pathname.includes("Admin")) {
+        cy.goToAdmin();
+      }
+      cy.goToLanguages();
+      cy.wait(1000);
+      // Find published rows
+      cy.get("#languages-grid")
+        .find("tbody")
+        .find("tr")
+        .then(($el) => {
+          if (removalIndex) {
+            cy.wrap(changePublicity($el, removalIndex));
+          } else {
+            // returns the rows that are published - looks for the checkmark
+            const eligibleRows = $el.filter((index, item) => {
+              return item.innerHTML.includes("true-icon");
+            });
+            // It's assumed there will always be one published language
+            expect(eligibleRows.length).to.be.gte(1);
+            // Find a random row to unpublish
+            const index = Cypress._.random(0, eligibleRows.length - 1);
+            cy.wrap(changePublicity(eligibleRows, index));
+          }
+        });
+    });
+  }
+  cy.wrap(accessLanguages());
+});
+
+// Republish a language. Needs the language name
+Cypress.Commands.add("publishLanguage", (language) => {
+  Cypress.log({
+    name: "publishLanguage",
+    message: `${language}`,
+    consoleProps: () => {
+      return {
+        "Language Name": language,
+      };
+    },
+  });
+  // Make sure language name is valid
+  expect(language).to.not.be.null;
+  expect(language).to.not.be.undefined;
+  assert.isString(language);
+
+  cy.location().then((loc) => {
+    if (!loc.pathname.includes("Admin")) {
+      cy.goToAdmin();
+    }
+    cy.goToLanguages();
+    cy.wait(1000);
+    cy.get("#languages-grid")
+      .find("tbody")
+      .find("tr")
+      .then(($el) => {
+        const relevantRow = $el.filter((index, item) => {
+          return item.innerText.includes(language);
+        });
+
+        cy.wrap(relevantRow).find("td").contains("Edit").click();
+        cy.get("#Published").should("not.have.attr", "checked");
+        cy.get("#Published").check();
+        cy.get('button[name="save"]').click();
+        cy.wait(500);
       });
   });
 });
