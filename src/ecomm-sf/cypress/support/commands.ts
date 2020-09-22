@@ -396,6 +396,146 @@ Cypress.Commands.add("testAddToCart", () => {
 
 // COMMANDS FOR LANGUAGE FUNCTIONALITY TESTS
 /**
+ * Swaps the language order
+ * Takes two language names and swaps the language at each index
+ * Assumes you're already on the languages page
+ */
+Cypress.Commands.add("swapOrder", (langOne, langTwo) => {
+  Cypress.log({
+    name: "swapOrder",
+    message: `${langOne}, ${langTwo}`,
+    consoleProps: () => {
+      return {
+        "First language": langOne,
+        "Second language": langTwo,
+      };
+    },
+  });
+  // Make sure indices are valid
+  expect(langOne).to.not.be.null;
+  expect(langTwo).to.not.be.null;
+  expect(langOne).to.not.be.undefined;
+  expect(langTwo).to.not.be.undefined;
+  assert.isString(langOne);
+  assert.isString(langTwo);
+  expect(langOne).to.not.eq(langTwo);
+  // Swap the numbers
+  cy.get("#languages-grid")
+    .find("tbody")
+    .find("tr")
+    .then(($rows) => {
+      const rowOne = $rows.filter((index, item) => {
+        return item.cells[0].innerText === langOne;
+      });
+      const indexOne = rowOne[0].rowIndex - 1;
+      const rowTwo = $rows.filter((index, item) => {
+        return item.cells[0].innerText === langTwo;
+      });
+      const displayOrderOne = rowOne[0].cells[3].innerText;
+      const displayOrderTwo = rowTwo[0].cells[3].innerText;
+      cy.get("#languages-grid")
+        .find("tbody")
+        .find("tr")
+        .eq(indexOne)
+        .find("td")
+        .contains("Edit")
+        .click();
+      cy.get("#DisplayOrder").siblings(".k-input").clear();
+      cy.get("#DisplayOrder").type(displayOrderTwo);
+      cy.get('button[name="save"]').click();
+      cy.wait(500);
+      cy.get("#languages-grid")
+        .find("tbody")
+        .find("tr")
+        .then(($newRows) => {
+          const rowTwoUpdate = $newRows.filter((index, item) => {
+            return item.cells[0].innerText === langTwo;
+          });
+          const indexTwo = rowTwoUpdate[0].rowIndex - 1;
+          cy.get("#languages-grid")
+            .find("tbody")
+            .find("tr")
+            .eq(indexTwo)
+            .find("td")
+            .contains("Edit")
+            .click();
+          cy.get("#DisplayOrder").siblings(".k-input").clear();
+          cy.get("#DisplayOrder").type(displayOrderOne);
+          cy.get('button[name="save"]').click();
+          cy.wait(500);
+        });
+    });
+});
+
+/**
+ * Compares the table when the language order is updated
+ * Expects the language to be at the matching index.
+ * langOne - first language name to compare. indexOne - the index you expect that language to be at
+ * list - the original list before the update, to compare the non-target items
+ */
+Cypress.Commands.add(
+  "compareTableOrder",
+  (langOne, indexOne, langTwo, indexTwo, list) => {
+    Cypress.log({
+      name: "compareTableOrder",
+    });
+    cy.get("#languages-grid")
+      .find("tbody")
+      .find("tr")
+      .each(($item, index, $newList) => {
+        if (index === indexOne) {
+          cy.wrap($item[0].cells[0].innerText)
+            .should("eq", langOne)
+            .and("not.eq", langTwo);
+        } else if (index === indexTwo) {
+          cy.wrap($item[0].cells[0].innerText)
+            .should("eq", langTwo)
+            .and("not.eq", langOne);
+        } else {
+          // NOTE: not sure if this is a good idea when the number of languages gets very large.
+          // Included it to make sure no other enteries in the list were affected by the order change
+          cy.wrap($item[0].cells[0].innerText).should(
+            "eq",
+            list[index].cells[0].innerText
+          );
+        }
+      });
+  }
+);
+
+/**
+ * Compares the dropdown when the language order is updated
+ * Expects the language to be at the matching index.
+ * langOne - first language name to compare. indexOne - the index you expect that language to be at
+ * list - the original list before the update, to compare the non-target items
+ */
+Cypress.Commands.add(
+  "compareDropdownOrder",
+  (langOne, indexOne, langTwo, indexTwo, list) => {
+    Cypress.log({
+      name: "compareDropdownOrder",
+    });
+    cy.get("#customerlanguage")
+      .find("option")
+      .each(($item, index, $newList) => {
+        if (index === indexOne) {
+          cy.wrap($item[0].innerText)
+            .should("eq", langOne)
+            .and("not.eq", langTwo);
+        } else if (index === indexTwo) {
+          cy.wrap($item[0].innerText)
+            .should("eq", langTwo)
+            .and("not.eq", langOne);
+        } else {
+          // NOTE: not sure if this is a good idea when the number of languages gets very large.
+          // Included it to make sure no other enteries in the list were affected by the order change
+          cy.wrap($item[0].innerText).should("eq", list[index].innerText);
+        }
+      });
+  }
+);
+
+/**
  * Unpublishes a random language.
  * Can get the language name calling cy.get('@languageName') after calling this command
  * Can provide a specific index to unpublish a specific language

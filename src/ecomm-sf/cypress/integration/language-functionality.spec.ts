@@ -109,128 +109,105 @@ describe("Ecommerce", function () {
       });
     });
 
-    it("Changing the language display order updates the dropdowns", () => {
+    it("Changing the language display order updates the table", () => {
+      cy.goToAdmin();
+      cy.goToLanguages();
+      cy.get("#languages-grid")
+        .find("tbody")
+        .find("tr")
+        .then(($list) => {
+          const indexOne = Cypress._.random(0, $list.length - 1);
+          const indexTwo =
+            indexOne > $list.length / 2 - 1
+              ? Cypress._.random(0, indexOne - 1)
+              : Cypress._.random(indexOne + 1, $list.length - 1);
+          const langOne = $list[indexOne].cells[0].innerText;
+          const langTwo = $list[indexTwo].cells[0].innerText;
+          // Swap the languages
+          cy.swapOrder(langOne, langTwo);
+          // Check for the correct order
+          cy.compareTableOrder(langOne, indexTwo, langTwo, indexOne, $list);
+          // Swap the languages back
+          cy.swapOrder(langOne, langTwo);
+          // compare order
+          cy.compareTableOrder(langOne, indexOne, langTwo, indexTwo, $list);
+        });
+    });
+
+    it("Changing the language display order updates the dropdown in the public store", () => {
       cy.get("#customerlanguage")
         .find("option")
         .then(($options) => {
-          var enIndex: number;
-          var ausIndex: number;
-          var hiIndex: number;
-          var deIndex: number;
-          for (var i = 0; i < $options.length; i++) {
-            if ($options[i].innerText === "English") {
-              enIndex = i;
-            } else if ($options[i].innerText === "English, Australia") {
-              ausIndex = i;
-            } else if ($options[i].innerText === "Hindi") {
-              hiIndex = i;
-            } else if ($options[i].innerText === "Deutsch") {
-              deIndex = i;
-            }
-          }
+          const indexOne = Cypress._.random(0, $options.length - 1);
+          const indexTwo =
+            indexOne > $options.length / 2 - 1
+              ? Cypress._.random(0, indexOne - 1)
+              : Cypress._.random(indexOne + 1, $options.length - 1);
+          const langOne = $options[indexOne].innerText;
+          const langTwo = $options[indexTwo].innerText;
           cy.goToAdmin();
-          cy.get("#customerlanguage")
-            .find("option")
-            .then(($admOptions) => {
-              cy.wrap($admOptions[enIndex]).should("contain.text", "English");
-              cy.wrap($admOptions[ausIndex]).should(
-                "contain.text",
-                "English, Australia"
-              );
-              cy.wrap($admOptions[hiIndex]).should("contain.text", "Hindi");
-              cy.wrap($admOptions[deIndex]).should("contain.text", "Deutsch");
+          cy.goToLanguages();
+          // Swap the languages
+          cy.swapOrder(langOne, langTwo);
+          // Check the public dropdown
+          cy.goToPublic();
+          cy.compareDropdownOrder(
+            langOne,
+            indexTwo,
+            langTwo,
+            indexOne,
+            $options
+          );
+          // reset the languages
+          cy.goToAdmin();
+          cy.goToLanguages();
+          cy.swapOrder(langOne, langTwo);
+          // Check the public dropdown
+          cy.goToPublic();
+          cy.compareDropdownOrder(
+            langOne,
+            indexOne,
+            langTwo,
+            indexTwo,
+            $options
+          );
+        });
+    });
 
-              cy.goToLanguages();
-              cy.get("#languages-grid")
-                .find("tbody")
-                .find("tr")
-                .eq(0)
-                .find("td")
-                .contains("Edit")
-                .click();
-              cy.wait(500);
-              cy.get("#DisplayOrder").siblings(".k-input").clear();
-              cy.get("#DisplayOrder").type("3");
-              cy.get('button[name="save"]').click();
-              cy.wait(500);
-              cy.get("#languages-grid")
-                .find("tbody")
-                .find("tr")
-                .eq(2)
-                .find("td")
-                .contains("Edit")
-                .click();
-              cy.wait(500);
-              cy.get("#DisplayOrder").siblings(".k-input").clear();
-              cy.get("#DisplayOrder").type("1");
-              cy.get('button[name="save"]').click();
-              cy.wait(500);
-              // Check that the order has updated.
-              cy.get("#customerlanguage")
-                .find("option")
-                .then(($newAdmOpt) => {
-                  cy.wrap($newAdmOpt[enIndex])
-                    .should("not.contain.text", "English")
-                    .and("contain.text", "Hindi");
-                  cy.wrap($newAdmOpt[ausIndex]).should(
-                    "contain.text",
-                    "English, Australia"
-                  );
-                  cy.wrap($newAdmOpt[hiIndex])
-                    .should("not.contain.text", "Hindi")
-                    .and("contain.text", "English");
-                  cy.wrap($newAdmOpt[deIndex]).should(
-                    "contain.text",
-                    "Deutsch"
-                  );
-                  cy.goToPublic();
-                  cy.get("#customerlanguage")
-                    .find("option")
-                    .then(($newOptions) => {
-                      cy.wrap($newOptions[enIndex])
-                        .should("not.contain.text", "English")
-                        .and("contain.text", "Hindi");
-                      cy.wrap($newOptions[ausIndex]).should(
-                        "contain.text",
-                        "English, Australia"
-                      );
-                      cy.wrap($newOptions[hiIndex])
-                        .should("not.contain.text", "Hindi")
-                        .and("contain.text", "English");
-                      cy.wrap($newOptions[deIndex]).should(
-                        "contain.text",
-                        "Deutsch"
-                      );
-                      // Set it back to the original order
-                      cy.goToAdmin();
-                      cy.goToLanguages();
-                      cy.get("#languages-grid")
-                        .find("tbody")
-                        .find("tr")
-                        .eq(0)
-                        .find("td")
-                        .contains("Edit")
-                        .click();
-                      cy.wait(500);
-                      cy.get("#DisplayOrder").siblings(".k-input").clear();
-                      cy.get("#DisplayOrder").type("3");
-                      cy.get('button[name="save"]').click();
-                      cy.wait(500);
-                      cy.get("#languages-grid")
-                        .find("tbody")
-                        .find("tr")
-                        .eq(1)
-                        .find("td")
-                        .contains("Edit")
-                        .click();
-                      cy.wait(500);
-                      cy.get("#DisplayOrder").siblings(".k-input").clear();
-                      cy.get("#DisplayOrder").type("1");
-                      cy.get('button[name="save"]').click();
-                      cy.wait(500);
-                    });
-                });
-            });
+    it("Changing the language display order updates the dropdowns in the admin store", () => {
+      cy.goToAdmin();
+      cy.get("#customerlanguage")
+        .find("option")
+        .then(($options) => {
+          const indexOne = Cypress._.random(0, $options.length - 1);
+          const indexTwo =
+            indexOne > $options.length / 2 - 1
+              ? Cypress._.random(0, indexOne - 1)
+              : Cypress._.random(indexOne + 1, $options.length - 1);
+          const langOne = $options[indexOne].innerText;
+          const langTwo = $options[indexTwo].innerText;
+          cy.goToLanguages();
+          // Swap the languages
+          cy.swapOrder(langOne, langTwo);
+          // Check the dropdown
+          cy.compareDropdownOrder(
+            langOne,
+            indexTwo,
+            langTwo,
+            indexOne,
+            $options
+          );
+          // reset the languages
+          cy.goToLanguages();
+          cy.swapOrder(langOne, langTwo);
+          // Check the dropdown
+          cy.compareDropdownOrder(
+            langOne,
+            indexOne,
+            langTwo,
+            indexTwo,
+            $options
+          );
         });
     });
 
