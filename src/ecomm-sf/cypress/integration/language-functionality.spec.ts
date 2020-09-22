@@ -56,7 +56,6 @@ describe("Ecommerce", function () {
       cy.get(".product-price").then(($div) => {
         const orgPrice = $div[0].innerText;
         cy.changeDefaultCurrency("Deutsch", "Euro").then(($orgVal) => {
-          debugger;
           cy.goToPublic();
           cy.goToProduct("Bald Cypress");
           cy.switchLanguage("Deutsch");
