@@ -51,6 +51,45 @@ describe("Ecommerce", function () {
       });
     });
 
+    it("Switching language changes the labels in admin store", () => {
+      cy.switchLanguage("English");
+      cy.goToAdminProduct("Bald Cypress");
+      cy.switchLanguage("Deutsch");
+      cy.get("#product-info-localized-standard-tab")
+        .find(".form-group")
+        .then(($divs) => {
+          cy.wrap($divs[0])
+            .find("label")
+            .should("not.have.text", "Product name")
+            .and("have.text", "Produktname");
+          cy.wrap($divs[1])
+            .find("label")
+            .should("not.have.text", "Short description")
+            .and("have.text", "Kurzbeschreibung");
+          cy.wrap($divs[2])
+            .find("label")
+            .should("not.have.text", "Full description")
+            .and("have.text", "Komplette Beschreibung");
+          cy.switchLanguage();
+          cy.get("#product-info-localized-standard-tab")
+            .find(".form-group")
+            .then(($formGroups) => {
+              cy.wrap($formGroups[0])
+                .find("label")
+                .should("not.have.text", "Produktname")
+                .and("have.text", "Product name");
+              cy.wrap($formGroups[1])
+                .find("label")
+                .should("not.have.text", "Kurzbeschreibung")
+                .and("have.text", "Short description");
+              cy.wrap($formGroups[2])
+                .find("label")
+                .should("not.have.text", "Komplette Beschreibung")
+                .and("have.text", "Full description");
+            });
+        });
+    });
+
     it("Changing the language updates the currency", () => {
       cy.goToProduct("Bald Cypress");
       cy.get(".product-price").then(($div) => {

@@ -253,20 +253,57 @@ Cypress.Commands.add("goToLanguages", () => {
   });
   cy.location().then((loc) => {
     if (!loc.pathname.includes("Language/List")) {
-      cy.get(".sidebar-menu.tree")
-        .find("li")
-        .contains("Configuration")
-        .as("sidebar");
-      cy.get("@sidebar").click();
+      cy.get(".sidebar-menu.tree").find("li").contains("Configuration").click();
     }
     cy.get(".sidebar-menu.tree")
       .find("li")
       .find(".treeview-menu")
       .find("li")
       .contains("Languages")
-      .as("languages");
-    cy.get("@languages").click();
+      .click();
     cy.wait(500);
+  });
+});
+
+// Goes to a product page in admin store. Must provide name of product
+Cypress.Commands.add("goToAdminProduct", (productName) => {
+  Cypress.log({
+    name: "goToAdminProduct",
+    message: productName,
+    consoleProps: () => {
+      return {
+        "Product Name": productName,
+      };
+    },
+  });
+  // Make sure product name is valid
+  expect(productName).to.not.be.null;
+  expect(productName).to.not.be.undefined;
+  assert.isString(productName);
+  cy.location("pathname").then((loc) => {
+    if (!loc.includes("Product/List")) {
+      if (!loc.includes("Admin")) {
+        cy.goToAdmin();
+      }
+      cy.get(".sidebar-menu.tree").find("li").contains("Catalog").click();
+    }
+    cy.get(".sidebar-menu.tree")
+      .find("li")
+      .find(".treeview-menu")
+      .find("li")
+      .contains("Products")
+      .click();
+    cy.wait(500);
+    cy.get("#products-grid")
+      .find("tbody")
+      .find("tr")
+      .then(($rows) => {
+        const row = $rows.filter((index, item) => {
+          return item.cells[2].innerText === productName;
+        });
+        cy.wrap(row[0]).find(".button-column").click();
+        cy.wait(500);
+      });
   });
 });
 
