@@ -126,6 +126,16 @@ Cypress.Commands.add("clearCart", () => {
     });
 });
 
+// Get the visible top-menu. Cypress may display the mobile or desktop top-menu depending on screen size.
+Cypress.Commands.add("getVisibleMenu", () => {
+  if (Cypress.$(".menu-toggle:visible").length === 0) {
+    return cy.get(".top-menu.notmobile").then(cy.wrap);
+  } else {
+    cy.get(".menu-toggle").click();
+    return cy.get(".top-menu.mobile").then(cy.wrap);
+  }
+});
+
 // Go to a catgory page. Will go to the default category page unless another category is specified
 Cypress.Commands.add("goToCategory", (categoryName) => {
   Cypress.log({
@@ -137,22 +147,11 @@ Cypress.Commands.add("goToCategory", (categoryName) => {
       };
     },
   });
-  cy.get(".top-menu.notmobile").then(($el) => {
-    if ($el.css("display") === "none") {
-      cy.get(".menu-toggle").click();
-      cy.wait(500);
-      cy.get(".top-menu.mobile")
-        .find("li")
-        .contains(categoryName || Cypress.config("defaultCategory"))
-        .click();
-    } else {
-      cy.wrap($el)
-        .find("li")
-        .contains(categoryName || Cypress.config("defaultCategory"))
-        .click();
-    }
-    cy.wait(500);
-  });
+  cy.getVisibleMenu()
+    .find("li")
+    .contains(categoryName || Cypress.config("defaultCategory"))
+    .click();
+  cy.wait(500);
 });
 
 /**
@@ -188,6 +187,9 @@ Cypress.Commands.add("goToProduct", (productName, categoryName) => {
 
 // Adds a product to the cart, go to cart, agree with TOS, and click checkout
 Cypress.Commands.add("addToCartAndCheckout", () => {
+  Cypress.log({
+    name: "addToCartAndCheckout",
+  });
   cy.goToProduct("Bald Cypress");
   cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
   cy.get(".add-to-cart-button").click();
@@ -197,43 +199,140 @@ Cypress.Commands.add("addToCartAndCheckout", () => {
   cy.wait(500);
 });
 
+/**
+ * Switches the language to the provided one.
+ * Works for both public and admin stores
+ * If not provided a language, automatically switches to English
+ */
+Cypress.Commands.add("switchLanguage", (newLanguage) => {
+  Cypress.log({
+    name: "switchLanguage",
+    message: `${newLanguage || Cypress.config("defaultLanguage")}`,
+    consoleProps: () => {
+      return {
+        "New Language":
+          newLanguage ||
+          `Not provided. Defaulted to ${Cypress.config("defaultLanguage")}`,
+      };
+    },
+  });
+  cy.get("#customerlanguage").select(
+    newLanguage || Cypress.config("defaultLanguage")
+  );
+  cy.wait(1000);
+});
+
+// Goes to the admin site. Assumes user is logged in
+Cypress.Commands.add("goToAdmin", () => {
+  Cypress.log({
+    name: "goToAdmin",
+  });
+  // Admin site has undefined Globalize, causes Cypress to autofail tests
+  cy.on("uncaught:exception", (err, runnable) => {
+    return false;
+  });
+  cy.get(".administration").click();
+  cy.wait(1000);
+  cy.location("pathname").should("eq", "/Admin");
+});
+
+// Goes to public site
+Cypress.Commands.add("goToPublic", () => {
+  Cypress.log({
+    name: "goToPublic",
+  });
+  cy.get(".navbar-nav").find("li").eq(4).find("a").click();
+  cy.wait(1000);
+  cy.location("pathname").should("not.contain", "Admin");
+});
+
+// Goes to the languages page under configurations in admin store
+Cypress.Commands.add("goToLanguages", () => {
+  Cypress.log({
+    name: "goToLanguages",
+  });
+  cy.location().then((loc) => {
+    if (!loc.pathname.includes("Language/List")) {
+      cy.get(".sidebar-menu.tree").find("li").contains("Configuration").click();
+    }
+    cy.get(".sidebar-menu.tree")
+      .find("li")
+      .find(".treeview-menu")
+      .find("li")
+      .contains("Languages")
+      .click();
+    cy.wait(500);
+  });
+});
+
+// Goes to a product page in admin store. Must provide name of product
+Cypress.Commands.add("goToAdminProduct", (productName) => {
+  Cypress.log({
+    name: "goToAdminProduct",
+    message: productName,
+    consoleProps: () => {
+      return {
+        "Product Name": productName,
+      };
+    },
+  });
+  // Make sure product name is valid
+  expect(productName).to.not.be.null;
+  expect(productName).to.not.be.undefined;
+  assert.isString(productName);
+  cy.location("pathname").then((loc) => {
+    if (!loc.includes("Product/List")) {
+      if (!loc.includes("Admin")) {
+        cy.goToAdmin();
+      }
+      cy.get(".sidebar-menu.tree").find("li").contains("Catalog").click();
+    }
+    cy.get(".sidebar-menu.tree")
+      .find("li")
+      .find(".treeview-menu")
+      .find("li")
+      .contains("Products")
+      .click();
+    cy.wait(500);
+    cy.get("#products-grid")
+      .find("tbody")
+      .find("tr")
+      .then(($rows) => {
+        const row = $rows.filter((index, item) => {
+          return item.cells[2].innerText === productName;
+        });
+        cy.wrap(row[0]).find(".button-column").click();
+        cy.wait(500);
+      });
+  });
+});
+
 // COMMANDS FOR TESTS THAT ARE THE SAME BETWEEN REGISTERED USERS AND GUESTS
 
 // Test going to a category
 Cypress.Commands.add("testCategory", () => {
-  cy.get(".top-menu.notmobile").then(($el) => {
-    if ($el.css("display") === "none") {
-      cy.get(".menu-toggle").click();
-      cy.wait(500);
-      cy.get(".top-menu.mobile")
-        .find("li")
-        .contains(Cypress.config("defaultCategory"))
-        .as("category");
-    } else {
-      cy.wrap($el)
-        .find("li")
-        .contains(Cypress.config("defaultCategory"))
-        .as("category");
-    }
-    cy.get("@category").should("be.visible").and("have.attr", "href");
-    cy.get("@category").then(($li) => {
-      const href = $li.attr("href");
-      const correctLocation = href?.includes(
-        `/en/${Cypress.config("defaultCategoryUrl")}`
-      );
-      cy.expect(correctLocation).to.equal(true);
-      cy.wrap($li).click();
-    });
-    cy.wait(500);
-    cy.location("pathname").should(
-      "eq",
+  cy.getVisibleMenu()
+    .find("li")
+    .contains(Cypress.config("defaultCategory"))
+    .as("category");
+  cy.get("@category").should("be.visible").and("have.attr", "href");
+  cy.get("@category").then(($li) => {
+    const href = $li.attr("href");
+    const correctLocation = href?.includes(
       `/en/${Cypress.config("defaultCategoryUrl")}`
     );
-    cy.get(".page.category-page").should(
-      "contain.text",
-      Cypress.config("defaultCategory")
-    );
+    cy.expect(correctLocation).to.equal(true);
+    cy.wrap($li).click();
   });
+  cy.wait(500);
+  cy.location("pathname").should(
+    "eq",
+    `/en/${Cypress.config("defaultCategoryUrl")}`
+  );
+  cy.get(".page.category-page").should(
+    "contain.text",
+    Cypress.config("defaultCategory")
+  );
 });
 
 // Test going to product via Image
@@ -332,4 +431,335 @@ Cypress.Commands.add("testAddToCart", () => {
           });
       });
   });
+});
+
+// COMMANDS FOR LANGUAGE FUNCTIONALITY TESTS
+/**
+ * Swaps the language order
+ * Takes two language names and swaps the language at each index
+ * Assumes you're already on the languages page
+ */
+Cypress.Commands.add("swapOrder", (langOne, langTwo) => {
+  Cypress.log({
+    name: "swapOrder",
+    message: `${langOne}, ${langTwo}`,
+    consoleProps: () => {
+      return {
+        "First language": langOne,
+        "Second language": langTwo,
+      };
+    },
+  });
+  // Make sure indices are valid
+  expect(langOne).to.not.be.null;
+  expect(langTwo).to.not.be.null;
+  expect(langOne).to.not.be.undefined;
+  expect(langTwo).to.not.be.undefined;
+  assert.isString(langOne);
+  assert.isString(langTwo);
+  expect(langOne).to.not.eq(langTwo);
+  // Swap the numbers
+  cy.get("#languages-grid")
+    .find("tbody")
+    .find("tr")
+    .then(($rows) => {
+      const rowOne = $rows.filter((index, item) => {
+        return item.cells[0].innerText === langOne;
+      });
+      const indexOne = rowOne[0].rowIndex - 1;
+      const rowTwo = $rows.filter((index, item) => {
+        return item.cells[0].innerText === langTwo;
+      });
+      const displayOrderOne = rowOne[0].cells[3].innerText;
+      const displayOrderTwo = rowTwo[0].cells[3].innerText;
+      cy.get("#languages-grid")
+        .find("tbody")
+        .find("tr")
+        .eq(indexOne)
+        .find("td")
+        .contains("Edit")
+        .click();
+      cy.get("#DisplayOrder").siblings(".k-input").clear();
+      cy.get("#DisplayOrder").type(displayOrderTwo);
+      cy.get('button[name="save"]').click();
+      cy.wait(500);
+      cy.get("#languages-grid")
+        .find("tbody")
+        .find("tr")
+        .then(($newRows) => {
+          const rowTwoUpdate = $newRows.filter((index, item) => {
+            return item.cells[0].innerText === langTwo;
+          });
+          const indexTwo = rowTwoUpdate[0].rowIndex - 1;
+          cy.get("#languages-grid")
+            .find("tbody")
+            .find("tr")
+            .eq(indexTwo)
+            .find("td")
+            .contains("Edit")
+            .click();
+          cy.get("#DisplayOrder").siblings(".k-input").clear();
+          cy.get("#DisplayOrder").type(displayOrderOne);
+          cy.get('button[name="save"]').click();
+          cy.wait(500);
+        });
+    });
+});
+
+/**
+ * Compares the table when the language order is updated
+ * Expects the language to be at the matching index.
+ * langOne - first language name to compare. indexOne - the index you expect that language to be at
+ * list - the original list before the update, to compare the non-target items
+ */
+Cypress.Commands.add(
+  "compareTableOrder",
+  (langOne, indexOne, langTwo, indexTwo, list) => {
+    Cypress.log({
+      name: "compareTableOrder",
+    });
+    cy.get("#languages-grid")
+      .find("tbody")
+      .find("tr")
+      .each(($item, index, $newList) => {
+        if (index === indexOne) {
+          cy.wrap($item[0].cells[0].innerText)
+            .should("eq", langOne)
+            .and("not.eq", langTwo);
+        } else if (index === indexTwo) {
+          cy.wrap($item[0].cells[0].innerText)
+            .should("eq", langTwo)
+            .and("not.eq", langOne);
+        } else {
+          // NOTE: not sure if this is a good idea when the number of languages gets very large.
+          // Included it to make sure no other enteries in the list were affected by the order change
+          cy.wrap($item[0].cells[0].innerText).should(
+            "eq",
+            list[index].cells[0].innerText
+          );
+        }
+      });
+  }
+);
+
+/**
+ * Compares the dropdown when the language order is updated
+ * Expects the language to be at the matching index.
+ * langOne - first language name to compare. indexOne - the index you expect that language to be at
+ * list - the original list before the update, to compare the non-target items
+ */
+Cypress.Commands.add(
+  "compareDropdownOrder",
+  (langOne, indexOne, langTwo, indexTwo, list) => {
+    Cypress.log({
+      name: "compareDropdownOrder",
+    });
+    cy.get("#customerlanguage")
+      .find("option")
+      .each(($item, index, $newList) => {
+        if (index === indexOne) {
+          cy.wrap($item[0].innerText)
+            .should("eq", langOne)
+            .and("not.eq", langTwo);
+        } else if (index === indexTwo) {
+          cy.wrap($item[0].innerText)
+            .should("eq", langTwo)
+            .and("not.eq", langOne);
+        } else {
+          // NOTE: not sure if this is a good idea when the number of languages gets very large.
+          // Included it to make sure no other enteries in the list were affected by the order change
+          cy.wrap($item[0].innerText).should("eq", list[index].innerText);
+        }
+      });
+  }
+);
+
+/**
+ * Unpublishes a random language.
+ * Can get the language name calling cy.get('@languageName') after calling this command
+ * Can provide a specific index to unpublish a specific language
+ */
+Cypress.Commands.add("unpublishLanguage", (removalIndex) => {
+  Cypress.log({
+    name: "unpublishLanguage",
+  });
+  // Make sure that removalIndex is a valid argument if included
+  if (removalIndex) {
+    assert.isNotNaN(removalIndex);
+    assert.isNumber(removalIndex);
+  }
+  // Broken up into functions that we then wrap
+  // In order to be able to grab the language name
+  function changePublicity(eligibleRows, index) {
+    cy.wrap(eligibleRows[index])
+      .find("td")
+      .then(($cells) => {
+        // Grab the language name and unpublish it
+        const language = $cells[0].innerText;
+        cy.wrap($cells[5]).click();
+        cy.wait(500);
+        cy.get("#Published").should("have.attr", "checked");
+        cy.get("#Published").uncheck();
+        cy.get('button[name="save"]').click();
+        cy.wait(500);
+        cy.wrap(language).as("languageName");
+      });
+  }
+  function accessLanguages() {
+    cy.location().then((loc) => {
+      if (!loc.pathname.includes("Admin")) {
+        cy.goToAdmin();
+      }
+      cy.goToLanguages();
+      cy.wait(1000);
+      // Find published rows
+      cy.get("#languages-grid")
+        .find("tbody")
+        .find("tr")
+        .then(($el) => {
+          if (removalIndex) {
+            cy.wrap(changePublicity($el, removalIndex));
+          } else {
+            // returns the rows that are published - looks for the checkmark
+            const eligibleRows = $el.filter((index, item) => {
+              return item.innerHTML.includes("true-icon");
+            });
+            // It's assumed there will always be one published language
+            expect(eligibleRows.length).to.be.gte(1);
+            // Find a random row to unpublish
+            const index = Cypress._.random(0, eligibleRows.length - 1);
+            cy.wrap(changePublicity(eligibleRows, index));
+          }
+        });
+    });
+  }
+  cy.wrap(accessLanguages());
+});
+
+// Republish a language. Needs the language name
+Cypress.Commands.add("publishLanguage", (language) => {
+  Cypress.log({
+    name: "publishLanguage",
+    message: `${language}`,
+    consoleProps: () => {
+      return {
+        "Language Name": language,
+      };
+    },
+  });
+  // Make sure language name is valid
+  expect(language).to.not.be.null;
+  expect(language).to.not.be.undefined;
+  assert.isString(language);
+
+  cy.location().then((loc) => {
+    if (!loc.pathname.includes("Admin")) {
+      cy.goToAdmin();
+    }
+    cy.goToLanguages();
+    cy.wait(1000);
+    cy.get("#languages-grid")
+      .find("tbody")
+      .find("tr")
+      .then(($el) => {
+        const relevantRow = $el.filter((index, item) => {
+          return item.innerText.includes(language);
+        });
+
+        cy.wrap(relevantRow).find("td").contains("Edit").click();
+        cy.get("#Published").should("not.have.attr", "checked");
+        cy.get("#Published").check();
+        cy.get('button[name="save"]').click();
+        cy.wait(500);
+      });
+  });
+});
+
+// Gets the seo codes for 4 languages
+Cypress.Commands.add("getSeoCodes", () => {
+  Cypress.log({
+    name: "getSeoCodes",
+  });
+  cy.goToAdmin();
+  cy.goToLanguages();
+  const codes = [];
+  function getToCode(row) {
+    cy.wrap(row).find("td").contains("Edit").click();
+    cy.get("#UniqueSeoCode").then(($el) => {
+      codes.push($el.val());
+      cy.get(".content-header")
+        .find(".pull-left")
+        .find("small")
+        .find("a")
+        .click();
+      cy.wait(500);
+    });
+  }
+  cy.get("#languages-grid")
+    .find("tbody")
+    .find("tr")
+    .then(($rows) => {
+      const english = $rows.filter((index, item) => {
+        return item.cells[0].innerText === "English";
+      });
+      getToCode(english);
+      cy.get("#languages-grid")
+        .find("tbody")
+        .find("tr")
+        .then(($rows2) => {
+          const aussie = $rows2.filter((index, item) => {
+            return item.cells[0].innerText === "English, Australia";
+          });
+          getToCode(aussie);
+          cy.get("#languages-grid")
+            .find("tbody")
+            .find("tr")
+            .then(($rows3) => {
+              const hindi = $rows3.filter((index, item) => {
+                return item.cells[0].innerText === "Hindi";
+              });
+              getToCode(hindi);
+              cy.get("#languages-grid")
+                .find("tbody")
+                .find("tr")
+                .then(($rows4) => {
+                  const german = $rows4.filter((index, item) => {
+                    return item.cells[0].innerText === "Deutsch";
+                  });
+                  getToCode(german);
+                  cy.wrap(codes).as("seoCodes");
+                });
+            });
+        });
+    });
+});
+
+/**
+ * Change the default currency of a language
+ * Mandatory to pass in a language name.
+ * Currency can be left blank to select the currency as ---
+ */
+Cypress.Commands.add("changeDefaultCurrency", (language, currency) => {
+  Cypress.log({
+    name: "changeDefaultCurrency",
+  });
+  cy.goToAdmin();
+  cy.goToLanguages();
+  cy.get("#languages-grid")
+    .find("tbody")
+    .find("tr")
+    .then(($rows) => {
+      const row = $rows.filter((index, item) => {
+        return item.cells[0].innerText === language;
+      });
+      cy.wrap(row).find("td").contains("Edit").click();
+      const value = !currency || currency === "default" ? 0 : currency;
+      cy.get("#DefaultCurrencyId").then(($select) => {
+        const orgVal = $select.val();
+        cy.get("#DefaultCurrencyId").select(value);
+        cy.get('button[name="save"]').click();
+        cy.wait(500);
+        cy.wrap(orgVal).as("originalValue");
+      });
+    });
 });
