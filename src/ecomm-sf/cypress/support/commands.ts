@@ -349,7 +349,7 @@ Cypress.Commands.add("addNewCampaign", (name, subject, body, date, role) => {
 });
 
 // Send a test email for a specific campaign. Assumes you're on the campaign list page
-Cypress.Commands.add("sendCampaignTest", (campaignName, testEmail) => {
+Cypress.Commands.add("sendCampaignTest", (campaignName) => {
   Cypress.log({
     name: "sendCampaignTest",
     message: campaignName,
@@ -361,11 +361,8 @@ Cypress.Commands.add("sendCampaignTest", (campaignName, testEmail) => {
   });
   // Make sure campaign name and email are valid
   expect(campaignName).to.not.be.null;
-  expect(testEmail).to.not.be.null;
   expect(campaignName).to.not.be.undefined;
-  expect(testEmail).to.not.be.undefined;
   assert.isString(campaignName);
-  assert.isString(testEmail);
   cy.get("#campaigns-grid")
     .find("tbody")
     .find("tr")
@@ -375,7 +372,7 @@ Cypress.Commands.add("sendCampaignTest", (campaignName, testEmail) => {
       });
       cy.wrap(row).find("td").contains("Edit").click();
       cy.wait(500);
-      cy.get("#TestEmail").type(testEmail);
+      cy.get("#TestEmail").type(Cypress.config("campaignReceiver"));
       cy.get("button[name=send-test-email").click();
     });
 });

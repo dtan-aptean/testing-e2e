@@ -36,7 +36,7 @@ describe("Ecommerce", function () {
         `${twoDaysAhead.toLocaleDateString()} 12:00 AM`,
         "All"
       );
-      cy.sendCampaignTest(campaignName, Cypress.config("campaignReceiver"));
+      cy.sendCampaignTest(campaignName);
       cy.wait(500);
       cy.get(".alert").should(
         "contain.text",
