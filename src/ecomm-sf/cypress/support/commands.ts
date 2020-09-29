@@ -286,8 +286,10 @@ Cypress.Commands.add("goToAdminProduct", (productName) => {
       if (!loc.includes("Admin")) {
         cy.goToAdmin();
       }
+      cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
       cy.get(".sidebar-menu.tree").find("li").contains("Catalog").click();
     }
+    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
     cy.get(".sidebar-menu.tree")
       .find("li")
       .find(".treeview-menu")
@@ -317,8 +319,10 @@ Cypress.Commands.add("goToCampaigns", () => {
       if (!loc.includes("Admin")) {
         cy.goToAdmin();
       }
+      cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
       cy.get(".sidebar-menu.tree").find("li").contains("Promotions").click();
     }
+    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
     cy.get(".sidebar-menu.tree")
       .find("li")
       .find(".treeview-menu")
