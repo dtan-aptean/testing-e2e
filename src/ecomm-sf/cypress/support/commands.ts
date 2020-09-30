@@ -282,14 +282,14 @@ Cypress.Commands.add("goToAdminProduct", (productName) => {
   expect(productName).to.not.be.undefined;
   assert.isString(productName);
   cy.location("pathname").then((loc) => {
+    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
     if (!loc.includes("Product/List")) {
       if (!loc.includes("Admin")) {
         cy.goToAdmin();
+        cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
       }
-      cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
       cy.get(".sidebar-menu.tree").find("li").contains("Catalog").click();
     }
-    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
     cy.get(".sidebar-menu.tree")
       .find("li")
       .find(".treeview-menu")
@@ -315,14 +315,14 @@ Cypress.Commands.add("goToCampaigns", () => {
   Cypress.log({ name: "goToCampaigns" });
 
   cy.location("pathname").then((loc) => {
+    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
     if (!loc.includes("Campaign/List")) {
       if (!loc.includes("Admin")) {
         cy.goToAdmin();
+        cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
       }
-      cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
       cy.get(".sidebar-menu.tree").find("li").contains("Promotions").click();
     }
-    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
     cy.get(".sidebar-menu.tree")
       .find("li")
       .find(".treeview-menu")
