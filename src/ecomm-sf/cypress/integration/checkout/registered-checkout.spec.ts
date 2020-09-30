@@ -154,6 +154,7 @@ describe("Ecommerce", function () {
           cy.get(".earn-reward-points")
             .find("td")
             .eq(1)
+            .find(".value-summary")
             .should("have.text", `${points} points`);
           cy.clearCart();
         });

@@ -251,6 +251,7 @@ Cypress.Commands.add("goToLanguages", () => {
   Cypress.log({
     name: "goToLanguages",
   });
+  cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
   cy.location().then((loc) => {
     if (!loc.pathname.includes("Language/List")) {
       cy.get(".sidebar-menu.tree").find("li").contains("Configuration").click();
@@ -281,9 +282,11 @@ Cypress.Commands.add("goToAdminProduct", (productName) => {
   expect(productName).to.not.be.undefined;
   assert.isString(productName);
   cy.location("pathname").then((loc) => {
+    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
     if (!loc.includes("Product/List")) {
       if (!loc.includes("Admin")) {
         cy.goToAdmin();
+        cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
       }
       cy.get(".sidebar-menu.tree").find("li").contains("Catalog").click();
     }
@@ -305,6 +308,107 @@ Cypress.Commands.add("goToAdminProduct", (productName) => {
         cy.wait(500);
       });
   });
+});
+
+// Goes to campaigns page. Can be done from public or admin
+Cypress.Commands.add("goToCampaigns", () => {
+  Cypress.log({ name: "goToCampaigns" });
+
+  cy.location("pathname").then((loc) => {
+    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
+    if (!loc.includes("Campaign/List")) {
+      if (!loc.includes("Admin")) {
+        cy.goToAdmin();
+        cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
+      }
+      cy.get(".sidebar-menu.tree").find("li").contains("Promotions").click();
+    }
+    cy.get(".sidebar-menu.tree")
+      .find("li")
+      .find(".treeview-menu")
+      .find("li")
+      .contains("Campaigns")
+      .click();
+    cy.wait(500);
+  });
+});
+
+// Adds a new campaign. Assumes you're on the campaign list page
+Cypress.Commands.add("addNewCampaign", (name, subject, body, date, role) => {
+  Cypress.log({ name: "addNewCampaign" });
+
+  cy.get(".content-header").find("a").contains("Add new").click();
+  // Fill in content
+  cy.get("#Name").type(name);
+  cy.get("#Subject").type(subject);
+  cy.get("#Body").type(body);
+  cy.get("#DontSendBeforeDate").type(date);
+  cy.get("#CustomerRoleId").select(role);
+  cy.get("button[name=save]").click();
+  cy.wait(500);
+});
+
+// Send a test email for a specific campaign. Assumes you're on the campaign list page
+Cypress.Commands.add("sendCampaignTest", (campaignName) => {
+  Cypress.log({
+    name: "sendCampaignTest",
+    message: campaignName,
+    consoleProps: () => {
+      return {
+        "Campaign name": campaignName,
+      };
+    },
+  });
+  // Make sure campaign name and email are valid
+  expect(campaignName).to.not.be.null;
+  expect(campaignName).to.not.be.undefined;
+  assert.isString(campaignName);
+  cy.get("#campaigns-grid")
+    .find("tbody")
+    .find("tr")
+    .then(($rows) => {
+      const row = $rows.filter((index, item) => {
+        return item.cells[0].innerText === campaignName;
+      });
+      cy.wrap(row).find("td").contains("Edit").click();
+      cy.wait(500);
+      cy.get("#TestEmail").type(Cypress.config("campaignReceiver"));
+      cy.get("button[name=send-test-email").click();
+    });
+});
+
+// Delete a specific campaign
+Cypress.Commands.add("deleteCampaign", (campaignName) => {
+  Cypress.log({
+    name: "deleteCampaign",
+    message: campaignName,
+    consoleProps: () => {
+      return {
+        "Campaign name": campaignName,
+      };
+    },
+  });
+  // Make sure campaign name is valid
+  expect(campaignName).to.not.be.null;
+  expect(campaignName).to.not.be.undefined;
+  assert.isString(campaignName);
+  cy.get("#campaigns-grid")
+    .find("tbody")
+    .find("tr")
+    .then(($rows) => {
+      const row = $rows.filter((index, item) => {
+        return item.cells[0].innerText === campaignName;
+      });
+      cy.wrap(row).find("td").contains("Edit").click();
+      cy.wait(500);
+      cy.get("#campaign-delete").click();
+      cy.wait(200);
+      cy.get("#campaignmodel-Delete-delete-confirmation")
+        .find(".modal-footer")
+        .find("button")
+        .contains("Delete")
+        .click();
+    });
 });
 
 // COMMANDS FOR TESTS THAT ARE THE SAME BETWEEN REGISTERED USERS AND GUESTS

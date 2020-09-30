@@ -5,6 +5,7 @@
   "defaultCategory": "Cypress Trees",
   "defaultCategoryUrl": "cypress",
   "defaultLanguage": "English",
+  "campaignReceiver": "#{EMAIL_ADDRESS}#",
   "env": {},
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
