@@ -832,7 +832,10 @@ Cypress.Commands.add("unpublishLanguage", (removalIndex) => {
           } else {
             // returns the rows that are published - looks for the checkmark
             const eligibleRows = $el.filter((index, item) => {
-              return item.innerHTML.includes("true-icon");
+              return (
+                item.innerHTML.includes("true-icon") &&
+                item.cells[0].innerText !== "English"
+              );
             });
             // It's assumed there will always be one published language
             expect(eligibleRows.length).to.be.gte(1);
