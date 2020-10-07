@@ -105,7 +105,7 @@ Cypress.Commands.add("goToCart", () => {
   Cypress.log({
     name: "goToCart",
   });
-  cy.get(".header-links").find(".ico-cart").click();
+  cy.get(".header-links").find(".ico-cart").click({ force: true });
   cy.wait(500);
 });
 
@@ -115,6 +115,7 @@ Cypress.Commands.add("clearCart", () => {
     name: "clearCart",
   });
   cy.goToCart();
+  cy.wait(500);
   cy.get(".order-summary-content").then(($div) => {
     if (!$div[0].innerHTML.includes("no-data")) {
       cy.get(".coupon-box").then(($box) => {
@@ -241,7 +242,7 @@ Cypress.Commands.add("goToAdmin", () => {
   cy.on("uncaught:exception", (err, runnable) => {
     return false;
   });
-  cy.get(".administration").click();
+  cy.get(".administration").click({ force: true });
   cy.wait(1000);
   cy.location("pathname").should("eq", "/Admin");
 });
@@ -432,14 +433,17 @@ Cypress.Commands.add("goToDiscounts", () => {
         cy.goToAdmin();
         cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("Promotions").click();
+      cy.get(".sidebar-menu.tree")
+        .find("li")
+        .contains("Promotions")
+        .click({ force: true });
     }
     cy.get(".sidebar-menu.tree")
       .find("li")
       .find(".treeview-menu")
       .find("li")
       .contains("Discounts")
-      .click();
+      .click({ force: true });
     cy.wait(500);
   });
 });

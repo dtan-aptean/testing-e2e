@@ -1,6 +1,14 @@
 /// <reference types="cypress" />
+// Log of all created discounts; discount name pushed upon creation. Used to clear them
 const createdDiscounts: string[] = [];
-
+// Returns the discount as a numerical percentage or a number
+const parseDiscountAmount = (discount) => {
+  if (discount.usePercentage) {
+    return parseFloat(`0.${discount.amount}`);
+  }
+  return parseFloat(discount.amount);
+};
+// Searches a single page of the discounts table for the provided name and returns the row if found
 const runFilter = (name: string) => {
   return cy
     .get("#discounts-grid")
@@ -17,7 +25,7 @@ const runFilter = (name: string) => {
       }
     });
 };
-
+// Calls runFilter and pages through the pagination if runFilter doesn't find it
 const findInTable = (name: string) => {
   return cy
     .get("ul.pagination")
@@ -32,22 +40,24 @@ const findInTable = (name: string) => {
             if ($li.length - 2 > 1) {
               cy.get("#discounts-grid_next").find("a").click();
               cy.wait(1000);
+            } else {
+              return null;
             }
           }
         });
       }
     });
 };
-
+// Searches the table and clicks edit if it finds the discount
 const editDiscount = (discountName: string) => {
   findInTable(discountName).then((row) => {
     if (row) {
-      cy.wrap(row).find("td").contains("Edit").click();
+      cy.wrap(row).find("td").contains("Edit").click({ force: true });
       cy.wait(500);
     }
   });
 };
-
+// Calls editDiscount and if it makes it to the edit page, deletes the discount
 const deleteDiscount = (discountName: string) => {
   editDiscount(discountName);
   cy.location("pathname").then((loc) => {
@@ -65,7 +75,7 @@ const deleteDiscount = (discountName: string) => {
     }
   });
 };
-
+// While editing a discount, adds a product or category. Pass in name of product/category, and "product"/"category"
 const addProductOrCategory = (
   prodCatName: string,
   productOrCategory: string
@@ -113,31 +123,57 @@ const addProductOrCategory = (
     });
   });
 };
-
+// Returns the original price of a discounted product while on product page.
+const getOriginalPrice = () => {
+  return cy.get(".prices").then(($div) => {
+    var cost = $div.find(".product-price > span");
+    if ($div[0].innerHTML.includes("discounted-price")) {
+      cost = $div.find(".non-discounted-price > span");
+    }
+    const price = parseFloat(cost.text().replace("$", ""));
+    return price;
+  });
+};
+// Clears the cart, then adds 3 products to cart, wrapping their original prices as productPrices. Goes to cart after
+const addProductsToCart = () => {
+  cy.goToPublic();
+  cy.clearCart();
+  cy.goToProduct("Ibanez", "Guitars");
+  getOriginalPrice().then((guitarPrice) => {
+    cy.get(".add-to-cart-button").click();
+    cy.goToProduct("Bald Cypress", "Cypress Trees");
+    getOriginalPrice().then((baldPrice) => {
+      cy.get(".add-to-cart-button").click();
+      cy.goToProduct("Montezuma Cypress", "Cypress Trees");
+      getOriginalPrice().then((montePrice) => {
+        cy.get(".add-to-cart-button").click();
+        cy.wrap({ guitarPrice, baldPrice, montePrice }).as("productPrices");
+        cy.goToCart();
+      });
+    });
+  });
+};
+// Creates a new discount and adds 3 products to the cart. Gets prices and discount value and wraps them as returnValue
 const createDiscountAndAddProduct = (discount) => {
   cy.goToDiscounts();
   cy.addNewDiscount(discount);
   createdDiscounts.push(discount.name);
-  cy.goToPublic();
-  cy.goToProduct("Ibanez", "Guitars");
-  cy.get(".product-price").then(($div) => {
-    const guitarPrice = parseFloat($div.text().replace("$", ""));
-    cy.get(".add-to-cart-button").click();
-    cy.goToProduct("Bald Cypress", "Cypress Trees");
-    cy.get(".product-price").then(($el) => {
-      const treePrice = parseFloat($el.text().replace("$", ""));
-      var valueToFloat = discount.amount;
-      if (discount.usePercentage) {
-        valueToFloat = `0.${valueToFloat}`;
-      }
-      const value = parseFloat(valueToFloat);
-      cy.get(".add-to-cart-button").click();
-      const returnValue = { guitarPrice, treePrice, value };
-      cy.wrap(returnValue).as("returnValue");
-    });
+  addProductsToCart();
+  cy.get("@productPrices").then((prices) => {
+    const { guitarPrice, baldPrice, montePrice } = prices;
+    const value = parseDiscountAmount(discount);
+    const returnValue = { guitarPrice, baldPrice, montePrice, value };
+    cy.wrap(returnValue).as("returnValue");
   });
 };
-
+// Creates a new discount and then goes to the edit page. For when you need to add products/categories
+const createDiscountAndEdit = (discount) => {
+  cy.goToDiscounts();
+  cy.addNewDiscount(discount);
+  createdDiscounts.push(discount.name);
+  editDiscount(discount.name);
+};
+// Verifies the subtotal or total of the cart when a single total/subtotal discount is applied.
 const verifyCost = (
   discount: number,
   itemCosts: number[],
@@ -172,7 +208,7 @@ const verifyCost = (
     .find(".value-summary")
     .should("have.text", currencyFormat.format(expectedTotal));
 };
-
+// Verifies the subtotal or total of the cart. To be used when a total/subtotal discount shouldn't apply, such as expiration
 const verifyFailure = (
   discount: number,
   itemCosts: number[],
@@ -206,7 +242,227 @@ const verifyFailure = (
     .should("not.contain.html", `${discountLocation}`)
     .and("not.contain.text", `-${currencyFormat.format(expectedDiscount)}`);
 };
-
+// Checks a product page for the discount display. Use expected to control whether it should be there or not
+const checkProductForDiscount = (
+  expected: boolean,
+  discount?: number,
+  percent?: boolean
+) => {
+  const shouldContain = expected ? "contain.html" : "not.contain.html";
+  cy.get(".prices")
+    .should(shouldContain, "non-discounted-price")
+    .and(shouldContain, "discounted-price");
+  if (expected && discount) {
+    cy.get(".non-discounted-price")
+      .find("span")
+      .then(($span) => {
+        const origPrice = parseFloat($span.text().replace("$", ""));
+        const discountAmount = percent ? origPrice * discount : discount;
+        const discountPrice = origPrice - discountAmount;
+        cy.get(".discounted-price").should(
+          "have.text",
+          `Your price: ${discountPrice.toLocaleString("en-US", {
+            currency: "USD",
+            style: "currency",
+          })}`
+        );
+      });
+  }
+};
+// Checks a category page for the discount display. Checks all products on page. Use expected to control whether it should be there or not
+const checkCategoryForDiscounts = (
+  expected: boolean,
+  discount?: number,
+  percent?: boolean
+) => {
+  cy.get(".item-grid")
+    .find(".product-item")
+    .each(($div, index, $list) => {
+      const shouldContain = expected ? "contain.html" : "not.contain.html";
+      cy.wrap($div).find(".prices").should(shouldContain, "old-price");
+      if (expected && discount) {
+        cy.wrap($div).find(".prices").should("contain.html", "old-price");
+        cy.wrap($div)
+          .find(".old-price")
+          .then(($el) => {
+            const cardPrice = parseFloat($el.text().replace("$", ""));
+            const discountAmount = percent ? cardPrice * discount : discount;
+            const discountedCardPrice = cardPrice - discountAmount;
+            cy.wrap($div)
+              .find(".actual-price")
+              .should(
+                "have.text",
+                discountedCardPrice.toLocaleString("en-US", {
+                  currency: "USD",
+                  style: "currency",
+                })
+              );
+          });
+      }
+    });
+};
+// Checks a category page for a discount displaying on a specific product. Checks that other products do not have the discount
+const checkProductInCategory = (
+  productName: string,
+  discount: number,
+  percent: boolean
+) => {
+  cy.get(".item-grid")
+    .find(".product-item")
+    .each(($div, index, $list) => {
+      if (!$div[0].innerText.includes(productName)) {
+        cy.wrap($div).find(".prices").should("not.contain.html", "old-price");
+      }
+    })
+    .then(($list) => {
+      cy.wrap($list)
+        .filter((index, item) => {
+          return item.innerText.includes(productName);
+        })
+        .as("targetProduct");
+      cy.get("@targetProduct")
+        .find(".prices")
+        .should("contain.html", "old-price");
+      cy.get("@targetProduct")
+        .find(".old-price")
+        .then(($el) => {
+          const cardPrice = parseFloat($el.text().replace("$", ""));
+          const discountAmount = percent ? cardPrice * discount : discount;
+          const discountedCardPrice = cardPrice - discountAmount;
+          cy.get("@targetProduct")
+            .find(".actual-price")
+            .should(
+              "have.text",
+              discountedCardPrice.toLocaleString("en-US", {
+                currency: "USD",
+                style: "currency",
+              })
+            );
+        });
+    });
+};
+// Checks the unit price of a row in the cart. Should be called from within the row.
+const checkUnitPrice = (price: number) => {
+  cy.get(".product-unit-price").should(
+    "have.text",
+    price.toLocaleString("en-US", {
+      currency: "USD",
+      style: "currency",
+    })
+  );
+};
+// Checks the subtotal and discount presence of a row in the cart. Should be called from within the row. Returns the subtotal
+const checkUnitSubtotal = (
+  price: number,
+  discount: number,
+  fullPrice: boolean
+) => {
+  return cy
+    .get(".qty-input")
+    .invoke("val")
+    .then((value) => {
+      const contain = fullPrice ? "not.contain.html" : "contain.html";
+      const qty = parseInt(value);
+      cy.get(".subtotal").should(contain, "discount");
+      if (fullPrice) {
+        cy.get(".subtotal").should("not.contain.text", "You save");
+        const subtotal = price * qty;
+        cy.get(".product-subtotal").should(
+          "have.text",
+          subtotal.toLocaleString("en-US", {
+            currency: "USD",
+            style: "currency",
+          })
+        );
+        return cy.wrap(subtotal);
+      } else {
+        const savings = discount * qty;
+        cy.get(".discount").should(
+          "have.text",
+          `You save: ${savings.toLocaleString("en-US", {
+            currency: "USD",
+            style: "currency",
+          })}`
+        );
+        const adjustedSubtotal = price * qty - savings;
+        cy.get(".product-subtotal").should(
+          "have.text",
+          adjustedSubtotal.toLocaleString("en-US", {
+            currency: "USD",
+            style: "currency",
+          })
+        );
+        return cy.wrap(adjustedSubtotal);
+      }
+    });
+};
+// Calls previous two functions from within the row that's passed in.
+const checkCartRow = (
+  tr: JQuery<HTMLElement>,
+  price: number,
+  discount: number,
+  fullPrice: boolean
+) => {
+  return cy.wrap(tr).within(($tr) => {
+    const unitPrice = fullPrice ? price : price - discount;
+    checkUnitPrice(unitPrice);
+    checkUnitSubtotal(price, discount, fullPrice);
+  });
+};
+// Examines the cart to make sure discounts are applied correctly.
+// Assumes that the Cypress Trees category is discounted unless you pass in a product name
+// Adds up each item after it validates them, then validates the cart subtotal.
+const verifyCartAndSubtotal = (
+  discount: number,
+  prices: number[],
+  options: { productName?: string; percent?: boolean }
+) => {
+  const { productName, percent } = options;
+  const cypressProducts = ["Bald Cypress", "Montezuma Cypress"];
+  cy.get(".cart").find("tbody").find("tr").should("have.length", 3);
+  var cartSubtotal = 0;
+  cy.get(".cart")
+    .find("tbody")
+    .find("tr")
+    .each(($tr, index, list) => {
+      const itemName = $tr.find(".product-name").text();
+      var price = 0;
+      switch (itemName) {
+        case "Ibanez":
+          price = prices[0];
+          break;
+        case "Bald Cypress":
+          price = prices[1];
+          break;
+        case "Montezuma Cypress":
+          price = prices[2];
+          break;
+      }
+      const calcDiscount = percent ? price * discount : discount;
+      var fullPrice = true;
+      if (productName && itemName === productName) {
+        fullPrice = false;
+      } else if (!productName && cypressProducts.includes(itemName)) {
+        fullPrice = false;
+      }
+      checkCartRow($tr, price, calcDiscount, fullPrice).then((itemSubtotal) => {
+        cartSubtotal += itemSubtotal;
+      });
+    })
+    .then(() => {
+      cy.get(".order-subtotal")
+        .find(".value-summary")
+        .should(
+          "have.text",
+          cartSubtotal.toLocaleString("en-US", {
+            currency: "USD",
+            style: "currency",
+          })
+        );
+    });
+};
+// Clears cart and deletes the discount if it's found, then goes to eComm public store home.
+// Called in the beforeEach and the last test
 const resetCartAndDiscount = (discountName: string) => {
   if (discountName.length > 0) {
     cy.clearCart();
@@ -215,7 +471,6 @@ const resetCartAndDiscount = (discountName: string) => {
     cy.visit("/");
   }
 };
-
 // Dates to use for discounts
 const today = new Date();
 const twoDaysAhead = new Date(today.valueOf() + 172800000);
@@ -354,7 +609,7 @@ describe("Ecommerce", function () {
     });
 
     it("Required fields validate when creating a new discount", () => {
-      // TODO: WIP, figure out what else validates
+      // TODO: Double check field validation, seems like only name and amount is needed?
       cy.goToDiscounts();
       cy.get(".content-header").find("a").contains("Add new").click();
       cy.get("button[name=save]").click();
@@ -628,8 +883,8 @@ describe("Ecommerce", function () {
       };
       createDiscountAndAddProduct(percentageDiscount);
       cy.get("@returnValue").then((returnValue) => {
-        const { value, guitarPrice, treePrice } = returnValue;
-        verifyCost(value, [guitarPrice, treePrice], "total");
+        const { value, guitarPrice, baldPrice, montePrice } = returnValue;
+        verifyCost(value, [guitarPrice, baldPrice, montePrice], "total");
       });
     });
 
@@ -646,8 +901,8 @@ describe("Ecommerce", function () {
       };
       createDiscountAndAddProduct(valueDiscount);
       cy.get("@returnValue").then((returnValue) => {
-        const { value, guitarPrice, treePrice } = returnValue;
-        verifyCost(value, [guitarPrice, treePrice], "total");
+        const { value, guitarPrice, baldPrice, montePrice } = returnValue;
+        verifyCost(value, [guitarPrice, baldPrice, montePrice], "total");
       });
     });
 
@@ -666,7 +921,7 @@ describe("Ecommerce", function () {
       };
       createDiscountAndAddProduct(inDateDiscount);
       cy.get("@returnValue").then((returnValue) => {
-        const { value, guitarPrice, treePrice } = returnValue;
+        const { value, guitarPrice, baldPrice, montePrice } = returnValue;
         cy.goToCart();
         cy.get("#discountcouponcode").type(inDateDiscount.code);
         cy.get("#applydiscountcouponcode").click();
@@ -674,7 +929,7 @@ describe("Ecommerce", function () {
           "contain.text",
           "The coupon code was applied"
         );
-        verifyCost(value, [guitarPrice, treePrice], "total");
+        verifyCost(value, [guitarPrice, baldPrice, montePrice], "total");
       });
     });
 
@@ -693,7 +948,7 @@ describe("Ecommerce", function () {
       };
       createDiscountAndAddProduct(expiredDiscount);
       cy.get("@returnValue").then((returnValue) => {
-        const { value, guitarPrice, treePrice } = returnValue;
+        const { value, guitarPrice, baldPrice, montePrice } = returnValue;
         cy.goToCart();
         cy.get("#discountcouponcode").type(expiredDiscount.code);
         cy.get("#applydiscountcouponcode").click();
@@ -701,7 +956,7 @@ describe("Ecommerce", function () {
           "contain.text",
           "Sorry, this offer is expired"
         );
-        verifyFailure(value, [guitarPrice, treePrice], "total");
+        verifyFailure(value, [guitarPrice, baldPrice, montePrice], "total");
       });
     });
 
@@ -718,9 +973,119 @@ describe("Ecommerce", function () {
       };
       createDiscountAndAddProduct(codelessExpiredDiscount);
       cy.get("@returnValue").then((returnValue) => {
-        const { value, guitarPrice, treePrice } = returnValue;
+        const { value, guitarPrice, baldPrice, montePrice } = returnValue;
         cy.goToCart();
-        verifyFailure(value, [guitarPrice, treePrice], "total");
+        verifyFailure(value, [guitarPrice, baldPrice, montePrice], "total");
+      });
+    });
+
+    it("Product discounts display on the product's page", () => {
+      const baldCypressDisplay = {
+        name: "Bald Cypress Display",
+        discountType: "Assigned to products",
+        usePercentage: true,
+        amount: "40",
+        date: {
+          startDate: `${twoDaysBehind.toLocaleDateString()} 12:00 AM`,
+          endDate: `${twoDaysAhead.toLocaleDateString()} 11:59 PM`,
+        },
+        limitation: "Unlimited",
+      };
+      createDiscountAndEdit(baldCypressDisplay);
+      const productName = "Bald Cypress";
+      addProductOrCategory(productName, "product");
+      cy.goToPublic();
+      cy.goToCategory("Guitars");
+      checkCategoryForDiscounts(false);
+      cy.goToCategory("Cypress Trees");
+      const discount = parseDiscountAmount(baldCypressDisplay);
+      checkProductInCategory(productName, discount, true);
+      cy.goToProduct("Bald Cypress", "Cypress Trees");
+      checkProductForDiscount(true, discount, true);
+      cy.goToProduct("Montezuma Cypress", "Cypress Trees");
+      checkProductForDiscount(false);
+      cy.goToProduct("Ibanez", "Guitars");
+      checkProductForDiscount(false);
+    });
+
+    it("Category discounts appear on the category page", () => {
+      const treesDiscount = {
+        name: "Cypress Trees Display",
+        discountType: "Assigned to categories",
+        usePercentage: true,
+        amount: "40",
+        date: {
+          startDate: `${twoDaysBehind.toLocaleDateString()} 12:00 AM`,
+          endDate: `${twoDaysAhead.toLocaleDateString()} 11:59 PM`,
+        },
+        limitation: "Unlimited",
+        maxDiscountQty: "5",
+      };
+      cy.goToDiscounts();
+      createDiscountAndEdit(treesDiscount);
+      addProductOrCategory("Cypress Trees", "category");
+      const discount = parseDiscountAmount(treesDiscount);
+      cy.goToPublic();
+      cy.goToCategory("Guitars");
+      checkCategoryForDiscounts(false);
+      cy.goToProduct("Ibanez", "Guitars");
+      checkProductForDiscount(false);
+      cy.goToCategory("Cypress Trees");
+      checkCategoryForDiscounts(true, discount, true);
+      cy.goToProduct("Bald Cypress", "Cypress Trees");
+      checkProductForDiscount(true, discount, true);
+      cy.goToProduct("Montezuma Cypress", "Cypress Trees");
+      checkProductForDiscount(true, discount, true);
+    });
+
+    it("Product discounts are only applied to the correct product and the cart subtotal is correct", () => {
+      const baldCypressDiscount = {
+        name: "Bald Cypress Discount",
+        discountType: "Assigned to products",
+        usePercentage: true,
+        amount: "30",
+        date: {
+          startDate: `${twoDaysBehind.toLocaleDateString()} 12:00 AM`,
+          endDate: `${twoDaysAhead.toLocaleDateString()} 11:59 PM`,
+        },
+        limitation: "Unlimited",
+        maxDiscountQty: "5",
+      };
+      createDiscountAndEdit(baldCypressDiscount);
+      addProductOrCategory("Bald Cypress", "product");
+      const discount = parseDiscountAmount(baldCypressDiscount);
+      addProductsToCart();
+      cy.get("@productPrices").then((prices) => {
+        verifyCartAndSubtotal(discount, Object.values(prices), {
+          productName: "Bald Cypress",
+          percent: true,
+        });
+      });
+    });
+
+    it("Category discounts are only applied to items in the correct category and the cart subtotal is correct", () => {
+      const cypressTreesDiscount = {
+        name: "Cypress Trees Discount",
+        discountType: "Assigned to categories",
+        usePercentage: true,
+        amount: "30",
+        date: {
+          startDate: `${twoDaysBehind.toLocaleDateString()} 12:00 AM`,
+          endDate: `${twoDaysAhead.toLocaleDateString()} 11:59 PM`,
+        },
+        limitation: "Unlimited",
+        maxDiscountQty: "5",
+      };
+      createDiscountAndEdit(cypressTreesDiscount);
+      addProductOrCategory("Cypress Trees", "category");
+      addProductsToCart();
+      const discount = parseDiscountAmount(cypressTreesDiscount);
+      cy.get("@productPrices").then((prices) => {
+        verifyCartAndSubtotal(discount, Object.values(prices), {
+          percent: true,
+        });
+        // NOTE: needs to be called in the last test. Move this if a test is added!
+        resetCartAndDiscount(cypressTreesDiscount.name);
       });
     });
 
@@ -740,6 +1105,9 @@ describe("Ecommerce", function () {
           // All but the last discount should have been deleted before each test
           // But just in case, we'll run through the array of created discounts and make sure
           createdDiscounts.forEach((discountName) => {
+            // TODO: If a test fails, this won't delete a discount, for some weird cypress reason.
+            // It insists it can't find the ul that it can find if the tests pass.
+            // Haven't managed to find a fix for that, added a failsafe to the last test, but keep working on it.
             deleteDiscount(discountName);
             cy.wait(1000);
           });
