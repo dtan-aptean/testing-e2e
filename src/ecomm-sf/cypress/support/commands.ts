@@ -105,25 +105,36 @@ Cypress.Commands.add("goToCart", () => {
   Cypress.log({
     name: "goToCart",
   });
-  cy.get(".header-links").find(".ico-cart").click();
+  cy.get(".header-links").find(".ico-cart").click({ force: true });
   cy.wait(500);
 });
 
-// Empty the cart
+// Empty the cart and remove applied discounts
 Cypress.Commands.add("clearCart", () => {
   Cypress.log({
     name: "clearCart",
   });
   cy.goToCart();
-  cy.get(".cart > tbody")
-    .find("tr")
-    .each(($tr, $i, $all) => {
-      cy.wrap($tr).find("td").eq(0).find("input").check();
-    })
-    .then(() => {
-      cy.get(".update-cart-button").click();
-      cy.wait(500);
-    });
+  cy.wait(500);
+  cy.get(".order-summary-content").then(($div) => {
+    if (!$div[0].innerHTML.includes("no-data")) {
+      cy.get(".coupon-box").then(($box) => {
+        if ($box[0].innerHTML.includes("remove-discount-button")) {
+          cy.get(".remove-discount-button").click();
+          cy.wait(200);
+        }
+        cy.get(".cart > tbody")
+          .find("tr")
+          .each(($tr, $i, $all) => {
+            cy.wrap($tr).find("td").eq(0).find("input").check();
+          })
+          .then(() => {
+            cy.get(".update-cart-button").click();
+            cy.wait(500);
+          });
+      });
+    }
+  });
 });
 
 // Get the visible top-menu. Cypress may display the mobile or desktop top-menu depending on screen size.
@@ -231,7 +242,7 @@ Cypress.Commands.add("goToAdmin", () => {
   cy.on("uncaught:exception", (err, runnable) => {
     return false;
   });
-  cy.get(".administration").click();
+  cy.get(".administration").click({ force: true });
   cy.wait(1000);
   cy.location("pathname").should("eq", "/Admin");
 });
@@ -409,6 +420,105 @@ Cypress.Commands.add("deleteCampaign", (campaignName) => {
         .contains("Delete")
         .click();
     });
+});
+
+// Goes to discounts page. Can be done from public or admin
+Cypress.Commands.add("goToDiscounts", () => {
+  Cypress.log({ name: "goToDiscounts" });
+
+  cy.location("pathname").then((loc) => {
+    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
+    if (!loc.includes("Discount/List")) {
+      if (!loc.includes("Admin")) {
+        cy.goToAdmin();
+        cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
+      }
+      cy.get(".sidebar-menu.tree")
+        .find("li")
+        .contains("Promotions")
+        .click({ force: true });
+    }
+    cy.get(".sidebar-menu.tree")
+      .find("li")
+      .find(".treeview-menu")
+      .find("li")
+      .contains("Discounts")
+      .click({ force: true });
+    cy.wait(500);
+  });
+});
+
+/** Adds a new discount with given information
+ * options = {
+ *  name: string,
+ *  discountType: string,
+ *  applySubcategories: boolean || undefined,
+ *  usePercentage: boolean || undefined,
+ *  amount: string,
+ *  maxAmount: string || undefined,
+ *  useCode: boolean || undefined,
+ *  code: string || undefined,
+ *  date = { startDate: string, endDate: string },
+ *  isCumulative: boolean || undefined,
+ *  limitation: string,
+ *  nTimes: string || undefined
+ *  maxDiscountQty: string || undefined,
+ * }
+ */
+Cypress.Commands.add("addNewDiscount", (options) => {
+  Cypress.log({
+    name: "addNewDiscount",
+  });
+
+  cy.get(".content-header").find("a").contains("Add new").click();
+  // Fill in content
+  cy.get("#Name").type(options.name);
+  cy.get("#DiscountTypeId").select(options.discountType);
+  cy.wait(100);
+  if (options.applySubcategories) {
+    cy.get("#AppliedToSubCategories").check();
+  }
+  if (options.usePercentage) {
+    cy.get("#UsePercentage").check();
+    cy.wait(100);
+    cy.get("#DiscountPercentage").clear({ force: true }).type(options.amount, {
+      force: true,
+    });
+    if (options.maxAmount)
+      cy.get("#MaximumDiscountAmount").type(options.maxAmount, {
+        force: true,
+      });
+  } else {
+    cy.get("#DiscountAmount")
+      .clear({ force: true })
+      .type(options.amount, { force: true });
+  }
+  if (options.useCode) {
+    cy.get("#RequiresCouponCode").check();
+    cy.wait(100);
+    cy.get("#CouponCode").type(options.code, { force: true });
+  }
+  cy.get("#StartDateUtc").type(options.date.startDate, { force: true });
+  cy.get("#EndDateUtc").type(options.date.endDate, { force: true });
+  if (options.isCumulative) {
+    cy.get("#IsCumulative").check();
+  }
+  cy.get("#DiscountLimitationId").select(options.limitation);
+  if (options.nTimes) {
+    cy.get("#LimitationTimes").clear({ force: true });
+    cy.get("#LimitationTimes").type(options.nTimes, { force: true });
+  }
+  if (options.maxDiscountQty) {
+    cy.get("#MaximumDiscountedQuantity").type(options.maxDiscountQty, {
+      force: true,
+    });
+  }
+  cy.get("button[name=save]").click();
+  cy.wait(500);
+  cy.get(".alert").should(
+    "contain.text",
+    "The new discount has been added successfully."
+  );
 });
 
 // COMMANDS FOR TESTS THAT ARE THE SAME BETWEEN REGISTERED USERS AND GUESTS
@@ -726,7 +836,10 @@ Cypress.Commands.add("unpublishLanguage", (removalIndex) => {
           } else {
             // returns the rows that are published - looks for the checkmark
             const eligibleRows = $el.filter((index, item) => {
-              return item.innerHTML.includes("true-icon");
+              return (
+                item.innerHTML.includes("true-icon") &&
+                item.cells[0].innerText !== "English"
+              );
             });
             // It's assumed there will always be one published language
             expect(eligibleRows.length).to.be.gte(1);
