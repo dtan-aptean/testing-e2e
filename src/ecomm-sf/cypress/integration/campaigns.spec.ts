@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+// TEST COUNT: 2
 
 describe("Ecommerce", function () {
   context("Campaigns", () => {

@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+// TEST COUNT: 13
 
 describe("Ecommerce", function () {
   context("Language Functionality", () => {
