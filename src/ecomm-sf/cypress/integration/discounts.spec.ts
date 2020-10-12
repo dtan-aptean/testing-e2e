@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 21
+// TEST COUNT: 22
 
 // Log of all created discounts; discount name pushed upon creation. Used to clear them
 const createdDiscounts: string[] = [];
@@ -35,7 +35,7 @@ const runFilter = (name: string) => {
 // Calls runFilter and pages through the pagination if runFilter doesn't find it
 const findInTable = (name: string) => {
   return cy
-    .get("ul.pagination")
+    .get(".pagination")
     .find("li")
     .then(($li) => {
       for (var i = 0; i < $li.length - 2; i++) {
@@ -160,7 +160,7 @@ const addProductsToCart = () => {
     });
   });
 };
-
+// Looks for a duplicate discount in the table and deletes it
 const checkForDuplicate = (name: string) => {
   findInTable(name).then((row) => {
     if (row) {
@@ -178,6 +178,12 @@ const checkForDuplicate = (name: string) => {
       );
     }
   });
+};
+// Flatly creates a discount after checking for duplicates and then pushes to the createdDiscounts array
+const createDiscount = (discount) => {
+  checkForDuplicate(discount.name);
+  cy.addNewDiscount(discount);
+  createdDiscounts.push(discount.name);
 };
 // Creates a new discount and adds 3 products to the cart. Gets prices and discount value and wraps them as returnValue
 const createDiscountAndAddProduct = (discount) => {
@@ -200,6 +206,37 @@ const createDiscountAndEdit = (discount) => {
   cy.addNewDiscount(discount);
   createdDiscounts.push(discount.name);
   editDiscount(discount.name);
+};
+// Run a search. Will clear the search if invalid searchType is passed in
+const runDiscountSearch = (searchValue, searchType: string) => {
+  switch(searchType) {
+    case 'name':
+      cy.get("#SearchDiscountName").type(searchValue);
+      break;
+    case "code":
+      cy.get("#SearchDiscountCouponCode").type(searchValue);
+      break;
+    case "startString":
+      const startDate = new Date(searchValue);
+      cy.get("#SearchStartDate").type(startDate.toLocaleDateString());
+      break;
+    case "endString":
+      const endDate = new Date(searchValue);
+      cy.get("#SearchEndDate").type(endDate.toLocaleDateString());
+      break;
+    case "type":
+      cy.get("#SearchDiscountTypeId").select(searchValue);
+      break;
+    default: 
+    cy.get("#SearchDiscountName").clear();
+    cy.get("#SearchDiscountCouponCode").clear();
+    cy.get("#SearchStartDate").clear();
+    cy.get("#SearchEndDate").clear();
+    cy.get("#SearchDiscountTypeId").select('All');
+  };
+  cy.wait(1000);
+  cy.get("#search-discounts").click();
+  
 };
 // Verifies the subtotal or total of the cart when a single total/subtotal discount is applied.
 const verifyCost = (
@@ -651,7 +688,6 @@ describe("Ecommerce", function () {
     });
 
     it("Required fields validate when creating a new discount", () => {
-      // TODO: Double check field validation, seems like only name and amount is needed?
       cy.goToDiscounts();
       cy.get(".content-header").find("a").contains("Add new").click();
       cy.get("button[name=save]").click();
@@ -911,6 +947,72 @@ describe("Ecommerce", function () {
         });
     });
 
+    it("Searching discounts returns the correct discount", () => {
+      const searchName = {
+        name: "Cypress Search Name",
+      };
+      const searchCode = {
+        name: "Cypress Search Code",
+        useCode: true,
+        code: "CypSearch",
+      };
+      const searchStart = {
+        name: "Cypress Search Start",
+        date: {
+          startDate: `${today.toLocaleDateString()} 12:00 AM`,
+          endDate: `${twoDaysAhead.toLocaleDateString()} 11:59 PM`,
+        },
+      };
+      const searchEnd = {
+        name: "Cypress Search End",
+        date: {
+          startDate: `${twoDaysBehind.toLocaleDateString()} 12:00 AM`,
+          endDate: `${today.toLocaleDateString()} 11:59 PM`,
+        },
+      };
+      const searchType = {
+        name: "Cypress Search Type",
+        discountType: "Assigned to shipping",
+      };
+      const searchableDiscounts = [searchName, searchCode, searchStart, searchEnd, searchType];
+      function verifyTable(expected, notExpected) {
+        cy.get("#discounts-grid").find('tbody').find('tr').should("contain.text", expected.name);
+        if (notExpected) {
+          cy.get("#discounts-grid").find('tbody').find('tr').should("not.contain.text", notExpected.name);
+        } else {
+        searchableDiscounts.forEach((item) => {
+          if (item.name !== expected.name) {
+            cy.get("#discounts-grid").find('tbody').find('tr').should("not.contain.text", item.name);
+          }
+        });
+      }
+      };
+      function verifyAndClear(discount, notExpected) {
+        verifyTable(discount, notExpected);
+        runDiscountSearch("","");
+      };
+      cy.goToDiscounts();
+      // Create the discounts
+      searchableDiscounts.forEach((item) => {
+        createDiscount(item);
+      });
+      // Run Searches
+      runDiscountSearch(searchName.name, "name");
+      verifyAndClear(searchName);
+      runDiscountSearch(searchCode.code, "code");
+      verifyAndClear(searchCode);
+      runDiscountSearch(searchStart.date.startDate, "startString");
+      verifyAndClear(searchStart, searchEnd);
+      runDiscountSearch(searchEnd.date.endDate, "endString");
+      verifyAndClear(searchEnd, searchStart);
+      runDiscountSearch(searchType.discountType, "type")
+      verifyAndClear(searchType);
+      // Delete them all
+      searchableDiscounts.forEach((item) => {
+        deleteDiscount(item.name);
+      })
+    });
+    
     it("Percentage discount is applied correctly", () => {
       const percentageDiscount = {
         name: "Cypress Percentage Discount",
