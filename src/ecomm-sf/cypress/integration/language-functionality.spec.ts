@@ -24,14 +24,14 @@ describe("Ecommerce", function () {
 
     it("Changing language overrides the standard", () => {
       cy.getVisibleMenu().should("contain.text", "Cypress Trees");
-      cy.switchLanguage("Deutsch");
+      cy.switchLanguage("German");
       cy.getVisibleMenu()
         .should("not.contain.text", "Cypress Trees")
         .and("contain.text", "Zypressen");
       cy.switchLanguage("English");
       cy.goToAdmin();
       cy.get(".content-header").should("contain.text", "Dashboard");
-      cy.switchLanguage("Deutsch");
+      cy.switchLanguage("German");
       cy.get(".content-header")
         .should("not.contain.text", "Dashboard")
         .and("contain.text", "Übersicht");
@@ -52,7 +52,7 @@ describe("Ecommerce", function () {
     it("Switching language changes the labels in admin store", () => {
       cy.switchLanguage("English");
       cy.goToAdminProduct("Bald Cypress");
-      cy.switchLanguage("Deutsch");
+      cy.switchLanguage("German");
       cy.get("#product-info-localized-standard-tab")
         .find(".form-group")
         .then(($divs) => {
@@ -92,10 +92,10 @@ describe("Ecommerce", function () {
       cy.goToProduct("Bald Cypress");
       cy.get(".product-price").then(($div) => {
         const orgPrice = $div[0].innerText;
-        cy.changeDefaultCurrency("Deutsch", "Euro").then(($orgVal) => {
+        cy.changeDefaultCurrency("German", "Euro").then(($orgVal) => {
           cy.goToPublic();
           cy.goToProduct("Bald Cypress");
-          cy.switchLanguage("Deutsch");
+          cy.switchLanguage("German");
           cy.wait(200);
           cy.get(".product-price").then(($newDiv) => {
             const price = $newDiv[0].innerText;
@@ -103,7 +103,7 @@ describe("Ecommerce", function () {
             expect($newDiv[0]).to.not.contain.text(orgPrice.substring(0, 1));
             expect($newDiv[0]).to.contain.text("€");
             cy.switchLanguage("English");
-            cy.changeDefaultCurrency("Deutsch", $orgVal);
+            cy.changeDefaultCurrency("German", $orgVal);
           });
         });
       });
@@ -116,7 +116,7 @@ describe("Ecommerce", function () {
         cy.getVisibleMenu().then(($hi) => {
           const hiMenu = $hi.text();
           expect(hiMenu).to.not.equal(enMenu);
-          cy.switchLanguage("Deutsch");
+          cy.switchLanguage("German");
           cy.getVisibleMenu().then(($de) => {
             const deMenu = $de.text();
             expect(deMenu).to.not.equal(enMenu);
@@ -126,7 +126,7 @@ describe("Ecommerce", function () {
               .should("have.text", enMenu)
               .and("not.have.text", deMenu)
               .and("not.have.text", hiMenu);
-            cy.switchLanguage("Deutsch");
+            cy.switchLanguage("German");
             cy.getVisibleMenu()
               .should("have.text", deMenu)
               .and("not.have.text", enMenu)
@@ -154,7 +154,7 @@ describe("Ecommerce", function () {
         cy.get(".content-header").then(($hi) => {
           const hiHeader = $hi.text();
           expect(hiHeader).to.not.equal(enHeader);
-          cy.switchLanguage("Deutsch");
+          cy.switchLanguage("German");
           cy.get(".content-header").then(($de) => {
             const deHeader = $de.text();
             expect(deHeader).to.not.equal(enHeader);
@@ -164,7 +164,7 @@ describe("Ecommerce", function () {
               .should("have.text", enHeader)
               .and("not.have.text", deHeader)
               .and("not.have.text", hiHeader);
-            cy.switchLanguage("Deutsch");
+            cy.switchLanguage("German");
             cy.get(".content-header")
               .should("have.text", deHeader)
               .and("not.have.text", enHeader)
