@@ -1,9 +1,9 @@
 /// <reference types="cypress" />
 // TEST COUNT: 8
-describe('Query: categories', () => {
-    it('The categories query returns a valid return type', () => {
+describe('Query: productSpecifications', () => {
+    it('A query with orderBy returns valid data types', () => {
         const gqlQuery = `{
-            categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            productSpecifications(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 edges {
                     cursor
                     node {
@@ -22,14 +22,14 @@ describe('Query: categories', () => {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then((res) => {
-            cy.validateQueryRes(gqlQuery, res, "categories");
+        cy.postGQL(gqlQuery).then(res => {
+            cy.validateQueryRes(gqlQuery, res, "productSpecifications");
         });
     });
-    
+
     it("Query will fail without orderBy input", () => {
         const gqlQuery = `{
-            categories {
+            productSpecifications {
                 edges {
                     cursor
                     node {
@@ -48,14 +48,14 @@ describe('Query: categories', () => {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then((res) => {
+        cy.postGQL(gqlQuery).then(res => {
             cy.confirmOrderByError(res);
         });
     });
 
     it('Query fails if the orderBy argument is null', () => {
         const gqlQuery = `{
-            categories(orderBy: null) {
+            productSpecifications(orderBy: null) {
                 totalCount
             }
         }`;
@@ -66,7 +66,7 @@ describe('Query: categories', () => {
 
     it('Query fails if orderBy argument only has field', () => {
         const fieldQuery = `{
-            categories(orderBy: {field: TIMESTAMP}) {
+            productSpecifications(orderBy: {field: TIMESTAMP}) {
                 totalCount
             }
         }`;
@@ -77,7 +77,7 @@ describe('Query: categories', () => {
 
     it('Query fails if orderBy argument only has direction', () => {
         const directionQuery = `{
-            categories(orderBy: {direction: ASC}) {
+            productSpecifications(orderBy: {direction: ASC}) {
                 totalCount
             }
         }`;
@@ -88,8 +88,7 @@ describe('Query: categories', () => {
 
     it('Query will fail if no return type is provided', () => {
         const gqlQuery = `{
-            categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                
+            productSpecifications(orderBy: {direction: ASC, field: TIMESTAMP}) {
             }
         }`;
         cy.postGQL(gqlQuery).then(res => {
@@ -99,7 +98,7 @@ describe('Query: categories', () => {
 
     it('Query will succeed with orderBy input and one return type', () => {
         const gqlQuery = `{
-            categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            productSpecifications(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 totalCount
             }
         }`;
@@ -113,13 +112,13 @@ describe('Query: categories', () => {
             // has data
             assert.exists(res.body.data);
             // validate data types
-            assert.isNotNaN(res.body.data.categories.totalCount);
+            assert.isNotNaN(res.body.data.productSpecifications.totalCount);
         });
     });
 
     it("Query without first or last will return all items", () => {
         const gqlQuery = `{
-            categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            productSpecifications(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 nodes {
                     id
                 }
@@ -127,7 +126,7 @@ describe('Query: categories', () => {
             }
         }`;
         cy.postGQL(gqlQuery).then((res) => {
-            cy.confirmCount(res, "categories");
+            cy.confirmCount(res, "productSpecifications");
         });
     });
 });

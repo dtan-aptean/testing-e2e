@@ -1,9 +1,9 @@
 /// <reference types="cypress" />
 // TEST COUNT: 8
-describe('Query: categories', () => {
-    it('The categories query returns a valid return type', () => {
+describe('Query: vendors', () => {
+    it('A query with orderBy returns valid data types', () => {
         const gqlQuery = `{
-            categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            vendors(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 edges {
                     cursor
                     node {
@@ -22,40 +22,40 @@ describe('Query: categories', () => {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then((res) => {
-            cy.validateQueryRes(gqlQuery, res, "categories");
-        });
-    });
-    
-    it("Query will fail without orderBy input", () => {
-        const gqlQuery = `{
-            categories {
-                edges {
-                    cursor
-                    node {
-                        id
-                    }
-                }
-                nodes {
-                    id
-                }
-                pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                }
-                totalCount
-            }
-        }`;
-        cy.postGQL(gqlQuery).then((res) => {
-            cy.confirmOrderByError(res);
+        cy.postGQL(gqlQuery).then(res => {
+            cy.validateQueryRes(gqlQuery, res, "vendors");
         });
     });
 
+    it("Query will fail without orderBy input", () => {
+        const gqlQuery = `{
+            vendors {
+                edges {
+                    cursor
+                    node {
+                        id
+                    }
+                }
+                nodes {
+                    id
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
+                totalCount
+            }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+            cy.confirmOrderByError(res);
+        });
+    });
+    
     it('Query fails if the orderBy argument is null', () => {
         const gqlQuery = `{
-            categories(orderBy: null) {
+            vendors(orderBy: null) {
                 totalCount
             }
         }`;
@@ -66,7 +66,7 @@ describe('Query: categories', () => {
 
     it('Query fails if orderBy argument only has field', () => {
         const fieldQuery = `{
-            categories(orderBy: {field: TIMESTAMP}) {
+            vendors(orderBy: {field: TIMESTAMP}) {
                 totalCount
             }
         }`;
@@ -77,7 +77,7 @@ describe('Query: categories', () => {
 
     it('Query fails if orderBy argument only has direction', () => {
         const directionQuery = `{
-            categories(orderBy: {direction: ASC}) {
+            vendors(orderBy: {direction: ASC}) {
                 totalCount
             }
         }`;
@@ -88,8 +88,7 @@ describe('Query: categories', () => {
 
     it('Query will fail if no return type is provided', () => {
         const gqlQuery = `{
-            categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                
+            vendors(orderBy: {direction: ASC, field: TIMESTAMP}) {
             }
         }`;
         cy.postGQL(gqlQuery).then(res => {
@@ -99,7 +98,7 @@ describe('Query: categories', () => {
 
     it('Query will succeed with orderBy input and one return type', () => {
         const gqlQuery = `{
-            categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            vendors(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 totalCount
             }
         }`;
@@ -113,7 +112,7 @@ describe('Query: categories', () => {
             // has data
             assert.exists(res.body.data);
             // validate data types
-            assert.isNotNaN(res.body.data.categories.totalCount);
+            assert.isNotNaN(res.body.data.vendors.totalCount);
         });
     });
 
