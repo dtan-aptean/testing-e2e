@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 8
+// TEST COUNT: 9
 describe('Query: categories', () => {
     it('The categories query returns a valid return type', () => {
         const gqlQuery = `{
@@ -128,6 +128,34 @@ describe('Query: categories', () => {
         }`;
         cy.postGQL(gqlQuery).then((res) => {
             cy.confirmCount(res, "categories");
+        });
+    });
+
+    it("Query with customData field will return valid value", () => {
+        const gqlQuery = `{
+            categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
+                edges {
+                    cursor
+                    node {
+                        id
+                    }
+                }
+                nodes {
+                    customData
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
+                totalCount
+            }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+            cy.validateQueryRes(gqlQuery, res, "categories").then(() => {
+                cy.checkCustomData(res, "categories");
+            });
         });
     });
 });

@@ -74,14 +74,25 @@ Cypress.Commands.add("confirmCount", (res, dataPath) => {
     expect(nodeCount).to.be.eql(totalCount);
 });
 
+// Checks for custom Data. TODO: Add functionality for use with mutations, ex: matching data
+Cypress.Commands.add("checkCustomData", (res, dataPath) => {
+    const nodesPath = res.body.data[dataPath].nodes;
+    nodesPath.forEach((item) => {
+        expect(item).to.have.property('customData');
+        // Currently only checks for property
+        // TODO: Add functionality for mutation use
+    });
+});
+
 // Validates the values field for checkoutAttributes and productAttributes
 Cypress.Commands.add("validateValues", (res, dataPath) => {
     if (res.body.data[dataPath].nodes.length > 0) {
         const nodesPath = res.body.data[dataPath].nodes;
         nodesPath.forEach((item) => {
             // has values field
+            expect(item).to.have.property('values');
             assert.exists(item.values);
-            // validate data types
+            // validate values as an array
             assert.isArray(item.values);
             expect(item.values.length).to.be.gte(1);
             item.values.forEach((val) => {

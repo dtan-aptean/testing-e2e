@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 8
+// TEST COUNT: 9
 describe('Query: manufacturers', () => {
     it('A query with orderBy returns valid data types', () => {
         const gqlQuery = `{
@@ -128,6 +128,34 @@ describe('Query: manufacturers', () => {
         }`;
         cy.postGQL(gqlQuery).then((res) => {
             cy.confirmCount(res, "manufacturers");
+        });
+    });
+
+    it("Query with customData field will return valid value", () => {
+        const gqlQuery = `{
+            manufacturers(orderBy: {direction: ASC, field: TIMESTAMP}) {
+                edges {
+                    cursor
+                    node {
+                        id
+                    }
+                }
+                nodes {
+                    customData
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
+                totalCount
+            }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+            cy.validateQueryRes(gqlQuery, res, "manufacturers").then(() => {
+                cy.checkCustomData(res, "manufacturers");
+            });
         });
     });
 });

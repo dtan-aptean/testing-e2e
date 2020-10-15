@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 8
+// TEST COUNT: 9
 describe('Query: returnReasons', () => {
     it('A query with orderBy returns valid data types', () => {
         const gqlQuery = `{
@@ -64,27 +64,27 @@ describe('Query: returnReasons', () => {
       });
   });
 
-  it('Query fails if orderBy argument only has field', () => {
-      const fieldQuery = `{
-          returnReasons(orderBy: {field: TIMESTAMP}) {
-              totalCount
-          }
-      }`;
-      cy.postGQL(fieldQuery).then((res) => {
-          cy.confirmError(res);
-      });
-  });
+    it('Query fails if orderBy argument only has field', () => {
+        const fieldQuery = `{
+            returnReasons(orderBy: {field: TIMESTAMP}) {
+                totalCount
+            }
+        }`;
+        cy.postGQL(fieldQuery).then((res) => {
+            cy.confirmError(res);
+        });
+    });
 
-  it('Query fails if orderBy argument only has direction', () => {
-      const directionQuery = `{
-          returnReasons(orderBy: {direction: ASC}) {
-              totalCount
-          }
-      }`;
-      cy.postGQL(directionQuery).then((res) => {
-          cy.confirmError(res);
-      });
-  });
+    it('Query fails if orderBy argument only has direction', () => {
+        const directionQuery = `{
+            returnReasons(orderBy: {direction: ASC}) {
+                totalCount
+            }
+        }`;
+        cy.postGQL(directionQuery).then((res) => {
+            cy.confirmError(res);
+        });
+    });
 
     it('Query will fail if no return type is provided', () => {
         const gqlQuery = `{
@@ -117,17 +117,45 @@ describe('Query: returnReasons', () => {
       });
   });
 
-  it("Query without first or last will return all items", () => {
-    const gqlQuery = `{
-        returnReasons(orderBy: {direction: ASC, field: TIMESTAMP}) {
-            nodes {
-                id
+    it("Query without first or last will return all items", () => {
+        const gqlQuery = `{
+            returnReasons(orderBy: {direction: ASC, field: TIMESTAMP}) {
+                nodes {
+                    id
+                }
+                totalCount
             }
-            totalCount
-        }
-    }`;
-    cy.postGQL(gqlQuery).then((res) => {
-        cy.confirmCount(res, "returnReasons");
+        }`;
+        cy.postGQL(gqlQuery).then((res) => {
+            cy.confirmCount(res, "returnReasons");
+        });
     });
-  });
+
+    it("Query with customData field will return valid value", () => {
+        const gqlQuery = `{
+            returnReasons(orderBy: {direction: ASC, field: TIMESTAMP}) {
+                edges {
+                    cursor
+                    node {
+                        id
+                    }
+                }
+                nodes {
+                    customData
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
+                totalCount
+            }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+            cy.validateQueryRes(gqlQuery, res, "returnReasons").then(() => {
+                cy.checkCustomData(res, "returnReasons");
+            });
+        });
+    });
 });

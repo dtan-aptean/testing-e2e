@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 8
+// TEST COUNT: 9
 describe('Query: taxCategories', () => {
     it('A query with orderBy returns valid data types', () => {
         const gqlQuery = `{
@@ -127,6 +127,34 @@ describe('Query: taxCategories', () => {
         }`;
         cy.postGQL(gqlQuery).then((res) => {
             cy.confirmCount(res, "taxCategories");
+        });
+    });
+
+    it("Query with customData field will return valid value", () => {
+        const gqlQuery = `{
+            taxCategories(orderBy: {direction: ASC, field: TIMESTAMP}) {
+                edges {
+                    cursor
+                    node {
+                        id
+                    }
+                }
+                nodes {
+                    customData
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
+                totalCount
+            }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+            cy.validateQueryRes(gqlQuery, res, "taxCategories").then(() => {
+                cy.checkCustomData(res, "taxCategories");
+            });
         });
     });
 });

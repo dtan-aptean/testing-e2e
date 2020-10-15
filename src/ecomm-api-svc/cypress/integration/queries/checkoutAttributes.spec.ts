@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 9
+// TEST COUNT: 10
 describe('Query: checkoutAttributes', () => {
     it('The checkoutAttributes query returns a valid return type', () => {
         const gqlQuery = `{
@@ -161,6 +161,34 @@ describe('Query: checkoutAttributes', () => {
         cy.postGQL(gqlQuery).then(res => {
             cy.validateQueryRes(gqlQuery, res, "checkoutAttributes").then(() => {
                 cy.validateValues(res, "checkoutAttributes");
+            });
+        });
+    });
+
+    it("Query with customData field will return valid value", () => {
+        const gqlQuery = `{
+            checkoutAttributes(orderBy: {direction: ASC, field: TIMESTAMP}) {
+                edges {
+                    cursor
+                    node {
+                        id
+                    }
+                }
+                nodes {
+                    customData
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
+                totalCount
+            }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+            cy.validateQueryRes(gqlQuery, res, "checkoutAttributes").then(() => {
+                cy.checkCustomData(res, "checkoutAttributes");
             });
         });
     });

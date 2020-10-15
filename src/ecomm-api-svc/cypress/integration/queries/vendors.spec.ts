@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 8
+// TEST COUNT: 9
 describe('Query: vendors', () => {
     it('A query with orderBy returns valid data types', () => {
         const gqlQuery = `{
@@ -118,7 +118,7 @@ describe('Query: vendors', () => {
 
     it("Query without first or last will return all items", () => {
         const gqlQuery = `{
-            categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            vendors(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 nodes {
                     id
                 }
@@ -126,7 +126,35 @@ describe('Query: vendors', () => {
             }
         }`;
         cy.postGQL(gqlQuery).then((res) => {
-            cy.confirmCount(res, "categories");
+            cy.confirmCount(res, "vendors");
+        });
+    });
+
+    it("Query with customData field will return valid value", () => {
+        const gqlQuery = `{
+            vendors(orderBy: {direction: ASC, field: TIMESTAMP}) {
+                edges {
+                    cursor
+                    node {
+                        id
+                    }
+                }
+                nodes {
+                    customData
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
+                totalCount
+            }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+            cy.validateQueryRes(gqlQuery, res, "vendors").then(() => {
+                cy.checkCustomData(res, "vendors");
+            });
         });
     });
 });
