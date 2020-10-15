@@ -45,7 +45,6 @@ Cypress.Commands.add("confirmError", (res) => {
 
 // Tests the response for errors. Should specifically use when we omit the orderBy input
 Cypress.Commands.add("confirmOrderByError", (res) => {
-    //debugger;
     cy.expect(res.isOkStatusCode).to.be.equal(false);
     // No data
     assert.notExists(res.body.data);
@@ -73,4 +72,46 @@ Cypress.Commands.add("confirmCount", (res, dataPath) => {
     const totalCount = res.body.data[dataPath].totalCount;
     const nodeCount = res.body.data[dataPath].nodes.length;
     expect(nodeCount).to.be.eql(totalCount);
+});
+
+// Validates the values field for checkoutAttributes and productAttributes
+Cypress.Commands.add("validateValues", (res, dataPath) => {
+    if (res.body.data[dataPath].nodes.length > 0) {
+        const nodesPath = res.body.data[dataPath].nodes;
+        nodesPath.forEach((item) => {
+            // has values field
+            assert.exists(item.values);
+            // validate data types
+            assert.isArray(item.values);
+            expect(item.values.length).to.be.gte(1);
+            item.values.forEach((val) => {
+                expect(val).to.have.property('displayOrder');
+                if (val.displayOrder !== null) {
+                    expect(val.displayOrder).to.be.a('number');
+                }
+                expect(val).to.have.property('isPreselected');
+                if (val.isPreselected !== null) {
+                    expect(val.isPreselected).to.be.a('boolean');
+                }
+                expect(val).to.have.property('name');
+                if (val.name !== null) {
+                    expect(val.name).to.be.a('string');
+                }
+                expect(val).to.have.property('priceAdjustment');
+                if (val.priceAdjustment !== null) {
+                    expect(val.priceAdjustment).to.be.a('number');
+                }
+                expect(val).to.have.property('weightAdjustment');
+                if (val.weightAdjustment !== null) {
+                    expect(val.weightAdjustment).to.be.a('number');
+                }
+                if (dataPath === "productAttributes") {
+                    expect(val).to.have.property('cost');
+                    if (val.cost !== null) {
+                        expect(val.cost).to.be.a('number');
+                    }
+                }
+            });
+        });    
+    }
 });

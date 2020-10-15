@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 8
+// TEST COUNT: 9
 describe('Query: productAttributes', () => {
     it('A query with orderBy returns valid data types', () => {
         const gqlQuery = `{
@@ -128,6 +128,41 @@ describe('Query: productAttributes', () => {
         }`;
         cy.postGQL(gqlQuery).then((res) => {
             cy.confirmCount(res, "productAttributes");
+        });
+    });
+
+    it("Requesting the values field returns an array with values", () => {
+        const gqlQuery = `{
+            productAttributes(orderBy: {direction: ASC, field: TIMESTAMP}) {
+                edges {
+                    cursor
+                    node {
+                        id
+                    }
+                }
+                nodes {
+                    values {
+                        displayOrder
+                        isPreselected
+                        name
+                        priceAdjustment
+                        weightAdjustment
+                        cost
+                    }
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
+                totalCount
+            }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+            cy.validateQueryRes(gqlQuery, res, "productAttributes").then(() => {
+                cy.validateValues(res, "productAttributes");
+            });
         });
     });
 });
