@@ -7,4 +7,4 @@
       "x-aptean-tenant": "#{X_ECOMM_TENANT}#"
     }, 
     "supportFile": "cypress/support/index.ts"
-  }
+}
