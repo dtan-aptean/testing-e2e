@@ -1,0 +1,13 @@
+{
+  "name": "@testing-e2e/ecomm-api-svc",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+  },
+  "scripts": {
+    "cypress": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:verify": "cypress verify"
+  }
+}
+  
