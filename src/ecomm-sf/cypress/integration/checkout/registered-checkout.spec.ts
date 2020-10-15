@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+// TEST COUNT: 12
 
 describe("Ecommerce", function () {
   context("Registered User Checkout", () => {
