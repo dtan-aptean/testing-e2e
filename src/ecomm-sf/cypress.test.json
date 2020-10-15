@@ -1,5 +1,5 @@
 {
-  "baseUrl": "https://test1.apteanecommerce.com/",
+  "baseUrl": "https://tst.apteanecommerce.com/",
   "username": "cypress.tester@testenvironment.com",
   "password": "CypressTester1",
   "env": {},
