@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+// TEST COUNT: 13
 
 describe("Ecommerce", function () {
   context("Language Functionality", () => {
@@ -10,17 +11,14 @@ describe("Ecommerce", function () {
     it("Changing the language updates the url in the public store", () => {
       cy.getSeoCodes();
       cy.get("@seoCodes").then(($codes) => {
-        expect($codes.length).to.eq(4);
+        expect($codes.length).to.be.greaterThan(0);
         cy.goToPublic();
-        cy.switchLanguage("English");
-        cy.location("pathname").should("eq", `/${$codes[0]}/`);
-        cy.switchLanguage("English, Australia");
-        cy.location("pathname").should("eq", `/${$codes[1]}/`);
-        cy.switchLanguage("Hindi");
-        cy.location("pathname").should("eq", `/${$codes[2]}/`);
-        cy.switchLanguage("Deutsch");
-        cy.location("pathname").should("eq", `/${$codes[3]}/`);
-        cy.switchLanguage();
+        cy.get("#customerlanguage").find("option").each(($el, index, $options) => {
+          cy.switchLanguage($el[0].innerText);
+          cy.location("pathname").should("eq", `/${$codes[index]}/`);
+        }).then(() => {
+          cy.switchLanguage();
+        });
       });
     });
 

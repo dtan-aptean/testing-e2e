@@ -257,12 +257,22 @@ Cypress.Commands.add("goToPublic", () => {
   cy.location("pathname").should("not.contain", "Admin");
 });
 
+// Checks to make sure English is the language. Used for navigating the sidebar in Admin.
+Cypress.Commands.add("correctLanguage", () => {
+  Cypress.log({ name: "correctLanguage" });
+  cy.get("#customerlanguage").then(($select) => {
+    if ($select[0].selectedOptions[0].text !== "English") {
+      cy.switchLanguage("English");
+    }
+  })
+});
+
 // Goes to the languages page under configurations in admin store
 Cypress.Commands.add("goToLanguages", () => {
   Cypress.log({
     name: "goToLanguages",
   });
-  cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
+  cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
   cy.location().then((loc) => {
     if (!loc.pathname.includes("Language/List")) {
       cy.get(".sidebar-menu.tree").find("li").contains("Configuration").click();
@@ -293,11 +303,11 @@ Cypress.Commands.add("goToAdminProduct", (productName) => {
   expect(productName).to.not.be.undefined;
   assert.isString(productName);
   cy.location("pathname").then((loc) => {
-    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
+    cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
     if (!loc.includes("Product/List")) {
       if (!loc.includes("Admin")) {
         cy.goToAdmin();
-        cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
+        cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
       cy.get(".sidebar-menu.tree").find("li").contains("Catalog").click();
     }
@@ -326,11 +336,11 @@ Cypress.Commands.add("goToCampaigns", () => {
   Cypress.log({ name: "goToCampaigns" });
 
   cy.location("pathname").then((loc) => {
-    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
+    cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
     if (!loc.includes("Campaign/List")) {
       if (!loc.includes("Admin")) {
         cy.goToAdmin();
-        cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
+        cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
       cy.get(".sidebar-menu.tree").find("li").contains("Promotions").click();
     }
@@ -427,11 +437,11 @@ Cypress.Commands.add("goToDiscounts", () => {
   Cypress.log({ name: "goToDiscounts" });
 
   cy.location("pathname").then((loc) => {
-    cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
+    cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
     if (!loc.includes("Discount/List")) {
       if (!loc.includes("Admin")) {
         cy.goToAdmin();
-        cy.switchLanguage("English"); // Fail safe to make sure we can effectively navigate
+        cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
       cy.get(".sidebar-menu.tree")
         .find("li")
@@ -450,19 +460,19 @@ Cypress.Commands.add("goToDiscounts", () => {
 
 /** Adds a new discount with given information
  * options = {
- *  name: string,
- *  discountType: string,
- *  applySubcategories: boolean || undefined,
- *  usePercentage: boolean || undefined,
- *  amount: string,
- *  maxAmount: string || undefined,
- *  useCode: boolean || undefined,
- *  code: string || undefined,
- *  date = { startDate: string, endDate: string },
- *  isCumulative: boolean || undefined,
- *  limitation: string,
- *  nTimes: string || undefined
- *  maxDiscountQty: string || undefined,
+ *  name?: string,
+ *  discountType?: string,
+ *  applySubcategories?: boolean,
+ *  usePercentage?: boolean,
+ *  amount?: string,
+ *  maxAmount?: string,
+ *  useCode?: boolean,
+ *  code?: string,
+ *  date? = { startDate: string, endDate: string },
+ *  isCumulative?: boolean,
+ *  limitation?: string,
+ *  nTimes?: string
+ *  maxDiscountQty?: string,
  * }
  */
 Cypress.Commands.add("addNewDiscount", (options) => {
@@ -473,8 +483,10 @@ Cypress.Commands.add("addNewDiscount", (options) => {
   cy.get(".content-header").find("a").contains("Add new").click();
   // Fill in content
   cy.get("#Name").type(options.name);
-  cy.get("#DiscountTypeId").select(options.discountType);
-  cy.wait(100);
+  if (options.discountType) {
+    cy.get("#DiscountTypeId").select(options.discountType);
+    cy.wait(100);
+  }
   if (options.applySubcategories) {
     cy.get("#AppliedToSubCategories").check();
   }
@@ -488,7 +500,7 @@ Cypress.Commands.add("addNewDiscount", (options) => {
       cy.get("#MaximumDiscountAmount").type(options.maxAmount, {
         force: true,
       });
-  } else {
+  } else if (options.amount) {
     cy.get("#DiscountAmount")
       .clear({ force: true })
       .type(options.amount, { force: true });
@@ -498,12 +510,16 @@ Cypress.Commands.add("addNewDiscount", (options) => {
     cy.wait(100);
     cy.get("#CouponCode").type(options.code, { force: true });
   }
-  cy.get("#StartDateUtc").type(options.date.startDate, { force: true });
-  cy.get("#EndDateUtc").type(options.date.endDate, { force: true });
+  if (options.date) {
+    cy.get("#StartDateUtc").type(options.date.startDate, { force: true });
+    cy.get("#EndDateUtc").type(options.date.endDate, { force: true });
+  }
   if (options.isCumulative) {
     cy.get("#IsCumulative").check();
   }
-  cy.get("#DiscountLimitationId").select(options.limitation);
+  if (options.limitation) {
+    cy.get("#DiscountLimitationId").select(options.limitation);
+  }
   if (options.nTimes) {
     cy.get("#LimitationTimes").clear({ force: true });
     cy.get("#LimitationTimes").type(options.nTimes, { force: true });
@@ -513,12 +529,71 @@ Cypress.Commands.add("addNewDiscount", (options) => {
       force: true,
     });
   }
+  cy.server();
+  cy.route("POST", "/Admin/Discount/List").as('tableLoaded');
   cy.get("button[name=save]").click();
-  cy.wait(500);
+  cy.wait('@tableLoaded');
   cy.get(".alert").should(
     "contain.text",
     "The new discount has been added successfully."
   );
+});
+
+// Progresses through checkout to get to confirm order.
+Cypress.Commands.add("getToConfirmOrder", () => {
+  Cypress.log({
+    name: "getToConfirmOrder",
+  });
+  cy.get("#co-billing-form").then(($el) => {
+    const select = $el.find(".select-billing-address");
+    if (select.length === 0) {
+      // Inputting Aptean's address
+      cy.get("#BillingNewAddress_CountryId").select("United States");
+      cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
+      cy.get("#BillingNewAddress_City").type("Alpharetta");
+      cy.get("#BillingNewAddress_Address1").type("4325 Alexander Dr #100");
+      cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
+      cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
+      cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
+      cy.get(".field-validation-error").should("have.length", 0);
+    }
+  });
+  cy.get(".new-address-next-step-button").eq(0).click();
+  cy.wait(200);
+
+  // Pick shipping method
+  cy.get("#shippingoption_1").check();
+  cy.get(".shipping-method-next-step-button").click();
+  cy.wait(2000);
+
+  // Payment Information
+  cy.getIframeBody("#credit-card-iframe_iframe")
+    .scrollIntoView()
+    .should("be.visible");
+  cy.getIframeBody("#credit-card-iframe_iframe")
+    .find("#text-input-cc-number")
+    .type("6011111111111117");
+  cy.getIframeBody("#credit-card-iframe_iframe")
+    .find("#text-input-expiration-month")
+    .type("03");
+  cy.getIframeBody("#credit-card-iframe_iframe")
+    .find("#text-input-expiration-year")
+    .type("24");
+  cy.getIframeBody("#credit-card-iframe_iframe")
+    .find("#text-input-cvv-number")
+    .type("123");
+  cy.getIframeBody("#credit-card-iframe_iframe")
+    .find(".error-text")
+    .should("have.length", 0);
+  cy.get("#submit-credit-card-button").click();
+  cy.wait(2000);
+  cy.get("#payment-success").should(
+    "contain.text",
+    "Your payment has been successfully processed!"
+  );
+  cy.get(".payment-info-next-step-button").click();
+  cy.wait(1000);
+  cy.get('.cart').should("exist").and("be.visible");
 });
 
 // COMMANDS FOR TESTS THAT ARE THE SAME BETWEEN REGISTERED USERS AND GUESTS
@@ -911,43 +986,64 @@ Cypress.Commands.add("getSeoCodes", () => {
         .click();
       cy.wait(500);
     });
-  }
-  cy.get("#languages-grid")
+  };
+  function findName(name: string) {
+    return cy.get("#languages-grid")
     .find("tbody")
     .find("tr")
     .then(($rows) => {
-      const english = $rows.filter((index, item) => {
-        return item.cells[0].innerText === "English";
+      const row = $rows.filter((index, item) => {
+        return item.cells[0].innerText === name;
       });
-      getToCode(english);
-      cy.get("#languages-grid")
-        .find("tbody")
-        .find("tr")
-        .then(($rows2) => {
-          const aussie = $rows2.filter((index, item) => {
-            return item.cells[0].innerText === "English, Australia";
-          });
-          getToCode(aussie);
-          cy.get("#languages-grid")
-            .find("tbody")
-            .find("tr")
-            .then(($rows3) => {
-              const hindi = $rows3.filter((index, item) => {
-                return item.cells[0].innerText === "Hindi";
-              });
-              getToCode(hindi);
-              cy.get("#languages-grid")
-                .find("tbody")
-                .find("tr")
-                .then(($rows4) => {
-                  const german = $rows4.filter((index, item) => {
-                    return item.cells[0].innerText === "Deutsch";
-                  });
-                  getToCode(german);
-                  cy.wrap(codes).as("seoCodes");
-                });
+      getToCode(row);
+    });
+  }
+  function filterPage() {
+    return cy.get("#languages-grid")
+    .find("tbody")
+    .find("tr")
+    .then(($rows) => {
+      const rowNames = [];
+      const eligibleRows = $rows.filter((index, item) => {
+        return item.innerHTML.includes("true-icon");
+      });
+      if (eligibleRows.length > 0) {
+        cy.wrap(eligibleRows).each(($val, index, $list) => {
+          rowNames.push($val[0].cells[0].innerText);
+        }).then(() => {
+          return rowNames;
+        });
+      } else {
+        return [];
+      }
+    });
+  };
+  cy.get(".pagination")
+    .find("li")
+    .then(($li) => {
+      const truePages = $li.filter((index, item) => {
+        return (!item.outerHTML.includes("previous") && !item.outerHTML.includes("next"));
+      });
+      for (var i = 0; i < truePages.length; i++) {
+        filterPage().then((names) => {
+          if (names.length > 0) {
+            names.forEach((name) => {
+              findName(name);
+            });
+            cy.wait(1000);
+          }
+          cy.get(".pagination")
+            .find("li")
+            .then(($el) => {
+              if (!$el[$el.length - 1].outerHTML.includes("disabled")) {
+                cy.wrap($el[$el.length - 1]).find('a').click();
+                cy.wait(500);
+              }
             });
         });
+      }
+    }).then(() => {
+      cy.wrap(codes).as("seoCodes");
     });
 });
 
