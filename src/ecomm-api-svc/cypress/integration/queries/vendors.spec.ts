@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 9
+// TEST COUNT: 10
 describe('Query: vendors', () => {
     it('A query with orderBy returns valid data types', () => {
         const gqlQuery = `{
@@ -154,6 +154,73 @@ describe('Query: vendors', () => {
         cy.postGQL(gqlQuery).then(res => {
             cy.validateQueryRes(gqlQuery, res, "vendors").then(() => {
                 cy.checkCustomData(res, "vendors");
+            });
+        });
+    });
+
+    it('Query with address field will return valid data and correct fields', () => {
+        const gqlQuery = `{
+            vendors(orderBy: {direction: ASC, field: TIMESTAMP}) {
+                edges {
+                    cursor
+                    node {
+                        id
+                    }
+                }
+                nodes {
+                    address {
+                        city
+                        country
+                        line1
+                        line2
+                        postalCode
+                        region
+                    }
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
+                totalCount
+            }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+            cy.validateQueryRes(gqlQuery, res, "vendors").then(() => {
+                if (res.body.data.vendors.nodes.length > 0) {
+                    const nodesPath = res.body.data.vendors.nodes;
+                    nodesPath.forEach((item) => {
+                        // has address field
+                        expect(item).to.have.property('address');
+                        if (item.address !== null) {
+                            expect(item.address).to.have.property('city');
+                            if (item.address.city !== null) {
+                                expect(item.address.city).to.be.a('string');
+                            }
+                            expect(item.address).to.have.property('country');
+                            if (item.address.country !== null) {
+                                expect(item.address.country).to.be.a('string');
+                            }
+                            expect(item.address).to.have.property('line1');
+                            if (item.address.line1 !== null) {
+                                expect(item.address.line1).to.be.a('string');
+                            }
+                            expect(item.address).to.have.property('line2');
+                            if (item.address.line2 !== null) {
+                                expect(item.address.line2).to.be.a('string');
+                            }
+                            expect(item.address).to.have.property('postalCode');
+                            if (item.address.postalCode !== null) {
+                                expect(item.address.postalCode).to.be.a('string');
+                            }
+                            expect(item.address).to.have.property('region');
+                            if (item.address.region !== null) {
+                                expect(item.address.region).to.be.a('string');
+                            }
+                        }
+                    });
+                }
             });
         });
     });
