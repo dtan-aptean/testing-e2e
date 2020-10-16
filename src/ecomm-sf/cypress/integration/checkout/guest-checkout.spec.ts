@@ -202,47 +202,14 @@ describe("Ecommerce", function () {
       cy.wait(200);
       cy.get(".shipping-method-next-step-button").click();
       cy.wait(1000);
-      // Payment Information
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .scrollIntoView()
-        .should("be.visible");
+      // Check credit card payment method
+      cy.get("#payment-method-block").find('li').eq(0).find('input[type="radio"]').check();
       // Test Credit card validation, should get errors
-      cy.get("#submit-credit-card-button").click();
+      cy.get(".payment-method-next-step-button").click();
       cy.wait(200);
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-expiration-month")
-        .type("03")
-        .clear();
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-expiration-year")
-        .type("24")
-        .clear();
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find(".error-text")
-        .should("have.length", 3);
-      // Input credit card info, test validation along the way
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-cc-number")
-        .type("6011111111111117");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find(".error-text")
-        .should("have.length", 2);
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-expiration-month")
-        .type("03");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-expiration-year")
-        .type("24");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find(".error-text")
-        .should("have.length", 1);
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-cvv-number")
-        .type("123");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find(".error-text")
-        .should("have.length", 0);
-
+      cy.get(".payment-info-next-step-button").click();
+      cy.wait(500);
+      cy.get(".message-error").find('ul').find('li').should('have.length', 4);
       cy.clearCart();
     });
 
@@ -292,31 +259,21 @@ describe("Ecommerce", function () {
       cy.get(".shipping-method-next-step-button").click();
       cy.wait(1000);
 
+      // Payment Method
+      cy.get("#payment-method-block").find('li').eq(0).find('input[type="radio"]').check();
+      cy.get(".payment-method-next-step-button").click();
+      cy.wait(200);
       // Payment Information
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .scrollIntoView()
-        .should("be.visible");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-cc-number")
+      cy.get("#CreditCardType").select("Discover");
+      cy.get("#CardholderName").type("Cypress McTester")
+      cy.get("#CardNumber")
         .type("6011111111111117");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-expiration-month")
-        .type("03");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-expiration-year")
-        .type("24");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-cvv-number")
+      cy.get("#ExpireMonth")
+        .select("03");
+      cy.get("#ExpireYear")
+        .select("2024");
+      cy.get("#CardCode")
         .type("123");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find(".error-text")
-        .should("have.length", 0);
-      cy.get("#submit-credit-card-button").click();
-      cy.wait(2000);
-      cy.get("#payment-success").should(
-        "contain.text",
-        "Your payment has been successfully processed!"
-      );
       cy.get(".payment-info-next-step-button").click();
       cy.wait(1000);
 
@@ -373,31 +330,21 @@ describe("Ecommerce", function () {
       cy.get(".shipping-method-next-step-button").click();
       cy.wait(1000);
 
+      // Payment Method
+      cy.get("#payment-method-block").find('li').eq(0).find('input[type="radio"]').check();
+      cy.get(".payment-method-next-step-button").click();
+      cy.wait(200);
       // Payment Information
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .scrollIntoView()
-        .should("be.visible");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-cc-number")
+      cy.get("#CreditCardType").select("Discover");
+      cy.get("#CardholderName").type("Cypress McTester")
+      cy.get("#CardNumber")
         .type("6011111111111117");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-expiration-month")
-        .type("03");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-expiration-year")
-        .type("24");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find("#text-input-cvv-number")
+      cy.get("#ExpireMonth")
+        .select("03");
+      cy.get("#ExpireYear")
+        .select("2024");
+      cy.get("#CardCode")
         .type("123");
-      cy.getIframeBody("#credit-card-iframe_iframe")
-        .find(".error-text")
-        .should("have.length", 0);
-      cy.get("#submit-credit-card-button").click();
-      cy.wait(2000);
-      cy.get("#payment-success").should(
-        "contain.text",
-        "Your payment has been successfully processed!"
-      );
       cy.get(".payment-info-next-step-button").click();
       cy.wait(1000);
 

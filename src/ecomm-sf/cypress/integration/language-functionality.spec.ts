@@ -92,19 +92,14 @@ describe("Ecommerce", function () {
       cy.goToProduct("Bald Cypress");
       cy.get(".product-price").then(($div) => {
         const orgPrice = $div[0].innerText;
-        cy.changeDefaultCurrency("German", "Euro").then(($orgVal) => {
-          cy.goToPublic();
-          cy.goToProduct("Bald Cypress");
-          cy.switchLanguage("German");
-          cy.wait(200);
-          cy.get(".product-price").then(($newDiv) => {
-            const price = $newDiv[0].innerText;
-            expect(price).to.not.eq(orgPrice);
-            expect($newDiv[0]).to.not.contain.text(orgPrice.substring(0, 1));
-            expect($newDiv[0]).to.contain.text("€");
-            cy.switchLanguage("English");
-            cy.changeDefaultCurrency("German", $orgVal);
-          });
+        cy.switchLanguage("German");
+        cy.wait(200);
+        cy.get(".product-price").then(($newDiv) => {
+          const price = $newDiv[0].innerText;
+          expect(price).to.not.eq(orgPrice);
+          expect($newDiv[0]).to.not.contain.text(orgPrice.substring(0, 1));
+          expect($newDiv[0]).to.contain.text("€");
+          cy.switchLanguage("English");
         });
       });
     });
@@ -295,7 +290,7 @@ describe("Ecommerce", function () {
         .then(($el) => {
           // returns the rows that are published - looks for the checkmark
           const eligibleRows = $el.filter((index, item) => {
-            return item.innerHTML.includes("true-icon");
+            return (item.innerHTML.includes("true-icon") && !item.innerText.includes("English"));
           });
           expect(eligibleRows.length).to.be.gte(1);
           // Find a random row to unpublish

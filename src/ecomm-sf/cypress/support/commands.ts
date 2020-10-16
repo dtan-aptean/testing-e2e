@@ -566,31 +566,21 @@ Cypress.Commands.add("getToConfirmOrder", () => {
   cy.get(".shipping-method-next-step-button").click();
   cy.wait(2000);
 
+  // Payment Method
+  cy.get("#payment-method-block").find('li').eq(0).find('input[type="radio"]').check();
+  cy.get(".payment-method-next-step-button").click();
+  cy.wait(200);
   // Payment Information
-  cy.getIframeBody("#credit-card-iframe_iframe")
-    .scrollIntoView()
-    .should("be.visible");
-  cy.getIframeBody("#credit-card-iframe_iframe")
-    .find("#text-input-cc-number")
+  cy.get("#CreditCardType").select("Discover");
+  cy.get("#CardholderName").type("Cypress McTester")
+  cy.get("#CardNumber")
     .type("6011111111111117");
-  cy.getIframeBody("#credit-card-iframe_iframe")
-    .find("#text-input-expiration-month")
-    .type("03");
-  cy.getIframeBody("#credit-card-iframe_iframe")
-    .find("#text-input-expiration-year")
-    .type("24");
-  cy.getIframeBody("#credit-card-iframe_iframe")
-    .find("#text-input-cvv-number")
+  cy.get("#ExpireMonth")
+    .select("03");
+  cy.get("#ExpireYear")
+    .select("2024");
+  cy.get("#CardCode")
     .type("123");
-  cy.getIframeBody("#credit-card-iframe_iframe")
-    .find(".error-text")
-    .should("have.length", 0);
-  cy.get("#submit-credit-card-button").click();
-  cy.wait(2000);
-  cy.get("#payment-success").should(
-    "contain.text",
-    "Your payment has been successfully processed!"
-  );
   cy.get(".payment-info-next-step-button").click();
   cy.wait(1000);
   cy.get('.cart').should("exist").and("be.visible");
@@ -689,7 +679,7 @@ Cypress.Commands.add("testAddToCart", () => {
   cy.goToProduct("Bald Cypress");
   // Get the name of the product
   cy.get(".product-name").then(($h1) => {
-    const product = $h1.text();
+    const product = $h1[0].innerText;
     // Get current amount of shopping cart
     cy.get(".header-links")
       .find(".cart-qty")
@@ -967,7 +957,7 @@ Cypress.Commands.add("publishLanguage", (language) => {
   });
 });
 
-// Gets the seo codes for 4 languages
+// Gets the seo codes for all languages
 Cypress.Commands.add("getSeoCodes", () => {
   Cypress.log({
     name: "getSeoCodes",
