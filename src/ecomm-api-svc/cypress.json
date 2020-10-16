@@ -1,0 +1,10 @@
+{
+    "baseUrl": "#{ECOMM_API_URL}#", 
+    "chromeWebSecurity": false,
+    "defaultCommandTimeout": 10000,
+    "env": {
+      "x-aptean-apim": "#{X_APTEAN_APIM}#", 
+      "x-aptean-tenant": "#{X_ECOMM_TENANT}#"
+    }, 
+    "supportFile": "cypress/support/index.ts"
+}
