@@ -22,6 +22,9 @@ const runFilter = (name: string) => {
     .find("tbody")
     .find("tr")
     .then(($rows) => {
+      if ($rows.length === 1 && $rows[0].innerText === "No data available in table") {
+        return null;
+      }
       const row = $rows.filter((index, item) => {
         return item.cells[0].innerText === name;
       });
@@ -38,6 +41,9 @@ const findInTable = (name: string) => {
     .get(".pagination")
     .find("li")
     .then(($li) => {
+      if ($li.length === 2) {
+        return null;
+      }
       for (var i = 0; i < $li.length - 2; i++) {
         runFilter(name).then((el) => {
           if (el) {
@@ -89,44 +95,53 @@ const addProductOrCategory = (
 ) => {
   var buttonId;
   var gridId;
+  var panelId
   if (productOrCategory === "product") {
+    panelId = "#discount-applied-to-products";
     buttonId = "#btnAddNewProduct";
     gridId = "#products-grid";
   } else if (productOrCategory === "category") {
+    panelId = "#discount-applied-to-categories";
     buttonId = "#btnAddNewCategory";
     gridId = "#categories-grid";
   }
-  cy.get(`${buttonId}`).then((button) => {
-    const url = button.attr("onclick")?.split('"')[1];
-    cy.location("pathname").then((loc) => {
-      const current = loc;
-      cy.window().then((win) => {
-        // Replace window.open(url, target)-function with our own arrow function
-        cy.stub(win, "open", (url) => {
-          // change window location to be same as the popup url
-          win.location.href = Cypress.config().baseUrl + url;
-        }).as("popup"); // alias it with popup, so we can wait refer it with @popup
-      });
-      cy.get(`${buttonId}`).click();
-      cy.get("@popup").should("be.called");
-      cy.get(`${gridId}`)
-        .find("tbody")
-        .find("tr")
-        .then(($rows) => {
-          const row = $rows.filter((index, item) => {
-            return item.cells[1].innerText === prodCatName;
-          });
-          cy.wrap(row).find("td").find("input").check();
-          cy.get("button[name=save]").click();
-          cy.wait(500);
-          cy.visit(current);
-          cy.get("button[name=save]").click();
-          cy.wait(500);
-          cy.get(".alert").should(
-            "contain.text",
-            "The discount has been updated successfully."
-          );
+  cy.get(`${panelId}`).then((panel) => {
+    if (!panel[0].innerHTML.includes("opened")) {
+      cy.wrap(panel).click();
+      cy.get(`${panelId}`).should("contain.html", "opened");
+    }
+    cy.get(`${buttonId}`).then((button) => {
+      const url = button.attr("onclick")?.split('"')[1];
+      cy.location("pathname").then((loc) => {
+        const current = loc;
+        cy.window().then((win) => {
+          // Replace window.open(url, target)-function with our own arrow function
+          cy.stub(win, "open", (url) => {
+            // change window location to be same as the popup url
+            win.location.href = Cypress.config().baseUrl + url;
+          }).as("popup"); // alias it with popup, so we can wait refer it with @popup
         });
+        cy.get(`${buttonId}`).click();
+        cy.get("@popup").should("be.called");
+        cy.get(`${gridId}`)
+          .find("tbody")
+          .find("tr")
+          .then(($rows) => {
+            const row = $rows.filter((index, item) => {
+              return item.cells[1].innerText === prodCatName;
+            });
+            cy.wrap(row).find("td").find("input").check();
+            cy.get("button[name=save]").click();
+            cy.wait(500);
+            cy.visit(current);
+            cy.get("button[name=save]").click();
+            cy.wait(500);
+            cy.get(".alert").should(
+              "contain.text",
+              "The discount has been updated successfully."
+            );
+          });
+      });
     });
   });
 };
@@ -324,12 +339,16 @@ const checkProductForDiscount = (
         const origPrice = parseFloat($span.text().replace("$", ""));
         const discountAmount = percent ? origPrice * discount : discount;
         const discountPrice = origPrice - discountAmount;
-        cy.get(".discounted-price").should(
-          "have.text",
-          `Your price: ${discountPrice.toLocaleString("en-US", {
+        cy.get(".discounted-price").find('span').eq(0).should(
+          "contain.text",
+          "Your price:"
+        );
+        cy.get(".discounted-price").find('span').eq(1).should(
+          "contain.text",
+          discountPrice.toLocaleString("en-US", {
             currency: "USD",
             style: "currency",
-          })}`
+          })
         );
       });
   }
@@ -356,7 +375,7 @@ const checkCategoryForDiscounts = (
             cy.wrap($div)
               .find(".actual-price")
               .should(
-                "have.text",
+                "contain.text",
                 discountedCardPrice.toLocaleString("en-US", {
                   currency: "USD",
                   style: "currency",
@@ -703,59 +722,53 @@ describe("Ecommerce", function () {
 
     it("Creating a new discount displays a success banner and updates the table", () => {
       cy.goToDiscounts();
+      cy.addNewDiscount(commonDiscount);
+      cy.get(".alert").should(
+        "contain.text",
+        "The new discount has been added successfully."
+      );
       cy.get("#discounts-grid")
         .find("tbody")
         .find("tr")
         .then(($rows) => {
-          const originalTableLength = $rows.length;
-          cy.addNewDiscount(commonDiscount);
-          cy.get(".alert").should(
-            "contain.text",
-            "The new discount has been added successfully."
+          expect($rows.length).to.be.gte(1);
+          const row = $rows.filter((index, item) => {
+            return item.cells[0].innerText === commonDiscount.name;
+          });
+          expect(row.length).to.be.eq(1);
+          const cells = row[0].cells;
+          cy.wrap(cells[0]).should("have.text", commonDiscount.name);
+          cy.wrap(cells[1]).should(
+            "have.text",
+            commonDiscount.discountType
           );
-          cy.get("#discounts-grid")
-            .find("tbody")
-            .find("tr")
-            .then(($newRows) => {
-              expect($newRows.length).to.be.eq(originalTableLength + 1);
-              const row = $newRows.filter((index, item) => {
-                return item.cells[0].innerText === commonDiscount.name;
-              });
-              expect(row.length).to.be.eq(1);
-              const cells = row[0].cells;
-              cy.wrap(cells[0]).should("have.text", commonDiscount.name);
-              cy.wrap(cells[1]).should(
-                "have.text",
-                commonDiscount.discountType
-              );
-              cy.wrap(cells[2]).should(
-                "have.text",
-                `${commonDiscount.amount} USD`
-              );
-              cy.wrap(cells[3]).should(
-                "have.text",
-                `${new Date(commonDiscount.date.startDate).toLocaleString(
-                  undefined,
-                  {
-                    month: "2-digit",
-                    day: "2-digit",
-                    year: "numeric",
-                  }
-                )} 00:00:00`
-              );
-              cy.wrap(cells[4]).should(
-                "have.text",
-                `${new Date(commonDiscount.date.endDate).toLocaleString(
-                  undefined,
-                  {
-                    month: "2-digit",
-                    day: "2-digit",
-                    year: "numeric",
-                  }
-                )} 23:59:00`
-              );
-              cy.wrap(cells[5]).should("have.text", "0");
-            });
+          cy.wrap(cells[2]).should(
+            "have.text",
+            `${commonDiscount.amount} USD`
+          );
+          cy.wrap(cells[3]).should(
+            "have.text",
+            `${new Date(commonDiscount.date.startDate).toLocaleString(
+              undefined,
+              {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+                }
+              )} 00:00:00`
+            );
+          cy.wrap(cells[4]).should(
+            "have.text",
+            `${new Date(commonDiscount.date.endDate).toLocaleString(
+              undefined,
+              {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              }
+            )} 23:59:00`
+          );
+          cy.wrap(cells[5]).should("have.text", "0");
         });
     });
 
@@ -880,10 +893,7 @@ describe("Ecommerce", function () {
         },
         limitation: "Unlimited",
       };
-      cy.goToDiscounts();
-      cy.addNewDiscount(productDiscount);
-      createdDiscounts.push(productDiscount.name);
-      editDiscount(productDiscount.name);
+      createDiscountAndEdit(productDiscount);
       addProductOrCategory(cypressProductOne, "product");
       editDiscount(productDiscount.name);
       cy.get("#products-grid")
@@ -921,10 +931,7 @@ describe("Ecommerce", function () {
         limitation: "Unlimited",
         maxDiscountQty: "5",
       };
-      cy.goToDiscounts();
-      cy.addNewDiscount(categoryDiscount);
-      createdDiscounts.push(categoryDiscount.name);
-      editDiscount(categoryDiscount.name);
+      createDiscountAndEdit(categoryDiscount);
       addProductOrCategory(cypressCategory, "category");
       editDiscount(categoryDiscount.name);
       cy.get("#categories-grid")
@@ -975,7 +982,7 @@ describe("Ecommerce", function () {
         discountType: "Assigned to shipping",
       };
       const searchableDiscounts = [searchName, searchCode, searchStart, searchEnd, searchType];
-      function verifyTable(expected, notExpected) {
+      function verifyTable(expected, notExpected?) {
         cy.get("#discounts-grid").find('tbody').find('tr').should("contain.text", expected.name);
         if (notExpected) {
           cy.get("#discounts-grid").find('tbody').find('tr').should("not.contain.text", notExpected.name);
@@ -987,7 +994,7 @@ describe("Ecommerce", function () {
         });
       }
       };
-      function verifyAndClear(discount, notExpected) {
+      function verifyAndClear(discount, notExpected?) {
         verifyTable(discount, notExpected);
         runDiscountSearch("","");
       };
@@ -1007,10 +1014,11 @@ describe("Ecommerce", function () {
       verifyAndClear(searchEnd, searchStart);
       runDiscountSearch(searchType.discountType, "type")
       verifyAndClear(searchType);
+      cy.wait(1000);
       // Delete them all
       searchableDiscounts.forEach((item) => {
         deleteDiscount(item.name);
-      })
+      });
     });
     
     it("Percentage discount is applied correctly", () => {
