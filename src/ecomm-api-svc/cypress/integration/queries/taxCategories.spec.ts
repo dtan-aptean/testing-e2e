@@ -1,51 +1,39 @@
 /// <reference types="cypress" />
 // TEST COUNT: 9
 describe('Query: taxCategories', () => {
-    it('A query with orderBy returns valid data types', () => {
-        const gqlQuery = `{
-            taxCategories(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                edges {
-                    cursor
-                    node {
-                        id
-                    }
-                }
-                nodes {
+    const standardQueryBody = `edges {
+                cursor
+                node {
                     id
+                    name
                 }
-                pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                }
-                totalCount
             }
-        }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.validateQueryRes(gqlQuery, res, "taxCategories");
-        });
+            nodes {
+                id
+                name
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+                hasPreviousPage
+                startCursor
+            }
+            totalCount`;
+        
+    const standardQuery = `{
+        taxCategories(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${standardQueryBody}
+        }
+    }`;
+
+    it("Query with valid 'orderBy' input argument returns valid data types", () => {
+        cy.postAndValidate(standardQuery, "taxCategories");
     });
 
-    it("Query will fail without orderBy input", () => {
+    it("Query will fail without 'orderBy' input argument", () => {
         const gqlQuery = `{
             taxCategories {
-                edges {
-                    cursor
-                    node {
-                        id
-                    }
-                }
-                nodes {
-                    id
-                }
-                pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                }
-                totalCount
+                ${standardQueryBody}
             }
         }`;
         cy.postGQL(gqlQuery).then(res => {
@@ -53,37 +41,31 @@ describe('Query: taxCategories', () => {
         });
     });
 
-    it('Query fails if the orderBy argument is null', () => {
+    it("Query fails if the 'orderBy' input argument is null", () => {
         const gqlQuery = `{
             taxCategories(orderBy: null) {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(gqlQuery);
     });
 
-    it('Query fails if orderBy argument only has field', () => {
+    it("Query fails if 'orderBy' input argument only has field", () => {
         const fieldQuery = `{
             taxCategories(orderBy: {field: TIMESTAMP}) {
                 totalCount
             }
         }`;
-        cy.postGQL(fieldQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(fieldQuery);
     });
 
-    it('Query fails if orderBy argument only has direction', () => {
+    it("Query fails if 'orderBy' input argument only has direction", () => {
         const directionQuery = `{
             taxCategories(orderBy: {direction: ASC}) {
                 totalCount
             }
         }`;
-        cy.postGQL(directionQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(directionQuery);
     });
 
     it('Query will fail if no return type is provided', () => {
@@ -91,12 +73,10 @@ describe('Query: taxCategories', () => {
             taxCategories(orderBy: {direction: ASC, field: TIMESTAMP}) {
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(gqlQuery);
     });
 
-    it('Query will succeed with orderBy input and one return type', () => {
+    it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
         const gqlQuery = `{
             taxCategories(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 totalCount
@@ -116,17 +96,10 @@ describe('Query: taxCategories', () => {
         });
     });
 
-    it("Query without first or last will return all items", () => {
-        const gqlQuery = `{
-            taxCategories(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                nodes {
-                    id
-                }
-                totalCount
-            }
-        }`;
-        cy.postGQL(gqlQuery).then((res) => {
+    it("Query without 'first' or 'last' input arguments will return all items", () => {
+        cy.postAndValidate(standardQuery, "taxCategories").then((res) => {
             cy.confirmCount(res, "taxCategories");
+            cy.verifyPageInfo(res, "taxCategories", false, false);
         });
     });
 
@@ -151,10 +124,8 @@ describe('Query: taxCategories', () => {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.validateQueryRes(gqlQuery, res, "taxCategories").then(() => {
-                cy.checkCustomData(res, "taxCategories");
-            });
+        cy.postAndValidate(gqlQuery, "taxCategories").then((res) => {
+            cy.checkCustomData(res, "taxCategories");
         });
     });
 });

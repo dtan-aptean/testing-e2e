@@ -1,51 +1,38 @@
 /// <reference types="cypress" />
 // TEST COUNT: 9
 describe('Query: categories', () => {
-    it('The categories query returns a valid return type', () => {
-        const gqlQuery = `{
-            categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                edges {
-                    cursor
-                    node {
-                        id
-                    }
-                }
-                nodes {
+    const standardQueryBody = `edges {
+                cursor
+                node {
                     id
+                    name
                 }
-                pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                }
-                totalCount
             }
-        }`;
-        cy.postGQL(gqlQuery).then((res) => {
-            cy.validateQueryRes(gqlQuery, res, "categories");
-        });
+            nodes {
+                id
+                name
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+                hasPreviousPage
+                startCursor
+            }
+            totalCount`;
+    const standardQuery = `{
+        categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${standardQueryBody}
+        }
+    }`;
+
+    it("Query with valid 'orderBy' input argument returns valid data types", () => {
+        cy.postAndValidate(standardQuery, "categories");
     });
     
-    it("Query will fail without orderBy input", () => {
+    it("Query will fail without 'orderBy' input argument", () => {
         const gqlQuery = `{
             categories {
-                edges {
-                    cursor
-                    node {
-                        id
-                    }
-                }
-                nodes {
-                    id
-                }
-                pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                }
-                totalCount
+                ${standardQueryBody}
             }
         }`;
         cy.postGQL(gqlQuery).then((res) => {
@@ -53,37 +40,31 @@ describe('Query: categories', () => {
         });
     });
 
-    it('Query fails if the orderBy argument is null', () => {
+    it("Query fails if the 'orderBy' input argument is null", () => {
         const gqlQuery = `{
             categories(orderBy: null) {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(gqlQuery);
     });
 
-    it('Query fails if orderBy argument only has field', () => {
+    it("Query fails if 'orderBy' input argument only has field", () => {
         const fieldQuery = `{
             categories(orderBy: {field: TIMESTAMP}) {
                 totalCount
             }
         }`;
-        cy.postGQL(fieldQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(fieldQuery);
     });
 
-    it('Query fails if orderBy argument only has direction', () => {
+    it("Query fails if 'orderBy' input argument only has direction", () => {
         const directionQuery = `{
             categories(orderBy: {direction: ASC}) {
                 totalCount
             }
         }`;
-        cy.postGQL(directionQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(directionQuery);
     });
 
     it('Query will fail if no return type is provided', () => {
@@ -92,12 +73,10 @@ describe('Query: categories', () => {
                 
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(gqlQuery);
     });
 
-    it('Query will succeed with orderBy input and one return type', () => {
+    it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
         const gqlQuery = `{
             categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 totalCount
@@ -117,17 +96,10 @@ describe('Query: categories', () => {
         });
     });
 
-    it("Query without first or last will return all items", () => {
-        const gqlQuery = `{
-            categories(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                nodes {
-                    id
-                }
-                totalCount
-            }
-        }`;
-        cy.postGQL(gqlQuery).then((res) => {
+    it("Query without 'first' or 'last' input arguments will return all items", () => {
+        cy.postAndValidate(standardQuery, "categories").then((res) => {
             cy.confirmCount(res, "categories");
+            cy.verifyPageInfo(res, "categories", false, false);
         });
     });
 
@@ -152,10 +124,8 @@ describe('Query: categories', () => {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.validateQueryRes(gqlQuery, res, "categories").then(() => {
-                cy.checkCustomData(res, "categories");
-            });
+        cy.postAndValidate(gqlQuery, "categories").then((res) => {
+            cy.checkCustomData(res, "categories");
         });
     });
 });
