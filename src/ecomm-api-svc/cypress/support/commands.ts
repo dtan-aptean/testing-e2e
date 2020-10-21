@@ -50,19 +50,6 @@ Cypress.Commands.add('validateQueryRes', (gqlQuery, res, dataPath: string) => {
     assert.isObject(res.body.data[dataPath].pageInfo);
     assert.isNotNaN(res.body.data[dataPath].totalCount);
     expect(res.body.data[dataPath].edges.length).to.be.eql(res.body.data[dataPath].nodes.length, "Expect edge length to equal nodes length");
-    // Checks for duplicate cursors
-    /* Cypress.log({message: "check for duplicate cursors"});
-    var cursor;
-    for (var i = 0; i < res.body.data[dataPath].edges.length; i++) {
-        cursor = res.body.data[dataPath].edges[i].cursor;
-        for (var f = 0; f < res.body.data[dataPath].edges.length; f++) {
-            if (i !== f) {
-                expect(res.body.data[dataPath].edges[f].cursor).not.to.eql(cursor);
-            } else {
-                expect(res.body.data[dataPath].edges[f].cursor).to.eql(cursor);
-            }
-        }
-    } */
 });
 
 // Post query and do standard validation
