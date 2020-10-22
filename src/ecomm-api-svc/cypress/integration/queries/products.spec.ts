@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 // TEST COUNT: 24
 describe('Query: products', () => {
+    const queryName = "products";
     // Standard query body to use when we don't need special data but do need special input arguments
     const standardQueryBody = `edges {
                 cursor
@@ -28,7 +29,7 @@ describe('Query: products', () => {
     }`;
 
     it("Query with valid 'orderBy' input argument returns valid data types", () => {
-        cy.postAndValidate(standardQuery, "products");
+        cy.postAndValidate(standardQuery, queryName);
     });
 
     it("Query will fail without 'orderBy' input argument", () => {
@@ -99,14 +100,14 @@ describe('Query: products', () => {
     });
 
     it("Query without 'first' or 'last' input arguments will return all items", () => {
-        cy.postAndValidate(standardQuery, "products").then((res) => {
-            cy.confirmCount(res, "products");
-            cy.verifyPageInfo(res, "products", false, false);
+        cy.postAndValidate(standardQuery, queryName).then((res) => {
+            cy.confirmCount(res, queryName);
+            cy.verifyPageInfo(res, queryName, false, false);
         });
     });
 
     it("Query with valid 'first' input argument will return only that amount of items", () => {
-        cy.returnCount(standardQuery, "products").then((totalCount: number) => {
+        cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
             // If there's only one item, we can't do any pagination
             expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
             // Get half the items, rounding down
@@ -116,16 +117,16 @@ describe('Query: products', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(gqlQuery, "products").then((resp) => {
+            cy.postAndValidate(gqlQuery, queryName).then((resp) => {
                 // Verify that the pageInfo's cursors match up with the edges array's cursors
-                cy.verifyPageInfo(resp, "products", true, false);
-                cy.verifyFirstOrLast(resp, "products", first, "first");
+                cy.verifyPageInfo(resp, queryName, true, false);
+                cy.verifyFirstOrLast(resp, queryName, first, "first");
             });
         });
     });
 
     it("Query with valid 'last' input argument will return only that amount of items", () => {
-        cy.returnCount(standardQuery, "products").then((totalCount: number) => {
+        cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
             // If there's only one item, we can't do any pagination
             expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
             // Get half the items, rounding down
@@ -135,10 +136,10 @@ describe('Query: products', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(gqlQuery, "products").then((resp) => {
+            cy.postAndValidate(gqlQuery, queryName).then((resp) => {
                 // Verify that the pageInfo's cursors match up with the edges array's cursors
-                cy.verifyPageInfo(resp, "products", true, false);
-                cy.verifyFirstOrLast(resp, "products", last, "last");
+                cy.verifyPageInfo(resp, queryName, true, false);
+                cy.verifyFirstOrLast(resp, queryName, last, "last");
             });
         });
     });
@@ -177,20 +178,20 @@ describe('Query: products', () => {
     });
 
     it("Query with a valid 'searchString' input argument will return the specific item", () => {
-        cy.returnRandomName(standardQuery, "products").then((name: string) => {
+        cy.returnRandomName(standardQuery, queryName).then((name: string) => {
             const searchQuery = `{
                 products(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(searchQuery, "products").then((resp) => {
-                cy.validateNameSearch(resp, "products", name, true);
+            cy.postAndValidate(searchQuery, queryName).then((resp) => {
+                cy.validateNameSearch(resp, queryName, name, true);
             });
         });
     });
 
     it("Query with a valid partial 'searchString' input argument will return all items containing the string", () => {
-        cy.returnRandomName(standardQuery, "products").then((name: string) => {
+        cy.returnRandomName(standardQuery, queryName).then((name: string) => {
             // Get the first word if the name has multiple words. Otherwise, get a random segment of the name
             var newWordIndex = name.search(" ");
             var searchText = "";
@@ -205,8 +206,8 @@ describe('Query: products', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(searchQuery, "products").then((resp) => {
-                cy.validateNameSearch(resp, "products", searchText, false);
+            cy.postAndValidate(searchQuery, queryName).then((resp) => {
+                cy.validateNameSearch(resp, queryName, searchText, false);
             });
         });
     });
@@ -224,31 +225,31 @@ describe('Query: products', () => {
     });
 
     it("Query with a valid 'before' input argument will return all items before that value", () => {
-        cy.returnRandomCursor(standardQuery, "products", true).then((cursor: string) => {
+        cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             const beforeQuery = `{
                 products(before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(beforeQuery, "products").then((resp) => {
+            cy.postAndValidate(beforeQuery, queryName).then((resp) => {
                 // Verify that the pageInfo's cursors match up with the edges array's cursors
-                cy.verifyPageInfo(resp, "products", false, true);
-                cy.validateCursor(resp, "products", "before");
+                cy.verifyPageInfo(resp, queryName, false, true);
+                cy.validateCursor(resp, queryName, "before");
             });
         });
     });
     
     it("Query with a valid 'after' input argument will return all items after that value", () => {
-        cy.returnRandomCursor(standardQuery, "products", false).then((cursor: string) => {
+        cy.returnRandomCursor(standardQuery, queryName, false).then((cursor: string) => {
             const afterQuery = `{
                 products(after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(afterQuery, "products").then((resp) => {
+            cy.postAndValidate(afterQuery, queryName).then((resp) => {
                 // Verify that the pageInfo's cursors match up with the edges array's cursors
-                cy.verifyPageInfo(resp, "products", false, true);
-                cy.validateCursor(resp, "products", "after");
+                cy.verifyPageInfo(resp, queryName, false, true);
+                cy.validateCursor(resp, queryName, "after");
             });
         });
     });
@@ -266,12 +267,12 @@ describe('Query: products', () => {
             // no data
             assert.notExists(res.body.data);
 
-            expect(res.body.errors[0].message).to.include("Unsupported request");
+            expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
         });
     });
 
     it("Query with both 'before' and 'first' input arguments will return a specific amount of items before that value", () => {
-        cy.returnRandomCursor(standardQuery, "products", true).then((cursor: string) => {
+        cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             cy.get('@cursorIndex').then((index: number) => {
                 const first = Math.floor(index / 2);
                 Cypress.log({message: `first: ${first}`});
@@ -280,17 +281,17 @@ describe('Query: products', () => {
                         ${standardQueryBody}
                     }
                 }`;
-                cy.postAndValidate(beforeQuery, "products").then((resp) => {
+                cy.postAndValidate(beforeQuery, queryName).then((resp) => {
                     // Verify that the pageInfo's cursors match up with the edges array's cursors
-                    cy.verifyPageInfo(resp, "products", true, true);
-                    cy.validateCursor(resp, "products", "before", "first", first);
+                    cy.verifyPageInfo(resp, queryName, true, true);
+                    cy.validateCursor(resp, queryName, "before", "first", first);
                 });
             });
         });
     });
 
     it("Query with both 'after' and 'first' input will arguments return a specific amount of items after that value", () => {
-        cy.returnRandomCursor(standardQuery, "products", false).then((cursor: string) => {
+        cy.returnRandomCursor(standardQuery, queryName, false).then((cursor: string) => {
             cy.get('@cursorIndex').then((index: number) => {
                 cy.get('@orgCount').then((count: number) => {
                     const diff = (count - 1) - index;
@@ -301,10 +302,10 @@ describe('Query: products', () => {
                             ${standardQueryBody}
                         }
                     }`;
-                    cy.postAndValidate(afterQuery, "products").then((resp) => {
+                    cy.postAndValidate(afterQuery, queryName).then((resp) => {
                         // Verify that the pageInfo's cursors match up with the edges array's cursors
-                        cy.verifyPageInfo(resp, "products");
-                        cy.validateCursor(resp, "products", "after", "first", first);
+                        cy.verifyPageInfo(resp, queryName);
+                        cy.validateCursor(resp, queryName, "after", "first", first);
                     });
                 });
             });
@@ -312,7 +313,7 @@ describe('Query: products', () => {
     });
 
     it("Query with both 'before' and 'last' input arguments will return a specific amount of items before that value", () => {
-        cy.returnRandomCursor(standardQuery, "products", true).then((cursor: string) => {
+        cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             cy.get('@cursorIndex').then((index: number) => {
                 const last = Math.floor(index / 2);
                 Cypress.log({message: `last: ${last}`});
@@ -321,17 +322,17 @@ describe('Query: products', () => {
                         ${standardQueryBody}
                     }
                 }`;
-                cy.postAndValidate(beforeQuery, "products").then((resp) => {
+                cy.postAndValidate(beforeQuery, queryName).then((resp) => {
                     // Verify that the pageInfo's cursors match up with the edges array's cursors
-                    cy.verifyPageInfo(resp, "products", true, true);
-                    cy.validateCursor(resp, "products", "before", "last", last);
+                    cy.verifyPageInfo(resp, queryName, true, true);
+                    cy.validateCursor(resp, queryName, "before", "last", last);
                 });
             });
         });
     });
 
     it("Query with both 'after' and 'last' input will return a specific amount of items after that value", () => {
-        cy.returnRandomCursor(standardQuery, "products", false).then((cursor: string) => {
+        cy.returnRandomCursor(standardQuery, queryName, false).then((cursor: string) => {
             cy.get('@cursorIndex').then((index: number) => {
                 cy.get('@orgCount').then((count: number) => {
                     const diff = (count - 1) - index;
@@ -342,10 +343,10 @@ describe('Query: products', () => {
                             ${standardQueryBody}
                         }
                     }`;
-                    cy.postAndValidate(afterQuery, "products").then((resp) => {
+                    cy.postAndValidate(afterQuery, queryName).then((resp) => {
                         // Verify that the pageInfo's cursors match up with the edges array's cursors
-                        cy.verifyPageInfo(resp, "products");
-                        cy.validateCursor(resp, "products", "after", "last", last);
+                        cy.verifyPageInfo(resp, queryName);
+                        cy.validateCursor(resp, queryName, "after", "last", last);
                     });
                 });
             });
@@ -373,8 +374,8 @@ describe('Query: products', () => {
                 totalCount
             }
         }`;
-        cy.postAndValidate(gqlQuery, "products").then((res) => {
-            cy.checkCustomData(res, "products");
+        cy.postAndValidate(gqlQuery, queryName).then((res) => {
+            cy.checkCustomData(res, queryName);
         });
     });
 });

@@ -292,10 +292,13 @@ Cypress.Commands.add("verifyFirstOrLast", (res, dataPath: string, value: number,
                 expect(nodes[i].id).to.be.eql(orgEdges[i].node.id);
             }
         } else if (firstOrLast.toLowerCase() === "last") {
-            expect(pageInfo.startCursor).not.to.be.eql(orgPageInfo.startCursor);
-            expect(pageInfo.startCursor).to.be.eql(orgEdges[value + 1].cursor);
-            expect(pageInfo.endCursor).to.be.eql(orgPageInfo.endCursor);
             var f = value + 1;
+            if (value === orgRes.totalCount / 2){
+                f = value;
+            }
+            expect(pageInfo.startCursor).not.to.be.eql(orgPageInfo.startCursor);
+            expect(pageInfo.startCursor).to.be.eql(orgEdges[f].cursor);
+            expect(pageInfo.endCursor).to.be.eql(orgPageInfo.endCursor);
             for(var i = 0; i < value; i++){
                 expect(nodes[i].id).to.be.eql(orgNodes[f].id);
                 expect(edges[i].cursor).to.be.eql(orgEdges[f].cursor);
