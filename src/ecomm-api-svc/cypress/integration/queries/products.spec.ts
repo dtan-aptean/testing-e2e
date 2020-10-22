@@ -167,7 +167,7 @@ describe('Query: products', () => {
         });
     });
     
-    it.skip("Query with both 'first' and 'last' input arguments will fail", () => {
+    it("Query with both 'first' and 'last' input arguments will fail", () => {
         const gqlQuery = `{
             products(first: 7, last: 3, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
