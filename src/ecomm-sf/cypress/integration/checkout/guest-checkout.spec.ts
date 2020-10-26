@@ -203,7 +203,7 @@ describe("Ecommerce", function () {
       cy.get(".shipping-method-next-step-button").click();
       cy.wait(1000);
       // Check credit card payment method
-      cy.get("#payment-method-block").find('li').eq(0).find('input[type="radio"]').check();
+      cy.get("#payment-method-block").find("#paymentmethod_1").check();
       // Test Credit card validation, should get errors
       cy.get(".payment-method-next-step-button").click();
       cy.wait(200);
@@ -260,7 +260,7 @@ describe("Ecommerce", function () {
       cy.wait(1000);
 
       // Payment Method
-      cy.get("#payment-method-block").find('li').eq(0).find('input[type="radio"]').check();
+      cy.get("#payment-method-block").find("#paymentmethod_1").check();
       cy.get(".payment-method-next-step-button").click();
       cy.wait(200);
       // Payment Information
@@ -331,7 +331,7 @@ describe("Ecommerce", function () {
       cy.wait(1000);
 
       // Payment Method
-      cy.get("#payment-method-block").find('li').eq(0).find('input[type="radio"]').check();
+      cy.get("#payment-method-block").find("#paymentmethod_1").check();
       cy.get(".payment-method-next-step-button").click();
       cy.wait(200);
       // Payment Information
