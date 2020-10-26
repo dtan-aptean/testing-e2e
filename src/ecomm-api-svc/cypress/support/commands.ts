@@ -514,8 +514,10 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
             expect(edges).not.to.deep.include(data.edges[g]);
         }
     }
-    expect(pageInfo.startCursor).to.be.eql(sCursor);
-    expect(pageInfo.endCursor).not.to.eql(eCursor);
+    if (nodes.length !== 1 && edges.length !== 1) {
+        expect(pageInfo.startCursor).to.be.eql(sCursor);
+        expect(pageInfo.endCursor).not.to.eql(eCursor);
+    }
 });
 
 // Validate the response from a query using after. Can optionally validate first/last input as well.
@@ -566,8 +568,10 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
             expect(edges).not.to.deep.include(data.edges[g]);
         }
     }
-    expect(pageInfo.startCursor).not.to.be.eql(sCursor);
-    expect(pageInfo.endCursor).to.eql(eCursor);
+    if (nodes.length !== 1 && edges.length !== 1) {
+        expect(pageInfo.startCursor).not.to.be.eql(sCursor);
+        expect(pageInfo.endCursor).to.eql(eCursor);
+    }
 });
 
 // Should be called after returnRandomCursor
