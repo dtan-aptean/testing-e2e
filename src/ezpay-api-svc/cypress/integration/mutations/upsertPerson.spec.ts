@@ -4,7 +4,7 @@ describe('Mutation: upsertPerson', () => {
   let personId = '';
   let personEmail = 'John.Doe.One@aptean.com'
 
-  // Before any of these upset tests run, make sure our friend John.Doe.One@aptean.com does not exist.
+  // Ensure our friend John.Doe.One@aptean.com does not exist before starting any of the upsert tests.
   before(() => {
     // Query for person.
     const personGqlQuery = `query {
