@@ -1,51 +1,39 @@
 /// <reference types="cypress" />
 // TEST COUNT: 10
 describe('Query: vendors', () => {
-    it('A query with orderBy returns valid data types', () => {
-        const gqlQuery = `{
-            vendors(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                edges {
-                    cursor
-                    node {
-                        id
-                    }
-                }
-                nodes {
+    const standardQueryBody = `edges {
+                cursor
+                node {
                     id
+                    name
                 }
-                pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                }
-                totalCount
             }
-        }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.validateQueryRes(gqlQuery, res, "vendors");
-        });
+            nodes {
+                id
+                name
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+                hasPreviousPage
+                startCursor
+            }
+            totalCount`;
+    
+    const standardQuery = `{
+        vendors(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${standardQueryBody}
+        }
+    }`;
+
+    it("Query with valid 'orderBy' input argument returns valid data types", () => {
+        cy.postAndValidate(standardQuery, "vendors");
     });
 
-    it("Query will fail without orderBy input", () => {
+    it("Query will fail without 'orderBy' input argument", () => {
         const gqlQuery = `{
             vendors {
-                edges {
-                    cursor
-                    node {
-                        id
-                    }
-                }
-                nodes {
-                    id
-                }
-                pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                }
-                totalCount
+                ${standardQueryBody}
             }
         }`;
         cy.postGQL(gqlQuery).then(res => {
@@ -53,37 +41,31 @@ describe('Query: vendors', () => {
         });
     });
     
-    it('Query fails if the orderBy argument is null', () => {
+    it("Query fails if the 'orderBy' input argument is null", () => {
         const gqlQuery = `{
             vendors(orderBy: null) {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(gqlQuery);
     });
 
-    it('Query fails if orderBy argument only has field', () => {
+    it("Query fails if 'orderBy' input argument only has field", () => {
         const fieldQuery = `{
             vendors(orderBy: {field: TIMESTAMP}) {
                 totalCount
             }
         }`;
-        cy.postGQL(fieldQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(fieldQuery);
     });
 
-    it('Query fails if orderBy argument only has direction', () => {
+    it("Query fails if 'orderBy' input argument only has direction", () => {
         const directionQuery = `{
             vendors(orderBy: {direction: ASC}) {
                 totalCount
             }
         }`;
-        cy.postGQL(directionQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(directionQuery);
     });
 
     it('Query will fail if no return type is provided', () => {
@@ -91,12 +73,10 @@ describe('Query: vendors', () => {
             vendors(orderBy: {direction: ASC, field: TIMESTAMP}) {
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(gqlQuery);
     });
 
-    it('Query will succeed with orderBy input and one return type', () => {
+    it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
         const gqlQuery = `{
             vendors(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 totalCount
@@ -116,17 +96,10 @@ describe('Query: vendors', () => {
         });
     });
 
-    it("Query without first or last will return all items", () => {
-        const gqlQuery = `{
-            vendors(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                nodes {
-                    id
-                }
-                totalCount
-            }
-        }`;
-        cy.postGQL(gqlQuery).then((res) => {
+    it("Query without 'first' or 'last' input arguments will return all items", () => {
+        cy.postAndValidate(standardQuery, "vendors").then((res) => {
             cy.confirmCount(res, "vendors");
+            cy.verifyPageInfo(res, "vendors", false, false);
         });
     });
 
@@ -151,10 +124,8 @@ describe('Query: vendors', () => {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.validateQueryRes(gqlQuery, res, "vendors").then(() => {
-                cy.checkCustomData(res, "vendors");
-            });
+        cy.postAndValidate(gqlQuery, "vendors").then((res) => {
+            cy.checkCustomData(res, "vendors");
         });
     });
 
@@ -186,42 +157,40 @@ describe('Query: vendors', () => {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.validateQueryRes(gqlQuery, res, "vendors").then(() => {
-                if (res.body.data.vendors.nodes.length > 0) {
-                    const nodesPath = res.body.data.vendors.nodes;
-                    nodesPath.forEach((item) => {
-                        // has address field
-                        expect(item).to.have.property('address');
-                        if (item.address !== null) {
-                            expect(item.address).to.have.property('city');
-                            if (item.address.city !== null) {
-                                expect(item.address.city).to.be.a('string');
-                            }
-                            expect(item.address).to.have.property('country');
-                            if (item.address.country !== null) {
-                                expect(item.address.country).to.be.a('string');
-                            }
-                            expect(item.address).to.have.property('line1');
-                            if (item.address.line1 !== null) {
-                                expect(item.address.line1).to.be.a('string');
-                            }
-                            expect(item.address).to.have.property('line2');
-                            if (item.address.line2 !== null) {
-                                expect(item.address.line2).to.be.a('string');
-                            }
-                            expect(item.address).to.have.property('postalCode');
-                            if (item.address.postalCode !== null) {
-                                expect(item.address.postalCode).to.be.a('string');
-                            }
-                            expect(item.address).to.have.property('region');
-                            if (item.address.region !== null) {
-                                expect(item.address.region).to.be.a('string');
-                            }
+        cy.postAndValidate(gqlQuery, "vendors").then((res) => {
+            if (res.body.data.vendors.nodes.length > 0) {
+                const nodesPath = res.body.data.vendors.nodes;
+                nodesPath.forEach((item) => {
+                    // has address field
+                    expect(item).to.have.property('address');
+                    if (item.address !== null) {
+                        expect(item.address).to.have.property('city');
+                        if (item.address.city !== null) {
+                            expect(item.address.city).to.be.a('string');
                         }
-                    });
-                }
-            });
+                        expect(item.address).to.have.property('country');
+                        if (item.address.country !== null) {
+                            expect(item.address.country).to.be.a('string');
+                        }
+                        expect(item.address).to.have.property('line1');
+                        if (item.address.line1 !== null) {
+                            expect(item.address.line1).to.be.a('string');
+                        }
+                        expect(item.address).to.have.property('line2');
+                        if (item.address.line2 !== null) {
+                            expect(item.address.line2).to.be.a('string');
+                        }
+                        expect(item.address).to.have.property('postalCode');
+                        if (item.address.postalCode !== null) {
+                            expect(item.address.postalCode).to.be.a('string');
+                        }
+                        expect(item.address).to.have.property('region');
+                        if (item.address.region !== null) {
+                            expect(item.address.region).to.be.a('string');
+                        }
+                    }
+                });
+            }
         });
     });
 });
