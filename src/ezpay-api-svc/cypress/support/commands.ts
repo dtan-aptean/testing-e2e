@@ -30,6 +30,7 @@ Cypress.Commands.add('postGQL', query => {
     method: 'POST',
     url: '/graphql',
     headers: {
+      authorization: Cypress.env('authorization'),
       'x-aptean-apim': Cypress.env('x-aptean-apim'),
       'x-aptean-tenant': Cypress.env('x-aptean-tenant'),
       'x-ezpay-pmt': Cypress.env('x-ezpay-pmt'),
@@ -40,20 +41,20 @@ Cypress.Commands.add('postGQL', query => {
 });
 
 // -- This will post GQL query with bearer token --
-Cypress.Commands.add('postGQLWithBearerToken', query => {
-  return cy.request({
-    method: 'POST',
-    url: '/graphql',
-    headers: {
-      authorization: Cypress.env('authorization'),
-      'x-aptean-apim': Cypress.env('x-aptean-apim'),
-      'x-aptean-tenant': Cypress.env('x-aptean-tenant'),
-      'x-ezpay-pmt': Cypress.env('x-ezpay-pmt'),
-    },
-    body: { query },
-    failOnStatusCode: false,
-  });
-});
+// Cypress.Commands.add('postGQL', query => {
+//   return cy.request({
+//     method: 'POST',
+//     url: '/graphql',
+//     headers: {
+//       authorization: Cypress.env('authorization'),
+//       'x-aptean-apim': Cypress.env('x-aptean-apim'),
+//       'x-aptean-tenant': Cypress.env('x-aptean-tenant'),
+//       'x-ezpay-pmt': Cypress.env('x-ezpay-pmt'),
+//     },
+//     body: { query },
+//     failOnStatusCode: false,
+//   });
+// });
 
 // -- This will upload an invoice and return the invoiceRef number --
 Cypress.Commands.add('getInvoiceRef', () => {

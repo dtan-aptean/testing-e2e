@@ -66,7 +66,7 @@ describe('Mutation: processPaymentRequest', () => {
       }
     }`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       console.log(gqlQuery);
       console.log(res);
       // should be 200 ok
@@ -125,7 +125,7 @@ describe('Mutation: processPaymentRequest', () => {
       ) {}
     }`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -144,7 +144,7 @@ describe('Mutation: processPaymentRequest', () => {
       }
     }`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 

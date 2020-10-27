@@ -28,7 +28,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 			}
 		}`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -59,7 +59,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 				}
 			}`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -78,7 +78,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 				}
 			}`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -96,7 +96,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 				}
 			}`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -115,7 +115,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 				}
 			}`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -142,7 +142,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 		}
 	}`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
