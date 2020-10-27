@@ -92,6 +92,7 @@ Cypress.Commands.add('generatePaymentRequest', () => {
           }
         ) {
           paymentUrl
+          paymentRequestId
         }
       }`;
       cy.postGQL(gqlQuery).then(paymentRequest => {

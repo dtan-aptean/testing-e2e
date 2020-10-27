@@ -6,12 +6,8 @@ describe('Query: paymentRequestFromUrlToken', () => {
 
   before(() => {
     cy.generatePaymentRequest().then(response => {
-      cy.request(response.paymentUrl).then(res => {
-        const { redirects } = res;
-        const longUri = redirects[0];
-        const qsTokenIndex = 1;
-        urlToken = longUri.split('?')[qsTokenIndex];
-      });
+      const qsTokenIndex = 1;
+      urlToken = response.paymentUrl.split('?')[qsTokenIndex];
     });
   });
 
@@ -32,7 +28,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 			}
 		}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -63,7 +59,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 				}
 			}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -82,7 +78,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 				}
 			}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -100,7 +96,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 				}
 			}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -119,7 +115,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 				}
 			}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -146,7 +142,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 		}
 	}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 

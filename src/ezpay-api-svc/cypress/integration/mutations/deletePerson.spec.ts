@@ -10,7 +10,7 @@ describe('Mutation: deletePerson', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -53,7 +53,7 @@ describe('Mutation: deletePerson', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 

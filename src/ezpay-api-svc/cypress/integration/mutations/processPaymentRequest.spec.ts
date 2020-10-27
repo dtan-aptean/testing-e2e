@@ -66,7 +66,7 @@ describe('Mutation: processPaymentRequest', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       console.log(gqlQuery);
       console.log(res);
       // should be 200 ok
@@ -82,7 +82,7 @@ describe('Mutation: processPaymentRequest', () => {
       assert.isNotNull(res.body.data.processPaymentRequest);
       assert.isNotNull(res.body.data.processPaymentRequest.code);
       assert.isNull(res.body.data.processPaymentRequest.error, res.body.data.processPaymentRequest.message);
-      assert.equal(res.body.data.processPaymentRequest.code, 'SUCCESS', 'Code is not SUCCESS');
+      assert.equal(res.body.data.processPaymentRequest.code, 'PENDING', 'Code is not PENDING');
     });
   });
 
@@ -125,7 +125,7 @@ describe('Mutation: processPaymentRequest', () => {
       ) {}
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -144,7 +144,7 @@ describe('Mutation: processPaymentRequest', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 

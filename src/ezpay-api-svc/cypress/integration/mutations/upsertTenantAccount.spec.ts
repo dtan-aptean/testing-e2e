@@ -20,7 +20,7 @@ describe('Mutation: upsertTenantAccount', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -49,7 +49,7 @@ describe('Mutation: upsertTenantAccount', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -74,7 +74,7 @@ describe('Mutation: upsertTenantAccount', () => {
       ) {}
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -93,7 +93,7 @@ describe('Mutation: upsertTenantAccount', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -114,7 +114,7 @@ describe('Mutation: upsertTenantAccount', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLWithBearerToken(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
