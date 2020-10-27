@@ -106,7 +106,7 @@ Cypress.Commands.add("goToCart", () => {
     name: "goToCart",
   });
   cy.get(".header-links").find(".ico-cart").click({ force: true });
-  cy.wait(500);
+  cy.wait(1000);
 });
 
 // Empty the cart and remove applied discounts
@@ -204,6 +204,7 @@ Cypress.Commands.add("addToCartAndCheckout", () => {
   cy.goToProduct("Bald Cypress");
   cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
   cy.get(".add-to-cart-button").click();
+  cy.wait(1000);
   cy.goToCart();
   cy.get("#termsofservice").click();
   cy.get(".checkout-button").click();
