@@ -13,7 +13,6 @@ describe('Mutation: upsertPerson', () => {
       }
     }`
     cy.postGQL(personGqlQuery).then(res => {
-      // should be 200 ok
       if (!res.body.errors && res.body.data.person) {
         personId = res.body.data.person.id;
         const gqlQuery = `mutation {
@@ -29,7 +28,6 @@ describe('Mutation: upsertPerson', () => {
         });              
       }
     });
-    
   });
 
   afterEach(() => {
