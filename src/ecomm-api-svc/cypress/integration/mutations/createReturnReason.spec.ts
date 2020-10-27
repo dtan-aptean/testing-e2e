@@ -1,13 +1,13 @@
 /// <reference types="cypress" />
 // TEST COUNT: 3
 // request count: 3
-describe('Muation: createCategory', () => {
+describe('Muation: createReturnReason', () => {
     let id = '';
     const standardMutationBody = `
         code
         message
         error
-        category {
+        returnReason {
             id
             name
         }
@@ -15,7 +15,7 @@ describe('Muation: createCategory', () => {
     
     it("Mutation will fail without input", () => {
         const mutation = `mutation {
-            createCategory {
+            createReturnReason {
                 ${standardMutationBody}
             }
         }`
@@ -24,7 +24,7 @@ describe('Muation: createCategory', () => {
 
     it("Mutation will fail when input is an empty object", () => {
         const mutation = `mutation {
-            createCategory(input: {}) {
+            createReturnReason(input: {}) {
                 ${standardMutationBody}
             }
         }`
@@ -33,7 +33,7 @@ describe('Muation: createCategory', () => {
 
     it("Mutation will fail with invalid 'Name' input", () => {
         const mutation = `mutation {
-            createCategory(input: { name: 7 }) {
+            createReturnReason(input: { name: 7 }) {
                 ${standardMutationBody}
             }
         }`
