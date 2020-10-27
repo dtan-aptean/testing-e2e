@@ -1,51 +1,39 @@
 /// <reference types="cypress" />
 // TEST COUNT: 10
 describe('Query: checkoutAttributes', () => {
-    it('The checkoutAttributes query returns a valid return type', () => {
-        const gqlQuery = `{
-            checkoutAttributes(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                edges {
-                    cursor
-                    node {
-                        id
-                    }
-                }
-                nodes {
+    const standardQueryBody = `edges {
+                cursor
+                node {
                     id
+                    name
                 }
-                pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                }
-                totalCount
             }
-        }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.validateQueryRes(gqlQuery, res, "checkoutAttributes");
-        });
+            nodes {
+                id
+                name
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+                hasPreviousPage
+                startCursor
+            }
+            totalCount`;
+            
+    const standardQuery = `{
+        checkoutAttributes(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${standardQueryBody}
+        }
+    }`;
+
+    it("Query with valid 'orderBy' input argument returns valid data types", () => {
+        cy.postAndValidate(standardQuery, "checkoutAttributes");
     });
 
-    it("Query will fail without orderBy input", () => {
+    it("Query will fail without 'orderBy' input argument", () => {
         const gqlQuery = `{
             checkoutAttributes {
-                edges {
-                    cursor
-                    node {
-                        id
-                    }
-                }
-                nodes {
-                    id
-                }
-                pageInfo {
-                    endCursor
-                    hasNextPage
-                    hasPreviousPage
-                    startCursor
-                }
-                totalCount
+                ${standardQueryBody}
             }
         }`;
         cy.postGQL(gqlQuery).then(res => {
@@ -53,37 +41,31 @@ describe('Query: checkoutAttributes', () => {
         });
     });
 
-    it('Query fails if the orderBy argument is null', () => {
+    it("Query fails if the 'orderBy' input argument is null", () => {
         const gqlQuery = `{
             checkoutAttributes(orderBy: null) {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(gqlQuery);
     });
 
-    it('Query fails if orderBy argument only has field', () => {
+    it("Query fails if 'orderBy' input argument only has field", () => {
         const fieldQuery = `{
             checkoutAttributes(orderBy: {field: TIMESTAMP}) {
                 totalCount
             }
         }`;
-        cy.postGQL(fieldQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(fieldQuery);
     });
 
-    it('Query fails if orderBy argument only has direction', () => {
+    it("Query fails if 'orderBy' input argument only has direction", () => {
         const directionQuery = `{
             checkoutAttributes(orderBy: {direction: ASC}) {
                 totalCount
             }
         }`;
-        cy.postGQL(directionQuery).then((res) => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(directionQuery);
     });
 
     it('Query will fail if no return type is provided', () => {
@@ -92,12 +74,10 @@ describe('Query: checkoutAttributes', () => {
                 
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.confirmError(res);
-        });
+        cy.postAndConfirmError(gqlQuery);
     });
 
-    it('Query will succeed with orderBy input and one return type', () => {
+    it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
         const gqlQuery = `{
             checkoutAttributes(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 totalCount
@@ -117,17 +97,10 @@ describe('Query: checkoutAttributes', () => {
         });
     });
 
-    it("Query without first or last will return all items", () => {
-        const gqlQuery = `{
-            checkoutAttributes(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                nodes {
-                    id
-                }
-                totalCount
-            }
-        }`;
-        cy.postGQL(gqlQuery).then((res) => {
+    it("Query without 'first' or 'last' input arguments will return all items", () => {
+        cy.postAndValidate(standardQuery, "checkoutAttributes").then((res) => {
             cy.confirmCount(res, "checkoutAttributes");
+            cy.verifyPageInfo(res, "checkoutAttributes", false, false);
         });
     });
 
@@ -158,10 +131,8 @@ describe('Query: checkoutAttributes', () => {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.validateQueryRes(gqlQuery, res, "checkoutAttributes").then(() => {
-                cy.validateValues(res, "checkoutAttributes");
-            });
+        cy.postAndValidate(gqlQuery, "checkoutAttributes").then((res) => {
+            cy.validateValues(res, "checkoutAttributes");
         });
     });
 
@@ -186,10 +157,8 @@ describe('Query: checkoutAttributes', () => {
                 totalCount
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
-            cy.validateQueryRes(gqlQuery, res, "checkoutAttributes").then(() => {
-                cy.checkCustomData(res, "checkoutAttributes");
-            });
+        cy.postAndValidate(gqlQuery, "checkoutAttributes").then((res) => {
+            cy.checkCustomData(res, "checkoutAttributes");
         });
     });
 });

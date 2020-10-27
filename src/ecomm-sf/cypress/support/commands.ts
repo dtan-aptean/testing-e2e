@@ -567,7 +567,7 @@ Cypress.Commands.add("getToConfirmOrder", () => {
   cy.wait(2000);
 
   // Payment Method
-  cy.get("#payment-method-block").find('li').eq(0).find('input[type="radio"]').check();
+  cy.get("#payment-method-block").find("#paymentmethod_1").check();
   cy.get(".payment-method-next-step-button").click();
   cy.wait(200);
   // Payment Information
