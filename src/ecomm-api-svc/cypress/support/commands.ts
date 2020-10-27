@@ -211,7 +211,10 @@ Cypress.Commands.add("validateValues", (res, dataPath: string) => {
                 }
                 expect(val).to.have.property('priceAdjustment');
                 if (val.priceAdjustment !== null) {
-                    expect(val.priceAdjustment).to.be.a('number');
+                    expect(val.priceAdjustment).to.have.property('amount');
+                    expect(val.priceAdjustment.amount).to.be.a('number');
+                    expect(val.priceAdjustment).to.have.property('currency');
+                    expect(val.priceAdjustment.currency).to.be.a('string');
                 }
                 expect(val).to.have.property('weightAdjustment');
                 if (val.weightAdjustment !== null) {
@@ -220,7 +223,10 @@ Cypress.Commands.add("validateValues", (res, dataPath: string) => {
                 if (dataPath === "productAttributes") {
                     expect(val).to.have.property('cost');
                     if (val.cost !== null) {
-                        expect(val.cost).to.be.a('number');
+                        expect(val.cost).to.have.property('amount');
+                        expect(val.cost.amount).to.be.a('number');
+                        expect(val.cost).to.have.property('currency');
+                        expect(val.cost.currency).to.be.a('string');
                     }
                 }
             });

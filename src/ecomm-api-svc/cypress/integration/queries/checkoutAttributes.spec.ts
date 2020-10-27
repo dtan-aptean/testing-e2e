@@ -300,7 +300,7 @@ describe('Query: checkoutAttributes', () => {
     it("Query with both 'before' and 'first' input arguments will return a specific amount of items before that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             cy.get('@cursorIndex').then((index: number) => {
-                const first = Math.floor(index / 2);
+                const first = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `first: ${first}`});
                 const beforeQuery = `{
                     checkoutAttributes(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -341,7 +341,7 @@ describe('Query: checkoutAttributes', () => {
     it("Query with both 'before' and 'last' input arguments will return a specific amount of items before that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             cy.get('@cursorIndex').then((index: number) => {
-                const last = Math.floor(index / 2);
+                const last = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `last: ${last}`});
                 const beforeQuery = `{
                     checkoutAttributes(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -420,7 +420,10 @@ describe('Query: checkoutAttributes', () => {
                         displayOrder
                         isPreselected
                         name
-                        priceAdjustment
+                        priceAdjustment {
+                            amount
+                            currency
+                        }
                         weightAdjustment
                     }
                 }

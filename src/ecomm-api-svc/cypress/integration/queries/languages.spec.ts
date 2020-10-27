@@ -1,9 +1,9 @@
 /// <reference types="cypress" />
 // TEST COUNT: 26
 // request count: 36
-describe('Query: manufacturers', () => {
+describe('Query: languages', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
-    const queryName = "manufacturers";
+    const queryName = "languages";
     // Standard query body to use when we don't need special data but do need special input arguments
     const standardQueryBody = `edges {
                 cursor
@@ -23,9 +23,9 @@ describe('Query: manufacturers', () => {
                 startCursor
             }
             totalCount`;
-    // Standard query to use when we don't need any specialized data or input arguments        
+    // Standard query to use when we don't need any specialized data or input arguments
     const standardQuery = `{
-        manufacturers(orderBy: {direction: ASC, field: TIMESTAMP}) {
+        languages(orderBy: {direction: ASC, field: TIMESTAMP}) {
             ${standardQueryBody}
         }
     }`;
@@ -33,30 +33,21 @@ describe('Query: manufacturers', () => {
     it("Query with valid 'orderBy' input argument returns valid data types", () => {
         cy.postAndValidate(standardQuery, queryName);
     });
-
+    
     it("Query will fail without 'orderBy' input argument", () => {
         const gqlQuery = `{
-            manufacturers {
+            languages {
                 ${standardQueryBody}
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
+        cy.postGQL(gqlQuery).then((res) => {
             cy.confirmOrderByError(res);
         });
     });
 
-    it('Query will fail if no return type is provided', () => {
-        const gqlQuery = `{
-            manufacturers(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                
-            }
-        }`;
-        cy.postAndConfirmError(gqlQuery);
-    });
-
     it("Query fails if the 'orderBy' input argument is null", () => {
         const gqlQuery = `{
-            manufacturers(orderBy: null) {
+            languages(orderBy: null) {
                 totalCount
             }
         }`;
@@ -65,7 +56,7 @@ describe('Query: manufacturers', () => {
 
     it("Query fails if 'orderBy' input argument only has field", () => {
         const fieldQuery = `{
-            manufacturers(orderBy: {field: TIMESTAMP}) {
+            languages(orderBy: {field: TIMESTAMP}) {
                 totalCount
             }
         }`;
@@ -74,16 +65,25 @@ describe('Query: manufacturers', () => {
 
     it("Query fails if 'orderBy' input argument only has direction", () => {
         const directionQuery = `{
-            manufacturers(orderBy: {direction: ASC}) {
+            languages(orderBy: {direction: ASC}) {
                 totalCount
             }
         }`;
         cy.postAndConfirmError(directionQuery);
     });
 
+    it('Query will fail if no return type is provided', () => {
+        const gqlQuery = `{
+            languages(orderBy: {direction: ASC, field: TIMESTAMP}) {
+                
+            }
+        }`;
+        cy.postAndConfirmError(gqlQuery);
+    });
+
     it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
         const gqlQuery = `{
-            manufacturers(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 totalCount
             }
         }`;
@@ -97,7 +97,7 @@ describe('Query: manufacturers', () => {
             // has data
             assert.exists(res.body.data);
             // validate data types
-            assert.isNotNaN(res.body.data.manufacturers.totalCount);
+            assert.isNotNaN(res.body.data.languages.totalCount);
         });
     });
 
@@ -115,7 +115,7 @@ describe('Query: manufacturers', () => {
             // Get half the items, rounding down
             const first = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                manufacturers(first: ${first}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(first: ${first}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -134,7 +134,7 @@ describe('Query: manufacturers', () => {
             // Get half the items, rounding down
             const last = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                manufacturers(last: ${last}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(last: ${last}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -148,7 +148,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with invalid 'first' input argument will fail", () => {
         const gqlQuery = `{
-            manufacturers(first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -160,7 +160,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with invalid 'last' input argument will fail", () => {
         const gqlQuery = `{
-            manufacturers(last: "5", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(last: "5", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -172,7 +172,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with both 'first' and 'last' input arguments will fail", () => {
         const gqlQuery = `{
-            manufacturers(first: 7, last: 3, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(first: 7, last: 3, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -182,7 +182,7 @@ describe('Query: manufacturers', () => {
     it("Query with a valid 'searchString' input argument will return the specific item", () => {
         cy.returnRandomName(standardQuery, queryName).then((name: string) => {
             const searchQuery = `{
-                manufacturers(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -204,7 +204,7 @@ describe('Query: manufacturers', () => {
                 searchText = name.substring(0, segmentIndex);
             }
             const searchQuery = `{
-                manufacturers(searchString: "${searchText}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(searchString: "${searchText}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -216,7 +216,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with an invalid 'searchString' input argument will fail", () => {
         const gqlQuery = `{
-            manufacturers(searchString: 7, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(searchString: 7, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -229,7 +229,7 @@ describe('Query: manufacturers', () => {
     it("Query with a valid 'before' input argument will return all items before that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             const beforeQuery = `{
-                manufacturers(before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -244,7 +244,7 @@ describe('Query: manufacturers', () => {
     it("Query with a valid 'after' input argument will return all items after that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, false).then((cursor: string) => {
             const afterQuery = `{
-                manufacturers(after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -258,7 +258,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with invalid 'before' input argument will fail", () => {
         const gqlQuery = `{
-            manufacturers(before: 123, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(before: 123, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -270,7 +270,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with invalid 'after' input argument will fail", () => {
         const gqlQuery = `{
-            manufacturers(after: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(after: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -282,7 +282,7 @@ describe('Query: manufacturers', () => {
     
     it("Query with both 'before' and 'after' input arguments will fail", () => {
         const gqlQuery = `{
-            manufacturers(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -303,7 +303,7 @@ describe('Query: manufacturers', () => {
                 const first = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `first: ${first}`});
                 const beforeQuery = `{
-                    manufacturers(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    languages(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -324,7 +324,7 @@ describe('Query: manufacturers', () => {
                     const first = diff >= 2 ? Math.floor(diff / 2): diff;
                     Cypress.log({message: `first: ${first}`});
                     const afterQuery = `{
-                        manufacturers(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        languages(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             ${standardQueryBody}
                         }
                     }`;
@@ -344,7 +344,7 @@ describe('Query: manufacturers', () => {
                 const last = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `last: ${last}`});
                 const beforeQuery = `{
-                    manufacturers(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    languages(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -365,7 +365,7 @@ describe('Query: manufacturers', () => {
                     const last = diff >= 2 ? Math.floor(diff / 2): diff;
                     Cypress.log({message: `last: ${last}`});
                     const afterQuery = `{
-                        manufacturers(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        languages(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             ${standardQueryBody}
                         }
                     }`;
@@ -381,7 +381,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with customData field will return valid value", () => {
         const gqlQuery = `{
-            manufacturers(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 edges {
                     cursor
                     node {
