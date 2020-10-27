@@ -2,6 +2,35 @@
 
 describe('Mutation: upsertPerson', () => {
   let personId = '';
+  let personEmail = 'John.Doe.One@aptean.com'
+
+  // Before any of these upset tests run, make sure our friend John.Doe.One@aptean.com does not exist.
+  before(() => {
+    // Query for person.
+    const personGqlQuery = `query {
+      person(email: "${personEmail}") {
+        id
+      }
+    }`
+    cy.postGQL(personGqlQuery).then(res => {
+      // should be 200 ok
+      if (!res.body.errors && res.body.data.person) {
+        personId = res.body.data.person.id;
+        const gqlQuery = `mutation {
+          deletePerson(input: { id: "${personId}" }) {
+            code
+            message
+            error
+          }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+          cy.expect(res.isOkStatusCode).to.be.equal(true);
+          assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+        });              
+      }
+    });
+    
+  });
 
   afterEach(() => {
     // delete created person
@@ -13,7 +42,7 @@ describe('Mutation: upsertPerson', () => {
       }
     }`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -29,7 +58,7 @@ describe('Mutation: upsertPerson', () => {
     const gqlQuery = `mutation {
       upsertPerson(
         input: {
-          email: "John.Doe.One@aptean.com"
+          email: "${personEmail}"
         }
       ) {
         code
@@ -39,7 +68,7 @@ describe('Mutation: upsertPerson', () => {
       }
     }`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -86,7 +115,7 @@ describe('Mutation: upsertPerson', () => {
       }
     }`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -119,12 +148,12 @@ describe('Mutation: upsertPerson', () => {
     const gqlQuery = `mutation {
       upsertPerson(
         input: {
-          email: "John.Doe.One@aptean.com"
+          email: "${personEmail}"
         }
       ) {}
     }`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -140,14 +169,14 @@ describe('Mutation: upsertPerson', () => {
     const gqlQuery = `mutation {
       upsertPerson(
         input: {
-          email: "John.Doe.One@aptean.com"
+          email: "${personEmail}"
         }
       ) {
         code
       }
     }`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
