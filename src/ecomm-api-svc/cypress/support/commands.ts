@@ -39,8 +39,16 @@ Cypress.Commands.add('validateQueryRes', (gqlQuery, res, dataPath: string) => {
     // should be 200 ok
     expect(res.isOkStatusCode).to.be.equal(true);
     
+    var errorMessage = `No errors while executing query: \n${gqlQuery}`;
+    if (res.body.errors) {
+        errorMessage = `One or more errors ocuured while executing query: \n${gqlQuery}`;
+        res.body.errors.forEach((item) => {
+            errorMessage = errorMessage + " \n" + item.extensions.code + ". " + item.message;
+        });
+        errorMessage = errorMessage + "\n";
+    }
     // no errors
-    assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+    assert.notExists(res.body.errors, errorMessage);
 
     // has data
     assert.exists(res.body.data);
