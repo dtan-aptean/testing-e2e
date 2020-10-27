@@ -35,27 +35,29 @@ describe("Ecommerce Portal", function () {
       cy.get("#TenantId").should("be.visible").should("be.disabled");
     });
 
-    it("Search existing order from Quick order search", () => {
-      cy.on("uncaught:exception", (err, runnable) => {
-        return false;
-      });
+    // Skip this test;
+    // Need to rewrite this test so that it doesn't look for specific order GUID
+    // it("Search existing order from Quick order search", () => {
+    //   cy.on("uncaught:exception", (err, runnable) => {
+    //     return false;
+    //   });
 
-      cy.visit("/Admin/ApteanPay/QuickOrderSearch");
+    //   cy.visit("/Admin/ApteanPay/QuickOrderSearch");
 
-      cy.get("#orderGuid")
-        .should("be.visible")
-        .should("be.enabled")
-        .type("e86762c6-aa23-4d8f-951c-531686c7cfad")
-        .should("have.value", "e86762c6-aa23-4d8f-951c-531686c7cfad");
+    //   cy.get("#orderGuid")
+    //     .should("be.visible")
+    //     .should("be.enabled")
+    //     .type("e86762c6-aa23-4d8f-951c-531686c7cfad")
+    //     .should("have.value", "e86762c6-aa23-4d8f-951c-531686c7cfad");
 
-      cy.get("#go-to-order-by-number")
-        .should("be.visible")
-        .should("be.enabled")
-        .click();
+    //   cy.get("#go-to-order-by-number")
+    //     .should("be.visible")
+    //     .should("be.enabled")
+    //     .click();
 
-      cy.get(
-        ":nth-child(3) > .panel-body > :nth-child(2) > .col-md-9 > .form-text-row"
-      ).should("have.text", "e86762c6-aa23-4d8f-951c-531686c7cfad");
-    });
+    //   cy.get(
+    //     ":nth-child(3) > .panel-body > :nth-child(2) > .col-md-9 > .form-text-row"
+    //   ).should("have.text", "e86762c6-aa23-4d8f-951c-531686c7cfad");
+    // });
   });
 });

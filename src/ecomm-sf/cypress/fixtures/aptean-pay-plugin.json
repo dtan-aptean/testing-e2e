@@ -1,8 +1,8 @@
 {
   "users": {
     "admin": {
-      "username": "admin@testenvironment.com",
-      "password": "admin"
+      "username": "cypress.tester@testenvironment.com",
+      "password": "CypressTester1"
     }
   },
   "guestProfile": {
