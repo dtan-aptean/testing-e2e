@@ -867,6 +867,37 @@ Cypress.Commands.add("unpublishLanguage", (removalIndex) => {
     assert.isNotNaN(removalIndex);
     assert.isNumber(removalIndex);
   }
+  function publishIfNecessary(eligibleRows) {
+    return cy.get("#languages-grid")
+      .find("tbody")
+      .find("tr")
+      .then(($rows) => {
+        if (eligibleRows.length === 1) {
+          const unpublished = $rows.filter((index, item) => {
+            return (item.innerHTML.includes("false-icon") && !item.innerText.includes("English"));
+          });
+          if (unpublished.length >= 1) {
+            const name = unpublished[0].cells[0].innerText;
+            cy.publishLanguage(name);
+            cy.get("#languages-grid")
+              .find("tbody")
+              .find("tr")
+              .then(($tr) => {
+                const validRows = $tr.filter((index, item) => {
+                  return (
+                    item.innerHTML.includes("true-icon") &&
+                    item.cells[0].innerText !== "English"
+                  );
+                });
+                return validRows;
+              });
+          }
+        } else {
+          return null;
+        }
+      });
+  };
+
   // Broken up into functions that we then wrap
   // In order to be able to grab the language name
   function changePublicity(eligibleRows, index) {
@@ -908,9 +939,19 @@ Cypress.Commands.add("unpublishLanguage", (removalIndex) => {
             });
             // It's assumed there will always be one published language
             expect(eligibleRows.length).to.be.gte(1);
-            // Find a random row to unpublish
-            const index = Cypress._.random(0, eligibleRows.length - 1);
-            cy.wrap(changePublicity(eligibleRows, index));
+            // Call the function to publish another row if we need one
+            publishIfNecessary(eligibleRows).then((validRows) => {
+              if (validRows) {
+                // Find a random row to unpublish
+                const index = Cypress._.random(0, validRows.length - 1);
+                cy.wrap(changePublicity(validRows, index));
+              } else {
+                // Find a random row to unpublish
+                const index = Cypress._.random(0, eligibleRows.length - 1);
+                cy.wrap(changePublicity(eligibleRows, index));
+              }
+            })
+            
           }
         });
     });
