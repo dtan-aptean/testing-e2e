@@ -2,6 +2,33 @@
 
 describe('Mutation: upsertPerson', () => {
   let personId = '';
+  let personEmail = 'John.Doe.One@aptean.com'
+
+  // Ensure our friend John.Doe.One@aptean.com does not exist before starting any of the upsert tests.
+  before(() => {
+    // Query for person.
+    const personGqlQuery = `query {
+      person(email: "${personEmail}") {
+        id
+      }
+    }`
+    cy.postGQL(personGqlQuery).then(res => {
+      if (!res.body.errors && res.body.data.person) {
+        personId = res.body.data.person.id;
+        const gqlQuery = `mutation {
+          deletePerson(input: { id: "${personId}" }) {
+            code
+            message
+            error
+          }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+          cy.expect(res.isOkStatusCode).to.be.equal(true);
+          assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+        });              
+      }
+    });
+  });
 
   afterEach(() => {
     // delete created person
@@ -29,7 +56,7 @@ describe('Mutation: upsertPerson', () => {
     const gqlQuery = `mutation {
       upsertPerson(
         input: {
-          email: "John.Doe.One@aptean.com"
+          email: "${personEmail}"
         }
       ) {
         code
@@ -119,7 +146,7 @@ describe('Mutation: upsertPerson', () => {
     const gqlQuery = `mutation {
       upsertPerson(
         input: {
-          email: "John.Doe.One@aptean.com"
+          email: "${personEmail}"
         }
       ) {}
     }`;
@@ -140,7 +167,7 @@ describe('Mutation: upsertPerson', () => {
     const gqlQuery = `mutation {
       upsertPerson(
         input: {
-          email: "John.Doe.One@aptean.com"
+          email: "${personEmail}"
         }
       ) {
         code
