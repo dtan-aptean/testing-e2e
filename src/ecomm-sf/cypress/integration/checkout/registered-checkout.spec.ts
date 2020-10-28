@@ -85,7 +85,7 @@ describe("Ecommerce", function () {
                     cy.get(".qty-input").type((count - 1).toString());
                   });
                   cy.get(".update-cart-button").click();
-                  cy.wait(500);
+                  cy.wait(1000);
                   cy.get("@target")
                     .find("td")
                     .then(($newTd) => {

@@ -35,7 +35,9 @@ describe("Ecommerce Portal", function () {
       cy.get("#TenantId").should("be.visible").should("be.disabled");
     });
 
-    it("Search existing order from Quick order search", () => {
+    // Skip this test;
+    // Need to rewrite this test so that it doesn't look for specific order GUID
+    it.skip("Search existing order from Quick order search", () => {
       cy.on("uncaught:exception", (err, runnable) => {
         return false;
       });

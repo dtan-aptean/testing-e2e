@@ -27,17 +27,17 @@ describe("Ecommerce", function () {
       cy.goToProduct("Bald Cypress");
       cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
       cy.get(".add-to-cart-button").click();
-      cy.wait(500);
+      cy.wait(1000);
       // Get current amount of shopping cart
       cy.get(".header-links")
         .find(".cart-qty")
         .then(($amt) => {
           const quantity = $amt.text().replace("(", "").replace(")", "");
           cy.get(".header-links").find(".ico-cart").click();
-          cy.wait(500);
+          cy.wait(1000);
           cy.get(".remove-from-cart").find("input").check();
           cy.get(".update-cart-button").click();
-          cy.wait(500);
+          cy.wait(1000);
           cy.contains("Your Shopping Cart is empty!");
           cy.get(".header-links")
             .find(".cart-qty")

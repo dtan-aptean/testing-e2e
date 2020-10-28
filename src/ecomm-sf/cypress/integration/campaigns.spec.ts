@@ -25,7 +25,7 @@ describe("Ecommerce", function () {
       cy.get("#campaigns-grid").should("not.contain.text", campaignName);
     });
 
-    it("Test emails can be sent out for campaigns", () => {
+    it.skip("Test emails can be sent out for campaigns", () => {
       const campaignName = "Cypress Test Campaign";
       const today = new Date();
       const twoDaysAhead = new Date(today.valueOf() + 172800000);

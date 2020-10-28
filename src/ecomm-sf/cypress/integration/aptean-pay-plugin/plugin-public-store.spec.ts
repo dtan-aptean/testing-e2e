@@ -20,13 +20,11 @@ describe("Ecommerce Portal", function () {
       const guestProfile = this.PaymentFixture.guestProfile;
 
       cy.log("Add items to cart");
-      cy.get(
-        ":nth-child(1) > .product-item > .details > .add-info > .buttons > .product-box-add-to-cart-button"
-      )
+      cy.get(":nth-child(1) > .product-item > .details > .add-info > .buttons > .product-box-add-to-cart-button")
         .should("be.visible")
         .click();
-      cy.get("#add-to-cart-button-1").should("be.visible").click();
 
+      cy.wait(1000);
       cy.log("Checkout as guest");
       cy.fromPublicStore_QuickCheckout();
       cy.get(".checkout-as-guest-button").should("be.visible").click();
@@ -37,12 +35,22 @@ describe("Ecommerce Portal", function () {
       cy.get("#billing-buttons-container > .button-1")
         .should("be.visible")
         .click();
+
       cy.get("#shipping-method-buttons-container > .button-1")
         .should("be.visible")
         .click();
 
+      cy.get("#payment-method-block").find("input[value='Payments.ApteanPay']")
+        .should("be.visible")
+        .click(); 
+
+      cy.get(".payment-method-next-step-button")
+        .should("be.visible")
+        .click();          
+
       cy.log("Submit payment details");
       cy.get("#payment-container").should("be.visible");
+
       cy.getIframeBody("#credit-card-iframe_iframe")
         .find("#text-input-cc-number")
         .type(cardProfile.creditCardNumber)
@@ -63,7 +71,7 @@ describe("Ecommerce Portal", function () {
       cy.get("#submit-credit-card-button").should("be.visible").click();
 
       cy.log("Ensure payment submitted successfully");
-      cy.wait(2000)
+      cy.wait(10000)
         .get("#payment-success")
         .should(
           "contain.text",
