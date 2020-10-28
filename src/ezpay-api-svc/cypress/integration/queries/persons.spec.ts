@@ -177,7 +177,7 @@ describe('Query: persons', () => {
 		}
 	}`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -199,7 +199,7 @@ describe('Query: persons', () => {
 				}
 			}`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -218,7 +218,7 @@ describe('Query: persons', () => {
 				}
 			}`;
 
-    cy.postGQLWithBearerToken(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 

@@ -244,7 +244,7 @@ describe('Query: paymentRequests', () => {
         dateRangeType: PAYMENT_COMPLETED
         startDate: "1/1/2001"
         endDate: "${new Date().toLocaleDateString()}"
-        status: COMPLETED
+        status: FULLY_REFUNDED
       ) {
         nodes {
           amount

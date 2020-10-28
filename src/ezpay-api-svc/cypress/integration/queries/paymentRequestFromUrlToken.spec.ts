@@ -6,12 +6,8 @@ describe('Query: paymentRequestFromUrlToken', () => {
 
   before(() => {
     cy.generatePaymentRequest().then(response => {
-      cy.request(response.paymentUrl).then(res => {
-        const { redirects } = res;
-        const longUri = redirects[0];
-        const qsTokenIndex = 1;
-        urlToken = longUri.split('?')[qsTokenIndex];
-      });
+      const qsTokenIndex = 1;
+      urlToken = response.paymentUrl.split('?')[qsTokenIndex];
     });
   });
 
