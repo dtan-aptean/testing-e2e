@@ -1,8 +1,10 @@
 /// <reference types="cypress" />
-// TEST COUNT: 3
-// request count: 3
+// TEST COUNT: 5
+// request count: 5
 describe('Muation: createProduct', () => {
     let id = '';
+    const mutationName = 'createProduct';
+    const dataPath = 'product';
     const standardMutationBody = `
         code
         message
@@ -12,10 +14,26 @@ describe('Muation: createProduct', () => {
             name
         }
     `;
+
+    afterEach(() => {
+        if (id !== "") {
+            const deletionName = "deleteProduct";
+            const removalMutation = `mutation {
+                ${deletionName}(input: { id: "${id}" }) {
+                    code
+                    message
+                    error
+                }
+            }`;
+            cy.postAndConfirmDelete(removalMutation, deletionName, dataPath).then(() => {
+                id = "";
+            });
+        }
+    });
     
     it("Mutation will fail without input", () => {
         const mutation = `mutation {
-            createProduct {
+            ${mutationName} {
                 ${standardMutationBody}
             }
         }`
@@ -24,7 +42,7 @@ describe('Muation: createProduct', () => {
 
     it("Mutation will fail when input is an empty object", () => {
         const mutation = `mutation {
-            createProduct(input: {}) {
+            ${mutationName}(input: {}) {
                 ${standardMutationBody}
             }
         }`
@@ -33,10 +51,51 @@ describe('Muation: createProduct', () => {
 
     it("Mutation will fail with invalid 'Name' input", () => {
         const mutation = `mutation {
-            createProduct(input: { name: 7 }) {
+            ${mutationName}(input: { name: 7 }) {
                 ${standardMutationBody}
             }
         }`
         cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation with valid 'Name' input will create a new item", () => {
+        const name = "Cypress API Product";
+        const mutation = `mutation {
+            ${mutationName}(input: { name: "${name}" }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            id = res.body.data[mutationName][dataPath].id;
+            cy.confirmMutationSuccess(res, mutationName, dataPath, ["name"], [name]);
+        });
+    });
+
+    it("Mutation creates item that has all included input", () => {
+        const name = "Cypress Product Input";
+        const shortDescription = "Cypress testing 'create' mutation input";
+        const mutation = `mutation {
+            ${mutationName}(
+                input: {
+                    name: "${name}"
+                    shortDescription: "${shortDescription}"
+                }
+            ) {
+                code
+                message
+                error
+                ${dataPath} {
+                    id
+                    name
+                    shortDescription
+                }
+            }
+        }`;
+        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            id = res.body.data[mutationName][dataPath].id;
+            const names = ["name", "shortDescription"];
+            const values = [name, shortDescription];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, names, values);
+        });
     });
 });

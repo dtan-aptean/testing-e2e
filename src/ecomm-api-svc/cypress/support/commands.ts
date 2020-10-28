@@ -52,6 +52,45 @@ Cypress.Commands.add('validateQueryRes', (gqlQuery, res, dataPath: string) => {
     expect(res.body.data[dataPath].edges.length).to.be.eql(res.body.data[dataPath].nodes.length, "Expect edge length to equal nodes length");
 });
 
+// Test the standard mutation response for standard valid data
+Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: string, dataPath: string) => {
+    Cypress.log({
+        name: "validateMutationRes",
+        message: `Validate response for ${dataPath}`,
+        consoleProps: () => {
+            return {
+                "GQL Mutation": gqlMut,
+                "Response": res,
+                "Item path": dataPath
+            };
+        },
+    });
+
+    // should be 200 ok
+    expect(res.isOkStatusCode).to.be.equal(true);
+
+    // Craft error message, so that we have good visibility on issues that cause us to fail
+    var errorMessage = `No errors while executing mutation: \n${gqlMut}`;
+    if (res.body.errors) {
+        errorMessage = `One or more errors ocuured while executing mutation: \n${gqlMut}`;
+        res.body.errors.forEach((item) => {
+            errorMessage = errorMessage + " \n" + item.extensions.code + ". " + item.message;
+        });
+        errorMessage = errorMessage + "\n";
+    }
+    // shoule be no errors
+    assert.notExists(res.body.errors, errorMessage);
+    // has data
+    assert.exists(res.body.data);
+    // validate data types and values
+    assert.isString(res.body.data[mutationName].code);
+    expect(res.body.data[mutationName].code).not.to.eql("ERROR");
+    assert.isString(res.body.data[mutationName].message);
+    // TODO: Check that message matches (ex: code is success, message should confirm that with created or updated)
+    assert.isNull(res.body.data[mutationName].error);
+    assert.isObject(res.body.data[mutationName][dataPath]);
+});
+
 // Post query and do standard validation
 Cypress.Commands.add("postAndValidate", (gqlQuery: string, dataPath: string) => {
     Cypress.log({
@@ -68,6 +107,65 @@ Cypress.Commands.add("postAndValidate", (gqlQuery: string, dataPath: string) => 
         cy.validateQueryRes(gqlQuery, res, dataPath).then(() => {
             return res;
         });
+    });
+});
+
+// Post mutation and validate
+Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string, dataPath: string) => {
+    Cypress.log({
+        name: "postMutAndValidate",
+        message: mutationName,
+        consoleProps: () => {
+            return {
+                "Mutation Body": gqlMut,
+                "Mutation Name": mutationName,
+                "Item path": dataPath
+            };
+        },
+    });
+    return cy.postGQL(gqlMut).then((res) => {
+        cy.validateMutationRes(gqlMut, res, mutationName, dataPath).then(() => {
+            return res;
+        });
+    });
+});
+
+// Post and confirm Deletion
+Cypress.Commands.add("postAndConfirmDelete", (gqlMut: string, mutationName: string, dataPath: string) => {
+    Cypress.log({
+        name: "postAndConfirmDelete",
+        message: mutationName,
+        consoleProps: () => {
+            return {
+                "Mutation Body": gqlMut,
+                "Mutation Name": mutationName,
+                "Item path": dataPath
+            };
+        },
+    });
+    return cy.postGQL(gqlMut).then((res) => {
+        // should be 200 ok
+        expect(res.isOkStatusCode).to.be.equal(true);
+
+        // Craft error message, so that we have good visibility on issues that cause us to fail
+        var errorMessage = `No errors while executing mutation: \n${gqlMut}`;
+        if (res.body.errors) {
+            errorMessage = `One or more errors ocuured while executing mutation: \n${gqlMut}`;
+            res.body.errors.forEach((item) => {
+                errorMessage = errorMessage + " \n" + item.extensions.code + ". " + item.message;
+            });
+            errorMessage = errorMessage + "\n";
+        }
+        // shoule be no errors
+        assert.notExists(res.body.errors, errorMessage);
+        // has data
+        assert.exists(res.body.data);
+        // validate data types and values
+        assert.isString(res.body.data[mutationName].code);
+        expect(res.body.data[mutationName].code).not.to.eql("ERROR");
+        assert.isString(res.body.data[mutationName].message);
+        expect(res.body.data[mutationName].message).to.eql(`${dataPath} deleted`);
+        assert.isNull(res.body.data[mutationName].error);
     });
 });
 
@@ -602,4 +700,26 @@ Cypress.Commands.add("validateCursor", (res, dataPath: string, beforeAfter: stri
             });
         });
     });
+});
+
+// Confirms the mutation data that you instruct it to. Checks descendents with the eql() which is a deep equal
+Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataPath: string, propNames: string[], values: []) => {
+    Cypress.log({
+        name: "confirmMutationSuccess",
+        message: mutationName,
+        consoleProps: () => {
+            return {
+                "Mutation response": res,
+                "Mutation name": mutationName,
+                "Data path": dataPath,
+                "Properties to check": propNames.toString(),
+                "Expected Values": values.toString()
+            };
+        },
+    });
+    expect(propNames.length).to.be.eql(values.length);
+    var result = res.body.data[mutationName][dataPath];
+    for (var i = 0; i < propNames.length; i++) {
+        expect(result[propNames[i]]).to.be.eql(values[i]);
+    }
 });
