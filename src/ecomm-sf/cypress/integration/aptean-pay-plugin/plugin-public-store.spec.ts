@@ -20,13 +20,11 @@ describe("Ecommerce Portal", function () {
       const guestProfile = this.PaymentFixture.guestProfile;
 
       cy.log("Add items to cart");
-      cy.get(
-        ":nth-child(1) > .product-item > .details > .add-info > .buttons > .product-box-add-to-cart-button"
-      )
+      cy.get(":nth-child(1) > .product-item > .details > .add-info > .buttons > .product-box-add-to-cart-button")
         .should("be.visible")
         .click();
-      //cy.get("#add-to-cart-button-1").should("be.visible").click();
 
+      cy.wait(1000);
       cy.log("Checkout as guest");
       cy.fromPublicStore_QuickCheckout();
       cy.get(".checkout-as-guest-button").should("be.visible").click();
