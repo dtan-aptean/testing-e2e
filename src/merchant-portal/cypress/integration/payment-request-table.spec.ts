@@ -21,10 +21,10 @@ describe("Payment Request Table", function () {
     it("should pass if able to access the table row", () => {
       cy.get("@rows").then(($rows) => {
         if ($rows.length > 0) {
-          // If there are already enteries, just access the first one
+          // If there are already entries, just access the first one
           cy.get("@rows").eq(0).should("exist");
         } else {
-          // If there are not enteries, create a new one and make sure we can access it
+          // If there are not entries, create a new one and make sure we can access it
           const amount = Cypress._.random(1, 1e3);
           const invoicePath = "sample.pdf";
           const referenceNumber = Cypress._.random(0, 1e9);
@@ -44,35 +44,20 @@ describe("Payment Request Table", function () {
       });
     });
 
-    it("should pass if the details button shows when hovering over a row", () => {
-      cy.get("@rows").eq(0).as("firstRow");
-      cy.get("@firstRow").find("th").as("actionsCell");
-      cy.get("@actionsCell")
+    it("should pass if the details button shows when a row is selected", () => {
+      cy.get("[data-cy=view-details]")
+        .should("not.be.visible");
+      cy.get("@rows").eq(0).as("firstRow").click();
+      cy.get("[data-cy=view-details]")
         .scrollIntoView()
-        .should("be.visible")
-        .and("be.empty");
-      cy.get("@firstRow").trigger("mouseover");
-      cy.get("@actionsCell").within(() => {
-        cy.get("@actionsCell").should("not.be.empty");
-        cy.get("[data-cy=view-payment-icon]").should("exist");
-        cy.get("[data-cy=view-payment-icon]")
-          .scrollIntoView()
-          .should("be.visible");
-      });
+        .should("be.visible");
     });
 
     it("should be able to open and close the info modal", () => {
-      cy.get("@rows").eq(0).as("firstRow");
-      cy.get("@firstRow").find("th").as("actionsCell");
+      cy.get("@rows").eq(0).as("firstRow").click(); //selecting a row should add action buttons to the payment request toolbar
       // Open the modal
-      cy.get("@actionsCell").scrollIntoView().should("be.visible");
-      cy.get("@firstRow").trigger("mouseover");
-      cy.get("@actionsCell").within(() => {
-        cy.get("[data-cy=view-payment-icon]")
-          .scrollIntoView()
-          .should("be.visible");
-        cy.get("[data-cy=view-payment-icon]").click({ force: true });
-      });
+      cy.get("[data-cy=view-details]").scrollIntoView().should("be.visible");
+      cy.get("[data-cy=view-details]").click({ force: true });
       // Close via the close button
       cy.get("[data-cy=payment-request-details-modal]")
         .should("exist")
