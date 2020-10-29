@@ -4,7 +4,7 @@ Cypress.Commands.add('postGQL', query => {
         name: "postGQL",
         consoleProps: () => {
             return {
-                "Query Body": query,
+                "Query/Mutation Body": query,
                 "Headers": `"x-aptean-apim": ${Cypress.env('x-aptean-apim')} \n\t\t\t "x-aptean-tenant": ${Cypress.env('x-aptean-tenant')}`, 
             };
         },
@@ -253,8 +253,8 @@ Cypress.Commands.add("confirmCount", (res, dataPath: string) => {
     expect(edgeCount).to.be.eql(totalCount);
 });
 
-// Checks for custom Data. TODO: Add functionality for use with mutations, ex: matching data
-Cypress.Commands.add("checkCustomData", (res, dataPath: string) => {
+// Checks for customData property. If expectData and expectedData are included, will compare nodes' customData to the expectedData
+Cypress.Commands.add("checkCustomData", (res, dataPath: string, expectData?: boolean, expectedData?) => {
     Cypress.log({
         name: "checkCustomData",
         message: `Confirm ${dataPath} has customData property`,
@@ -267,9 +267,57 @@ Cypress.Commands.add("checkCustomData", (res, dataPath: string) => {
     });
     const nodesPath = res.body.data[dataPath].nodes;
     nodesPath.forEach((item) => {
+        // Check that property exists
         expect(item).to.have.property('customData');
-        // Currently only checks for property
-        // TODO: Add functionality for mutation use
+        // If we expect there to be custom data, check that it is there and matches
+        if (expectData && expectedData) {
+            expect(item.customData).to.be.eql(expectedData);
+        }
+    });
+});
+
+// Posts query and checks custom Data. Query body should have searchString for a specific item, and ask for id and customData
+Cypress.Commands.add("postAndCheckCustom", (query: string, queryPath: string, id: string, customData) => {
+    Cypress.log({
+        name: "postAndCheckCustom",
+        message: `Item's id: ${id}, query: ${queryPath}`,
+        consoleProps: () => {
+            return {
+                "Query body": query,
+                "Query name": queryPath,
+                "Item's Id": id,
+                "Custom Data": customData
+            };
+        },
+    });
+    cy.postGQL(query).then((res) => {
+        // should be 200 ok
+        expect(res.isOkStatusCode).to.be.equal(true);
+        
+        // no errors
+        assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${query}`);
+
+        // has data
+        assert.exists(res.body.data);
+        assert.isArray(res.body.data[queryPath].nodes);
+        const nodes = res.body.data[queryPath].nodes;
+        if (nodes.length === 1) {
+            cy.checkCustomData(res, queryPath, true, customData);
+        } else if (nodes.length > 1) {
+            // Create a dummy object with the same structure as response for checkCustomData to look at
+            const dummy = {body: {data: {}}};
+            Object.defineProperty(dummy.body.data, queryPath, {value: {nodes: []}});
+            // Look for the specific node we want
+            const node = nodes.filter((item) => {
+                return item.id === id;
+            });
+            if (node.length === 1) {
+                // If found, push the node into our dummy object's nodes array
+                dummy.body.data[queryPath].nodes.push(node[0]);
+                // Pass our dummy object to checkCustomData in place of res
+                cy.checkCustomData(dummy, queryPath, true, customData);
+            }
+        }
     });
 });
 

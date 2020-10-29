@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
-// TEST COUNT: 5
-// request count: 5
+// TEST COUNT: 6
+// request count: 7
 describe('Muation: createProductSpecification', () => {
     let id = '';
     const mutationName = 'createProductSpecification';
@@ -9,7 +9,7 @@ describe('Muation: createProductSpecification', () => {
         code
         message
         error
-        productSpecification {
+        ${dataPath} {
             id
             name
         }
@@ -68,6 +68,45 @@ describe('Muation: createProductSpecification', () => {
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
             cy.confirmMutationSuccess(res, mutationName, dataPath, ["name"], [name]);
+        });
+    });
+
+    it("Mutation with all required input and 'customData' input creates item with customData", () => {
+        const name = "Cypress ProductSpecification customData";
+        const customData = {data: `${dataPath} customData`, canDelete: true};
+        const mutation = `mutation {
+            ${mutationName}(
+                input: {
+                    name: "${name}"
+                    customData: {data: "${customData.data}", canDelete: ${customData.canDelete}}
+                }
+            ) {
+                code
+                message
+                error
+                ${mutationName} {
+                    id
+                    name
+                    customData
+                }
+            }
+        }`;
+        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            id = res.body.data[mutationName][dataPath].id;
+            const names = ["name", "customData"];
+            const testValues = [name, customData];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
+                const queryName = "productSpecifications";
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            customData
+                        }
+                    }
+                }`;
+                cy.postAndCheckCustom(query, queryName, id, customData);
+            });
         });
     });
 
