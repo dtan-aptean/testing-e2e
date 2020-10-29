@@ -164,7 +164,8 @@ Cypress.Commands.add("postAndConfirmDelete", (gqlMut: string, mutationName: stri
         assert.isString(res.body.data[mutationName].code);
         expect(res.body.data[mutationName].code).not.to.eql("ERROR");
         assert.isString(res.body.data[mutationName].message);
-        expect(res.body.data[mutationName].message).to.eql(`${dataPath} deleted`);
+        // TODO: Check that message matches (ex: code is success, message should confirm that with deleted)
+        // expect(res.body.data[mutationName].message).to.eql(`${dataPath} deleted`);
         assert.isNull(res.body.data[mutationName].error);
     });
 });
@@ -770,4 +771,69 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataP
     for (var i = 0; i < propNames.length; i++) {
         expect(result[propNames[i]]).to.be.eql(values[i]);
     }
+});
+
+// Queries for an item and if it doesn't find it, creates the item. Returns id of item
+Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutationName: string, mutationInput?: string) => {
+    Cypress.log({
+        name: "searchOrCreate",
+        message: `"${name}", ${queryName}, ${mutationName}${mutationInput ? ", " + mutationInput : ""}`,
+        consoleProps: () => {
+            return {
+                "searchString": name,
+                "Query name": queryName,
+                "Mutation Name": mutationName,
+                "Extra input for Mutation": mutationInput
+            };
+        },
+    });
+    const searchQuery = `{
+        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            nodes {
+                id
+                name
+            }
+        }
+    }`;
+    return cy.postGQL(searchQuery).then((res) => {
+        // should be 200 ok
+        expect(res.isOkStatusCode).to.be.equal(true);
+        // no errors
+        assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${searchQuery}`);
+        // has data
+        assert.exists(res.body.data);
+        // has nodes
+        assert.isArray(res.body.data[queryName].nodes);
+        const nodes = res.body.data[queryName].nodes;
+        if (nodes.length === 1) {
+            if (nodes[0].name === name) {
+                return nodes[0].id;
+            }
+        } else if (nodes.length > 1) {
+            const extraFiltered = nodes.filter((item) => {
+                return item.name === name;
+            });
+            if (extraFiltered.length !== 0) {
+                return extraFiltered[0].id;
+            }
+        }
+        var dataPath = mutationName.replace("create", "");
+        dataPath = dataPath.replace(dataPath.charAt(0), dataPath.charAt(0).toLowerCase());
+        const input = mutationInput ? `{name: "${name}", ${mutationInput}}` : `{name: "${name}"}`;
+        const creationMutation = `mutation {
+            ${mutationName}(input: ${input}) {
+                code
+                message
+                error
+                ${dataPath} {
+                    id
+                    name
+                }
+            }
+        }`;
+        cy.postMutAndValidate(creationMutation, mutationName, dataPath).then((resp) => {
+            expect(resp.body.data[mutationName][dataPath].name).to.be.eql(name);
+            return resp.body.data[mutationName][dataPath].id;
+        });
+    });
 });

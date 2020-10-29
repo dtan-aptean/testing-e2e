@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
-// TEST COUNT: 7
-// request count: 8
+// TEST COUNT: 8
+// request count: 10-11
 describe('Muation: createCheckoutAttribute', () => {
     let id = '';
     const mutationName = 'createCheckoutAttribute';
@@ -18,7 +18,23 @@ describe('Muation: createCheckoutAttribute', () => {
         }
     `;
 
+    let taxCategoryId = '';
+
     afterEach(() => {
+        if (taxCategoryId !== "") {
+            const taxDeletionName = "deleteTaxCategory";
+            const taxRemovalMutation = `mutation {
+                ${taxDeletionName}(input: { id: "${taxCategoryId}" }) {
+                    code
+                    message
+                    error
+                }
+            }`;
+            cy.postAndConfirmDelete(taxRemovalMutation, taxDeletionName, "taxCategory").then(() => {
+                taxCategoryId = "";
+            });
+            cy.wait(1000);
+        }
         if (id !== "") {
             const deletionName = "deleteCheckoutAttribute";
             const removalMutation = `mutation {
@@ -205,6 +221,41 @@ describe('Muation: createCheckoutAttribute', () => {
             const names = ["displayOrder", "name", "defaultValue", "displayName", "isRequired", "isTaxExempt", "shippableProductRequired", "values"];
             const testValues = [displayOrder, name, defaultValue, displayName, isRequired, isTaxExempt, shippableProductRequired, values];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues);
+        });
+    });
+
+    it("Mutation returns item connected with correct taxCategory when valid 'taxCategoryId' input is used", () => {
+        const taxCategoryName = "Cypress Attribute Test TC";
+        cy.searchOrCreate(taxCategoryName, "taxCategories", "createTaxCategory").then((returnedId: string) => {
+            taxCategoryId = returnedId;
+            const dummyTaxCategory = {id: taxCategoryId, name: taxCategoryName};
+            const name = "Cypress CheckoutAttribute TC creation";
+            const values = [{name: 'Cypress Obligatory CA'}];
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        name: "${name}"
+                        values: [{name: "${values[0].name}"}]
+                        taxCategoryId: "${returnedId}"
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${dataPath} {
+                        id
+                        name
+                        taxCategory {
+                            id
+                            name
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                id = res.body.data[mutationName][dataPath].id;
+                cy.confirmMutationSuccess(res, mutationName, dataPath, ["name", "taxCategory"], [name, dummyTaxCategory]);
+            });
         });
     });
 });

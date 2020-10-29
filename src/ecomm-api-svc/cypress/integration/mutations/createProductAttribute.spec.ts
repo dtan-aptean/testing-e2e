@@ -142,7 +142,7 @@ describe('Muation: createProductAttribute', () => {
                             amount
                             currency
                         }
-                      }
+                    }
                 }
             }
         }`;
