@@ -1,10 +1,10 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
 // request count: 7
-describe('Muation: createVendor', () => {
+describe('Mutation: createReturnReason', () => {
     let id = '';
-    const mutationName = 'createVendor';
-    const dataPath = 'vendor';
+    const mutationName = 'createReturnReason';
+    const dataPath = 'returnReason';
     const standardMutationBody = `
         code
         message
@@ -17,7 +17,7 @@ describe('Muation: createVendor', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteVendor";
+            const deletionName = "deleteReturnReason";
             const removalMutation = `mutation {
                 ${deletionName}(input: { id: "${id}" }) {
                     code
@@ -59,7 +59,7 @@ describe('Muation: createVendor', () => {
     });
 
     it("Mutation with valid 'Name' input will create a new item", () => {
-        const name = "Cypress API Vendor";
+        const name = "Cypress API Return Reason";
         const mutation = `mutation {
             ${mutationName}(input: { name: "${name}" }) {
                 ${standardMutationBody}
@@ -72,7 +72,7 @@ describe('Muation: createVendor', () => {
     });
 
     it("Mutation with all required input and 'customData' input creates item with customData", () => {
-        const name = "Cypress Vendor customData";
+        const name = "Cypress ReturnReason customData";
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
             ${mutationName}(
@@ -96,7 +96,7 @@ describe('Muation: createVendor', () => {
             const names = ["name", "customData"];
             const testValues = [name, customData];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
-                const queryName = "vendors";
+                const queryName = "returnReasons";
                 const query = `{
                     ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         nodes {
@@ -111,44 +111,12 @@ describe('Muation: createVendor', () => {
     });
 
     it("Mutation creates item that has all included input", () => {
-        const active = Cypress._.random(0, 1) === 1;
-        const address = {
-            city: "Alpharetta",
-            country: "United States",
-            line1: "4325 Alexander Dr",
-            line2: "#100",
-            postalCode: "30022",
-            region: "Georgia"
-        };
-        const description = "Cypress testing 'create' mutation input";
         const displayOrder = Cypress._.random(1, 20);
-        const email = "cypressVendorTest@testenvironment.com";
-        const metaTags = {
-            keywords:  "Cypress",
-            description: "Cypress Input metaTag",
-            title: "Cypress Input test"
-        };
-        const name = "Cypress Vendor Input";
+        const name = "Cypress ReturnReason Input";
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    active: ${active}
-                    address: {
-                        city: "${address.city}",
-                        country: "${address.country}",
-                        line1: "${address.line1}",
-                        line2: "${address.line2}",
-                        postalCode: "${address.postalCode}",
-                        region: "${address.region}"
-                    };
-                    description: "${description}"
                     displayOrder: ${displayOrder}
-                    email: "${email}"
-                    metaTags: {
-                        keywords:  "${metaTags.keywords}",
-                        description: "${metaTags.description}",
-                        title: "${metaTags.title}"
-                    }
                     name: "${name}"
                 }
             ) {
@@ -157,31 +125,15 @@ describe('Muation: createVendor', () => {
                 error
                 ${dataPath} {
                     id
-                    active
-                    address {
-                        city
-                        country
-                        line1
-                        line2
-                        postalCode
-                        region
-                    }
-                    description
                     displayOrder
-                    email
-                    metaTags {
-                        keywords
-                        description
-                        title
-                    }
                     name
                 }
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["active", "address", "description", "displayOrder", "email", "metaTags", "name"];
-            const values = [active, address, description, displayOrder, email, metaTags, name];
+            const names = ["displayOrder", "name"];
+            const values = [displayOrder, name];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, values);
         });
     });

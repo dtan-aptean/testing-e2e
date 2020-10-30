@@ -1,10 +1,10 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
 // request count: 7
-describe('Muation: createReturnReason', () => {
+describe('Mutation: createProduct', () => {
     let id = '';
-    const mutationName = 'createReturnReason';
-    const dataPath = 'returnReason';
+    const mutationName = 'createProduct';
+    const dataPath = 'product';
     const standardMutationBody = `
         code
         message
@@ -17,7 +17,7 @@ describe('Muation: createReturnReason', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteReturnReason";
+            const deletionName = "deleteProduct";
             const removalMutation = `mutation {
                 ${deletionName}(input: { id: "${id}" }) {
                     code
@@ -59,7 +59,7 @@ describe('Muation: createReturnReason', () => {
     });
 
     it("Mutation with valid 'Name' input will create a new item", () => {
-        const name = "Cypress API Return Reason";
+        const name = "Cypress API Product";
         const mutation = `mutation {
             ${mutationName}(input: { name: "${name}" }) {
                 ${standardMutationBody}
@@ -72,7 +72,7 @@ describe('Muation: createReturnReason', () => {
     });
 
     it("Mutation with all required input and 'customData' input creates item with customData", () => {
-        const name = "Cypress ReturnReason customData";
+        const name = "Cypress Product customData";
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
             ${mutationName}(
@@ -96,7 +96,7 @@ describe('Muation: createReturnReason', () => {
             const names = ["name", "customData"];
             const testValues = [name, customData];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
-                const queryName = "returnReasons";
+                const queryName = "products";
                 const query = `{
                     ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         nodes {
@@ -111,13 +111,13 @@ describe('Muation: createReturnReason', () => {
     });
 
     it("Mutation creates item that has all included input", () => {
-        const displayOrder = Cypress._.random(1, 20);
-        const name = "Cypress ReturnReason Input";
+        const name = "Cypress Product Input";
+        const shortDescription = "Cypress testing 'create' mutation input";
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    displayOrder: ${displayOrder}
                     name: "${name}"
+                    shortDescription: "${shortDescription}"
                 }
             ) {
                 code
@@ -125,15 +125,15 @@ describe('Muation: createReturnReason', () => {
                 error
                 ${dataPath} {
                     id
-                    displayOrder
                     name
+                    shortDescription
                 }
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["displayOrder", "name"];
-            const values = [displayOrder, name];
+            const names = ["name", "shortDescription"];
+            const values = [name, shortDescription];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, values);
         });
     });

@@ -1,10 +1,10 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
 // request count: 7
-describe('Muation: createManufacturer', () => {
+describe('Mutation: createCustomerRole', () => {
     let id = '';
-    const mutationName = 'createManufacturer';
-    const dataPath = 'manufacturer';
+    const mutationName = 'createCustomerRole';
+    const dataPath = 'customerRole';
     const standardMutationBody = `
         code
         message
@@ -17,7 +17,7 @@ describe('Muation: createManufacturer', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteManufacturer";
+            const deletionName = "deleteCustomerRole";
             const removalMutation = `mutation {
                 ${deletionName}(input: { id: "${id}" }) {
                     code
@@ -59,7 +59,7 @@ describe('Muation: createManufacturer', () => {
     });
 
     it("Mutation with valid 'Name' input will create a new item", () => {
-        const name = "Cypress API Manufacturer";
+        const name = "Cypress API Role";
         const mutation = `mutation {
             ${mutationName}(input: { name: "${name}" }) {
                 ${standardMutationBody}
@@ -72,7 +72,7 @@ describe('Muation: createManufacturer', () => {
     });
 
     it("Mutation with all required input and 'customData' input creates item with customData", () => {
-        const name = "Cypress Manufacturer customData";
+        const name = "Cypress CustomerRole customData";
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
             ${mutationName}(
@@ -96,7 +96,7 @@ describe('Muation: createManufacturer', () => {
             const names = ["name", "customData"];
             const testValues = [name, customData];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
-                const queryName = "manufacturers";
+                const queryName = "customerRoles";
                 const query = `{
                     ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         nodes {
@@ -111,23 +111,19 @@ describe('Muation: createManufacturer', () => {
     });
 
     it("Mutation creates item that has all included input", () => {
-        const displayOrder = Cypress._.random(1, 20);
-        const name = "Cypress Manufacturer Input";
-        const description = "Cypress testing 'create' mutation input";
-        const metaTags = {
-            keywords:  "Cypress",
-            description: "Cypress Input metaTag",
-            title: "Cypress Input test"
-        };
-        const priceRanges = "4-5";
+        const isTaxExempt = Cypress._.random(0, 1) === 1;
+        const freeShipping = Cypress._.random(0, 1) === 1;
+        const active = Cypress._.random(0, 1) === 1;
+        const enablePasswordLifetime = Cypress._.random(0, 1) === 1;
+        const name = "Cypress Role Input";
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    displayOrder: ${displayOrder}
+                    isTaxExempt: ${isTaxExempt}
+                    freeShipping: ${freeShipping}
+                    active: ${active}
+                    enablePasswordLifetime: ${enablePasswordLifetime}
                     name: "${name}"
-                    description: "${description}"
-                    metaTags: ${metaTags}
-                    priceRanges: "${priceRanges}"
                 }
             ) {
                 code
@@ -135,22 +131,18 @@ describe('Muation: createManufacturer', () => {
                 error
                 ${dataPath} {
                     id
-                    displayOrder
+                    isTaxExempt
+                    freeShipping
+                    active
+                    enablePasswordLifetime
                     name
-                    description
-                    metaTags {
-                        keywords
-                        description
-                        title
-                    }
-                    priceRanges
                 }
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["displayOrder", "name", "description", "metaTags", "priceRanges"];
-            const values = [displayOrder, name, description, metaTags, priceRanges];
+            const names = ["isTaxExempt", "freeShipping", "active", "enablePasswordLifetime", "name"];
+            const values = [isTaxExempt, freeShipping, active, enablePasswordLifetime, name];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, values);
         });
     });
