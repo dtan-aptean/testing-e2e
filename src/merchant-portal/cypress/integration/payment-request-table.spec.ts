@@ -373,7 +373,7 @@ describe("Payment Request Table", function () {
       });
     });
 
-    it.only("should pass if the href for the invoice download is correct", () => {
+    it("should pass if the href for the invoice download is correct", () => {
       cy.wait(4000);
       cy.get("@rows").eq(0).as("firstRow").click();
       cy.get("[data-cy=view-details]").scrollIntoView().should("be.visible");
