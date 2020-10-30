@@ -343,7 +343,7 @@ Cypress.Commands.add("makePayment", (count) => {
   cy.get("body").then(($body) => {
     const appWindow = $body[0].ownerDocument.defaultView;
     // TODO - switch this to work in all environments
-    appWindow.location = "https://dev.payer.apteanpay.com/";
+    appWindow.location = "https://tst.payer.apteanpay.com/";
     return new Promise((resolve) => {
       setTimeout((x) => {
         // Log in - taken from payer portal login command
@@ -432,7 +432,7 @@ Cypress.Commands.add("makePayment", (count) => {
               // If we need to make more than one payment, send us back to the home page
               if (count > 1) {
                 cy.wait(5000);
-                appWindow.location = "https://dev.payer.apteanpay.com/";
+                appWindow.location = "https://tst.payer.apteanpay.com/";
               }
             });
           }
