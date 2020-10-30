@@ -282,6 +282,37 @@ describe("Ecommerce", function () {
     });
 
     it("Publishing and unpublishing a language updates the table", () => {
+      function publishIfNecessary(eligibleRows) {
+        return cy.get("#languages-grid")
+          .find("tbody")
+          .find("tr")
+          .then(($rows) => {
+            if (eligibleRows.length === 1) {
+              const unpublished = $rows.filter((index, item) => {
+                return (item.innerHTML.includes("false-icon") && !item.innerText.includes("English"));
+              });
+              if (unpublished.length >= 1) {
+                const name = unpublished[0].cells[0].innerText;
+                cy.publishLanguage(name);
+                cy.get("#languages-grid")
+                  .find("tbody")
+                  .find("tr")
+                  .then(($tr) => {
+                    const validRows = $tr.filter((index, item) => {
+                      return (
+                        item.innerHTML.includes("true-icon") &&
+                        item.cells[0].innerText !== "English"
+                      );
+                    });
+                    return validRows;
+                  });
+              }
+            } else {
+              return null;
+            }
+          });
+      };
+      
       cy.goToAdmin();
       cy.goToLanguages();
       cy.get("#languages-grid")
@@ -293,27 +324,35 @@ describe("Ecommerce", function () {
             return (item.innerHTML.includes("true-icon") && !item.innerText.includes("English"));
           });
           expect(eligibleRows.length).to.be.gte(1);
-          // Find a random row to unpublish
-          const index = Cypress._.random(0, eligibleRows.length - 1);
-          const trueIndex = eligibleRows[index].rowIndex - 1; // The index of the row in the full table
-          cy.unpublishLanguage(trueIndex);
-          // Check that the table has updated.
-          cy.get("#languages-grid")
-            .find("tbody")
-            .find("tr")
-            .eq(trueIndex)
-            .should("contain.html", "false-icon")
-            .and("not.contain.html", "true-icon");
-          // Republish the language
-          cy.get("@languageName").then((languageName) => {
-            cy.publishLanguage(languageName);
-            // Check that the table updated
+          // Call the function to publish another language if we need one
+          publishIfNecessary(eligibleRows).then((validRows) => {
+            // Find a random row to unpublish
+            var index = Cypress._.random(0, eligibleRows.length - 1);
+            var trueIndex = eligibleRows[index].rowIndex - 1; // The index of the row in the full table
+            if (validRows) {
+              // Find a random row to unpublish
+              index = Cypress._.random(0, validRows.length - 1);
+              trueIndex = validRows[index].rowIndex - 1; // The index of the row in the full table
+            }
+            cy.unpublishLanguage(trueIndex);
+            // Check that the table has updated.
             cy.get("#languages-grid")
               .find("tbody")
               .find("tr")
               .eq(trueIndex)
-              .should("contain.html", "true-icon")
-              .and("not.contain.html", "false-icon");
+              .should("contain.html", "false-icon")
+              .and("not.contain.html", "true-icon");
+            // Republish the language
+            cy.get("@languageName").then((languageName) => {
+              cy.publishLanguage(languageName);
+              // Check that the table updated
+              cy.get("#languages-grid")
+                .find("tbody")
+                .find("tr")
+                .eq(trueIndex)
+                .should("contain.html", "true-icon")
+                .and("not.contain.html", "false-icon");
+            });
           });
         });
     });

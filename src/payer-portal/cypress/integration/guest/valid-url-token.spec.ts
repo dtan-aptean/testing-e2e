@@ -94,12 +94,9 @@ describe('Payer Portal - Guest User', function() {
       cy.get('[data-cy=checkout-as-guest]').click();
       cy.get('[data-cy=continue-to-payment]').should('be.disabled');
 
-      cy.getInput('first-name')
-        .type('Bobo')
-        .should('have.value', 'Bobo');
-      cy.getInput('last-name')
-        .type('Obob')
-        .should('have.value', 'Obob');
+      cy.getInput('holder-name')
+        .type('Bobo Obob')
+        .should('have.value', 'Bobo Obob');
       cy.getInput('street-address')
         .type('1234 Street Road')
         .should('have.value', '1234 Street Road');
@@ -125,12 +122,9 @@ describe('Payer Portal - Guest User', function() {
       cy.get('[data-cy=checkout-as-guest]').click();
       cy.get('[data-cy=continue-to-payment]').should('be.disabled');
 
-      cy.getInput('first-name')
-        .type('Bobo')
-        .should('have.value', 'Bobo');
-      cy.getInput('last-name')
-        .type('Obob')
-        .should('have.value', 'Obob');
+      cy.getInput('holder-name')
+        .type('Bobo Obob')
+        .should('have.value', 'Bobo Obob');
       cy.getInput('email')
         .type('Bob.Bob@test.com')
         .should('have.value', 'Bob.Bob@test.com');
@@ -156,12 +150,9 @@ describe('Payer Portal - Guest User', function() {
       cy.get('[data-cy=checkout-as-guest]').click();
       cy.get('[data-cy=continue-to-payment]').should('be.disabled');
 
-      cy.getInput('first-name')
-        .type('Bobo')
-        .should('have.value', 'Bobo');
-      cy.getInput('last-name')
-        .type('Obob')
-        .should('have.value', 'Obob');
+      cy.getInput('holder-name')
+        .type('Bobo Obob')
+        .should('have.value', 'Bobo Obob');
       cy.getInput('email')
         .type('Bob.Bob@test.com')
         .should('have.value', 'Bob.Bob@test.com');
@@ -184,12 +175,9 @@ describe('Payer Portal - Guest User', function() {
       cy.get('[data-cy=checkout-as-guest]').click();
       cy.get('[data-cy=continue-to-payment]').should('be.disabled');
 
-      cy.getInput('first-name')
-        .type('Bobo')
-        .should('have.value', 'Bobo');
-      cy.getInput('last-name')
-        .type('Obob')
-        .should('have.value', 'Obob');
+      cy.getInput('holder-name')
+        .type('Bobo Obob')
+        .should('have.value', 'Bobo Obob');
       cy.getInput('email')
         .type('Bob.Bob@test.com')
         .should('have.value', 'Bob.Bob@test.com');
@@ -212,12 +200,9 @@ describe('Payer Portal - Guest User', function() {
       cy.get('[data-cy=checkout-as-guest]').click();
       cy.get('[data-cy=continue-to-payment]').should('be.disabled');
 
-      cy.getInput('first-name')
-        .type('Bobo')
-        .should('have.value', 'Bobo');
-      cy.getInput('last-name')
-        .type('Obob')
-        .should('have.value', 'Obob');
+      cy.getInput('holder-name')
+        .type('Bobo Obob')
+        .should('have.value', 'Bobo Obob');
       cy.getInput('email')
         .type('Bob.Bob@test.com')
         .should('have.value', 'Bob.Bob@test.com');
@@ -245,8 +230,8 @@ describe('Payer Portal - Guest User', function() {
     it('should be able to go back to billing and then continue back to the credit card info', () => {
       cy.get('[data-cy=back-to-billing]').click();
 
-      cy.getInput('first-name')
-        .should('have.value', 'Bobo');
+      cy.getInput('holder-name')
+        .should('have.value', 'Bobo Obob');
 
       cy.get('[data-cy=continue-to-payment]').click();
     })

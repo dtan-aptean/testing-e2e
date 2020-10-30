@@ -82,7 +82,7 @@ describe('Mutation: processPaymentRequest', () => {
       assert.isNotNull(res.body.data.processPaymentRequest);
       assert.isNotNull(res.body.data.processPaymentRequest.code);
       assert.isNull(res.body.data.processPaymentRequest.error, res.body.data.processPaymentRequest.message);
-      assert.equal(res.body.data.processPaymentRequest.code, 'SUCCESS', 'Code is not SUCCESS');
+      assert.equal(res.body.data.processPaymentRequest.code, 'PENDING', 'Code is not PENDING');
     });
   });
 
