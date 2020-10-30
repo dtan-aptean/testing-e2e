@@ -84,7 +84,7 @@ describe('Muation: createCustomerRole', () => {
                 code
                 message
                 error
-                ${mutationName} {
+                ${dataPath} {
                     id
                     name
                     customData

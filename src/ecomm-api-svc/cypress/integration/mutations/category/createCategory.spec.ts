@@ -84,7 +84,7 @@ describe('Muation: createCategory', () => {
                 code
                 message
                 error
-                ${mutationName} {
+                ${dataPath} {
                     id
                     name
                     customData

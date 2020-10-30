@@ -84,7 +84,7 @@ describe('Muation: createProductAttribute', () => {
                 code
                 message
                 error
-                ${mutationName} {
+                ${dataPath} {
                     id
                     name
                     customData

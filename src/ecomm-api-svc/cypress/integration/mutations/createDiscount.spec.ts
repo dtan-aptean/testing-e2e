@@ -84,7 +84,7 @@ describe('Muation: createDiscount', () => {
                 code
                 message
                 error
-                ${mutationName} {
+                ${dataPath} {
                     id
                     name
                     customData
@@ -127,8 +127,8 @@ describe('Muation: createDiscount', () => {
                     couponCode: "${couponCode}"
                     usePercentageForDiscount: ${usePercentageForDiscount}
                     discountPercentage: ${discountPercentage}
-                    discountLimitationCount
-                    applyDiscountToSubCategories
+                    discountLimitationCount: ${discountLimitationCount}
+                    applyDiscountToSubCategories: ${applyDiscountToSubCategories}
                     name: "${name}"
                 }
             ) {

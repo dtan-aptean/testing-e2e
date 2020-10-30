@@ -84,7 +84,7 @@ describe('Muation: createReturnReason', () => {
                 code
                 message
                 error
-                ${mutationName} {
+                ${dataPath} {
                     id
                     name
                     customData

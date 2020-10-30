@@ -84,7 +84,7 @@ describe('Muation: createManufacturer', () => {
                 code
                 message
                 error
-                ${mutationName} {
+                ${dataPath} {
                     id
                     name
                     customData

@@ -131,7 +131,7 @@ describe('Muation: createCheckoutAttribute', () => {
                 code
                 message
                 error
-                ${mutationName} {
+                ${dataPath} {
                     id
                     name
                     values {
