@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
 // request count: 7
-describe('Muation: createCustomerRole', () => {
+describe('Mutation: createCustomerRole', () => {
     let id = '';
     const mutationName = 'createCustomerRole';
     const dataPath = 'customerRole';

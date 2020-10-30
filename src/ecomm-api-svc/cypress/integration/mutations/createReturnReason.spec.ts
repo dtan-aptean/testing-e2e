@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
 // request count: 7
-describe('Muation: createReturnReason', () => {
+describe('Mutation: createReturnReason', () => {
     let id = '';
     const mutationName = 'createReturnReason';
     const dataPath = 'returnReason';

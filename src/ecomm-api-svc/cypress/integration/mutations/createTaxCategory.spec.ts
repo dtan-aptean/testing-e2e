@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
 // request count: 7
-describe('Muation: createTaxCategory', () => {
+describe('Mutation: createTaxCategory', () => {
     let id = '';
     const mutationName = 'createTaxCategory';
     const dataPath = 'taxCategory';

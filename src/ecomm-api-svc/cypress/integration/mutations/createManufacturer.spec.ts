@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
 // request count: 7
-describe('Muation: createManufacturer', () => {
+describe('Mutation: createManufacturer', () => {
     let id = '';
     const mutationName = 'createManufacturer';
     const dataPath = 'manufacturer';

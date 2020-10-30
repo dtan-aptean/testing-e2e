@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 // TEST COUNT: 8
 // request count: 10-11
-describe('Muation: createCheckoutAttribute', () => {
+describe('Mutation: createCheckoutAttribute', () => {
     let id = '';
     const mutationName = 'createCheckoutAttribute';
     const dataPath = 'checkoutAttribute';
