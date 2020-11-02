@@ -837,3 +837,44 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
         });
     });
 });
+
+// Create a new item, validate it, and return the id. Pass in the full input value as a string
+Cypress.Commands.add("createAndGetId", (mutationName: string, dataPath: string, input: string) => {
+    const mutation = `mutation {
+        ${mutationName}(input: ${input}) {
+            code
+            message
+            error
+            ${dataPath} {
+                id
+                name
+            }
+        }
+    }`;
+    return cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+        debugger;
+        const id = res.body.data[mutationName][dataPath].id;
+        return id;
+    });
+});
+
+Cypress.Commands.add("confirmUpdate", (res, mutationName: string, dataPath: string, propNames: string[], values: [], oldValues: []) => {
+    Cypress.log({
+        name: "confirmUpdate",
+        message: mutationName,
+        consoleProps: () => {
+            return {
+                "Mutation response": res,
+                "Mutation name": mutationName,
+                "Data path": dataPath,
+                "Properties to check": propNames.toString(),
+                "Expected Values": values.toString()
+            };
+        },
+    });
+    expect(propNames.length).to.be.eql(values.length);
+    var result = res.body.data[mutationName][dataPath];
+    for (var i = 0; i < propNames.length; i++) {
+        expect(result[propNames[i]]).to.be.eql(values[i]);
+    }
+})
