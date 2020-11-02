@@ -111,3 +111,27 @@ Cypress.Commands.add('generatePaymentRequest', () => {
       });
     });
 });
+
+Cypress.Commands.add('generatePaymentMethodToken', () => {
+  const WePayToken: "payment_methods-d30f0414-dc37-421d-b43a-0b77dc53b91f";
+  const gqlQuery = `mutation {
+    convertPayfacPaymentMethodToken(input: {
+      token: "${WePayToken}"
+      type: CREDIT_CARD
+      holder: {
+        address: {
+          country: "US",
+          postalCode: "30022"
+        }
+      }
+    }) {
+      token {
+        id
+      }
+    }
+  }`;
+  cy.postGQL(gqlQuery).then(resp => {
+    cy.expect(resp.isOkStatusCode).to.be.equal(true);
+    return resp.body.data.convertPayfacPaymentMethodToken.token.id;
+  });
+});
