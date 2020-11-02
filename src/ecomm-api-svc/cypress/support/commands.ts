@@ -209,9 +209,9 @@ Cypress.Commands.add("validateValues", (res, dataPath: string) => {
                 if (val.displayOrder !== null) {
                     expect(val.displayOrder).to.be.a('number');
                 }
-                expect(val).to.have.property('isPreselected');
+                expect(val).to.have.property('isPreSelected');
                 if (val.isPreselected !== null) {
-                    expect(val.isPreselected).to.be.a('boolean');
+                    expect(val.isPreSelected).to.be.a('boolean');
                 }
                 expect(val).to.have.property('name');
                 if (val.name !== null) {

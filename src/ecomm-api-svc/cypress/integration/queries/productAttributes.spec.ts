@@ -417,7 +417,7 @@ describe('Query: productAttributes', () => {
                 nodes {
                     values {
                         displayOrder
-                        isPreselected
+                        isPreSelected
                         name
                         priceAdjustment {
                             amount
