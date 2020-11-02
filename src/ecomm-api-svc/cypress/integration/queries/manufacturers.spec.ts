@@ -9,12 +9,16 @@ describe('Query: manufacturers', () => {
                 cursor
                 node {
                     id
-                    name
+                    manufacturerInfo {
+                        name
+                    }
                 }
             }
             nodes {
                 id
-                name
+                manufacturerInfo {
+                    name
+                }
             }
             pageInfo {
                 endCursor
@@ -29,6 +33,8 @@ describe('Query: manufacturers', () => {
             ${standardQueryBody}
         }
     }`;
+    // Name of the info field
+    const infoPath = "manufacturerInfo";
 
     it("Query with valid 'orderBy' input argument returns valid data types", () => {
         cy.postAndValidate(standardQuery, queryName);
@@ -180,20 +186,20 @@ describe('Query: manufacturers', () => {
     });
 
     it("Query with a valid 'searchString' input argument will return the specific item", () => {
-        cy.returnRandomName(standardQuery, queryName).then((name: string) => {
+        cy.returnRandomInfoName(standardQuery, queryName, infoPath).then((name: string) => {
             const searchQuery = `{
                 manufacturers(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
             cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                cy.validateNameSearch(resp, queryName, name, true);
+                cy.validateInfoNameSearch(resp, queryName, infoPath, name, true);
             });
         });
     });
 
     it("Query with a valid partial 'searchString' input argument will return all items containing the string", () => {
-        cy.returnRandomName(standardQuery, queryName).then((name: string) => {
+        cy.returnRandomInfoName(standardQuery, queryName, infoPath).then((name: string) => {
             // Get the first word if the name has multiple words. Otherwise, get a random segment of the name
             var newWordIndex = name.search(" ");
             var searchText = "";
@@ -209,7 +215,7 @@ describe('Query: manufacturers', () => {
                 }
             }`;
             cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                cy.validateNameSearch(resp, queryName, searchText, false);
+                cy.validateInfoNameSearch(resp, queryName, infoPath, searchText, false);
             });
         });
     });

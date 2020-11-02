@@ -390,6 +390,67 @@ Cypress.Commands.add('returnRandomName', (gqlQuery: string, dataPath: string) =>
     });
 });
 
+// For queries that have a info field instead of a name field.
+// Runs the query and grabs a random node to take the name from. Query body should look for name
+Cypress.Commands.add("returnRandomInfoName", (gqlQuery: string, dataPath: string, infoPath: string) => {
+    Cypress.log({
+        name: "returnRandomInfoName",
+        message: `${dataPath}, ${infoPath}`,
+        consoleProps: () => {
+            return {
+                "Query Body": gqlQuery,
+                "Query name / dataPath": dataPath,
+                "Info path": infoPath
+            };
+        },
+    });
+
+    function runNameFilter(node) {
+        var info = node[infoPath].filter((val) => {
+            return val.languageCode === "Standard" &&  val.name !== "";
+        });
+        if (info.length < 1) {
+            info = node[infoPath].filter((val) => {
+                return val.name !== "";
+            });
+            expect(info.length).to.be.gte(1); // Need to have a name we can search with
+        }
+        info = info[0];
+        return info;
+    };
+
+    return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
+        var randomIndex = 0;
+        const totalCount = res.body.data[dataPath].totalCount;
+        if (totalCount > 1) {
+            randomIndex = Cypress._.random(0, totalCount - 1);
+        }
+        var randomNode = res.body.data[dataPath].nodes[randomIndex];
+        var infoNode = runNameFilter(randomNode);
+        const duplicateArray = res.body.data[dataPath].nodes.filter((val) => {
+            const infoArray = val[infoPath].filter((item) => {
+                return item.name === infoNode.name;
+            });
+            return infoArray.length > 0;
+        });
+        if (duplicateArray.length > 1) {
+            const uniqueArray = res.body.data[dataPath].nodes.filter((val) => {
+                const infoArray = val[infoPath].filter((item) => {
+                    return item.name != infoNode.name && item.name != "";
+                });
+                return infoArray.length > 0;
+            });
+            randomIndex = 0;
+            if (uniqueArray.length > 1) {
+                randomIndex = Cypress._.random(0, uniqueArray.length - 1);
+            }
+            randomNode = uniqueArray[randomIndex];
+            infoNode = runNameFilter(randomNode);
+        }
+        return cy.wrap(infoNode.name);
+    });
+});
+
 // Validates that a query with searchString returned the node with the correct name or nodes that contain the string
 Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: string, fullName: boolean) => {
     Cypress.log({
@@ -419,6 +480,55 @@ Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: 
         for (var i = 0; i < nodes.length; i++) {
             expect(nodes[i].name).to.include(searchValue, `Node[${i}]`);
             expect(edges[i].node.name).to.include(searchValue, `Edge[${i}]`);
+        }
+    }
+});
+
+// For queries that have a info field instead of a name field.
+// Validates that a query with searchString returned the node with the correct name or nodes that contain the string
+Cypress.Commands.add("validateInfoNameSearch", (res, dataPath: string, infoPath: string, searchValue: string, fullName: boolean) => {
+    Cypress.log({
+        name: "validateInfoNameSearch",
+        message: `${dataPath}, ${infoPath}, searchString: ${searchValue}, fullName: ${fullName}`,
+        consoleProps: () => {
+            return {
+                "Response": res,
+                "Query name / dataPath": dataPath,
+                "Info name": infoPath,
+                "searchString": searchValue,
+                "fullName": fullName
+            };
+        },
+    });
+    const totalCount = res.body.data[dataPath].totalCount;
+    const nodes = res.body.data[dataPath].nodes;
+    const edges = res.body.data[dataPath].edges;
+    if (fullName) {
+        expect(totalCount).to.be.eql(1);
+        expect(nodes.length).to.be.eql(1);
+        expect(edges.length).to.be.eql(1);
+        const infoArray = nodes[0][infoPath].filter((val) => {
+            return val.name === searchValue;
+        });
+        expect(infoArray.length).to.be.gte(1);
+        const edgeInfoArray = edges[0].node[infoPath].filter((val) => {
+            return val.name === searchValue;
+        });
+        expect(edgeInfoArray.length).to.be.gte(1);
+        expect(infoArray.length).to.be.eql(edgeInfoArray.length);
+    } else {
+        expect(totalCount).to.be.eql(nodes.length);
+        expect(totalCount).to.be.eql(edges.length);
+        for (var i = 0; i < nodes.length; i++) {
+            var infoArray = nodes[i][infoPath].filter((val) => {
+                return val.name.includes(searchValue);
+            });
+            expect(infoArray.length).to.be.gte(1, `Node[${i}]`);
+            var edgeInfoArray = edges[i].node[infoPath].filter((val) => {
+                return  val.name.includes(searchValue);
+            });
+            expect(edgeInfoArray.length).to.be.gte(1, `Edge[${i}]`);
+            expect(infoArray.length).to.be.eql(edgeInfoArray.length);
         }
     }
 });
