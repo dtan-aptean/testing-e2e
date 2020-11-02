@@ -390,7 +390,7 @@ Cypress.Commands.add("makePayment", (count) => {
             cy.getInput("country-code").type("+1");
             cy.getInput("phone-number").clear();
             cy.getInput("phone-number").type("6785555555");
-            cy.get("[data-cy=continue-to-payment").click();
+            cy.get("[data-cy=continue-to-payment]").click();
             cy.wait(2000);
           }
           // Get the credit iframe - taken from payer portal tests
@@ -416,7 +416,10 @@ Cypress.Commands.add("makePayment", (count) => {
               .click();
             // Wait for page to load
             cy.wait(5000);
-
+            // Click the "Pay with Credit Card" button.
+            cy.get("[data-cy=pay-with-cc-button]")
+              .click();
+            cy.wait(2000);
             // Fill in the credit card info
             // TODO: Set up command to deal with saved cards, etc
             getIframeBody()
@@ -499,5 +502,37 @@ Cypress.Commands.add(
     cy.wait(5000);
     // Return to merchant portal
     cy.visit("/");
+  }
+);
+
+/**
+ * Returns a table body after it has completely loaded (no skeleton).
+ * selector - DOM selector to use.
+ * invokeChildren - Whether or not to invoke children and return them vs the table body.
+ */
+Cypress.Commands.add(
+  "getTableBodyAfterLoad",
+  (selector, invokeChildren) => {
+    function getTable (tableSelector) {
+      cy.get(tableSelector)
+      .invoke("children")
+      .then(($el) => {
+        if ($el && $el[0]) {
+          // Still loading.
+          const elements = $el[0].getElementsByClassName("MuiSkeleton-root");
+          if (elements && elements.length > 0) {
+            cy.wait(100);
+            getTable(tableSelector);
+          } else {
+            if (invokeChildren) {
+              return $el;
+            } else {
+              return $el.parent();
+            }            
+          }
+        }
+      });
+    };
+    return getTable(selector);
   }
 );
