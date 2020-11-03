@@ -49,10 +49,10 @@ describe('Mutation: attachPaymentMethod', () => {
         });
       });
     
-    //TODO: Current tests to detach a payment method do no reliably pass. Revisit after finding reliable ways to detach a payment method id
+    //TODO: Current tests to detach a payment method do not reliably pass. Revisit after finding reliable ways to detach a payment method id
     it.skip('should succesfully attach a detached payment method id to the tenant', () => {
       //generate detached payment method id
-      
+
       const gqlQuery = `mutation {
         attachPaymentMethod(input: {
           resourceId: "${Cypress.env('x-aptean-tenant')}"
