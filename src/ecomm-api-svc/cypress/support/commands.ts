@@ -191,6 +191,31 @@ Cypress.Commands.add("confirmError", (res) => {
     assert.notExists(res.body.data);
 });
 
+// Tests the response for errors. Use when we expect it to fail
+// For use with mutations that still return data and an okay status when erroring
+Cypress.Commands.add("confirmMutationError", (res, mutationName: string, dataPath: string) => {
+    Cypress.log({
+        name: "confirmMutationError",
+        message: `Confirm expected error are present`,
+        consoleProps: () => {
+            return {
+                "Response": res,
+            };
+        },
+    });
+    // should have errors
+    assert.exists(res.body.errors);
+    // should have data
+    assert.exists(res.body.data);
+    // Check data for errors
+    // validate data types and values
+    assert.isString(res.body.data[mutationName].code);
+    expect(res.body.data[mutationName].code).to.eql("ERROR");
+    assert.isString(res.body.data[mutationName].message);
+    expect(res.body.data[mutationName].message).to.include('Error');
+    assert.notExists(res.body.data[mutationName][dataPath]);
+});
+
 // Post Query and confirm it has errors
 Cypress.Commands.add("postAndConfirmError", (gqlQuery: string) => {
     Cypress.log({
@@ -203,6 +228,24 @@ Cypress.Commands.add("postAndConfirmError", (gqlQuery: string) => {
     });
     return cy.postGQL(gqlQuery).then((res) => {
         cy.confirmError(res).then(() => {
+            return res;
+        });
+    });
+});
+
+Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutationName: string, dataPath: string) => {
+    Cypress.log({
+        name: "postAndConfirmMutationError",
+        consoleProps: () => {
+            return {
+                "Mutation Body": gqlMutation,
+                "Mutation Name": mutationName,
+                "Data path": dataPath
+            };
+        },
+    });
+    return cy.postGQL(gqlMutation).then((res) => {
+        cy.confirmMutationError(res, mutationName, dataPath).then(() => {
             return res;
         });
     });

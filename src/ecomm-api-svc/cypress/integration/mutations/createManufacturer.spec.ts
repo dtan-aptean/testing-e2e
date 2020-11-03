@@ -1,17 +1,21 @@
 /// <reference types="cypress" />
-// TEST COUNT: 6
-// request count: 7
+// TEST COUNT: 9
+// request count: 10
 describe('Mutation: createManufacturer', () => {
     let id = '';
     const mutationName = 'createManufacturer';
     const dataPath = 'manufacturer';
+    const infoName = "manufacturerInfo";
     const standardMutationBody = `
         code
         message
         error
         ${dataPath} {
             id
-            name
+            ${infoName} {
+                name
+                languageCode
+            }
         }
     `;
 
@@ -49,35 +53,64 @@ describe('Mutation: createManufacturer', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will fail with invalid 'Name' input", () => {
+    it("Mutation will fail with no 'languageCode' input", () => {
         const mutation = `mutation {
-            ${mutationName}(input: { name: 7 }) {
+            ${mutationName}(input: { ${infoName}: [{name: "Cypress no languageCode"}] }) {
                 ${standardMutationBody}
             }
-        }`
+        }`;
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with no 'Name' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { ${infoName}: [{languageCode: "Standard"}] }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with invalid 'languageCode' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { ${infoName}: [{name: "Cypress invalid languageCode", languageCode: 6}] }) {
+                ${standardMutationBody}
+            }
+        }`;
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation with valid 'Name' input will create a new item", () => {
-        const name = "Cypress API Manufacturer";
+    it("Mutation will fail with invalid 'Name' input", () => {
         const mutation = `mutation {
-            ${mutationName}(input: { name: "${name}" }) {
+            ${mutationName}(input: { ${infoName}: [{name: 7, languageCode: "Standard"}] }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation with valid 'Name' and 'languageCode' input will create a new item", () => {
+        const name = "Cypress API Manufacturer";
+        const info = [{name: name, languageCode: "Standard"}];
+        const mutation = `mutation {
+            ${mutationName}(input: { ${infoName}: [{name: "${info[0].name}", languageCode: "${info[0].languageCode}"}] }) {
                 ${standardMutationBody}
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            cy.confirmMutationSuccess(res, mutationName, dataPath, ["name"], [name]);
+            cy.confirmMutationSuccess(res, mutationName, dataPath, [infoName], [info]);
         });
     });
 
     it("Mutation with all required input and 'customData' input creates item with customData", () => {
         const name = "Cypress Manufacturer customData";
+        const info = [{name: name, languageCode: "Standard"}];
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    name: "${name}"
+                    ${infoName}: [{name: "${info[0].name}", languageCode: "${info[0].languageCode}"}]
                     customData: {data: "${customData.data}", canDelete: ${customData.canDelete}}
                 }
             ) {
@@ -86,15 +119,18 @@ describe('Mutation: createManufacturer', () => {
                 error
                 ${dataPath} {
                     id
-                    name
+                    ${infoName} {
+                        name
+                        languageCode
+                    }
                     customData
                 }
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["name", "customData"];
-            const testValues = [name, customData];
+            const names = [infoName, "customData"];
+            const testValues = [info, customData];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
                 const queryName = "manufacturers";
                 const query = `{
@@ -114,19 +150,31 @@ describe('Mutation: createManufacturer', () => {
         const displayOrder = Cypress._.random(1, 20);
         const name = "Cypress Manufacturer Input";
         const description = "Cypress testing 'create' mutation input";
-        const metaTags = {
-            keywords:  "Cypress",
-            description: "Cypress Input metaTag",
-            title: "Cypress Input test"
-        };
+        const info = [{name: name, description: description, languageCode: "Standard"}];
+        const seoData = [{
+            searchEngineFriendlyPageName: "Cypress Input",
+            metaKeywords:  "Cypress",
+            metaDescription: "Cypress Input metaTag",
+            metaTitle: "Cypress Input test",
+            languageCode: "Standard"
+        }];
         const priceRanges = "4-5";
         const mutation = `mutation {
             ${mutationName}(
                 input: {
                     displayOrder: ${displayOrder}
-                    name: "${name}"
-                    description: "${description}"
-                    metaTags: ${metaTags}
+                    ${infoName}: [{
+                        name: "${info[0].name}",
+                        description: "${info[0].description}",
+                        languageCode: "${info[0].languageCode}"
+                    }]
+                    seoData: [{
+                        searchEngineFriendlyPageName: "${seoData[0].searchEngineFriendlyPageName}",
+                        metaKeywords: "${seoData[0].metaKeywords}",
+                        metaDescription: "${seoData[0].metaDescription}",
+                        metaTitle: "${seoData[0].metaTitle}",
+                        languageCode: "${seoData[0].languageCode}"
+                    }]
                     priceRanges: "${priceRanges}"
                 }
             ) {
@@ -136,12 +184,17 @@ describe('Mutation: createManufacturer', () => {
                 ${dataPath} {
                     id
                     displayOrder
-                    name
-                    description
-                    metaTags {
-                        keywords
+                    ${infoName} {
+                        name
                         description
-                        title
+                        languageCode
+                    }
+                    seoData {
+                        searchEngineFriendlyPageName
+                        metaKeywords
+                        metaDescription
+                        metaTitle
+                        languageCode
                     }
                     priceRanges
                 }
@@ -149,8 +202,8 @@ describe('Mutation: createManufacturer', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["displayOrder", "name", "description", "metaTags", "priceRanges"];
-            const values = [displayOrder, name, description, metaTags, priceRanges];
+            const names = ["displayOrder", infoName, "seoData", "priceRanges"];
+            const values = [displayOrder, info, seoData, priceRanges];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, values);
         });
     });
