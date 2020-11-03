@@ -24,8 +24,6 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
-import { values } from "cypress/types/lodash";
-
 // -- This will post GQL query --
 Cypress.Commands.add('postGQL', query => {
   return cy.request({
