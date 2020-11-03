@@ -43,5 +43,27 @@ describe('Mutation: deletePaymentMethod', () => {
           // no data
           assert.notExists(res.body.data);
         });
+    });
+
+    //Currently the api responds in an error about the wepay id not being found.
+    it.skip('should successfully delete a payment method', () => {
+      cy.generatePaymentMethodId().then(id => {
+        const gqlQuery = `mutation {
+          deletePaymentMethod(input: {
+            paymentMethodId: "${id}"
+          }) {
+            paymentMethod {
+              id
+              owner {
+                tenantId
+              }
+            }
+          }
+        }`
+        cy.postGQL(gqlQuery).then(res => {
+          cy.expect(res.isOkStatusCode).to.be.equal(true);
+          assert.exists(res.body.data);
+        });
       });
+    }); 
 });

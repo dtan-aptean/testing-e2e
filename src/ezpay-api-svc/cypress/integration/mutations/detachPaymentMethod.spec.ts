@@ -45,5 +45,29 @@ describe('Mutation: detachPaymentMethod', () => {
           // no data
           assert.notExists(res.body.data);
         });
+    });
+
+    // Currently the api responds in an error stating the payer profile does not exist.
+    it.skip('should succesfully detach a payment method from the tenant', () => {
+      cy.generatePaymentMethodId().then(id => {
+        const gqlQuery = `mutation {
+          detachPaymentMethod(input: {
+            paymentMethodId: "${id}"
+            resourceId: "${Cypress.env('x-aptean-tenant')}"
+          }) {
+            paymentMethod {
+              id
+              owner {
+                tenantId
+              }
+            }
+          }
+        }`
+
+        cy.postGQL(gqlQuery).then(res => {
+          cy.expect(res.isOkStatusCode).to.be.equal(true);
+          cy.expect(res.body.data);
+        });
       });
+    });
 });
