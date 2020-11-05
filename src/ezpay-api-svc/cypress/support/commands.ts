@@ -113,33 +113,44 @@ Cypress.Commands.add('generatePaymentRequest', () => {
 });
 
 //generates a wepay payment method token and calls convertPayfacPaymentMethodToken on it to generate a payment method token
-Cypress.Commands.add('generatePaymentMethodToken', () => {
+Cypress.Commands.add('generateWePayToken', () => {
   const baseUrl = Cypress.config('baseUrl'); //store the baseUrl
   Cypress.config('baseUrl', ''); //set the baseUrl to null to be able to visit a local file
   cy.visit('./cypress/support/WePayToken.html').then(contentWindow => {
     cy.get('[id=WePayToken]').invoke('text').then(token => {
       Cypress.config('baseUrl', baseUrl); //set the baseUrl back to normal now that we don't need the local file anymore
-      const gqlQuery = `mutation {
-        convertPayfacPaymentMethodToken(input: {
-          token: "${token}"
-          type: CREDIT_CARD
-          holder: {
-            address: {
-              country: "US",
-              postalCode: "30022"
-            }
-          }
-        }) {
-          token {
-            id
-          }
-        }
-      }`;
-      cy.postGQL(gqlQuery).then(res => {
-        cy.expect(res.isOkStatusCode).to.be.equal(true);
-        return res.body.data.convertPayfacPaymentMethodToken.token.id;
-      });
+      return token;
     });
+  });
+});
+
+Cypress.Commands.add('convertPayfacPaymentMethodToken', (token: string) => {
+  const gqlQuery = `mutation {
+    convertPayfacPaymentMethodToken(input: {
+      token: "${token}"
+      type: PAYMENT_BANK_US
+      holder: {
+        email: "something@somewhere.com"
+        name: "Somebody Somewhere"
+        address: {
+          country: "US",
+          postalCode: "30022"
+        }
+        phone: {
+          countryCode: "01"
+          number: "6783425532"
+        }
+      }
+    }) {
+      token {
+        id
+        type
+      }
+    }
+  }`
+
+  cy.postGQL(gqlQuery).then(res => {
+    return res.body.data.convertPayfacPaymentMethodToken.token.id;
   });
 });
 
@@ -155,46 +166,63 @@ Cypress.Commands.add('getPaymentMethods', () => {
         totalCount
     }
   }`
-  return cy.postGQL(gqlQuery);
+  cy.postGQL(gqlQuery).then(res => {
+    return res.body.data.paymentMethods;
+  });
 });
 
 //Calls the createPaymentMethod api after generating a wepay payment method token
 Cypress.Commands.add('createPaymentMethod', () => {
   const resourceId = Cypress.env('x-aptean-tenant');
-  cy.generatePaymentMethodToken().then(token => {
-    const gqlQuery = `mutation {
-      createPaymentMethod(input: {
-        token: "${token}"
-        type: CREDIT_CARD
-        attachToResourceId: "${resourceId}"
-      }) {
-        code
-        error
-        message
-        paymentMethod {
-          id
-          owner {
-            tenantId
+  cy.generateWePayToken().then(token => {
+    cy.convertPayfacPaymentMethodToken(token).then(id => {
+      const gqlQuery = `mutation {
+        createPaymentMethod(input: {
+          token: "${id}"
+          attachToResourceId: "${resourceId}"
+        }) {
+          code
+          error
+          message
+          paymentMethod {
+            id
+            owner {
+              tenantId
+            }
           }
         }
-      }
-    }`
-    return cy.postGQL(gqlQuery);
+      }`
+      return cy.postGQL(gqlQuery);
+    });
   });
 });
 
 //generates a payment method id either from an existing payment method on the tenant or creating a new payment method for the tenant
 Cypress.Commands.add('generatePaymentMethodId', () => {
-  cy.getPaymentMethods().then(res => {
-    const paymentMethods = res.body.data.paymentMethods;
+  cy.getPaymentMethods().then(paymentMethods => {
     if (paymentMethods.totalCount > 0) {
       return paymentMethods.nodes[0].id;
     } else {
       cy.createPaymentMethod().then(() => {
-        cy.getPaymentMethods().then(otherRes => {
-          return otherRes.body.data.paymentMethods.nodes[0].id;
+        cy.getPaymentMethods().then(newPaymentMethods => {
+          return newPaymentMethods.nodes[0].id;
         });
       });
     }
+  });
+});
+
+Cypress.Commands.add('getPaymentMethodById', (id: string) => {
+  const gqlQuery = `query {
+    paymentMethods(id: "${id}") {
+      nodes {
+        id
+        status
+        type
+      }
+    }
+  }`
+  cy.postGQL(gqlQuery).then(res => {
+    return res.body.data.paymentMethods.nodes[0];
   });
 });

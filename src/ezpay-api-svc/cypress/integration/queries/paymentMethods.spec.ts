@@ -9,6 +9,7 @@ describe('Query: paymentMethods', () => {
                 nodes {
                     id
                     type
+                    status
                 }
                 totalCount
             }

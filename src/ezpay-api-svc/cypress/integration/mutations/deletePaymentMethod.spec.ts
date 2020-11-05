@@ -45,8 +45,7 @@ describe('Mutation: deletePaymentMethod', () => {
         });
     });
 
-    //Currently the api responds in an error about the wepay id not being found.
-    it.skip('should successfully delete a payment method', () => {
+    it('should successfully delete a payment method', () => {
       cy.generatePaymentMethodId().then(id => {
         const gqlQuery = `mutation {
           deletePaymentMethod(input: {

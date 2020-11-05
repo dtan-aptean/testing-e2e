@@ -12,24 +12,24 @@
     </p1>
     <script>
       // after wepay.js is loaded
-    const appId = "585859"; // use appropriate AppId for wepay environment
+    const appId = Cypress.env('wepay-app-id'); // use appropriate AppId for wepay environment
     const apiVersion = "3.0";
     const error = window.WePay.configure("stage", appId, apiVersion);
     // handle error if there is one
     const token = window.WePay.tokens.create({
         resource: "payment_methods",
         payment_methods: {
-            "type": "credit_card",
-            "credit_card": {
-                "card_number": "4111111111111111",
-                "expiration_month": 08,
-                "expiration_year": 39,
-                "cvv": "783"
+            "type": "payment_bank_us",
+            "payment_bank_us": {
+                "account_number": "783924",
+                "account_type": "checking",
+                "routing_number": "021000021"
                 }
             }
         });
     // this is the value to send to our convert mutation
     const wepayToken = token.id;
+    console.log(token);
     document.getElementById('WePayToken').innerHTML = wepayToken;
     </script>
 </body>
