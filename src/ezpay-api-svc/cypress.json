@@ -1,13 +1,13 @@
 {
-  "baseUrl": "#{EZPAY_API_URL}#", 
+  "baseUrl": "#{EZPAY_API_URL}#",
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
-  "env": { 
-    "authorization": "bearer --BEARER_TOKEN--", 
-    "x-aptean-apim": "#{X_APTEAN_APIM}#", 
-    "x-aptean-tenant": "#{X_APTEAN_TENANT}#", 
+  "env": {
+    "authorization": "bearer --BEARER_TOKEN--",
+    "x-aptean-apim": "#{X_APTEAN_APIM}#",
+    "x-aptean-tenant": "#{X_APTEAN_TENANT}#",
     "x-ezpay": "#{X_EZPAY}#",
-    "wepay-app-id": "#{WEPAY_APP_ID}"
-  }, 
+    "wepay-app-id": "#{WEPAY_APP_ID}#"
+  },
   "supportFile": "cypress/support/index.ts"
 }
