@@ -932,39 +932,6 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, dataPath: string, 
     });
 });
 
-Cypress.Commands.add("turnArrayIntoInput", (givenArray) => {
-    function valueToString(propertyNames: string[], index: number, parentObject?: object) {
-        var itemAsString = '{ ';
-        for (var i = 0; i < propertyNames.length; i++) {
-            if (i !== 0) {
-                itemAsString = itemAsString + ', ';
-            }
-            var parent = parentObject ? parentObject : givenArray[index];
-            var value = parent[propertyNames[i]];
-            if (typeof value === 'string') {
-                value = `"${value}"`;
-            } else if (typeof value === 'object') {
-                var subProps = Object.getOwnPropertyNames(value);
-                value = valueToString(subProps, index, value);
-            }
-            itemAsString = itemAsString + `${propertyNames[i]}: ${value}`;
-        }
-        itemAsString = itemAsString + ' }';
-        return itemAsString;
-    }
-    var arrayAsString = '[';
-    for (var i = 0; i < givenArray.length; i++) {
-        if (i !== 0) {
-            arrayAsString = arrayAsString + ", ";
-        }
-        var props = Object.getOwnPropertyNames(givenArray[i]);
-        var currentItemAsString = valueToString(props, i);
-        arrayAsString = arrayAsString + currentItemAsString;
-    }
-    arrayAsString = arrayAsString + "]";
-    return arrayAsString;
-});
-
 // Confirms that a mutation has updated an item by querying for the item and matching the values to the array given
 Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, itemId: string, propNames: string[], values: []) => {
     Cypress.log({

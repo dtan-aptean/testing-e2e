@@ -1,6 +1,5 @@
 /// <reference types="cypress" />
 // TEST COUNT: 7
-// request count: 10
 describe('Mutation: updateReturnReason', () => {
     let id = '';
     let updateCount = 0;
@@ -102,7 +101,7 @@ describe('Mutation: updateReturnReason', () => {
         });
     });
 
-    it("Mutation with all required input and 'customData' input creates item with customData", () => {
+    it("Mutation with all required input and 'customData' input updates item with customData", () => {
         updateCount++;
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
         const customData = {data: `${dataPath} customData`, canDelete: true};

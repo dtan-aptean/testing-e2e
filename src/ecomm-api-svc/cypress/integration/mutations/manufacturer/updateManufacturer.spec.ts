@@ -1,6 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 6
-// request count: 8
+// TEST COUNT: 9
 describe('Mutation: updateManufacturer', () => {
     let id = '';
     let updateCount = 0;
@@ -23,6 +22,39 @@ describe('Mutation: updateManufacturer', () => {
         }
     `;
     const createName = 'createManufacturer';
+    // Function to turn an object or array into a string to use as input
+    function toInputString(item) {
+        function iterateThrough (propNames?: string[]) {
+            var returnValue = '';
+            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
+                if (i !== 0) {
+                    returnValue = returnValue + ', ';
+                }
+                var value = propNames ? item[propNames[i]]: item[i];
+                if (typeof value === 'string') {
+                    value = `"${value}"`;
+                } else if (typeof value === 'object') {
+                    // Arrays return as an object, so this will get both
+                    value = toInputString(value);
+                }
+                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
+            }
+            return returnValue;
+        };
+        var itemAsString = '{ ';
+        var props = undefined;
+        if (item === null) {
+            return "null";
+        } else if (item === undefined) {
+            return "undefined";
+        } else if (Array.isArray(item)) {
+            itemAsString = '[';
+        } else if (typeof item === 'object') {
+            props = Object.getOwnPropertyNames(item);
+        }
+        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
+        return itemAsString;
+    };
 
     before(() => {
         const name = `Cypress ${mutationName} Test`;
@@ -101,78 +133,302 @@ describe('Mutation: updateManufacturer', () => {
 
     it("Mutation will succeed with valid 'id' and 'name' input", () => {
         updateCount++;
-        const newName = `Cypress ${mutationName} Update ${updateCount}`;
-        const newDescription =  `${mutationName} cypress test #${updateCount}`;
-        const info = [{name: `${newName}`, description: newDescription, languageCode: "Standard"}];
-        cy.turnArrayIntoInput(info).then((infoString: string) => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: "${id}", ${infoName}: ${infoString}}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                const propNames = [infoName];
-                const propValues = [info];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                    const query = `{
-                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                            nodes {
-                                id
-                                ${infoName} {
-                                    name
-                                    description
-                                    languageCode
-                                }
+        const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}];
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", ${infoName}: ${toInputString(info)}}) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            const propNames = [infoName];
+            const propValues = [info];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            ${infoName} {
+                                name
+                                description
+                                languageCode
                             }
                         }
-                    }`;
-                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
+        });
+    });
+
+    it("Mutation with all required input and 'customData' input updates item with customData", () => {
+        updateCount++;
+        const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}];
+        const customData = {data: `${dataPath} customData`, canDelete: true};
+        const mutation = `mutation {
+            ${mutationName}(
+                input: {
+                    id: "${id}"
+                    ${infoName}: ${toInputString(info)}
+                    customData: ${toInputString(customData)}
+                }
+            ) {
+                code
+                message
+                error
+                ${dataPath} {
+                    id
+                    ${infoName} {
+                        name
+                        description
+                        languageCode
+                    }
+                    customData
+                }
+            }
+        }`;
+        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            const propNames = [infoName, "customData"];
+            const propValues = [info, customData];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            customData
+                        }
+                    }
+                }`;
+                cy.postAndCheckCustom(query, queryName, id, customData);
+            });
+        });
+    });
+
+    it("Mutation with 'discountIds' input will successfully attach the discounts", () => {
+        const discountOne = {name: `Cypress ${dataPath} discount 1`, discountAmount: {amount: 15, currency: "USD"}};
+        cy.createAndGetId("createDiscount", "discount", toInputString(discountOne)).then((returnedId: string) => {
+            extraIds.push({itemId: returnedId, deleteName: "deleteDiscount"});
+            discountOne.id = returnedId;
+            const discounts = [discountOne];
+            const discountIds = [returnedId];
+            const discountTwo = {name: `Cypress ${dataPath} discount 2`, discountAmount: {amount: 30, currency: "USD"}};
+            cy.createAndGetId("createDiscount", "discount", toInputString(discountTwo)).then((secondId: string) => {
+                extraIds.push({itemId: secondId, deleteName: "deleteDiscount"});
+                discountTwo.id = secondId;
+                discounts.push(discountTwo);
+                discountIds.push(secondId);
+                updateCount++;
+                const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            discountIds: ${toInputString(discountIds)}
+                            ${infoName}: ${toInputString(info)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${dataPath} {
+                            id
+                            discounts {
+                                id
+                                name
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                            ${infoName} {
+                                name
+                                description
+                                languageCode
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                    const propNames = [infoName, "discounts"];
+                    const propValues = [info, discounts];
+                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                nodes {
+                                    id
+                                    discounts {
+                                        id
+                                        name
+                                        discountAmount {
+                                            amount
+                                            currency
+                                        }
+                                    }
+                                    ${infoName} {
+                                        name
+                                        description
+                                        languageCode
+                                    }
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    });
                 });
             });
         });
     });
 
-    it("Mutation with all required input and 'customData' input creates item with customData", () => {
-        updateCount++;
-        const newName = `Cypress ${mutationName} Update ${updateCount}`;
-        const info = [{name: `${newName}`, languageCode: "Standard"}];
-        cy.turnArrayIntoInput(info).then((infoString: string) => {
-            const customData = {data: `${dataPath} customData`, canDelete: true};
-            const mutation = `mutation {
-                ${mutationName}(
-                    input: {
-                        id: "${id}"
-                        ${infoName}: ${infoString}
-                        customData: {data: "${customData.data}", canDelete: ${customData.canDelete}}
-                    }
-                ) {
-                    code
-                    message
-                    error
-                    ${dataPath} {
-                        id
-                        ${infoName} {
-                            name
-                            languageCode
+    it("Mutation with 'roleBasedAccess' input will successfully attach the roles", () => {
+        const roleOne = {name: `Cypress ${dataPath} role 1`};
+        cy.createAndGetId("createCustomerRole", "customerRole", toInputString(roleOne)).then((returnedId: string) => {
+            extraIds.push({itemId: returnedId, deleteName: "deleteCustomerRole"});
+            roleOne.id = returnedId;
+            const roles = [roleOne];
+            const custRoleIds = [returnedId];
+            const roleTwo = {name: `Cypress ${dataPath} role 2`};
+            cy.createAndGetId("createCustomerRole", "customerRole", toInputString(roleTwo)).then((secondId: string) => {
+                extraIds.push({itemId: secondId, deleteName: "deleteCustomerRole"});
+                roleTwo.id = secondId;
+                roles.push(roleTwo)
+                custRoleIds.push(secondId);
+                updateCount++;
+                const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}];
+                const roleBasedAccess = {enabled: true, roleIds: custRoleIds};
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            roleBasedAccess: ${toInputString(roleBasedAccess)}
+                            ${infoName}: ${toInputString(info)}
                         }
-                        customData
-                    }
-                }
-            }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                const propNames = [infoName, "customData"];
-                const propValues = [info, customData];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                    const query = `{
-                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                            nodes {
-                                id
-                                customData
+                    ) {
+                        code
+                        message
+                        error
+                        ${dataPath} {
+                            id
+                            roleBasedAccess {
+                                enabled
+                                roles {
+                                    id
+                                    name
+                                }
+                            }
+                            ${infoName} {
+                                name
+                                description
+                                languageCode
                             }
                         }
-                    }`;
-                    cy.postAndCheckCustom(query, queryName, id, customData);
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                    const roleAccess = {enabled: roleBasedAccess.enabled, roles: roles};
+                    const propNames = [infoName, "roleBasedAccess"];
+                    const propValues = [info, roleAccess];
+                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                nodes {
+                                    id
+                                    roleBasedAccess {
+                                        enabled
+                                        roles {
+                                            id
+                                            name
+                                        }
+                                    }
+                                    ${infoName} {
+                                        name
+                                        description
+                                        languageCode
+                                    }
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    });
                 });
+            });
+        });
+    });
+
+    it("Mutation will correctly use all input", () => {
+        updateCount++;
+        const info = [
+            {name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"},
+            {name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE"}
+        ];
+        const displayOrder = Cypress._.random(1, 20);
+        const seoData = [{
+            searchEngineFriendlyPageName: "Cypress Input",
+            metaKeywords:  "Cypress",
+            metaDescription: "Cypress Input metaTag",
+            metaTitle: "Cypress Input test",
+            languageCode: "Standard"
+        }];
+        const priceRanges = "4-5";
+        const published = Cypress._.random(0, 1) === 1;
+        const mutation = `mutation {
+            ${mutationName}(
+                input: {
+                    displayOrder: ${displayOrder}
+                    ${infoName}: ${toInputString(info)}
+                    seoData: ${toInputString(seoData)}
+                    priceRanges: "${priceRanges}"
+                    published: ${published}
+                }
+            ) {
+                code
+                message
+                error
+                ${dataPath} {
+                    id
+                    displayOrder
+                    ${infoName} {
+                        name
+                        description
+                        languageCode
+                    }
+                    seoData {
+                        searchEngineFriendlyPageName
+                        metaKeywords
+                        metaDescription
+                        metaTitle
+                        languageCode
+                    }
+                    priceRanges
+                    published
+                }
+            }
+        }`;
+        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            const propNames = [infoName, "displayOrder", "seoData", "priceRanges", "published"];
+            const propValues = [info, displayOrder, seoData, priceRanges, published];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            displayOrder
+                            ${infoName} {
+                                name
+                                description
+                                languageCode
+                            }
+                            seoData {
+                                searchEngineFriendlyPageName
+                                metaKeywords
+                                metaDescription
+                                metaTitle
+                                languageCode
+                            }
+                            priceRanges
+                            published
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
             });
         });
     });
