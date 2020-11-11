@@ -214,6 +214,7 @@ describe('Mutation: updateVendor', () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: {
+                    id: "${id}"
                     active: ${active}
                     address: ${toInputString(address)}
                     displayOrder: ${displayOrder}

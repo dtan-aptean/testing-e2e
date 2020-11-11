@@ -131,9 +131,9 @@ describe('Mutation: updateManufacturer', () => {
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
     });
 
-    it("Mutation will succeed with valid 'id' and 'name' input", () => {
+    it("Mutation will succeed with valid 'id', 'name', and 'languageCode' input", () => {
         updateCount++;
-        const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}];
+        const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard"}];
         const mutation = `mutation {
             ${mutationName}(input: { id: "${id}", ${infoName}: ${toInputString(info)}}) {
                 ${standardMutationBody}
@@ -149,7 +149,6 @@ describe('Mutation: updateManufacturer', () => {
                             id
                             ${infoName} {
                                 name
-                                description
                                 languageCode
                             }
                         }
@@ -372,6 +371,7 @@ describe('Mutation: updateManufacturer', () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: {
+                    id: "${id}"
                     displayOrder: ${displayOrder}
                     ${infoName}: ${toInputString(info)}
                     seoData: ${toInputString(seoData)}
