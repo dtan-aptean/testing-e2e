@@ -270,8 +270,8 @@ describe('Mutation: updateProduct', () => {
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            const propNames = [infoName, "inventoryInformation", "customData"];
-            const propValues = [info, inventoryInfo, customData];
+            const propNames = ["customData", infoName, "inventoryInformation"];
+            const propValues = [customData, info, inventoryInfo];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -753,7 +753,7 @@ describe('Mutation: updateProduct', () => {
             preOrderAvailabilityStartDateTimeUtc: priceInformation.preOrderAvailabilityStartDateTimeUtc,
             minimumStockQuantity: Cypress._.random(5, 20),
             allowBackInStockNotification: Cypress._.random(0, 1) === 1,
-        }
+        };
         const mutation = `mutation {
             ${mutationName}(
                 input: { 

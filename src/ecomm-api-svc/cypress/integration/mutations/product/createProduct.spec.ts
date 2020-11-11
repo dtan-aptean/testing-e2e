@@ -1,13 +1,12 @@
 /// <reference types="cypress" />
 // TEST COUNT: 12
-// request count: 13
 // TODO: More work needed for when createProducts is fully synced up and all required fields are known
 describe('Mutation: createProduct', () => {
     let id = '';
     const mutationName = 'createProduct';
+    const queryName = "products";
     const dataPath = 'product';
     const infoName = "productInfo";
-    // TODO: Update with other required fields
     const standardMutationBody = `
         code
         message
@@ -20,8 +19,44 @@ describe('Mutation: createProduct', () => {
                 fullDescription
                 languageCode
             }
+            inventoryInformation {
+                minimumStockQuantity
+            }
         }
     `;
+    // Function to turn an object or array into a string to use as input
+    function toInputString(item) {
+        function iterateThrough (propNames?: string[]) {
+            var returnValue = '';
+            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
+                if (i !== 0) {
+                    returnValue = returnValue + ', ';
+                }
+                var value = propNames ? item[propNames[i]]: item[i];
+                if (typeof value === 'string') {
+                    value = `"${value}"`;
+                } else if (typeof value === 'object') {
+                    // Arrays return as an object, so this will get both
+                    value = toInputString(value);
+                }
+                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
+            }
+            return returnValue;
+        };
+        var itemAsString = '{ ';
+        var props = undefined;
+        if (item === null) {
+            return "null";
+        } else if (item === undefined) {
+            return "undefined";
+        } else if (Array.isArray(item)) {
+            itemAsString = '[';
+        } else if (typeof item === 'object') {
+            props = Object.getOwnPropertyNames(item);
+        }
+        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
+        return itemAsString;
+    };
 
     afterEach(() => {
         if (id !== "") {
@@ -138,26 +173,31 @@ describe('Mutation: createProduct', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    // TODO: Tests for other missing or invalid required fields
+    it("Mutation will fail without 'inventoryInformation' input", () => {
+        const info = [{name: `Cypress ${mutationName} no inventoryInformation`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+        const mutation = `mutation {
+            ${mutationName}(
+                input: { 
+                    ${infoName}: ${toInputString(info)}
+                }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
 
-    // TODO: Needs all the required fields
-    it.skip("Mutation with valid 'Name', 'languageCode', and 'shortDescription' input will create a new item", () => {
-        const name = "Cypress API Product SD";
+    it("Mutation will succeed with valid 'name', 'shortDescription', and 'inventoryInformation' input", () => {
         const info = [{
-            name: name,
+            name: "Cypress API Product SD",
             shortDescription: "Testing creation",
-            fullDescription: "Testing creating with shortDescription",
             languageCode: "Standard"
         }];
+        const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    ${infoName}: [{
-                        name: "${info[0].name}",
-                        shortDescription: "${info[0].shortDescription}",
-                        fullDescription: "${info[0].fullDescription}",
-                        languageCode: "${info[0].languageCode}"
-                    }]
+                    ${infoName}: ${toInputString(info)}
+                    inventoryInformation: ${toInputString(inventoryInfo)}
                 }
             ) {
                 ${standardMutationBody}
@@ -165,85 +205,83 @@ describe('Mutation: createProduct', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            cy.confirmMutationSuccess(res, mutationName, dataPath, [infoName], [info]);
-        });
-    });
-
-    // TODO: Same test as above, but with fullDescription
-
-    // TODO: Needs all the required fields
-    it.skip("Mutation with all required input and 'customData' input creates item with customData", () => {
-        const name = "Cypress Product customData";
-        const info = [{name: name, languageCode: "Standard"}];
-        const customData = {data: `${dataPath} customData`, canDelete: true};
-        const mutation = `mutation {
-            ${mutationName}(
-                input: {
-                    ${infoName}: [{name: "${info[0].name}", languageCode: "${info[0].languageCode}"}]
-                    customData: {data: "${customData.data}", canDelete: ${customData.canDelete}}
-                }
-            ) {
-                code
-                message
-                error
-                ${dataPath} {
-                    id
-                    ${infoName} {
-                        name
-                        languageCode
-                    }
-                    customData
-                }
-            }
-        }`;
-        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            id = res.body.data[mutationName][dataPath].id;
-            const names = [infoName, "customData"];
-            const testValues = [info, customData];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
-                const queryName = "products";
+            const propNames = [infoName, "inventoryInformation"];
+            const propValues = [info, inventoryInfo];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         nodes {
                             id
-                            customData
+                            ${infoName} {
+                                name
+                                shortDescription
+                                fullDescription
+                                languageCode
+                            }
+                            inventoryInformation {
+                                minimumStockQuantity
+                            }
                         }
                     }
                 }`;
-                cy.postAndCheckCustom(query, queryName, id, customData);
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
             });
         });
     });
 
-    // TODO: Needs all the required fields
-    it.skip("Mutation creates item that has all included input", () => {
-        const name = "Cypress Product Input";
-        const shortDescription = "Cypress testing 'create' mutation input";
-        const fullDescription = "Cypress testing createProduct mutation input, to see if the input is added properly";
-        const info = [{name: name, shortDescription: shortDescription, fullDescription: fullDescription, languageCode: "Standard"}];
-        const seoData = [{
-            searchEngineFriendlyPageName: "Cypress Input",
-            metaKeywords:  "Cypress",
-            metaDescription: "Cypress Input metaTag",
-            metaTitle: "Cypress Input test",
+    it("Mutation will succeed with valid 'name', 'fullDescription', and 'inventoryInformation' input", () => {
+        const info = [{
+            name: "Cypress API Product SD",
+            fullDescription: "Testing creation with fullDescription",
             languageCode: "Standard"
         }];
+        const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    ${infoName}: [{
-                        name: "${info[0].name}",
-                        shortDescription: "${info[0].shortDescription}",
-                        fullDescription: "${info[0].fullDescription}",
-                        languageCode: "${info[0].languageCode}"
-                    }]
-                    seoData: [{
-                        searchEngineFriendlyPageName: "${seoData[0].searchEngineFriendlyPageName}",
-                        metaKeywords: "${seoData[0].metaKeywords}",
-                        metaDescription: "${seoData[0].metaDescription}",
-                        metaTitle: "${seoData[0].metaTitle}",
-                        languageCode: "${seoData[0].languageCode}"
-                    }]
+                    ${infoName}: ${toInputString(info)}
+                    inventoryInformation: ${toInputString(inventoryInfo)}
+                }
+            ) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            id = res.body.data[mutationName][dataPath].id;
+            const propNames = [infoName, "inventoryInformation"];
+            const propValues = [info, inventoryInfo];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            ${infoName} {
+                                name
+                                shortDescription
+                                fullDescription
+                                languageCode
+                            }
+                            inventoryInformation {
+                                minimumStockQuantity
+                            }
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
+        });
+    });
+
+    it("Mutation with all required input and 'customData' input creates item with customData", () => {
+        const info = [{name: "Cypress Product customData", shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+        const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
+        const customData = {data: `${dataPath} customData`, canDelete: true};
+        const mutation = `mutation {
+            ${mutationName}(
+                input: {
+                    ${infoName}: ${toInputString(info)}
+                    inventoryInformation: ${toInputString(inventoryInfo)}
+                    customData: ${toInputString(customData)}
                 }
             ) {
                 code
@@ -257,6 +295,165 @@ describe('Mutation: createProduct', () => {
                         fullDescription
                         languageCode
                     }
+                    inventoryInformation {
+                        minimumStockQuantity
+                    }
+                    customData
+                }
+            }
+        }`;
+        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            id = res.body.data[mutationName][dataPath].id;
+            const propNames = ["customData", infoName, "inventoryInformation"];
+            const propValues = [customData, info, inventoryInfo];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            customData
+                        }
+                    }
+                }`;
+                cy.postAndCheckCustom(query, queryName, id, customData);
+            });
+        });
+    });
+
+    // TODO: vendorIds test
+
+    // TODO: taxCategoryId test
+
+    // TODO: categoryIds test
+
+    // TODO: manufacturerIds test
+
+    // TODO: attributeIds test
+
+    // TODO: specificationOptionIds test
+
+    it("Mutation creates item that has all included input", () => {
+        const info = [
+            {name: "Cypress Product Input", shortDescription: "Cypress testing 'create' mutation input", fullDescription: "Cypress testing createProduct mutation input, to see if the input is added properly", languageCode: "Standard"},
+            {name: "Translate name to German", shortDescription: "Translate short desc to German", fullDescription: "Translate full desc to German", languageCode: "de-DE"}
+        ];
+        const today = new Date();
+        const nextWeek = new Date(today.valueOf() + 604800000);
+        const twoWeeks = new Date(today.valueOf() + 1209600000);
+        const sku = "Cypress Sku";
+        const manufacturerPartNumber = `C-${Cypress._.random(1, 10)}`;
+        const freeShipping = Cypress._.random(0, 1) === 1;
+        const shippingInformation = {
+            weight: Cypress._.random(1, 10),
+            length: Cypress._.random(1, 10),
+            width: Cypress._.random(1, 10),
+            height: Cypress._.random(1, 10),
+            isFreeShipping: freeShipping,
+            shipSeparately: Cypress._.random(0, 1) === 1,
+            additionalShippingCharge: freeShipping ? null : {
+                amount: Cypress._.random(1, 10),
+                currency: "USD"
+            }
+        };
+        const cartInfo = {
+            minimumCartQuantity: Cypress._.random(1, 100),
+            maximumCartQuantity: Cypress._.random(100, 500),
+            allowedQuantities: Cypress._.random(1, 500)
+        };
+        const preOrder = Cypress._.random(0, 1) === 1
+        const priceInformation = {
+            price: {
+                amount: Cypress._.random(1, 100),
+                currency: "USD"
+            },
+            isTaxExempt: Cypress._.random(0, 1) === 1,
+            availableForPreOrder: preOrder,
+            preOrderAvailabilityStartDateTimeUtc: preOrder ? today.toUTCString(): null
+        }; 
+        const published = Cypress._.random(0, 1) === 1;
+        const seoData = [{
+            searchEngineFriendlyPageName: "Cypress Update",
+            metaKeywords:  "Cypress",
+            metaDescription: "Cypress Update metaTag",
+            metaTitle: "Cypress Update test",
+            languageCode: "Standard"
+        }];
+        const inventoryInfo = {
+            displayStockAvailability: Cypress._.random(0, 1) === 1,
+            notifyAdminForQuantityBelow: Cypress._.random(1, 5),
+            notReturnable: Cypress._.random(0, 1) === 1,
+            availableStartDate: nextWeek.toUTCString(),
+            availableEndDate: twoWeeks.toUTCString(),
+            markAsNew: Cypress._.random(0, 1) === 1,
+            availableForPreOrder: priceInformation.availableForPreOrder,
+            preOrderAvailabilityStartDateTimeUtc: priceInformation.preOrderAvailabilityStartDateTimeUtc,
+            minimumStockQuantity: Cypress._.random(5, 20),
+            allowBackInStockNotification: Cypress._.random(0, 1) === 1,
+        };
+        const mutation = `mutation {
+            ${mutationName}(
+                input: {
+                    ${infoName}: ${toInputString(info)}
+                    sku: "${sku}"
+                    manufacturerPartNumber: "${manufacturerPartNumber}"
+                    shippingInformation: ${toInputString(shippingInformation)}
+                    inventoryInformation: ${toInputString(inventoryInfo)}
+                    cartInformation : ${toInputString(cartInfo)}
+                    price: ${toInputString(priceInformation.price)}
+                    isTaxExempt: ${priceInformation.isTaxExempt}
+                    availableForPreOrder: ${priceInformation.availableForPreOrder}
+                    published: ${published}
+                    preOrderAvailabilityStartDateTimeUtc: ${priceInformation.preOrderAvailabilityStartDateTimeUtc ? `"${priceInformation.preOrderAvailabilityStartDateTimeUtc}"`: null}
+                    seoData: ${toInputString(seoData)}
+                }
+            ) {
+                code
+                message
+                error
+                ${dataPath} {
+                    id
+                    sku
+                    manufacturerInformation {
+                        partNumber
+                    }
+                    shippingInformation {
+                        weight
+                        length
+                        width
+                        isFreeShipping
+                        shipSeparately
+                        additionalShippingCharge {
+                            amount
+                            currency
+                        }
+                    }
+                    inventoryInformation {
+                        displayStockAvailability
+                        notifyAdminForQuantityBelow
+                        notReturnable
+                        availableStartDate
+                        availableEndDate
+                        markAsNew
+                        availableForPreorder
+                        preorderAvailabilityStartDate
+                        minimumStockQuantity
+                        allowBackInStockNotification
+                    }
+                    cartInformation {
+                        minimumQuantity
+                        maximumQuantity
+                        allowedQuantities
+                    }
+                    priceInformation {
+                        price {
+                            amount
+                            currency
+                        }
+                        isTaxExempt
+                        availableForPreorder
+                        preorderAvailabilityStartDate
+                    }
+                    published
                     seoData {
                         searchEngineFriendlyPageName
                         metaKeywords
@@ -264,14 +461,84 @@ describe('Mutation: createProduct', () => {
                         metaTitle
                         languageCode
                     }
+                    ${infoName} {
+                        name
+                        shortDescription
+                        fullDescription
+                        languageCode
+                    }
                 }
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = [infoName, "seoData"];
-            const values = [info, seoData];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, values);
+            const propNames = ["sku", infoName, "inventoryInformation", "manufacturerInformation.manufacturerPartNumber", "shippingInformation", "cartInformation", "priceInformation", "seoData", "published"];
+            const propValues = [sku, info, inventoryInfo, manufacturerPartNumber, shippingInformation, cartInfo, priceInformation, seoData, published];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            sku
+                            manufacturerInformation {
+                                partNumber
+                            }
+                            shippingInformation {
+                                weight
+                                length
+                                width
+                                isFreeShipping
+                                shipSeparately
+                                additionalShippingCharge {
+                                    amount
+                                    currency
+                                }
+                            }
+                            inventoryInformation {
+                                displayStockAvailability
+                                notifyAdminForQuantityBelow
+                                notReturnable
+                                availableStartDate
+                                availableEndDate
+                                markAsNew
+                                availableForPreorder
+                                preorderAvailabilityStartDate
+                                minimumStockQuantity
+                                allowBackInStockNotification
+                            }
+                            cartInformation {
+                                minimumQuantity
+                                maximumQuantity
+                                allowedQuantities
+                            }
+                            priceInformation {
+                                price {
+                                    amount
+                                    currency
+                                }
+                                isTaxExempt
+                                availableForPreorder
+                                preorderAvailabilityStartDate
+                            }
+                            published
+                            seoData {
+                                searchEngineFriendlyPageName
+                                metaKeywords
+                                metaDescription
+                                metaTitle
+                                languageCode
+                            }
+                            ${infoName} {
+                                name
+                                shortDescription
+                                fullDescription
+                                languageCode
+                            }
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 });
