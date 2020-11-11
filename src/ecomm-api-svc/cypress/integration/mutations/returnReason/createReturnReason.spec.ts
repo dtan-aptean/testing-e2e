@@ -1,9 +1,9 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
-// request count: 7
 describe('Mutation: createReturnReason', () => {
     let id = '';
     const mutationName = 'createReturnReason';
+    const queryName = "returnReasons";
     const dataPath = 'returnReason';
     const standardMutationBody = `
         code
@@ -67,7 +67,19 @@ describe('Mutation: createReturnReason', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            cy.confirmMutationSuccess(res, mutationName, dataPath, ["name"], [name]);
+            const propNames = ["name"];
+            const propValues = [name];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            name
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 
@@ -93,8 +105,8 @@ describe('Mutation: createReturnReason', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["name", "customData"];
-            const testValues = [name, customData];
+            const names = ["customData", "name"];
+            const testValues = [customData, name];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
                 const queryName = "returnReasons";
                 const query = `{
@@ -132,9 +144,20 @@ describe('Mutation: createReturnReason', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["displayOrder", "name"];
-            const values = [displayOrder, name];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, values);
+            const propNames = ["name", "displayOrder"];
+            const propValues = [name, displayOrder];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            name
+                            displayOrder
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 });
