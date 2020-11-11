@@ -171,8 +171,8 @@ describe('Mutation: updateVendor', () => {
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            const propNames = [infoName, "customData"];
-            const propValues = [info, customData];
+            const propNames = ["customData", infoName];
+            const propValues = [customData, info];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
