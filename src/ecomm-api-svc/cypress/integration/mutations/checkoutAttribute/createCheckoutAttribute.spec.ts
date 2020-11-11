@@ -215,16 +215,27 @@ describe('Mutation: createCheckoutAttribute', () => {
         const isRequired = Cypress._.random(0, 1) === 1;
         const isTaxExempt = Cypress._.random(0, 1) === 1;
         const shippableProductRequired = Cypress._.random(0, 1) === 1;
-        const values = [{
-            displayOrder: Cypress._.random(1, 20),
-            isPreselected: Cypress._.random(0, 1) === 1,
-            name: 'Cypress CA Input',
-            priceAdjustment: {
-                amount: Cypress._.random(1, 5),
-                currency: "USD"
-            },
-            weightAdjustment: Cypress._.random(1, 10)
-        }];
+        const values = [
+            {
+                displayOrder: Cypress._.random(1, 20),
+                isPreselected: Cypress._.random(0, 1) === 1,
+                name: 'Cypress CA Input',
+                priceAdjustment: {
+                    amount: Cypress._.random(1, 5),
+                    currency: "USD"
+                },
+                weightAdjustment: Cypress._.random(1, 10)
+            }, {
+                displayOrder: Cypress._.random(1, 20),
+                isPreselected: Cypress._.random(0, 1) === 1,
+                name: 'Cypress CA Input 2',
+                priceAdjustment: {
+                    amount: Cypress._.random(1, 5),
+                    currency: "USD"
+                },
+                weightAdjustment: Cypress._.random(1, 10)
+            }
+        ];
         const mutation = `mutation {
             ${mutationName}(
                 input: {

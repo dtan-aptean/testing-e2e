@@ -220,6 +220,11 @@ describe('Mutation: updateProductAttribute', () => {
         const valuesCopy = [JSON.parse(JSON.stringify(values[0])), newValue];
         updateCount++;
         valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
+        valuesCopy[0].displayOrder = Cypress._.random(0, 10);
+        valuesCopy[0].isPreSelected = Cypress._.random(0, 1) === 1;
+        valuesCopy[0].priceAdjustment = {amount: Cypress._.random(1, 5), currency: "USD"};
+        valuesCopy[0].weightAdjustment = Cypress._.random(1, 10);
+        valuesCopy[0].cost = {amount: Cypress._.random(1, 5), currency: "USD"};
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
         const newDescription = `Cypress ${mutationName} description`;
         const mutation = `mutation {
@@ -239,6 +244,7 @@ describe('Mutation: updateProductAttribute', () => {
                     name
                     description
                     values {
+                        id
                         displayOrder
                         isPreSelected
                         name
@@ -255,10 +261,9 @@ describe('Mutation: updateProductAttribute', () => {
                 }
             }
         }`;
-        const valuesToMatch = [{displayOrder: 0, isPreSelected: false, name: values[0].name, priceAdjustment: {amount: 0, currency: "USD"}, weightAdjustment: 0}, newValue];
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             const propNames = ["name", "description", "values"];
-            const propValues = [newName, newDescription, valuesToMatch];
+            const propValues = [newName, newDescription, valuesCopy];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -284,8 +289,7 @@ describe('Mutation: updateProductAttribute', () => {
                         }
                     }
                 }`;
-                const propTest = [newName, newDescription, valuesCopy];
-                cy.confirmUsingQuery(query, queryName, id, propNames, propTest);
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
             });
         });
     });
