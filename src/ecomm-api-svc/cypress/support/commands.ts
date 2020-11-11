@@ -18,7 +18,7 @@ Cypress.Commands.add('postGQL', query => {
       },
       body: { query },
       failOnStatusCode: false,
-      //timeout: 5000,
+      timeout: 5000,
       retryOnNetworkFailure: true,
     });
 });
