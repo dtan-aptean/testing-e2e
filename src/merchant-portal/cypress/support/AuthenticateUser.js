@@ -5,7 +5,7 @@ exports.authenticateUser = async function authenticateUser(userOptions) {
   const contextClientKey = JSON.stringify({"authority":authorityName,"clientId":clientId,"scopes":clientId,"homeAccountIdentifier":homeAccountIdentifier});
   const contextScopeKey = JSON.stringify({"authority":authorityName,"clientId":clientId,"scopes":scopes,"homeAccountIdentifier":homeAccountIdentifier});
   const creds = await puppeteer
-    .launch({ headless: true })
+    .launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
     .then(async browser => {
       try {
         const page = await browser.newPage();
