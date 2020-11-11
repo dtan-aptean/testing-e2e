@@ -1,9 +1,9 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
-// request count: 7
 describe('Mutation: createCustomerRole', () => {
     let id = '';
     const mutationName = 'createCustomerRole';
+    const queryName = "customerRoles";
     const dataPath = 'customerRole';
     const standardMutationBody = `
         code
@@ -67,7 +67,19 @@ describe('Mutation: createCustomerRole', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            cy.confirmMutationSuccess(res, mutationName, dataPath, ["name"], [name]);
+            const propNames = ["name"];
+            const propValues = [name];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            name
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 
@@ -141,9 +153,23 @@ describe('Mutation: createCustomerRole', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["isTaxExempt", "freeShipping", "active", "enablePasswordLifetime", "name"];
-            const values = [isTaxExempt, freeShipping, active, enablePasswordLifetime, name];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, values);
+            const propNames = ["name", "isTaxExempt", "freeShipping", "active", "enablePasswordLifetime"];
+            const propValues = [name, isTaxExempt, freeShipping, active, enablePasswordLifetime];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            name
+                            isTaxExempt
+                            freeShipping
+                            active
+                            enablePasswordLifetime
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 });
