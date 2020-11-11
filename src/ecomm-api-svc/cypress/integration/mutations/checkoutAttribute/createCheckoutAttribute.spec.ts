@@ -1,9 +1,9 @@
 /// <reference types="cypress" />
 // TEST COUNT: 8
-// request count: 10-11
 describe('Mutation: createCheckoutAttribute', () => {
     let id = '';
     const mutationName = 'createCheckoutAttribute';
+    const queryName = "checkoutAttributes";
     const dataPath = 'checkoutAttribute';
     const standardMutationBody = `
         code
@@ -17,8 +17,40 @@ describe('Mutation: createCheckoutAttribute', () => {
             }
         }
     `;
-
     let taxCategoryId = '';
+    // Function to turn an object or array into a string to use as input
+    function toInputString(item) {
+        function iterateThrough (propNames?: string[]) {
+            var returnValue = '';
+            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
+                if (i !== 0) {
+                    returnValue = returnValue + ', ';
+                }
+                var value = propNames ? item[propNames[i]]: item[i];
+                if (typeof value === 'string') {
+                    value = `"${value}"`;
+                } else if (typeof value === 'object') {
+                    // Arrays return as an object, so this will get both
+                    value = toInputString(value);
+                }
+                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
+            }
+            return returnValue;
+        };
+        var itemAsString = '{ ';
+        var props = undefined;
+        if (item === null) {
+            return "null";
+        } else if (item === undefined) {
+            return "undefined";
+        } else if (Array.isArray(item)) {
+            itemAsString = '[';
+        } else if (typeof item === 'object') {
+            props = Object.getOwnPropertyNames(item);
+        }
+        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
+        return itemAsString;
+    };
 
     afterEach(() => {
         if (taxCategoryId !== "") {
@@ -104,7 +136,7 @@ describe('Mutation: createCheckoutAttribute', () => {
             ${mutationName}(
                 input: {
                     name: "${name}"
-                    values: [{name: "${values[0].name}"}, {name: "${values[1].name}"}]
+                    values: ${toInputString(values)}
                 }
             ) {
                 ${standardMutationBody}
@@ -112,7 +144,22 @@ describe('Mutation: createCheckoutAttribute', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            cy.confirmMutationSuccess(res, mutationName, dataPath, ["name", "values"], [name, values]);
+            const propNames = ["name", "values"];
+            const propValues = [name, values];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            name
+                            values {
+                                name
+                            }
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 
@@ -124,8 +171,8 @@ describe('Mutation: createCheckoutAttribute', () => {
             ${mutationName}(
                 input: {
                     name: "${name}"
-                    values: [{name: "${values[0].name}"}]
-                    customData: {data: "${customData.data}", canDelete: ${customData.canDelete}}
+                    values: ${toInputString(values)}
+                    customData: ${toInputString(customData)}
                 }
             ) {
                 code
@@ -188,7 +235,7 @@ describe('Mutation: createCheckoutAttribute', () => {
                     isRequired: ${isRequired}
                     isTaxExempt: ${isTaxExempt}
                     shippableProductRequired: ${shippableProductRequired}
-                    values: [{displayOrder: ${values[0].displayOrder}, isPreselected: ${values[0].isPreselected}, name: "${values[0].name}", priceAdjustment: {amount: ${values[0].priceAdjustment.amount}, currency: "${values[0].priceAdjustment.currency}"}, weightAdjustment: ${values[0].weightAdjustment}}]
+                    values: ${toInputString(values)}
                 }
             ) {
                 code
@@ -218,9 +265,35 @@ describe('Mutation: createCheckoutAttribute', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["displayOrder", "name", "defaultValue", "displayName", "isRequired", "isTaxExempt", "shippableProductRequired", "values"];
-            const testValues = [displayOrder, name, defaultValue, displayName, isRequired, isTaxExempt, shippableProductRequired, values];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues);
+            const propNames = ["displayOrder", "name", "defaultValue", "displayName", "isRequired", "isTaxExempt", "shippableProductRequired", "values"];
+            const propValues = [displayOrder, name, defaultValue, displayName, isRequired, isTaxExempt, shippableProductRequired, values];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            displayOrder
+                            name
+                            defaultValue
+                            displayName
+                            isRequired
+                            isTaxExempt
+                            shippableProductRequired
+                            values {
+                                displayOrder
+                                isPreSelected
+                                name
+                                priceAdjustment {
+                                    amount
+                                    currency
+                                }
+                                weightAdjustment
+                            }
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 
@@ -235,7 +308,7 @@ describe('Mutation: createCheckoutAttribute', () => {
                 ${mutationName}(
                     input: {
                         name: "${name}"
-                        values: [{name: "${values[0].name}"}]
+                        values: ${toInputString(values)}
                         taxCategoryId: "${returnedId}"
                     }
                 ) {
@@ -245,6 +318,9 @@ describe('Mutation: createCheckoutAttribute', () => {
                     ${dataPath} {
                         id
                         name
+                        values {
+                            name
+                        }
                         taxCategory {
                             id
                             name
@@ -254,7 +330,26 @@ describe('Mutation: createCheckoutAttribute', () => {
             }`;
             cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
                 id = res.body.data[mutationName][dataPath].id;
-                cy.confirmMutationSuccess(res, mutationName, dataPath, ["name", "taxCategory"], [name, dummyTaxCategory]);
+                const propNames = ["name", "taxCategory", "values"];
+                const propValues = [name, dummyTaxCategory, values];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            nodes {
+                                id
+                                name
+                                values {
+                                    name
+                                }
+                                taxCategory {
+                                    id
+                                    name
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
             });
         });
     });
