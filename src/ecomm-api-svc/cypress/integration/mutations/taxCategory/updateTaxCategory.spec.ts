@@ -125,8 +125,8 @@ describe('Mutation: updateTaxCategory', () => {
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            const propNames = ["name", "customData"];
-            const propValues = [newName, customData];
+            const propNames = ["customData", "name"];
+            const propValues = [customData, newName];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
