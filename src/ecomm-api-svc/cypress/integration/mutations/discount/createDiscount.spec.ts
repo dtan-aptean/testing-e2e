@@ -1,9 +1,9 @@
 /// <reference types="cypress" />
-// TEST COUNT: 10
-// request count: 11
+// TEST COUNT: 9
 describe('Mutation: createDiscount', () => {
     let id = '';
     const mutationName = 'createDiscount';
+    const queryName = "discounts";
     const dataPath = 'discount';
     const standardMutationBody = `
         code
@@ -12,8 +12,45 @@ describe('Mutation: createDiscount', () => {
         ${dataPath} {
             id
             name
+            discountAmount {
+                amount
+                currency
+            }
         }
     `;
+    // Function to turn an object or array into a string to use as input
+    function toInputString(item) {
+        function iterateThrough (propNames?: string[]) {
+            var returnValue = '';
+            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
+                if (i !== 0) {
+                    returnValue = returnValue + ', ';
+                }
+                var value = propNames ? item[propNames[i]]: item[i];
+                if (typeof value === 'string') {
+                    value = `"${value}"`;
+                } else if (typeof value === 'object') {
+                    // Arrays return as an object, so this will get both
+                    value = toInputString(value);
+                }
+                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
+            }
+            return returnValue;
+        };
+        var itemAsString = '{ ';
+        var props = undefined;
+        if (item === null) {
+            return "null";
+        } else if (item === undefined) {
+            return "undefined";
+        } else if (Array.isArray(item)) {
+            itemAsString = '[';
+        } else if (typeof item === 'object') {
+            props = Object.getOwnPropertyNames(item);
+        }
+        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
+        return itemAsString;
+    };
 
     afterEach(() => {
         if (id !== "") {
@@ -58,27 +95,62 @@ describe('Mutation: createDiscount', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation with valid 'Name' input will create a new item", () => {
-        const name = "Cypress API Discount";
+    it("Mutation will fail without 'discountAmount' input", () => {
+        const name = `Cypress ${mutationName} no discountAmount`;
         const mutation = `mutation {
-            ${mutationName}(input: { name: "${name}" }) {
+            ${mutationName}(input: { id: "${id}", name: "${name}" }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation with valid 'Name' and 'discountAmount' input will create a new item", () => {
+        const name = "Cypress API Discount";
+        const discountAmount = {
+            amount: Cypress._.random(0, 10),
+            currency: "USD"
+        };
+        const mutation = `mutation {
+            ${mutationName}(input: { name: "${name}", discountAmount: ${toInputString(discountAmount)}}) {
                 ${standardMutationBody}
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            cy.confirmMutationSuccess(res, mutationName, dataPath, ["name"], [name]);
+            const propNames = ["name", "discountAmount"];
+            const propValues = [name, discountAmount];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            name
+                            discountAmount {
+                                amount
+                                currency
+                            }
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 
     it("Mutation with all required input and 'customData' input creates item with customData", () => {
         const name = "Cypress Discount customData";
+        const discountAmount = {
+            amount: Cypress._.random(0, 10),
+            currency: "USD"
+        };
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
             ${mutationName}(
                 input: {
                     name: "${name}"
-                    customData: {data: "${customData.data}", canDelete: ${customData.canDelete}}
+                    discountAmount: ${toInputString(discountAmount)}
+                    customData: ${toInputString(customData)}
                 }
             ) {
                 code
@@ -87,15 +159,19 @@ describe('Mutation: createDiscount', () => {
                 ${dataPath} {
                     id
                     name
+                    discountAmount {
+                        amount
+                        currency
+                    }
                     customData
                 }
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["name", "customData"];
-            const testValues = [name, customData];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
+            const propNames = ["customData", "name", "discountAmount"];
+            const propValues = [customData, name, discountAmount];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const queryName = "discounts";
                 const query = `{
                     ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -110,12 +186,16 @@ describe('Mutation: createDiscount', () => {
         });
     });
 
-    it("Mutation with input usePercentageForDiscount=false and discountPercentage>0 will fail", () => {
+    it("Mutation with input 'usePercentageForDiscount'=true but no 'maximumDiscountAmount' input will fail", () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    usePercentageForDiscount: false
+                    usePercentageForDiscount: true
                     discountPercentage: 20
+                    discountAmount: {
+                        amount: 0,
+                        currency: "USD"
+                    }
                     name: "Cypress Discount Percent Test v1"
                 }
             ) {
@@ -126,51 +206,35 @@ describe('Mutation: createDiscount', () => {
                     id
                     usePercentageForDiscount
                     discountPercentage
+                    maximumDiscountAmount {
+                        amount
+                        currency
+                    }
+                    discountAmount {
+                        amount
+                        currency
+                    }
                     name
                 }
             }
         }`;
-        cy.postAndConfirmError(mutation);
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
     });
 
-    it("Mutation with input usePercentageForDiscount = false and discountPercentage = 0 will succeed", () => {
-        const usePercentageForDiscount = false;
-        const discountPercentage = 0;
-        const name = "Cypress Discount Percent Test v2";
-        const mutation = `mutation {
-            ${mutationName}(
-                input: {
-                    usePercentageForDiscount: ${usePercentageForDiscount}
-                    discountPercentage: ${discountPercentage}
-                    name: "${name}"
-                }
-            ) {
-                code
-                message
-                error
-                ${dataPath} {
-                    id
-                    usePercentageForDiscount
-                    discountPercentage
-                    name
-                }
-            }
-        }`;
-        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            id = res.body.data[mutationName][dataPath].id;
-            const names = ["usePercentageForDiscount", "discountPercentage", "name"];
-            const testValues = [usePercentageForDiscount, discountPercentage, name];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues);
-        });
-    });
-
-    it("Mutation with input usePercentageForDiscount=false and discountPercentage>0 will fail", () => {
+    it("Mutation with input 'usePercentageForDiscount'=true but no 'discountPercentage' input will fail", () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: {
                     usePercentageForDiscount: true
-                    discountPercentage: 0
-                    name: "Cypress Discount Percent Test v3"
+                    maximumDiscountAmount: {
+                        amount: 2000,
+                        currency: "USD"
+                    }
+                    discountAmount: {
+                        amount: 0,
+                        currency: "USD"
+                    }
+                    name: "Cypress Discount Percent Test v2"
                 }
             ) {
                 code
@@ -180,43 +244,26 @@ describe('Mutation: createDiscount', () => {
                     id
                     usePercentageForDiscount
                     discountPercentage
+                    maximumDiscountAmount {
+                        amount
+                        currency
+                    }
+                    discountAmount {
+                        amount
+                        currency
+                    }
                     name
                 }
             }
         }`;
-        cy.postAndConfirmError(mutation);
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
     });
 
-    it("Mutation with input usePercentageForDiscount = false and discountPercentage = 0 will succeed", () => {
-        const usePercentageForDiscount = true;
-        const discountPercentage = 15;
-        const name = "Cypress Discount Percent Test v4";
-        const mutation = `mutation {
-            ${mutationName}(
-                input: {
-                    usePercentageForDiscount: ${usePercentageForDiscount}
-                    discountPercentage: ${discountPercentage}
-                    name: "${name}"
-                }
-            ) {
-                code
-                message
-                error
-                ${dataPath} {
-                    id
-                    usePercentageForDiscount
-                    discountPercentage
-                    name
-                }
-            }
-        }`;
-        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            id = res.body.data[mutationName][dataPath].id;
-            const names = ["usePercentageForDiscount", "discountPercentage", "name"];
-            const testValues = [usePercentageForDiscount, discountPercentage, name];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues);
-        });
-    });
+    // TODO: productIds test
+
+    // TODO: categoryIds test
+
+    // TODO: manufacturerIds test
 
     it("Mutation creates item that has all included input", () => {
         const isCumulative = Cypress._.random(0, 1) === 1;
@@ -224,9 +271,17 @@ describe('Mutation: createDiscount', () => {
         const couponCode = requiresCouponCode ? Cypress._.random(0, 1e5) : null;
         const usePercentageForDiscount = Cypress._.random(0, 1) === 1;
         const discountPercentage = usePercentageForDiscount ? Cypress._.random(1, 20) : 0;
+        const discountAmount = {
+            amount: usePercentageForDiscount ? Cypress._.random(1, 20) : 0,
+            currency: "USD"
+        };
         const discountLimitationCount = Cypress._.random(1, 5);
         const applyDiscountToSubCategories = Cypress._.random(0, 1) === 1;
         const name = "Cypress Discount Input";
+        const maximumDiscountAmount = {
+            amount: Cypress._.random(100, 2000),
+            currency: "USD"
+        };
         const mutation = `mutation {
             ${mutationName}(
                 input: {
@@ -238,6 +293,8 @@ describe('Mutation: createDiscount', () => {
                     discountLimitationCount: ${discountLimitationCount}
                     applyDiscountToSubCategories: ${applyDiscountToSubCategories}
                     name: "${name}"
+                    discountAmount: ${toInputString(discountAmount)}
+                    maximumDiscountAmount: ${toInputString(maximumDiscountAmount)}
                 }
             ) {
                 code
@@ -253,14 +310,47 @@ describe('Mutation: createDiscount', () => {
                     discountLimitationCount
                     applyDiscountToSubCategories
                     name
+                    discountAmount {
+                        amount
+                        currency
+                    }
+                    maximumDiscountAmount {
+                        amount
+                        currency
+                    }
                 }
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["isCumulative", "requiresCouponCode", "couponCode", "usePercentageForDiscount", "discountPercentage", "discountLimitationCount", "applyDiscountToSubCategories", "name"];
-            const values = [isCumulative, requiresCouponCode, couponCode, usePercentageForDiscount, discountPercentage, discountLimitationCount, applyDiscountToSubCategories, name];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, values);
+            const propNames = ["isCumulative", "requiresCouponCode", "couponCode", "usePercentageForDiscount", "discountPercentage", "discountLimitationCount", "applyDiscountToSubCategories", "name", "discountAmount", "maximumDiscountAmount"];
+            const propValues = [isCumulative, requiresCouponCode, couponCode, usePercentageForDiscount, discountPercentage, discountLimitationCount, applyDiscountToSubCategories, name, newDiscountAmount, maximumDiscountAmount];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            name
+                            isCumulative
+                            requiresCouponCode
+                            couponCode
+                            usePercentageForDiscount
+                            discountPercentage
+                            discountLimitationCount
+                            applyDiscountToSubCategories
+                            discountAmount {
+                                amount
+                                currency
+                            }
+                            maximumDiscountAmount {
+                                amount
+                                currency
+                            }
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 });

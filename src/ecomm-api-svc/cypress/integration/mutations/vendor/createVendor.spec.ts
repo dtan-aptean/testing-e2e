@@ -1,6 +1,5 @@
 /// <reference types="cypress" />
 // TEST COUNT: 9
-// request count: 10
 describe('Mutation: createVendor', () => {
     let id = '';
     const mutationName = 'createVendor';
