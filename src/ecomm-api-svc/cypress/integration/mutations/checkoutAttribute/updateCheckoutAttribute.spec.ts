@@ -255,8 +255,8 @@ describe('Mutation: updateCheckoutAttribute', () => {
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            const propNames = ["name", "values", "customData"];
-            const propValues = [newName, valuesCopy, customData];
+            const propNames = ["customData", "name", "values"];
+            const propValues = [customData, newName, valuesCopy];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {

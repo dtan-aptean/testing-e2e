@@ -1,6 +1,5 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
-// request count: 7
 describe('Mutation: createTaxCategory', () => {
     let id = '';
     const mutationName = 'createTaxCategory';

@@ -131,7 +131,7 @@ describe('Mutation: updateCategory', () => {
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
     });
 
-    it("Mutation will succeed with valid 'id' and 'name' input", () => {
+    it("Mutation will succeed with valid 'id', 'name', and 'languageCode' input", () => {
         updateCount++;
         const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}];
         const mutation = `mutation {
@@ -187,8 +187,8 @@ describe('Mutation: updateCategory', () => {
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            const propNames = [infoName, "customData"];
-            const propValues = [info, customData];
+            const propNames = ["customData", infoName];
+            const propValues = [customData, info];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {

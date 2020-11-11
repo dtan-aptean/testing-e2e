@@ -105,8 +105,8 @@ describe('Mutation: createCustomerRole', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["name", "customData"];
-            const testValues = [name, customData];
+            const names = ["customData", "name"];
+            const testValues = [customData, name];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
                 const queryName = "customerRoles";
                 const query = `{

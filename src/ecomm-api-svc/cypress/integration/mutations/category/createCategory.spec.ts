@@ -178,10 +178,9 @@ describe('Mutation: createCategory', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = [infoName, "customData"];
-            const testValues = [info, customData];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
-                const queryName = "categories";
+            const propNames = ["customData", infoName];
+            const propValues = [customData, info];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         nodes {

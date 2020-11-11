@@ -160,8 +160,8 @@ describe('Mutation: createProductAttribute', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const propNames = ["name", "values", "customData"];
-            const propValues = [name, values, customData];
+            const propNames = ["customData", "name", "values"];
+            const propValues = [customData, name, values];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const queryName = "productAttributes";
                 const query = `{
