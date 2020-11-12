@@ -1,3 +1,39 @@
+// Turns an array or object into a string to use as gql input or with a custom command's consoleProps logging functionality
+export const toFormattedString = (item): string => {
+    function iterateThrough (propNames?: string[]) {
+        var returnValue = '';
+        for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
+            if (i !== 0) {
+                returnValue = returnValue + ', ';
+            }
+            var value = propNames ? item[propNames[i]]: item[i];
+            if (typeof value === 'string') {
+                if (value.charAt(0) !== '"' && value.charAt(value.length - 1) !== '"') {
+                    value = `"${value}"`;
+                }
+            } else if (typeof value === 'object') {
+                // Arrays return as an object, so this will get both
+                value = toFormattedString(value);
+            }
+            returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
+        }
+        return returnValue;
+    };
+    var itemAsString = '{ ';
+    var props = undefined;
+    if (item === null) {
+        return "null";
+    } else if (item === undefined) {
+        return "undefined";
+    } else if (Array.isArray(item)) {
+        itemAsString = '[';
+    } else if (typeof item === 'object') {
+        props = Object.getOwnPropertyNames(item);
+    }
+    itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
+    return itemAsString;
+};
+
 // -- This will post GQL query --
 Cypress.Commands.add('postGQL', query => {
     Cypress.log({
@@ -801,13 +837,36 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataP
                 "Mutation response": res,
                 "Mutation name": mutationName,
                 "Data path": dataPath,
-                "Properties to check": propNames.toString(),
-                "Expected Values": values.toString()
+                "Properties to check": toFormattedString(propNames),
+                "Expected Values": toFormattedString(values)
             };
         },
     });
     expect(propNames.length).to.be.eql(values.length, "Same number of properties and values given to function");
     var result = res.body.data[mutationName][dataPath];
+    function searchArray(resArray: [], matchArray: [], originalProperty: string) {
+        const matchingItems = resArray.filter((item) => {
+            var itemMatches = false;
+            for (var f = 0; f < matchArray.length; f++) {
+                const props = Object.getOwnPropertyNames(matchArray[f]);
+                for (var p = 0; p < props.length; p++) {
+                    var propMatches = item[props[p]] === matchArray[f][props[p]];
+                    if (!propMatches) {
+                        break;
+                    }
+                    if (propMatches && p === props.length - 1) {
+                        itemMatches = true;
+                    }
+                }
+                if (itemMatches) {
+                    break;
+                }
+            }
+            return itemMatches;
+        });
+        expect(matchingItems.length).to.be.eql(matchArray.length, `Expecting ${matchArray.length} updated items in ${originalProperty}`);
+        return matchingItems.length === matchArray.length;
+    };
     function matchObject (item, itemToMatch, parentProperty: string) {
         const props = Object.getOwnPropertyNames(itemToMatch);
         for (var p = 0; p < props.length; p++) {
@@ -816,7 +875,13 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataP
             if (itemToMatch[props[p]] && item[props[p]] === null) {
                 assert.exists(item[props[p]], `${descendingPropName} should not be null`);
             }
-            if (typeof itemToMatch[props[p]] === 'object') {
+            if (props[p].includes("Info") && Array.isArray(itemToMatch[props[p]])) {
+                if (item[props[p]].length > itemToMatch[props[p]].length) {
+                    searchArray(item[props[p]], itemToMatch[props[p]], descendingPropName);
+                } else {
+                    matchArray(item[props[p]], itemToMatch[props[p]], descendingPropName);
+                }
+            } else if (typeof itemToMatch[props[p]] === 'object') {
                 matchObject(item[props[p]], itemToMatch[props[p]], descendingPropName);
             } else {
                 expect(item[props[p]]).to.be.eql(itemToMatch[props[p]], `Verify ${descendingPropName}`);
@@ -824,9 +889,13 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataP
         }
     };
     function matchArray(resArray: [], matchArray: [], originalProperty: string) {
-        expect(resArray.length).to.be.eql(matchArray.length, `Updated ${matchArray.length} items of ${originalProperty}`);
+        //expect(resArray.length).to.be.eql(matchArray.length, `Updated ${matchArray.length} items of ${originalProperty}`);
         for (var f = 0; f < matchArray.length; f++) {
-            matchObject(resArray[f], matchArray[f], `${originalProperty}[${f}]`);
+            if (resArray.length > matchArray.length) {
+                searchArray(resArray, matchArray, `${originalProperty}[${f}]`);
+            } else {
+                matchObject(resArray[f], matchArray[f], `${originalProperty}[${f}]`);
+            }
         }
     };
     for (var i = 0; i < propNames.length; i++) {
@@ -936,14 +1005,14 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, dataPath: string, 
 Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, itemId: string, propNames: string[], values: []) => {
     Cypress.log({
         name: "confirmUsingQuery",
-        message: `query ${dataPath}, ${itemId}`,
+        message: `querying ${dataPath} for ${itemId}`,
         consoleProps: () => {
             return {
                 "Query Body": query,
                 "Query name": dataPath,
                 "Id of item to verify": itemId,
-                "Properties to check": propNames.toString(),
-                "Expected Values": values.toString()
+                "Properties to check": toFormattedString(propNames),
+                "Expected Values": toFormattedString(values)
             };
         },
     });
@@ -964,8 +1033,9 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
                 }
             }
             if (Array.isArray(itemToMatch[props[p]])) {
+                var useAsFilter = props[p].includes("Info");
                 // If the property value is an array, start the whole process over again to verify the array's items
-                propMatches = matchArrayItems(item[props[p]], itemToMatch[props[p]], descendingPropName);
+                propMatches = matchArrayItems(item[props[p]], itemToMatch[props[p]], descendingPropName, useAsFilter);
             } else if (typeof itemToMatch[props[p]] === 'object') {
                 // If the property value is an object, verify the object's properties match
                 propMatches = matchObject(item[props[p]], itemToMatch[props[p]], !!failOnNoMatch, descendingPropName);
@@ -987,7 +1057,7 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
     // Searches through the array for the items we expect to be there
     // ex, if we updated 2 items, but the array has 4 items, it runs a filter looking for those items and fails if they aren't there
     // Returns a boolean to use with matchObject above
-    function matchArrayItems(resArray: [], matchArray: [], originalProperty: string) {
+    function matchArrayItems(resArray: [], matchArray: [], originalProperty: string, useAsFilter?: boolean) {
         const matchingItems = resArray.filter((item) => {
             var itemMatches = false;
             for (var f = 0; f < matchArray.length; f++) {
@@ -998,7 +1068,9 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
             }
             return itemMatches;
         });
-        expect(matchingItems.length).to.be.eql(matchArray.length, `Expecting ${matchArray.length} updated items in ${originalProperty}`);
+        if (!useAsFilter) {
+            expect(matchingItems.length).to.be.eql(matchArray.length, `Expecting ${matchArray.length} updated items in ${originalProperty}`);
+        }
         return matchingItems.length === matchArray.length;
     };
     

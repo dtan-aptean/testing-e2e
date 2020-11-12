@@ -32,7 +32,9 @@ describe('Mutation: updateManufacturer', () => {
                 }
                 var value = propNames ? item[propNames[i]]: item[i];
                 if (typeof value === 'string') {
-                    value = `"${value}"`;
+                    if (value.charAt(0) !== '"' && value.charAt(value.length - 1) !== '"') {
+                        value = `"${value}"`;
+                    }
                 } else if (typeof value === 'object') {
                     // Arrays return as an object, so this will get both
                     value = toInputString(value);
@@ -72,13 +74,13 @@ describe('Mutation: updateManufacturer', () => {
                 for (var i = 0; i < extraIds.length; i++) {
                     cy.wait(2000);
                     var extraRemoval = `mutation {
-                        ${extraIds[i].deletionName}(input: { id: "${extraIds[i].id}" }) {
+                        ${extraIds[i].deleteName}(input: { id: "${extraIds[i].itemId}" }) {
                             code
                             message
                             error
                         }
                     }`;
-                    cy.postAndConfirmDelete(extraRemoval, extraIds[i].deletionName);
+                    cy.postAndConfirmDelete(extraRemoval, extraIds[i].deleteName);
                 }
             }
             // Delete the item we've been updating

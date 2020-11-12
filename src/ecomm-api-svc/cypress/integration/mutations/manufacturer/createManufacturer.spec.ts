@@ -28,7 +28,9 @@ describe('Mutation: createManufacturer', () => {
                 }
                 var value = propNames ? item[propNames[i]]: item[i];
                 if (typeof value === 'string') {
-                    value = `"${value}"`;
+                    if (value.charAt(0) !== '"' && value.charAt(value.length - 1) !== '"') {
+                        value = `"${value}"`;
+                    }
                 } else if (typeof value === 'object') {
                     // Arrays return as an object, so this will get both
                     value = toInputString(value);

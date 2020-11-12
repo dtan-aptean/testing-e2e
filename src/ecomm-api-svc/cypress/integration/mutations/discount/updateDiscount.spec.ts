@@ -1,4 +1,7 @@
 /// <reference types="cypress" />
+
+import { toFormattedString } from "../../../support/commands";
+
 // TEST COUNT: 13
 describe('Mutation: updateDiscount', () => {
     let id = '';
@@ -23,39 +26,6 @@ describe('Mutation: updateDiscount', () => {
         }
     `;
     const createName = 'createDiscount';
-    // Function to turn an object or array into a string to use as input
-    function toInputString(item) {
-        function iterateThrough (propNames?: string[]) {
-            var returnValue = '';
-            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
-                if (i !== 0) {
-                    returnValue = returnValue + ', ';
-                }
-                var value = propNames ? item[propNames[i]]: item[i];
-                if (typeof value === 'string') {
-                    value = `"${value}"`;
-                } else if (typeof value === 'object') {
-                    // Arrays return as an object, so this will get both
-                    value = toInputString(value);
-                }
-                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
-            }
-            return returnValue;
-        };
-        var itemAsString = '{ ';
-        var props = undefined;
-        if (item === null) {
-            return "null";
-        } else if (item === undefined) {
-            return "undefined";
-        } else if (Array.isArray(item)) {
-            itemAsString = '[';
-        } else if (typeof item === 'object') {
-            props = Object.getOwnPropertyNames(item);
-        }
-        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
-        return itemAsString;
-    };
 
     before(() => {
         const name = `Cypress ${mutationName} Test`;
@@ -151,7 +121,7 @@ describe('Mutation: updateDiscount', () => {
             currency: "USD"
         };
         const mutation = `mutation {
-            ${mutationName}(input: { id: "${id}", name: "${newName}", discountAmount: ${toInputString(newDiscountAmount)} }) {
+            ${mutationName}(input: { id: "${id}", name: "${newName}", discountAmount: ${toFormattedString(newDiscountAmount)} }) {
                 ${standardMutationBody}
             }
         }`;
@@ -189,8 +159,8 @@ describe('Mutation: updateDiscount', () => {
                 input: {
                     id: "${id}"
                     name: "${newName}"
-                    discountAmount: ${toInputString(newDiscountAmount)}
-                    customData: ${toInputString(customData)}
+                    discountAmount: ${toFormattedString(newDiscountAmount)}
+                    customData: ${toFormattedString(customData)}
                 }
             ) {
                 code
@@ -300,14 +270,14 @@ describe('Mutation: updateDiscount', () => {
     });
 
     it("Mutation with 'productIds' input will successfully attach the products", () => {
-        const productOne = {productInfo: { name:`Cypress ${dataPath} product 1`, shortDescription: "desc", languageCode: "Standard"}, inventoryInformation : {minimumStockQuantity: 5}};
-        cy.createAndGetId("createProduct", "product", toInputString(productOne)).then((returnedId: string) => {
+        const productOne = {productInfo: [{ name:`Cypress ${dataPath} product 1`, shortDescription: "desc", languageCode: "Standard"}], inventoryInformation : {minimumStockQuantity: 5}};
+        cy.createAndGetId("createProduct", "product", toFormattedString(productOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteProduct"});
             productOne.id = returnedId;
             const products = [productOne];
             const productIds = [returnedId];
-            const productTwo = {productInfo: { name: `Cypress ${dataPath} product 2`, shortDescription: "desc", languageCode: "Standard"}, inventoryInformation : {minimumStockQuantity: 5} };
-            cy.createAndGetId("createProduct", "product", toInputString(productTwo)).then((secondId: string) => {
+            const productTwo = {productInfo: [{ name: `Cypress ${dataPath} product 2`, shortDescription: "desc", languageCode: "Standard"}], inventoryInformation : {minimumStockQuantity: 5} };
+            cy.createAndGetId("createProduct", "product", toFormattedString(productTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteProduct"});
                 productTwo.id = secondId;
                 products.push(productTwo);
@@ -322,8 +292,8 @@ describe('Mutation: updateDiscount', () => {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
-                            discountAmount: ${toInputString(newDiscountAmount)}
-                            productIds: ${toInputString(productIds)}
+                            discountAmount: ${toFormattedString(newDiscountAmount)}
+                            productIds: ${toFormattedString(productIds)}
                             name: "${newName}"
                         }
                     ) {
@@ -386,14 +356,14 @@ describe('Mutation: updateDiscount', () => {
     });
 
     it("Mutation with 'categoryIds' input will successfully attach the categories", () => {
-        const categoryOne = { categoryInfo: { name:`Cypress ${dataPath} category 1`, languageCode: "Standard" } };
-        cy.createAndGetId("createCategory", "category", toInputString(categoryOne)).then((returnedId: string) => {
+        const categoryOne = { categoryInfo: [{ name:`Cypress ${dataPath} category 1`, languageCode: "Standard" }] };
+        cy.createAndGetId("createCategory", "category", toFormattedString(categoryOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteCategory"});
             categoryOne.id = returnedId;
             const categories = [categoryOne];
             const categoryIds = [returnedId];
-            const categoryTwo = {categoryInfo: {name: `Cypress ${dataPath} category 2`, languageCode: "Standard"} };
-            cy.createAndGetId("createCategory", "category", toInputString(categoryTwo)).then((secondId: string) => {
+            const categoryTwo = {categoryInfo: [{name: `Cypress ${dataPath} category 2`, languageCode: "Standard"}] };
+            cy.createAndGetId("createCategory", "category", toFormattedString(categoryTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteCategory"});
                 categoryTwo.id = secondId;
                 categories.push(categoryTwo);
@@ -408,8 +378,8 @@ describe('Mutation: updateDiscount', () => {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
-                            discountAmount: ${toInputString(newDiscountAmount)}
-                            categoryIds: ${toInputString(categoryIds)}
+                            discountAmount: ${toFormattedString(newDiscountAmount)}
+                            categoryIds: ${toFormattedString(categoryIds)}
                             name: "${newName}"
                         }
                     ) {
@@ -464,14 +434,14 @@ describe('Mutation: updateDiscount', () => {
     });
 
     it("Mutation with 'manufacturerIds' input will successfully attach the manufacturers", () => {
-        const manufacturerOne = {manufacturerInfo: { name: `Cypress ${dataPath} manufacturer 1`, languageCode: "Standard" } };
-        cy.createAndGetId("createManufacturer", "manufacturer", toInputString(manufacturerOne)).then((returnedId: string) => {
+        const manufacturerOne = {manufacturerInfo: [{ name: `Cypress ${dataPath} manufacturer 1`, languageCode: "Standard" }] };
+        cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteManufacturer"});
             manufacturerOne.id = returnedId;
             const manufacturers = [manufacturerOne];
             const manufacturerIds = [returnedId];
-            const manufacturerTwo = {manufacturerInfo: { name: `Cypress ${dataPath} manufacturer 2`, languageCode: "Standard" } };
-            cy.createAndGetId("createManufacturer", "manufacturer", toInputString(manufacturerTwo)).then((secondId: string) => {
+            const manufacturerTwo = {manufacturerInfo: [{ name: `Cypress ${dataPath} manufacturer 2`, languageCode: "Standard" }] };
+            cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteManufacturer"});
                 manufacturerTwo.id = secondId;
                 manufacturers.push(manufacturerTwo);
@@ -486,8 +456,8 @@ describe('Mutation: updateDiscount', () => {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
-                            discountAmount:${toInputString(newDiscountAmount)}
-                            manufacturerIds: ${toInputString(manufacturerIds)}
+                            discountAmount:${toFormattedString(newDiscountAmount)}
+                            manufacturerIds: ${toFormattedString(manufacturerIds)}
                             name: "${newName}"
                         }
                     ) {
@@ -546,7 +516,7 @@ describe('Mutation: updateDiscount', () => {
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
         const isCumulative = Cypress._.random(0, 1) === 1;
         const requiresCouponCode = Cypress._.random(0, 1) === 1;
-        const couponCode = requiresCouponCode ? Cypress._.random(0, 1e5) : null;
+        const couponCode = requiresCouponCode ? `A${Cypress._.random(0, 1e5)}` : null;
         const usePercentageForDiscount = Cypress._.random(0, 1) === 1;
         const discountPercentage = usePercentageForDiscount ? Cypress._.random(1, 20) : 0;
         const discountLimitationCount = Cypress._.random(1, 5);
@@ -571,8 +541,8 @@ describe('Mutation: updateDiscount', () => {
                     discountLimitationCount: ${discountLimitationCount}
                     applyDiscountToSubCategories: ${applyDiscountToSubCategories}
                     name: "${newName}"
-                    discountAmount: ${toInputString(newDiscountAmount)}
-                    maximumDiscountAmount: ${toInputString(maximumDiscountAmount)}
+                    discountAmount: ${toFormattedString(newDiscountAmount)}
+                    maximumDiscountAmount: ${toFormattedString(maximumDiscountAmount)}
                 }
             ) {
                 code

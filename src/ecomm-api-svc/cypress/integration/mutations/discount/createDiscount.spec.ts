@@ -1,4 +1,7 @@
 /// <reference types="cypress" />
+
+import { toFormattedString } from "../../../support/commands";
+
 // TEST COUNT: 9
 describe('Mutation: createDiscount', () => {
     let id = '';
@@ -18,39 +21,6 @@ describe('Mutation: createDiscount', () => {
             }
         }
     `;
-    // Function to turn an object or array into a string to use as input
-    function toInputString(item) {
-        function iterateThrough (propNames?: string[]) {
-            var returnValue = '';
-            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
-                if (i !== 0) {
-                    returnValue = returnValue + ', ';
-                }
-                var value = propNames ? item[propNames[i]]: item[i];
-                if (typeof value === 'string') {
-                    value = `"${value}"`;
-                } else if (typeof value === 'object') {
-                    // Arrays return as an object, so this will get both
-                    value = toInputString(value);
-                }
-                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
-            }
-            return returnValue;
-        };
-        var itemAsString = '{ ';
-        var props = undefined;
-        if (item === null) {
-            return "null";
-        } else if (item === undefined) {
-            return "undefined";
-        } else if (Array.isArray(item)) {
-            itemAsString = '[';
-        } else if (typeof item === 'object') {
-            props = Object.getOwnPropertyNames(item);
-        }
-        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
-        return itemAsString;
-    };
 
     afterEach(() => {
         if (id !== "") {
@@ -112,7 +82,7 @@ describe('Mutation: createDiscount', () => {
             currency: "USD"
         };
         const mutation = `mutation {
-            ${mutationName}(input: { name: "${name}", discountAmount: ${toInputString(discountAmount)}}) {
+            ${mutationName}(input: { name: "${name}", discountAmount: ${toFormattedString(discountAmount)}}) {
                 ${standardMutationBody}
             }
         }`;
@@ -149,8 +119,8 @@ describe('Mutation: createDiscount', () => {
             ${mutationName}(
                 input: {
                     name: "${name}"
-                    discountAmount: ${toInputString(discountAmount)}
-                    customData: ${toInputString(customData)}
+                    discountAmount: ${toFormattedString(discountAmount)}
+                    customData: ${toFormattedString(customData)}
                 }
             ) {
                 code
@@ -293,8 +263,8 @@ describe('Mutation: createDiscount', () => {
                     discountLimitationCount: ${discountLimitationCount}
                     applyDiscountToSubCategories: ${applyDiscountToSubCategories}
                     name: "${name}"
-                    discountAmount: ${toInputString(discountAmount)}
-                    maximumDiscountAmount: ${toInputString(maximumDiscountAmount)}
+                    discountAmount: ${toFormattedString(discountAmount)}
+                    maximumDiscountAmount: ${toFormattedString(maximumDiscountAmount)}
                 }
             ) {
                 code

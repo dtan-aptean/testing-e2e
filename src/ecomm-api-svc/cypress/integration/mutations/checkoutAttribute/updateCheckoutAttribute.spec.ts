@@ -1,4 +1,7 @@
 /// <reference types="cypress" />
+
+import { toFormattedString } from "../../../support/commands";
+
 // TEST COUNT: 9
 describe('Mutation: updateCheckoutAttribute', () => {
     let id = '';
@@ -23,39 +26,6 @@ describe('Mutation: updateCheckoutAttribute', () => {
         }
     `;
     const createName = 'createCheckoutAttribute';
-    // Function to turn an object or array into a string to use as input
-    function toInputString(item) {
-        function iterateThrough (propNames?: string[]) {
-            var returnValue = '';
-            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
-                if (i !== 0) {
-                    returnValue = returnValue + ', ';
-                }
-                var value = propNames ? item[propNames[i]]: item[i];
-                if (typeof value === 'string') {
-                    value = `"${value}"`;
-                } else if (typeof value === 'object') {
-                    // Arrays return as an object, so this will get both
-                    value = toInputString(value);
-                }
-                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
-            }
-            return returnValue;
-        };
-        var itemAsString = '{ ';
-        var props = undefined;
-        if (item === null) {
-            return "null";
-        } else if (item === undefined) {
-            return "undefined";
-        } else if (Array.isArray(item)) {
-            itemAsString = '[';
-        } else if (typeof item === 'object') {
-            props = Object.getOwnPropertyNames(item);
-        }
-        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
-        return itemAsString;
-    };
 
     before(() => {
         // Create an item for the tests to update
@@ -148,7 +118,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
         valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
         const mutation = `mutation {
-            ${mutationName}(input: { id: "${id}", name: "${newName}", values: ${toInputString(valuesCopy)} }) {
+            ${mutationName}(input: { id: "${id}", name: "${newName}", values: ${toFormattedString(valuesCopy)} }) {
                 ${standardMutationBody}
             }
         }`;
@@ -184,7 +154,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                     input: {
                         id: "${id}"
                         name: "${newName}"
-                        values: ${toInputString(valuesCopy)}
+                        values: ${toFormattedString(valuesCopy)}
                         taxCategoryId: "${returnedId}"
                     }
                 ) {
@@ -236,8 +206,8 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 input: {
                     id: "${id}"
                     name: "${newName}"
-                    values: ${toInputString(valuesCopy)}
-                    customData: ${toInputString(customData)}
+                    values: ${toFormattedString(valuesCopy)}
+                    customData: ${toFormattedString(customData)}
                 }
             ) {
                 code
@@ -285,6 +255,11 @@ describe('Mutation: updateCheckoutAttribute', () => {
         const valuesCopy = [JSON.parse(JSON.stringify(values[0])), newValue];
         updateCount++;
         valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
+        valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
+        valuesCopy[0].displayOrder = Cypress._.random(0, 10);
+        valuesCopy[0].isPreSelected = Cypress._.random(0, 1) === 1;
+        valuesCopy[0].priceAdjustment = {amount: Cypress._.random(1, 5), currency: "USD"};
+        valuesCopy[0].weightAdjustment = Cypress._.random(1, 10);
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
         const displayOrder = Cypress._.random(0, 10);
         const defaultValue = `Cypress ${mutationName}`;
@@ -303,7 +278,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                     isRequired: ${isRequired}
                     isTaxExempt: ${isTaxExempt}
                     shippableProductRequired: ${shippableProductRequired}
-                    values: ${toInputString(valuesCopy)}
+                    values: ${toFormattedString(valuesCopy)}
                 }
             ) {
                 code
@@ -331,10 +306,9 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 }
             }
         }`;
-        const valuesToMatch = [{displayOrder: 0, isPreSelected: false, name: values[0].name, priceAdjustment: {amount: 0, currency: "USD"}, weightAdjustment: 0}, newValue];
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             const propNames = ["name", "displayOrder", "defaultValue", "displayName", "isRequired", "isTaxExempt", "shippableProductRequired", "values"];
-            const propValues = [newName, displayOrder, defaultValue, displayName, isRequired, isTaxExempt, shippableProductRequired, valuesToMatch];
+            const propValues = [newName, displayOrder, defaultValue, displayName, isRequired, isTaxExempt, shippableProductRequired, valuesCopy];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {

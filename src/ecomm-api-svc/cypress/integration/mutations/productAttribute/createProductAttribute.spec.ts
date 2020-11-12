@@ -1,4 +1,7 @@
 /// <reference types="cypress" />
+
+import { toFormattedString } from "../../../support/commands";
+
 // TEST COUNT: 7
 describe('Mutation: createProductAttribute', () => {
     let id = '';
@@ -17,39 +20,6 @@ describe('Mutation: createProductAttribute', () => {
             }
         }
     `;
-    // Function to turn an object or array into a string to use as input
-    function toInputString(item) {
-        function iterateThrough (propNames?: string[]) {
-            var returnValue = '';
-            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
-                if (i !== 0) {
-                    returnValue = returnValue + ', ';
-                }
-                var value = propNames ? item[propNames[i]]: item[i];
-                if (typeof value === 'string') {
-                    value = `"${value}"`;
-                } else if (typeof value === 'object') {
-                    // Arrays return as an object, so this will get both
-                    value = toInputString(value);
-                }
-                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
-            }
-            return returnValue;
-        };
-        var itemAsString = '{ ';
-        var props = undefined;
-        if (item === null) {
-            return "null";
-        } else if (item === undefined) {
-            return "undefined";
-        } else if (Array.isArray(item)) {
-            itemAsString = '[';
-        } else if (typeof item === 'object') {
-            props = Object.getOwnPropertyNames(item);
-        }
-        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
-        return itemAsString;
-    };
 
     afterEach(() => {
         if (id !== "") {
@@ -108,7 +78,7 @@ describe('Mutation: createProductAttribute', () => {
         const name = "Cypress API Product Attribute";
         const values = [{name: `${mutationName} value 1`}, {name: `${mutationName} value 2`}];
         const mutation = `mutation {
-            ${mutationName}(input: { name: "${name}", values: ${toInputString(values)} }) {
+            ${mutationName}(input: { name: "${name}", values: ${toFormattedString(values)} }) {
                 ${standardMutationBody}
             }
         }`;
@@ -141,8 +111,8 @@ describe('Mutation: createProductAttribute', () => {
             ${mutationName}(
                 input: {
                     name: "${name}"
-                    values: ${toInputString(values)}
-                    customData: ${toInputString(customData)}
+                    values: ${toFormattedString(values)}
+                    customData: ${toFormattedString(customData)}
                 }
             ) {
                 code
@@ -214,7 +184,7 @@ describe('Mutation: createProductAttribute', () => {
                 input: {
                     description: "${description}"
                     name: "${name}"
-                    values: ${toInputString(values)}
+                    values: ${toFormattedString(values)}
                 }
             ) {
                 code

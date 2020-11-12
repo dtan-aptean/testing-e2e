@@ -1,6 +1,8 @@
 /// <reference types="cypress" />
+
+import { toFormattedString } from "../../../support/commands";
+
 // TEST COUNT: 12
-// TODO: More work needed for when createProducts is fully synced up and all required fields are known
 describe('Mutation: createProduct', () => {
     let id = '';
     const mutationName = 'createProduct';
@@ -24,39 +26,6 @@ describe('Mutation: createProduct', () => {
             }
         }
     `;
-    // Function to turn an object or array into a string to use as input
-    function toInputString(item) {
-        function iterateThrough (propNames?: string[]) {
-            var returnValue = '';
-            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
-                if (i !== 0) {
-                    returnValue = returnValue + ', ';
-                }
-                var value = propNames ? item[propNames[i]]: item[i];
-                if (typeof value === 'string') {
-                    value = `"${value}"`;
-                } else if (typeof value === 'object') {
-                    // Arrays return as an object, so this will get both
-                    value = toInputString(value);
-                }
-                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
-            }
-            return returnValue;
-        };
-        var itemAsString = '{ ';
-        var props = undefined;
-        if (item === null) {
-            return "null";
-        } else if (item === undefined) {
-            return "undefined";
-        } else if (Array.isArray(item)) {
-            itemAsString = '[';
-        } else if (typeof item === 'object') {
-            props = Object.getOwnPropertyNames(item);
-        }
-        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
-        return itemAsString;
-    };
 
     afterEach(() => {
         if (id !== "") {
@@ -178,7 +147,7 @@ describe('Mutation: createProduct', () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: { 
-                    ${infoName}: ${toInputString(info)}
+                    ${infoName}: ${toFormattedString(info)}
                 }) {
                 ${standardMutationBody}
             }
@@ -196,8 +165,8 @@ describe('Mutation: createProduct', () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    ${infoName}: ${toInputString(info)}
-                    inventoryInformation: ${toInputString(inventoryInfo)}
+                    ${infoName}: ${toFormattedString(info)}
+                    inventoryInformation: ${toFormattedString(inventoryInfo)}
                 }
             ) {
                 ${standardMutationBody}
@@ -239,8 +208,8 @@ describe('Mutation: createProduct', () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    ${infoName}: ${toInputString(info)}
-                    inventoryInformation: ${toInputString(inventoryInfo)}
+                    ${infoName}: ${toFormattedString(info)}
+                    inventoryInformation: ${toFormattedString(inventoryInfo)}
                 }
             ) {
                 ${standardMutationBody}
@@ -279,9 +248,9 @@ describe('Mutation: createProduct', () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    ${infoName}: ${toInputString(info)}
-                    inventoryInformation: ${toInputString(inventoryInfo)}
-                    customData: ${toInputString(customData)}
+                    ${infoName}: ${toFormattedString(info)}
+                    inventoryInformation: ${toFormattedString(inventoryInfo)}
+                    customData: ${toFormattedString(customData)}
                 }
             ) {
                 code
@@ -393,18 +362,18 @@ describe('Mutation: createProduct', () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    ${infoName}: ${toInputString(info)}
+                    ${infoName}: ${toFormattedString(info)}
                     sku: "${sku}"
                     manufacturerPartNumber: "${manufacturerPartNumber}"
-                    shippingInformation: ${toInputString(shippingInformation)}
-                    inventoryInformation: ${toInputString(inventoryInfo)}
-                    cartInformation : ${toInputString(cartInfo)}
-                    price: ${toInputString(priceInformation.price)}
+                    shippingInformation: ${toFormattedString(shippingInformation)}
+                    inventoryInformation: ${toFormattedString(inventoryInfo)}
+                    cartInformation : ${toFormattedString(cartInfo)}
+                    price: ${toFormattedString(priceInformation.price)}
                     isTaxExempt: ${priceInformation.isTaxExempt}
                     availableForPreOrder: ${priceInformation.availableForPreOrder}
                     published: ${published}
                     preOrderAvailabilityStartDateTimeUtc: ${priceInformation.preOrderAvailabilityStartDateTimeUtc ? `"${priceInformation.preOrderAvailabilityStartDateTimeUtc}"`: null}
-                    seoData: ${toInputString(seoData)}
+                    seoData: ${toFormattedString(seoData)}
                 }
             ) {
                 code

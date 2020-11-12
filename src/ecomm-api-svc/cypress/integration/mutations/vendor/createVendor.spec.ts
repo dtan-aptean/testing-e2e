@@ -1,4 +1,7 @@
 /// <reference types="cypress" />
+
+import { toFormattedString } from "../../../support/commands";
+
 // TEST COUNT: 9
 describe('Mutation: createVendor', () => {
     let id = '';
@@ -18,39 +21,6 @@ describe('Mutation: createVendor', () => {
             }
         }
     `;
-    // Function to turn an object or array into a string to use as input
-    function toInputString(item) {
-        function iterateThrough (propNames?: string[]) {
-            var returnValue = '';
-            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
-                if (i !== 0) {
-                    returnValue = returnValue + ', ';
-                }
-                var value = propNames ? item[propNames[i]]: item[i];
-                if (typeof value === 'string') {
-                    value = `"${value}"`;
-                } else if (typeof value === 'object') {
-                    // Arrays return as an object, so this will get both
-                    value = toInputString(value);
-                }
-                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
-            }
-            return returnValue;
-        };
-        var itemAsString = '{ ';
-        var props = undefined;
-        if (item === null) {
-            return "null";
-        } else if (item === undefined) {
-            return "undefined";
-        } else if (Array.isArray(item)) {
-            itemAsString = '[';
-        } else if (typeof item === 'object') {
-            props = Object.getOwnPropertyNames(item);
-        }
-        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
-        return itemAsString;
-    };
 
     afterEach(() => {
         if (id !== "") {
@@ -125,7 +95,7 @@ describe('Mutation: createVendor', () => {
     it("Mutation with valid 'Name' and 'languageCode' input will create a new item", () => {
         const info = [{name: "Cypress API Vendor", languageCode: "Standard"}];
         const mutation = `mutation {
-            ${mutationName}(input: { ${infoName}: ${toInputString(info)} }) {
+            ${mutationName}(input: { ${infoName}: ${toFormattedString(info)} }) {
                 ${standardMutationBody}
             }
         }`;
@@ -156,8 +126,8 @@ describe('Mutation: createVendor', () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    ${infoName}: ${toInputString(info)}
-                    customData: ${toInputString(customData)}
+                    ${infoName}: ${toFormattedString(info)}
+                    customData: ${toFormattedString(customData)}
                 }
             ) {
                 code
@@ -217,11 +187,11 @@ describe('Mutation: createVendor', () => {
             ${mutationName}(
                 input: {
                     active: ${active}
-                    address: ${toInputString(address)}
+                    address: ${toFormattedString(address)}
                     displayOrder: ${displayOrder}
                     email: "${email}"
-                    ${infoName}: ${toInputString(info)}
-                    seoData: ${toInputString(seoData)}
+                    ${infoName}: ${toFormattedString(info)}
+                    seoData: ${toFormattedString(seoData)}
                 }
             ) {
                 code

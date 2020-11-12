@@ -1,4 +1,7 @@
 /// <reference types="cypress" />
+
+import { toFormattedString } from "../../../support/commands";
+
 // TEST COUNT: 8
 describe('Mutation: updateProductAttribute', () => {
     let id = '';
@@ -22,39 +25,6 @@ describe('Mutation: updateProductAttribute', () => {
         }
     `;
     const createName = 'createProductAttribute';
-    // Function to turn an object or array into a string to use as input
-    function toInputString(item) {
-        function iterateThrough (propNames?: string[]) {
-            var returnValue = '';
-            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
-                if (i !== 0) {
-                    returnValue = returnValue + ', ';
-                }
-                var value = propNames ? item[propNames[i]]: item[i];
-                if (typeof value === 'string') {
-                    value = `"${value}"`;
-                } else if (typeof value === 'object') {
-                    // Arrays return as an object, so this will get both
-                    value = toInputString(value);
-                }
-                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
-            }
-            return returnValue;
-        };
-        var itemAsString = '{ ';
-        var props = undefined;
-        if (item === null) {
-            return "null";
-        } else if (item === undefined) {
-            return "undefined";
-        } else if (Array.isArray(item)) {
-            itemAsString = '[';
-        } else if (typeof item === 'object') {
-            props = Object.getOwnPropertyNames(item);
-        }
-        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
-        return itemAsString;
-    };
 
     before(() => {
         const name = `Cypress ${mutationName} Test`;
@@ -131,10 +101,10 @@ describe('Mutation: updateProductAttribute', () => {
     it("Mutation will succeed with valid 'id', 'name', and 'values' input", () => {
         updateCount++;
         const valuesCopy = JSON.parse(JSON.stringify(values));
-        valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
+        valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
         const mutation = `mutation {
-            ${mutationName}(input: { id: "${id}", name: "${newName}", values: ${toInputString(valuesCopy)} }) {
+            ${mutationName}(input: { id: "${id}", name: "${newName}", values: ${toFormattedString(valuesCopy)} }) {
                 ${standardMutationBody}
             }
         }`;
@@ -159,7 +129,7 @@ describe('Mutation: updateProductAttribute', () => {
     it("Mutation with all required input and 'customData' input updates item with customData", () => {
         updateCount++;
         const valuesCopy = JSON.parse(JSON.stringify(values));
-        valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
+        valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
@@ -167,8 +137,8 @@ describe('Mutation: updateProductAttribute', () => {
                 input: {
                     id: "${id}"
                     name: "${newName}"
-                    values: ${toInputString(valuesCopy)}
-                    customData: ${toInputString(customData)}
+                    values: ${toFormattedString(valuesCopy)}
+                    customData: ${toFormattedString(customData)}
                 }
             ) {
                 code
@@ -219,7 +189,7 @@ describe('Mutation: updateProductAttribute', () => {
         };
         const valuesCopy = [JSON.parse(JSON.stringify(values[0])), newValue];
         updateCount++;
-        valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
+        valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
         valuesCopy[0].displayOrder = Cypress._.random(0, 10);
         valuesCopy[0].isPreSelected = Cypress._.random(0, 1) === 1;
         valuesCopy[0].priceAdjustment = {amount: Cypress._.random(1, 5), currency: "USD"};
@@ -233,7 +203,7 @@ describe('Mutation: updateProductAttribute', () => {
                     id: "${id}"
                     name: "${newName}"
                     description: "${newDescription}"
-                    values: ${toInputString(valuesCopy)}
+                    values: ${toFormattedString(valuesCopy)}
                 }
             ) {
                 code
