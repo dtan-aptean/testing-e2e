@@ -913,24 +913,32 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataP
 });
 
 // Queries for an item and if it doesn't find it, creates the item. Returns id of item
-Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutationName: string, mutationInput?: string) => {
+Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutationName: string, mutationInput?: string, infoName?: string) => {
     Cypress.log({
         name: "searchOrCreate",
-        message: `"${name}", ${queryName}, ${mutationName}${mutationInput ? ", " + mutationInput : ""}`,
+        message: `"${name}", ${queryName}, ${mutationName}${mutationInput ? ", " + mutationInput : ""}${infoName ? ", " + infoName : ""}`,
         consoleProps: () => {
             return {
                 "searchString": name,
                 "Query name": queryName,
                 "Mutation Name": mutationName,
-                "Extra input for Mutation": mutationInput
+                "Extra input for Mutation": mutationInput,
+                "Info Name": infoName ? infoName : "Not provided"
             };
         },
     });
+    var nameField = "name";
+    if (infoName) {
+        nameField = `${infoName} {
+            name
+            languageCode
+        }`;
+    }
     const searchQuery = `{
         ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
             nodes {
                 id
-                name
+                ${nameField}
             }
         }
     }`;
@@ -945,12 +953,25 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
         assert.isArray(res.body.data[queryName].nodes);
         const nodes = res.body.data[queryName].nodes;
         if (nodes.length === 1) {
-            if (nodes[0].name === name) {
+            var nameSource = nodes[0].name;
+            if (infoName) {
+                nameSource = nodes[0][infoName].filter((item) => {
+                    return item.languageCode === "Standard";
+                })[0].name;
+            }
+            if (nameSource === name) {
                 return nodes[0].id;
             }
         } else if (nodes.length > 1) {
             const extraFiltered = nodes.filter((item) => {
-                return item.name === name;
+                if (infoName) {
+                    var target = item[infoName].filter((subItem) => {
+                        return subItem.languageCode === "Standard";
+                    });
+                    return target[0].name === name;
+                } else {
+                    return item.name === name;
+                }
             });
             if (extraFiltered.length !== 0) {
                 return extraFiltered[0].id;
@@ -958,7 +979,20 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
         }
         var dataPath = mutationName.replace("create", "");
         dataPath = dataPath.replace(dataPath.charAt(0), dataPath.charAt(0).toLowerCase());
-        const input = mutationInput ? `{name: "${name}", ${mutationInput}}` : `{name: "${name}"}`;
+        var nameInput = `name: "${name}"`;
+        var inputHasNameAsInfo = false;
+        var comboInput = '';
+        if (mutationInput && infoName) {
+            if (mutationInput.includes(infoName) && mutationInput.includes(name)) {
+                inputHasNameAsInfo = true;
+            } else {
+                nameInput = `${infoName}: [{name: "${name}", languageCode: "Standard"}]`;
+            }
+        } else if (infoName) {
+            nameInput = `${infoName}: [{name: "${name}", languageCode: "Standard"}]`;
+        }
+        comboInput = inputHasNameAsInfo ? `{${mutationInput}}` : `{${nameInput}, ${mutationInput}}`;
+        const input = mutationInput ? comboInput : `{${nameInput}}`;
         const creationMutation = `mutation {
             ${mutationName}(input: ${input}) {
                 code
@@ -966,12 +1000,19 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
                 error
                 ${dataPath} {
                     id
-                    name
+                    ${nameField}
                 }
             }
         }`;
         cy.postMutAndValidate(creationMutation, mutationName, dataPath).then((resp) => {
-            expect(resp.body.data[mutationName][dataPath].name).to.be.eql(name);
+            if (infoName) {
+                const infoItem = resp.body.data[mutationName][dataPath][infoName].filter((subItem) => {
+                    return subItem.languageCode === "Standard";
+                });
+                expect(infoItem[0].name).to.be.eql(name);
+            } else {
+                expect(resp.body.data[mutationName][dataPath].name).to.be.eql(name);
+            }
             return resp.body.data[mutationName][dataPath].id;
         });
     });
@@ -1097,6 +1138,61 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
             } else {
                 expect(node[propNames[i]]).to.be.eql(values[i], `Verify ${propNames[i]}`);
             }
+        }
+    });
+});
+
+// Search for an item we expect to have been deleted. Fail if we find it. Use infoName for things like categoryInfo, where the name is a descendant
+Cypress.Commands.add("queryForDeleted", (itemName: string, itemId: string, queryName: string, infoName?: string) => {
+    var nameField = "name";
+    if (infoName) {
+        nameField = `${infoName} {
+            name
+            languageCode
+        }`;
+    }
+    const searchQuery = `{
+        ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            nodes {
+                id
+                ${nameField}
+            }
+        }
+    }`;
+    return cy.postGQL(searchQuery).then((res) => {
+        // should be 200 ok
+        expect(res.isOkStatusCode).to.be.equal(true);
+        // no errors
+        assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${searchQuery}`);
+        // has data
+        assert.exists(res.body.data);
+        // has nodes
+        assert.isArray(res.body.data[queryName].nodes);
+        const nodes = res.body.data[queryName].nodes;
+        var message = "Query did not return item, assumed successful deletion"
+        if (nodes.length === 0) {
+            expect(nodes.length).to.be.eql(0, message);
+            return res;
+        } else {
+            // Compare ids to make sure it's not there.
+            var matchingItems;
+            if (infoName) {
+                matchingItems = nodes.filter((item) => {
+                    var nameMatches = item[infoName].filter((infoItem) => {
+                        return infoItem.name === itemName && infoItem.languageCode === "Standard";
+                    });
+                    return item.id === itemId && nameMatches.length > 0;
+                });
+            } else {
+                matchingItems = nodes.filter((item) => {
+                    return item.id === itemId && item.name === itemName;
+                });
+            }
+            if (matchingItems.length > 0) {
+                message = "Query returned item, deletion failed";
+            }
+            expect(matchingItems.length).to.be.eql(0, message);
+            return res;
         }
     });
 });

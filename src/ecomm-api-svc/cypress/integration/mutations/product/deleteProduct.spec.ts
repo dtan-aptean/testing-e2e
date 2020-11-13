@@ -1,12 +1,13 @@
 /// <reference types="cypress" />
 // TEST COUNT: 3
-describe('Mutation: deleteCheckoutAttribute', () => {
+describe('Mutation: deleteProduct', () => {
     let id = '';
     let currentItemName = '';
     let creationCount = 0;
-    const mutationName = 'deleteCheckoutAttribute';
-    const creationName = 'createCheckoutAttribute';
-    const queryName = "checkoutAttributes";
+    const mutationName = 'deleteProduct';
+    const creationName = 'createProduct';
+    const queryName = "products";
+    const infoName = 'productInfo';
     const standardMutationBody = `
         code
         message
@@ -15,8 +16,8 @@ describe('Mutation: deleteCheckoutAttribute', () => {
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee ${creationCount}`;
-        const mutationInput = 'values: [{name: "CA deletee value"}]';
-        cy.searchOrCreate(name, queryName, creationName, mutationInput).then((returnedId: string) => {
+        const input = `${infoName}: [{name: "${name}", shortDescription: "Cypress testing ${mutationName}", languageCode: "Standard"}], inventoryInformation: {minimumStockQuantity: 5}`;
+        cy.searchOrCreate(name, queryName, creationName, input, infoName).then((returnedId: string) => {
             id = returnedId;
             currentItemName = name;
             creationCount++;
