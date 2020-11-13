@@ -1,13 +1,13 @@
 /// <reference types="cypress" />
-// TEST COUNT: 3
+// TEST COUNT: 5
 describe('Mutation: deleteProduct', () => {
     let id = '';
     let currentItemName = '';
-    let creationCount = 0;
     const mutationName = 'deleteProduct';
     const creationName = 'createProduct';
     const queryName = "products";
     const infoName = 'productInfo';
+    const deletedMessage = "product";
     const standardMutationBody = `
         code
         message
@@ -15,25 +15,29 @@ describe('Mutation: deleteProduct', () => {
     `;
 
     beforeEach(() => {
-        const name = `Cypress test: ${mutationName}'s deletee ${creationCount}`;
+        const name = `Cypress test: ${mutationName}'s deletee`;
         const input = `${infoName}: [{name: "${name}", shortDescription: "Cypress testing ${mutationName}", languageCode: "Standard"}], inventoryInformation: {minimumStockQuantity: 5}`;
         cy.searchOrCreate(name, queryName, creationName, input, infoName).then((returnedId: string) => {
             id = returnedId;
             currentItemName = name;
-            creationCount++;
         });
     });
 
     afterEach(() => {
         if (id !== '') {
-            const mutation = `mutation {
-                ${mutationName}(input: {id: "${id}"}){
-                    ${standardMutationBody}
+            // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
+            cy.queryForDeleted(false, currentItemName, id, queryName, infoName).then((itemPresent: boolean) => {
+                if (itemPresent) {
+                    const mutation = `mutation {
+                        ${mutationName}(input: {id: "${id}"}){
+                            ${standardMutationBody}
+                        }
+                    }`;
+                    cy.postAndConfirmDelete(mutation, mutationName).then(() => {
+                        id = '';
+                        currentItemName = '';
+                    });
                 }
-            }`;
-            cy.postAndConfirmDelete(mutation, mutationName).then(() => {
-                id = '';
-                currentItemName = '';
             });
         }
     });
@@ -63,5 +67,36 @@ describe('Mutation: deleteProduct', () => {
             }
         }`;
         cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will succeed with valid 'id' input from an existing item", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}" }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
+            expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
+            cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
+                id = '';
+                currentItemName = '';
+            });
+        });
+    });
+
+    it("Mutation will fail when given 'id' input from an deleted item", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}" }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
+            expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
+            cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
+                id = '';
+                currentItemName = '';
+                cy.postAndConfirmMutationError(mutation, mutationName);
+            });
+        });
     });
 });

@@ -226,7 +226,7 @@ Cypress.Commands.add("confirmError", (res) => {
 
 // Tests the response for errors. Use when we expect it to fail
 // For use with mutations that still return data and an okay status when erroring
-Cypress.Commands.add("confirmMutationError", (res, mutationName: string, dataPath: string) => {
+Cypress.Commands.add("confirmMutationError", (res, mutationName: string, dataPath?: string) => {
     Cypress.log({
         name: "confirmMutationError",
         message: `Confirm expected error are present`,
@@ -237,7 +237,7 @@ Cypress.Commands.add("confirmMutationError", (res, mutationName: string, dataPat
         },
     });
     // should have errors
-    assert.exists(res.body.errors);
+    assert.exists(res.body.errors, "Errors should be present");
     // should have data
     assert.exists(res.body.data);
     // Check data for errors
@@ -246,7 +246,10 @@ Cypress.Commands.add("confirmMutationError", (res, mutationName: string, dataPat
     expect(res.body.data[mutationName].code).to.eql("ERROR");
     assert.isString(res.body.data[mutationName].message);
     expect(res.body.data[mutationName].message).to.include('Error');
-    assert.notExists(res.body.data[mutationName][dataPath]);
+    if (dataPath) {
+        // Since delete mutations don't have an item returned, datapath is optional
+        assert.notExists(res.body.data[mutationName][dataPath]);
+    }
 });
 
 // Post Query and confirm it has errors
@@ -1094,7 +1097,7 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
             }
         }
         return matchFound;
-    }
+    };
     // Searches through the array for the items we expect to be there
     // ex, if we updated 2 items, but the array has 4 items, it runs a filter looking for those items and fails if they aren't there
     // Returns a boolean to use with matchObject above
@@ -1142,8 +1145,30 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
     });
 });
 
-// Search for an item we expect to have been deleted. Fail if we find it. Use infoName for things like categoryInfo, where the name is a descendant
-Cypress.Commands.add("queryForDeleted", (itemName: string, itemId: string, queryName: string, infoName?: string) => {
+
+
+
+/**
+ * Search for an item we expect to have been deleted. Can be used as part of a test, or for after/afterEach hooks performing clean up
+ * If asTest = false, it acts more as filter and does not fail if item is found. Returns true/false value depending on item presence
+ * If asTest = true, it acts as part of the test and fails if item is found. Returns query response.
+ * Use infoName for things like categoryInfo, where the name is a descendant of an array
+ */
+Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, itemId: string, queryName: string, infoName?: string) => {
+    Cypress.log({
+        name: "queryForDeleted",
+        message: `querying ${queryName} for deleted item "${itemId}"`,
+        consoleProps: () => {
+            return {
+                "Used as a test": asTest,
+                "Query Name": queryName,
+                "Item's name": itemName,
+                "Item's Id": itemId,
+                "Info name": infoName ? infoName : "Not provided"
+            };
+        },
+    });
+
     var nameField = "name";
     if (infoName) {
         nameField = `${infoName} {
@@ -1171,7 +1196,10 @@ Cypress.Commands.add("queryForDeleted", (itemName: string, itemId: string, query
         const nodes = res.body.data[queryName].nodes;
         var message = "Query did not return item, assumed successful deletion"
         if (nodes.length === 0) {
-            expect(nodes.length).to.be.eql(0, message);
+            if (!asTest) {
+                return false;
+            }
+            assert.isEmpty(nodes, message);
             return res;
         } else {
             // Compare ids to make sure it's not there.
@@ -1191,7 +1219,10 @@ Cypress.Commands.add("queryForDeleted", (itemName: string, itemId: string, query
             if (matchingItems.length > 0) {
                 message = "Query returned item, deletion failed";
             }
-            expect(matchingItems.length).to.be.eql(0, message);
+            if (!asTest) {
+                return true;
+            }
+            assert.isEmpty(matchingItems, message);
             return res;
         }
     });
