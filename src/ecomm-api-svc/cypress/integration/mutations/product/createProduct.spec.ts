@@ -2,9 +2,10 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 12
+// TEST COUNT: 21
 describe('Mutation: createProduct', () => {
     let id = '';
+    let extraIds = []; // Should push objects formatted as {itemId: "example", deleteName: "example"}
     const mutationName = 'createProduct';
     const queryName = "products";
     const dataPath = 'product';
@@ -29,6 +30,21 @@ describe('Mutation: createProduct', () => {
 
     afterEach(() => {
         if (id !== "") {
+            // Delete any supplemental items we created
+            if (extraIds.length > 0) {
+                for (var i = 0; i < extraIds.length; i++) {
+                    cy.wait(2000);
+                    var extraRemoval = `mutation {
+                        ${extraIds[i].deleteName}(input: { id: "${extraIds[i].itemId}" }) {
+                            code
+                            message
+                            error
+                        }
+                    }`;
+                    cy.postAndConfirmDelete(extraRemoval, extraIds[i].deleteName);
+                }
+                extraIds = [];
+            }
             const deletionName = "deleteProduct";
             const removalMutation = `mutation {
                 ${deletionName}(input: { id: "${id}" }) {
@@ -154,6 +170,21 @@ describe('Mutation: createProduct', () => {
         }`;
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
     });
+
+    it("Mutation will fail with invalid 'inventoryInformation' input", () => {
+        const info = [{name: `Cypress ${mutationName} no inventoryInformation`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+        const mutation = `mutation {
+            ${mutationName}(
+                input: { 
+                    ${infoName}: ${toFormattedString(info)}
+                    inventoryInformation: true
+                }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
+    });
+
 
     it("Mutation will succeed with valid 'name', 'shortDescription', and 'inventoryInformation' input", () => {
         const info = [{
@@ -289,17 +320,471 @@ describe('Mutation: createProduct', () => {
         });
     });
 
-    // TODO: vendorIds test
+    it("Mutation with 'vendorId' input will successfully create a product with an attached vendor", () => {
+        const vendor = {vendorInfo: [{name: `Cypress ${mutationName} vendor`, languageCode: "Standard"}]};
+        cy.createAndGetId("createVendor", "vendor", toFormattedString(vendor)).then((returnedId: string) => {
+            extraIds.push({itemId: returnedId, deleteName: "deleteVendor"});
+            vendor.id = returnedId;
+            const info = [{name: `Cypress ${mutationName} vendorId test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+            const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        ${infoName}: ${toFormattedString(info)}
+                        inventoryInformation: ${toFormattedString(inventoryInfo)}
+                        vendorId: "${returnedId}"
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${dataPath} {
+                        id
+                        inventoryInformation {
+                            minimumStockQuantity
+                        }
+                        vendor {
+                            id
+                            vendorInfo {
+                                name
+                                languageCode
+                            }
+                        }
+                        ${infoName} {
+                            name
+                            shortDescription
+                            fullDescription
+                            languageCode
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                id = res.body.data[mutationName][dataPath].id;
+                const propNames = ["vendor", infoName, "inventoryInformation"];
+                const propValues = [vendor, info, inventoryInfo];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            nodes {
+                                id
+                                inventoryInformation {
+                                    minimumStockQuantity
+                                }
+                                vendor {
+                                    id
+                                    vendorInfo {
+                                        name
+                                        languageCode
+                                    }
+                                }
+                                ${infoName} {
+                                    name
+                                    shortDescription
+                                    fullDescription
+                                    languageCode
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+    });
 
-    // TODO: taxCategoryId test
+    it("Mutation with 'taxCategoryId' input will successfully create a product with an attached tax category", () => {
+        const taxCategory = {name: `Cypress ${mutationName} taxCategory 1`};
+        cy.createAndGetId("createTaxCategory", "taxCategory", toFormattedString(taxCategory)).then((returnedId: string) => {
+            extraIds.push({itemId: returnedId, deleteName: "deleteTaxCategory"});
+            taxCategory.id = returnedId;
+            const info = [{name: `Cypress ${mutationName} taxCategoryId test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+            const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
+            const dummyPriceInfo = {taxCategory: taxCategory};
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {   
+                        taxCategoryId: "${returnedId}"
+                        ${infoName}: ${toFormattedString(info)}
+                        inventoryInformation: ${toFormattedString(inventoryInfo)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${dataPath} {
+                        id
+                        inventoryInformation {
+                            minimumStockQuantity
+                        }
+                        priceInformation {
+                            taxCategory {
+                                id
+                                name
+                            }
+                        }
+                        ${infoName} {
+                            name
+                            shortDescription
+                            fullDescription
+                            languageCode
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                id = res.body.data[mutationName][dataPath].id;
+                const propNames = [infoName, "inventoryInformation", "priceInformation"];
+                const propValues = [info, inventoryInfo, dummyPriceInfo];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            nodes {
+                                id
+                                inventoryInformation {
+                                    minimumStockQuantity
+                                }
+                                priceInformation {
+                                    taxCategory {
+                                        id
+                                        name
+                                    }
+                                }
+                                ${infoName} {
+                                    name
+                                    shortDescription
+                                    fullDescription
+                                    languageCode
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+    });
 
-    // TODO: categoryIds test
+    it("Mutation with 'categoryIds' input will successfully create a product with attached categories", () => {
+        const categoryOne = { categoryInfo: [{ name:`Cypress ${mutationName} category 1`, languageCode: "Standard" }] };
+        cy.createAndGetId("createCategory", "category", toFormattedString(categoryOne)).then((returnedId: string) => {
+            extraIds.push({itemId: returnedId, deleteName: "deleteCategory"});
+            categoryOne.id = returnedId;
+            const categories = [categoryOne];
+            const categoryIds = [returnedId];
+            const categoryTwo = {categoryInfo: [{name: `Cypress ${mutationName} category 2`, languageCode: "Standard"}] };
+            cy.createAndGetId("createCategory", "category", toFormattedString(categoryTwo)).then((secondId: string) => {
+                extraIds.push({itemId: secondId, deleteName: "deleteCategory"});
+                categoryTwo.id = secondId;
+                categories.push(categoryTwo);
+                categoryIds.push(secondId);   
+                const info = [{name: `Cypress ${mutationName} categoryIds test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+                const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            ${infoName}: ${toFormattedString(info)}
+                            inventoryInformation: ${toFormattedString(inventoryInfo)}
+                            categoryIds: ${toFormattedString(categoryIds)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${dataPath} {
+                            id
+                            inventoryInformation {
+                                minimumStockQuantity
+                            }
+                            categories {
+                                id
+                                categoryInfo {
+                                    name
+                                    languageCode
+                                }
+                            }
+                            ${infoName} {
+                                name
+                                shortDescription
+                                fullDescription
+                                languageCode
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                    id = res.body.data[mutationName][dataPath].id;
+                    const propNames = ["categories", infoName, "inventoryInformation"];
+                    const propValues = [categories, info, inventoryInfo];
+                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                nodes {
+                                    id
+                                    inventoryInformation {
+                                        minimumStockQuantity
+                                    }
+                                    categories {
+                                        id
+                                        categoryInfo {
+                                            name
+                                            languageCode
+                                        }
+                                    }
+                                    ${infoName} {
+                                        name
+                                        shortDescription
+                                        fullDescription
+                                        languageCode
+                                    }
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    });
+                });
+            });
+        });
+    });
 
-    // TODO: manufacturerIds test
+    it("Mutation with 'manufacturerIds' input will successfully create a product with attached manufacturers", () => {
+        const manufacturerOne = {manufacturerInfo: [{ name: `Cypress ${mutationName} manufacturer 1`, languageCode: "Standard" }] };
+        cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerOne)).then((returnedId: string) => {
+            extraIds.push({itemId: returnedId, deleteName: "deleteManufacturer"});
+            manufacturerOne.id = returnedId;
+            const manufacturers = [manufacturerOne];
+            const manufacturerIds = [returnedId];
+            const manufacturerTwo = {manufacturerInfo: [{ name: `Cypress ${mutationName} manufacturer 2`, languageCode: "Standard" }] };
+            cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerTwo)).then((secondId: string) => {
+                extraIds.push({itemId: secondId, deleteName: "deleteManufacturer"});
+                manufacturerTwo.id = secondId;
+                manufacturers.push(manufacturerTwo);
+                manufacturerIds.push(secondId);  
+                const info = [{name: `Cypress ${mutationName} manufacturerIds test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+                const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            ${infoName}: ${toFormattedString(info)}
+                            inventoryInformation: ${toFormattedString(inventoryInfo)}
+                            manufacturerIds: ${toFormattedString(manufacturerIds)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${dataPath} {
+                            id
+                            inventoryInformation {
+                                minimumStockQuantity
+                            }
+                            manufacturers {
+                                id
+                                manufacturerInfo {
+                                    name
+                                    languageCode
+                                }
+                            }
+                            ${infoName} {
+                                name
+                                shortDescription
+                                fullDescription
+                                languageCode
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                    id = res.body.data[mutationName][dataPath].id;
+                    const propNames = ["manufacturers", infoName, "inventoryInformation"];
+                    const propValues = [manufacturers, info, inventoryInfo];
+                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                nodes {
+                                    id
+                                    inventoryInformation {
+                                        minimumStockQuantity
+                                    }
+                                    manufacturers {
+                                        id
+                                        manufacturerInfo {
+                                            name
+                                            languageCode
+                                        }
+                                    }
+                                    ${infoName} {
+                                        name
+                                        shortDescription
+                                        fullDescription
+                                        languageCode
+                                    }
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    });
+                });
+            });
+        });
+    });
 
-    // TODO: attributeIds test
+    it("Mutation with 'attributeIds' input will successfully create a product with attached attributes", () => {
+        const attributeOne = {name: `Cypress ${mutationName} attribute 1`, values: [{name: "attribute 1"}] };
+        cy.createAndGetId("createProductAttribute", "productAttribute", toFormattedString(attributeOne)).then((returnedId: string) => {
+            extraIds.push({itemId: returnedId, deleteName: "deleteProductAttribute"});
+            attributeOne.id = returnedId;
+            const attributes = [attributeOne];
+            const attributeIds = [returnedId];
+            const attributeTwo = {name: `Cypress ${mutationName} attribute 2`, values: [{name: "attribute 2"}] };
+            cy.createAndGetId("createProductAttribute", "productAttribute", toFormattedString(attributeTwo)).then((secondId: string) => {
+                extraIds.push({itemId: secondId, deleteName: "deleteProductAttribute"});
+                attributeTwo.id = secondId;
+                attributes.push(attributeTwo);
+                attributeIds.push(secondId); 
+                const info = [{name: `Cypress ${mutationName} attributeIds test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+                const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            
+                            ${infoName}: ${toFormattedString(info)}
+                            inventoryInformation: ${toFormattedString(inventoryInfo)}
+                            attributeIds: ${toFormattedString(attributeIds)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${dataPath} {
+                            id
+                            inventoryInformation {
+                                minimumStockQuantity
+                            }
+                            attributes {
+                                id
+                                name
+                                values {
+                                    name
+                                }
+                            }
+                            ${infoName} {
+                                name
+                                shortDescription
+                                fullDescription
+                                languageCode
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                    id = res.body.data[mutationName][dataPath].id;
+                    const propNames = ["attributes", infoName, "inventoryInformation"];
+                    const propValues = [attributes, info, inventoryInfo];
+                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                nodes {
+                                    id
+                                    inventoryInformation {
+                                        minimumStockQuantity
+                                    }
+                                    attributes {
+                                        id
+                                        name
+                                        values {
+                                            name
+                                        }
+                                    }
+                                    ${infoName} {
+                                        name
+                                        shortDescription
+                                        fullDescription
+                                        languageCode
+                                    }
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    });
+                });
+            });
+        });
+    });
 
-    // TODO: specificationOptionIds test
+    it("Mutation with 'specificationOptionIds' input will successfully create a product with attached specificationOptions", () => {
+        const productSpecification = {name: `Cypress ${mutationName} specificationOption 1`, options: [{name: "specificationOption 1"}, {name: "specificationOption2"}] };
+        const optionsField = `options {
+            id
+            name
+        }`;
+        cy.createAndGetId("createProductSpecification", "productSpecification", toFormattedString(productSpecification), optionsField).then((returnedItem) => {
+            assert.exists(returnedItem.id);
+            assert.exists(returnedItem.options);
+            extraIds.push({itemId: returnedItem.id, deleteName: "deleteProductSpecification"});
+            const specificationOptionIds = [returnedItem.options[0].id, returnedItem.options[1].id];
+            const info = [{name: `Cypress ${mutationName} specificationOptionsIds test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+            const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        
+                        ${infoName}: ${toFormattedString(info)}
+                        inventoryInformation: ${toFormattedString(inventoryInfo)}
+                        specificationOptionIds: ${toFormattedString(specificationOptionIds)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${dataPath} {
+                        id
+                        inventoryInformation {
+                            minimumStockQuantity
+                        }
+                        specificationOptions {
+                            id
+                            name
+                        }
+                        ${infoName} {
+                            name
+                            shortDescription
+                            fullDescription
+                            languageCode
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                id = res.body.data[mutationName][dataPath].id;
+                const propNames = ["specificationOptions", infoName, "inventoryInformation"];
+                const propValues = [returnedItem.options, info, inventoryInfo];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            nodes {
+                                id
+                                inventoryInformation {
+                                    minimumStockQuantity
+                                }
+                                specificationOptions {
+                                    id
+                                    name
+                                }
+                                ${infoName} {
+                                    name
+                                    shortDescription
+                                    fullDescription
+                                    languageCode
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+       });
+    });
 
     it("Mutation creates item that has all included input", () => {
         const info = [

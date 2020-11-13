@@ -2,7 +2,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 7
+// TEST COUNT: 9
 describe('Mutation: createProductSpecification', () => {
     let id = '';
     const mutationName = 'createProductSpecification';
@@ -56,6 +56,20 @@ describe('Mutation: createProductSpecification', () => {
         cy.postAndConfirmError(mutation);
     });
 
+    it("Mutation will fail with no 'Name' input", () => {
+        const options = [{name: 'Cypress PS v1'}, {name: 'Cypress PS v2'}];
+        const mutation = `mutation {
+            ${mutationName}(
+                input: {
+                    options: ${toFormattedString(options)}
+                }
+            ) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
+    });
+
     it("Mutation will fail with invalid 'Name' input", () => {
         const mutation = `mutation {
             ${mutationName}(input: { name: 7 }) {
@@ -73,6 +87,16 @@ describe('Mutation: createProductSpecification', () => {
             }
         }`;
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with invalid 'options' input", () => {
+        const name = "Cypress API Product Specification Invalid options";
+        const mutation = `mutation {
+            ${mutationName}(input: { name: "${name}", options: true }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
     });
 
     it("Mutation with valid 'Name' and 'Options' input will create a new item", () => {

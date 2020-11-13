@@ -2,7 +2,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 7
+// TEST COUNT: 9
 describe('Mutation: createProductAttribute', () => {
     let id = '';
     const mutationName = 'createProductAttribute';
@@ -55,6 +55,20 @@ describe('Mutation: createProductAttribute', () => {
         cy.postAndConfirmError(mutation);
     });
 
+    it("Mutation will fail with no 'Name' input", () => {
+        const values = [{name: 'Cypress PA v1'}, {name: 'Cypress PA v2'}];
+        const mutation = `mutation {
+            ${mutationName}(
+                input: {
+                    values: ${toFormattedString(values)}
+                }
+            ) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
+    });
+
     it("Mutation will fail with invalid 'Name' input", () => {
         const mutation = `mutation {
             ${mutationName}(input: { name: 7 }) {
@@ -72,6 +86,16 @@ describe('Mutation: createProductAttribute', () => {
             }
         }`;
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with invalid 'Values' input", () => {
+        const name = "Cypress API Checkout Attribute Invalid values";
+        const mutation = `mutation {
+            ${mutationName}(input: { name: "${name}", values: true }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
     });
 
     it("Mutation with valid 'Name' and 'Values' input will create a new item", () => {

@@ -1,7 +1,11 @@
 /// <reference types="cypress" />
-// TEST COUNT: 9
+
+import { toFormattedString } from "../../../support/commands";
+
+// TEST COUNT: 11
 describe('Mutation: createManufacturer', () => {
     let id = '';
+    let extraIds = []; // Should push objects formatted as {itemId: "example", deleteName: "example"}
     const mutationName = 'createManufacturer';
     const queryName = "manufacturers";
     const dataPath = 'manufacturer';
@@ -18,44 +22,25 @@ describe('Mutation: createManufacturer', () => {
             }
         }
     `;
-    // Function to turn an object or array into a string to use as input
-    function toInputString(item) {
-        function iterateThrough (propNames?: string[]) {
-            var returnValue = '';
-            for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
-                if (i !== 0) {
-                    returnValue = returnValue + ', ';
-                }
-                var value = propNames ? item[propNames[i]]: item[i];
-                if (typeof value === 'string') {
-                    if (value.charAt(0) !== '"' && value.charAt(value.length - 1) !== '"') {
-                        value = `"${value}"`;
-                    }
-                } else if (typeof value === 'object') {
-                    // Arrays return as an object, so this will get both
-                    value = toInputString(value);
-                }
-                returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
-            }
-            return returnValue;
-        };
-        var itemAsString = '{ ';
-        var props = undefined;
-        if (item === null) {
-            return "null";
-        } else if (item === undefined) {
-            return "undefined";
-        } else if (Array.isArray(item)) {
-            itemAsString = '[';
-        } else if (typeof item === 'object') {
-            props = Object.getOwnPropertyNames(item);
-        }
-        itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
-        return itemAsString;
-    };
 
     afterEach(() => {
         if (id !== "") {
+            // Delete any supplemental items we created
+            if (extraIds.length > 0) {
+                for (var i = 0; i < extraIds.length; i++) {
+                    cy.wait(2000);
+                    var extraRemoval = `mutation {
+                        ${extraIds[i].deleteName}(input: { id: "${extraIds[i].itemId}" }) {
+                            code
+                            message
+                            error
+                        }
+                    }`;
+                    cy.postAndConfirmDelete(extraRemoval, extraIds[i].deleteName);
+                }
+                extraIds = [];
+            }
+
             const deletionName = "deleteManufacturer";
             const removalMutation = `mutation {
                 ${deletionName}(input: { id: "${id}" }) {
@@ -127,7 +112,7 @@ describe('Mutation: createManufacturer', () => {
     it("Mutation with valid 'Name' and 'languageCode' input will create a new item", () => {
         const info = [{name: "Cypress API Manufacturer", languageCode: "Standard"}];
         const mutation = `mutation {
-            ${mutationName}(input: { ${infoName}: ${toInputString(info)} }) {
+            ${mutationName}(input: { ${infoName}: ${toFormattedString(info)} }) {
                 ${standardMutationBody}
             }
         }`;
@@ -158,8 +143,8 @@ describe('Mutation: createManufacturer', () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    ${infoName}: ${toInputString(info)}
-                    customData: ${toInputString(customData)}
+                    ${infoName}: ${toFormattedString(info)}
+                    customData: ${toFormattedString(customData)}
                 }
             ) {
                 code
@@ -195,9 +180,153 @@ describe('Mutation: createManufacturer', () => {
         });
     });
 
-    // TODO: discountsId test
+    it("Mutation with 'discountIds' input will successfully attach the discounts", () => {
+        const discountOne = {name: `Cypress ${mutationName} discount 1`, discountAmount: {amount: 15, currency: "USD"}};
+        cy.createAndGetId("createDiscount", "discount", toFormattedString(discountOne)).then((returnedId: string) => {
+            extraIds.push({itemId: returnedId, deleteName: "deleteDiscount"});
+            discountOne.id = returnedId;
+            const discounts = [discountOne];
+            const discountIds = [returnedId];
+            const discountTwo = {name: `Cypress ${mutationName} discount 2`, discountAmount: {amount: 30, currency: "USD"}};
+            cy.createAndGetId("createDiscount", "discount", toFormattedString(discountTwo)).then((secondId: string) => {
+                extraIds.push({itemId: secondId, deleteName: "deleteDiscount"});
+                discountTwo.id = secondId;
+                discounts.push(discountTwo);
+                discountIds.push(secondId);
+                const info = [{name: `Cypress ${mutationName} discountIds test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            discountIds: ${toFormattedString(discountIds)}
+                            ${infoName}: ${toFormattedString(info)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${dataPath} {
+                            id
+                            discounts {
+                                id
+                                name
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                            ${infoName} {
+                                name
+                                description
+                                languageCode
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                    id = res.body.data[mutationName][dataPath].id;
+                    const propNames = [infoName, "discounts"];
+                    const propValues = [info, discounts];
+                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                nodes {
+                                    id
+                                    discounts {
+                                        id
+                                        name
+                                        discountAmount {
+                                            amount
+                                            currency
+                                        }
+                                    }
+                                    ${infoName} {
+                                        name
+                                        description
+                                        languageCode
+                                    }
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    });
+                });
+            });
+        });
+    });
 
-    // TODO: roleBasedAccess test
+    it("Mutation with 'roleBasedAccess' input will successfully create an item with attached roles.", () => {
+        const roleOne = {name: `Cypress ${mutationName} role 1`};
+        cy.createAndGetId("createCustomerRole", "customerRole", toFormattedString(roleOne)).then((returnedId: string) => {
+            extraIds.push({itemId: returnedId, deleteName: "deleteCustomerRole"});
+            roleOne.id = returnedId;
+            const roles = [roleOne];
+            const custRoleIds = [returnedId];
+            const roleTwo = {name: `Cypress ${mutationName} role 2`};
+            cy.createAndGetId("createCustomerRole", "customerRole", toFormattedString(roleTwo)).then((secondId: string) => {
+                extraIds.push({itemId: secondId, deleteName: "deleteCustomerRole"});
+                roleTwo.id = secondId;
+                roles.push(roleTwo)
+                custRoleIds.push(secondId);
+                const info = [{name: `Cypress ${mutationName} rBA test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
+                const roleBasedAccess = {enabled: true, roleIds: custRoleIds};
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            roleBasedAccess: ${toFormattedString(roleBasedAccess)}
+                            ${infoName}: ${toFormattedString(info)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${dataPath} {
+                            id
+                            roleBasedAccess {
+                                enabled
+                                roles {
+                                    id
+                                    name
+                                }
+                            }
+                            ${infoName} {
+                                name
+                                description
+                                languageCode
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                    id = res.body.data[mutationName][dataPath].id;
+                    const roleAccess = {enabled: roleBasedAccess.enabled, roles: roles};
+                    const propNames = [infoName, "roleBasedAccess"];
+                    const propValues = [info, roleAccess];
+                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                nodes {
+                                    id
+                                    roleBasedAccess {
+                                        enabled
+                                        roles {
+                                            id
+                                            name
+                                        }
+                                    }
+                                    ${infoName} {
+                                        name
+                                        description
+                                        languageCode
+                                    }
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    });
+                });
+            });
+        });
+    });
 
     it("Mutation creates item that has all included input", () => {
         const displayOrder = Cypress._.random(1, 20);
@@ -215,8 +344,8 @@ describe('Mutation: createManufacturer', () => {
             ${mutationName}(
                 input: {
                     displayOrder: ${displayOrder}
-                    ${infoName}: ${toInputString(info)}
-                    seoData: ${toInputString(seoData)}
+                    ${infoName}: ${toFormattedString(info)}
+                    seoData: ${toFormattedString(seoData)}
                     priceRanges: "${priceRanges}"
                     published: ${published}
                 }

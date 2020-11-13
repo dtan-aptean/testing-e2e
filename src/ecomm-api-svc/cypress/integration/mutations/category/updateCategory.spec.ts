@@ -2,7 +2,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 10
+// TEST COUNT: 14
 describe('Mutation: updateCategory', () => {
     let id = '';
     let updateCount = 0;
@@ -99,6 +99,42 @@ describe('Mutation: updateCategory', () => {
             }
         }`;
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with no 'languageCode' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", ${infoName}: [{name: "Cypress no languageCode"}] }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with no 'Name' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", ${infoName}: [{languageCode: "Standard"}] }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with invalid 'languageCode' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", ${infoName}: [{name: "Cypress invalid languageCode", languageCode: 6}] }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail with invalid 'Name' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", ${infoName}: [{name: 7, languageCode: "Standard"}] }) {
+                ${standardMutationBody}
+            }
+        }`
+        cy.postAndConfirmError(mutation);
     });
 
     it("Mutation will succeed with valid 'id', 'name', and 'languageCode' input", () => {
@@ -222,13 +258,13 @@ describe('Mutation: updateCategory', () => {
     });
 
     it("Mutation with 'discountIds' input will successfully attach the discounts", () => {
-        const discountOne = {name: `Cypress ${dataPath} discount 1`, discountAmount: {amount: 15, currency: "USD"}};
+        const discountOne = {name: `Cypress ${mutationName} discount 1`, discountAmount: {amount: 15, currency: "USD"}};
         cy.createAndGetId("createDiscount", "discount", toFormattedString(discountOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteDiscount"});
             discountOne.id = returnedId;
             const discounts = [discountOne];
             const discountIds = [returnedId];
-            const discountTwo = {name: `Cypress ${dataPath} discount 2`, discountAmount: {amount: 30, currency: "USD"}};
+            const discountTwo = {name: `Cypress ${mutationName} discount 2`, discountAmount: {amount: 30, currency: "USD"}};
             cy.createAndGetId("createDiscount", "discount", toFormattedString(discountTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteDiscount"});
                 discountTwo.id = secondId;
@@ -297,13 +333,13 @@ describe('Mutation: updateCategory', () => {
     });
 
     it("Mutation with 'roleBasedAccess' input will successfully attach the roles", () => {
-        const roleOne = {name: `Cypress ${dataPath} role 1`};
+        const roleOne = {name: `Cypress ${mutationName} role 1`};
         cy.createAndGetId("createCustomerRole", "customerRole", toFormattedString(roleOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteCustomerRole"});
             roleOne.id = returnedId;
             const roles = [roleOne];
             const custRoleIds = [returnedId];
-            const roleTwo = {name: `Cypress ${dataPath} role 2`};
+            const roleTwo = {name: `Cypress ${mutationName} role 2`};
             cy.createAndGetId("createCustomerRole", "customerRole", toFormattedString(roleTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteCustomerRole"});
                 roleTwo.id = secondId;

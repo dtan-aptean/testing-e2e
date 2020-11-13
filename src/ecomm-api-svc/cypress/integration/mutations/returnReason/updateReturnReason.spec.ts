@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 7
+// TEST COUNT: 8
 describe('Mutation: updateReturnReason', () => {
     let id = '';
     let updateCount = 0;
@@ -74,6 +74,15 @@ describe('Mutation: updateReturnReason', () => {
             }
         }`;
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with invalid 'Name' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", name: 7 }) {
+                ${standardMutationBody}
+            }
+        }`
+        cy.postAndConfirmError(mutation);
     });
 
     it("Mutation will succeed with valid 'id' and 'name' input", () => {

@@ -2,7 +2,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 14
+// TEST COUNT: 23
 describe('Mutation: updateProduct', () => {
     let id = '';
     let updateCount = 0;
@@ -105,13 +105,49 @@ describe('Mutation: updateProduct', () => {
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
     });
 
+    it("Mutation will fail with no 'languageCode' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", ${infoName}: [{name: "Cypress no languageCode"}] }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with no 'Name' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", ${infoName}: [{languageCode: "Standard"}] }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with invalid 'languageCode' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", ${infoName}: [{name: "Cypress invalid languageCode", languageCode: 6}] }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail with invalid 'Name' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", ${infoName}: [{name: 7, languageCode: "Standard"}] }) {
+                ${standardMutationBody}
+            }
+        }`
+        cy.postAndConfirmError(mutation);
+    });
+
     it("Mutation will fail without 'shortDescription' or 'fullDescription' input", () => {
         const info = [{name: `Cypress ${mutationName} no descriptions`, languageCode: "Standard"}];
         const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
         const mutation = `mutation {
             ${mutationName}(
                 input: { 
-                    id: "${id}", 
+                    id: "${id}" 
                     ${infoName}: ${toFormattedString(info)}
                     inventoryInformation: ${toFormattedString(inventoryInfo)}
                 }) {
@@ -119,6 +155,58 @@ describe('Mutation: updateProduct', () => {
             }
         }`;
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with invalid 'inventoryInformation' input", () => {
+        const info = [{name: `Cypress ${mutationName} no inventoryInformation`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+        const mutation = `mutation {
+            ${mutationName}(
+                input: { 
+                    id: "${id}"
+                    ${infoName}: ${toFormattedString(info)}
+                    inventoryInformation: true
+                }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
+    });
+
+
+    it("Mutation will fail with invalid 'shortDescription'input", () => {
+        const mutation = `mutation {
+            ${mutationName}(
+                input: {
+                    ${infoName}: [{
+                        name: "Cypress invalid shortDescription",
+                        shortDescription: 5,
+                        fullDescription: "Cypress testing invalid types",
+                        languageCode: "Standard"
+                    }]
+                }
+            ) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail with invalid 'fullDescription' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(
+                input: { 
+                    ${infoName}: [{
+                        name: "Cypress invalid fullDescription",
+                        shortDescription: "Cypress testing invalid types",
+                        fullDescription: 5,
+                        languageCode: "Standard"
+                    }]
+                }
+            ) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
     });
 
     it("Mutation will fail without 'inventoryInformation' input", () => {
@@ -257,7 +345,7 @@ describe('Mutation: updateProduct', () => {
     });
 
     it("Mutation with 'vendorId' input will successfully attach the vendor", () => {
-        const vendor = {vendorInfo: [{name: `Cypress ${dataPath} vendor`, languageCode: "Standard"}]};
+        const vendor = {vendorInfo: [{name: `Cypress ${mutationName} vendor`, languageCode: "Standard"}]};
         cy.createAndGetId("createVendor", "vendor", toFormattedString(vendor)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteVendor"});
             vendor.id = returnedId;
@@ -327,7 +415,7 @@ describe('Mutation: updateProduct', () => {
     });
 
     it("Mutation with 'taxCategoryId' input will successfully attach the tax category", () => {
-        const taxCategory = {name: `Cypress ${dataPath} taxCategory 1`};
+        const taxCategory = {name: `Cypress ${mutationName} taxCategory 1`};
         cy.createAndGetId("createTaxCategory", "taxCategory", toFormattedString(taxCategory)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteTaxCategory"});
             taxCategory.id = returnedId;
@@ -396,13 +484,13 @@ describe('Mutation: updateProduct', () => {
     });
 
     it("Mutation with 'categoryIds' input will successfully attach the categories", () => {
-        const categoryOne = { categoryInfo: [{ name:`Cypress ${dataPath} category 1`, languageCode: "Standard" }] };
+        const categoryOne = { categoryInfo: [{ name:`Cypress ${mutationName} category 1`, languageCode: "Standard" }] };
         cy.createAndGetId("createCategory", "category", toFormattedString(categoryOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteCategory"});
             categoryOne.id = returnedId;
             const categories = [categoryOne];
             const categoryIds = [returnedId];
-            const categoryTwo = {categoryInfo: [{name: `Cypress ${dataPath} category 2`, languageCode: "Standard"}] };
+            const categoryTwo = {categoryInfo: [{name: `Cypress ${mutationName} category 2`, languageCode: "Standard"}] };
             cy.createAndGetId("createCategory", "category", toFormattedString(categoryTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteCategory"});
                 categoryTwo.id = secondId;
@@ -475,13 +563,13 @@ describe('Mutation: updateProduct', () => {
     });
 
     it("Mutation with 'manufacturerIds' input will successfully attach the manufacturers", () => {
-        const manufacturerOne = {manufacturerInfo: [{ name: `Cypress ${dataPath} manufacturer 1`, languageCode: "Standard" }] };
+        const manufacturerOne = {manufacturerInfo: [{ name: `Cypress ${mutationName} manufacturer 1`, languageCode: "Standard" }] };
         cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteManufacturer"});
             manufacturerOne.id = returnedId;
             const manufacturers = [manufacturerOne];
             const manufacturerIds = [returnedId];
-            const manufacturerTwo = {manufacturerInfo: [{ name: `Cypress ${dataPath} manufacturer 2`, languageCode: "Standard" }] };
+            const manufacturerTwo = {manufacturerInfo: [{ name: `Cypress ${mutationName} manufacturer 2`, languageCode: "Standard" }] };
             cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteManufacturer"});
                 manufacturerTwo.id = secondId;
@@ -554,13 +642,13 @@ describe('Mutation: updateProduct', () => {
     });
 
     it("Mutation with 'attributeIds' input will successfully attach the attributes", () => {
-        const attributeOne = {name: `Cypress ${dataPath} attribute 1`, values: [{name: "attribute 1"}] };
+        const attributeOne = {name: `Cypress ${mutationName} attribute 1`, values: [{name: "attribute 1"}] };
         cy.createAndGetId("createProductAttribute", "productAttribute", toFormattedString(attributeOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteProductAttribute"});
             attributeOne.id = returnedId;
             const attributes = [attributeOne];
             const attributeIds = [returnedId];
-            const attributeTwo = {name: `Cypress ${dataPath} attribute 2`, values: [{name: "attribute 2"}] };
+            const attributeTwo = {name: `Cypress ${mutationName} attribute 2`, values: [{name: "attribute 2"}] };
             cy.createAndGetId("createProductAttribute", "productAttribute", toFormattedString(attributeTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteProductAttribute"});
                 attributeTwo.id = secondId;
@@ -633,7 +721,7 @@ describe('Mutation: updateProduct', () => {
     });
 
     it("Mutation with 'specificationOptionIds' input will successfully attach the specificationOptions", () => {
-        const productSpecification = {name: `Cypress ${dataPath} specificationOption 1`, options: [{name: "specificationOption 1"}, {name: "specificationOption2"}] };
+        const productSpecification = {name: `Cypress ${mutationName} specificationOption 1`, options: [{name: "specificationOption 1"}, {name: "specificationOption2"}] };
         const optionsField = `options {
             id
             name

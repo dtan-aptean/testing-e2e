@@ -89,6 +89,30 @@ describe('Mutation: updateProductSpecification', () => {
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
     });
 
+    it("Mutation will fail with no 'Name' input", () => {
+        const options = [{name: 'Cypress PS v1'}, {name: 'Cypress PS v2'}];
+        const mutation = `mutation {
+            ${mutationName}(
+                input: {
+                    id: "${id}"
+                    options: ${toFormattedString(options)}
+                }
+            ) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with invalid 'Name' input", () => {
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", name: 7 }) {
+                ${standardMutationBody}
+            }
+        }`
+        cy.postAndConfirmError(mutation);
+    });
+
     it("Mutation will fail without 'options' input", () => {
         const newName = `Cypress ${mutationName} no options`;
         const mutation = `mutation {
@@ -97,6 +121,16 @@ describe('Mutation: updateProductSpecification', () => {
             }
         }`;
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+    });
+
+    it("Mutation will fail with invalid 'options' input", () => {
+        const name = "Cypress API Product Attribute Invalid options";
+        const mutation = `mutation {
+            ${mutationName}(input: { id: "${id}", name: "${name}", options: true }) {
+                ${standardMutationBody}
+            }
+        }`;
+        cy.postAndConfirmError(mutation);
     });
 
     it("Mutation will succeed with valid 'id', 'name', and options input", () => {
