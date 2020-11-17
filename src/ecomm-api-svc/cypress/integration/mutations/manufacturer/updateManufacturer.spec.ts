@@ -209,13 +209,13 @@ describe('Mutation: updateManufacturer', () => {
     });
 
     it("Mutation with 'discountIds' input will successfully attach the discounts", () => {
-        const discountOne = {name: `Cypress ${mutationName} discount 1`, discountAmount: {amount: 15, currency: "USD"}};
+        const discountOne = {name: `Cypress ${mutationName} discount 1`, discountType: "ASSIGNED_TO_MANUFACTURERS", discountAmount: {amount: 15, currency: "USD"}};
         cy.createAndGetId("createDiscount", "discount", toFormattedString(discountOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteDiscount"});
             discountOne.id = returnedId;
             const discounts = [discountOne];
             const discountIds = [returnedId];
-            const discountTwo = {name: `Cypress ${mutationName} discount 2`, discountAmount: {amount: 30, currency: "USD"}};
+            const discountTwo = {name: `Cypress ${mutationName} discount 2`, discountType: "ASSIGNED_TO_MANUFACTURERS", discountAmount: {amount: 30, currency: "USD"}};
             cy.createAndGetId("createDiscount", "discount", toFormattedString(discountTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteDiscount"});
                 discountTwo.id = secondId;
@@ -243,6 +243,7 @@ describe('Mutation: updateManufacturer', () => {
                                     amount
                                     currency
                                 }
+                                discountType
                             }
                             ${infoName} {
                                 name
@@ -267,6 +268,7 @@ describe('Mutation: updateManufacturer', () => {
                                             amount
                                             currency
                                         }
+                                        discountType
                                     }
                                     ${infoName} {
                                         name

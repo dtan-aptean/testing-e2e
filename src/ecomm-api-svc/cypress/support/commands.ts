@@ -1,5 +1,7 @@
 // Turns an array or object into a string to use as gql input or with a custom command's consoleProps logging functionality
 export const toFormattedString = (item): string => {
+    // Names of fields that are enum types and should not be wrapped in quotations.
+    const enumTypes = ["discountType", "discountLimitationType", "manageInventoryMethod", "erpBackOrderMode"];
     function iterateThrough (propNames?: string[]) {
         var returnValue = '';
         for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
@@ -8,7 +10,11 @@ export const toFormattedString = (item): string => {
             }
             var value = propNames ? item[propNames[i]]: item[i];
             if (typeof value === 'string') {
-                if (value.charAt(0) !== '"' && value.charAt(value.length - 1) !== '"') {
+                var allowTransformation = true;
+                if (propNames && enumTypes.includes(propNames[i])) {
+                    allowTransformation = false;
+                }
+                if (allowTransformation && value.charAt(0) !== '"' && value.charAt(value.length - 1) !== '"') {
                     value = `"${value}"`;
                 }
             } else if (typeof value === 'object') {
@@ -1102,20 +1108,24 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
     // ex, if we updated 2 items, but the array has 4 items, it runs a filter looking for those items and fails if they aren't there
     // Returns a boolean to use with matchObject above
     function matchArrayItems(resArray: [], matchArray: [], originalProperty: string, useAsFilter?: boolean) {
-        const matchingItems = resArray.filter((item) => {
-            var itemMatches = false;
-            for (var f = 0; f < matchArray.length; f++) {
-                itemMatches = matchObject(item, matchArray[f], undefined, `${originalProperty}[${f}]`);
-                if (itemMatches) {
-                    break;
+        if (!useAsFilter && matchArray.length === 0) {
+            expect(resArray).to.be.eql(matchArray, `Expecting ${originalProperty} to be an empty array`);
+        } else {
+            const matchingItems = resArray.filter((item) => {
+                var itemMatches = false;
+                for (var f = 0; f < matchArray.length; f++) {
+                    itemMatches = matchObject(item, matchArray[f], undefined, `${originalProperty}[${f}]`);
+                    if (itemMatches) {
+                        break;
+                    }
                 }
+                return itemMatches;
+            });
+            if (!useAsFilter) {
+                expect(matchingItems.length).to.be.eql(matchArray.length, `Expecting ${matchArray.length} updated items in ${originalProperty}`);
             }
-            return itemMatches;
-        });
-        if (!useAsFilter) {
-            expect(matchingItems.length).to.be.eql(matchArray.length, `Expecting ${matchArray.length} updated items in ${originalProperty}`);
+            return matchingItems.length === matchArray.length;
         }
-        return matchingItems.length === matchArray.length;
     };
     
     return cy.postGQL(query).then((resp) => {
@@ -1144,9 +1154,6 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
         }
     });
 });
-
-
-
 
 /**
  * Search for an item we expect to have been deleted. Can be used as part of a test, or for after/afterEach hooks performing clean up
