@@ -119,49 +119,46 @@ describe('Mutation: deleteDiscount', () => {
     });
 
     it("Deleting an item connected to a category will will disassociate the item from the category" , () => {
-        const extraMutationName = "createCategory";
-        const extraDataPath = "category";
-        const extraQueryName = "categories";
-        const infoName = "categoryInfo";
-        const discounts = [{id: id, name: currentItemName, discountAmount: {amount: 15, currency: "USD"}}];
-        const info = [{name: `Cypress ${mutationName} category test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
-        const mutation = `mutation {
-            ${extraMutationName}(
-                input: { 
-                    discountIds: ["${id}"]
-                    ${infoName}: ${toFormattedString(info)}
+        const discountType = "ASSIGNED_TO_CATEGORIES";
+        const discount = {id: id, name: currentItemName, discountType: discountType, discountAmount: {amount: 15, currency: "USD"}}
+        const updateMutation = `mutation {
+            updateDiscount(
+                input: {
+                    id: "${id}"
+                    name: "${currentItemName}"
+                    discountType: ${discountType}
+                    discountAmount: ${toFormattedString(discount.discountAmount)}
                 }
             ) {
                 code
                 message
                 error
-                ${extraDataPath} {
+                discount {
                     id
-                    discounts {
-                        id
-                        name
-                        discountAmount {
-                            amount
-                            currency
-                        }
-                    }
-                    ${infoName} {
-                        name
-                        description
-                        languageCode
-                    }
+                    name
+                    discountType
                 }
             }
         }`;
-        cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-            const categoryId = res.body.data[extraMutationName][extraDataPath].id;
-            extraIds.push({itemId: categoryId, deleteName: "deleteCategory"});
-            const propNames = [infoName, "discounts"];
-            const propValues = [info, discounts];
-            cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
-                const query = `{
-                    ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                        nodes {
+        cy.postMutAndValidate(updateMutation, "updateDiscount", "discount").then((response) => {
+            cy.confirmMutationSuccess(response, "updateDiscount", "discount", ["discountType"], [discountType]).then(() => {
+                const extraMutationName = "createCategory";
+                const extraDataPath = "category";
+                const extraQueryName = "categories";
+                const infoName = "categoryInfo";
+                const discounts = [discount];
+                const info = [{name: `Cypress ${mutationName} category test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
+                const mutation = `mutation {
+                    ${extraMutationName}(
+                        input: { 
+                            discountIds: ["${id}"]
+                            ${infoName}: ${toFormattedString(info)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${extraDataPath} {
                             id
                             discounts {
                                 id
@@ -170,6 +167,7 @@ describe('Mutation: deleteDiscount', () => {
                                     amount
                                     currency
                                 }
+                                discountType
                             }
                             ${infoName} {
                                 name
@@ -179,19 +177,48 @@ describe('Mutation: deleteDiscount', () => {
                         }
                     }
                 }`;
-                cy.confirmUsingQuery(query, extraQueryName, categoryId, propNames, propValues).then(() => {
-                    const mutation = `mutation {
-                        ${mutationName}(input: { id: "${id}" }) {
-                            ${standardMutationBody}
-                        }
-                    }`;
-                    cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                        expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                        cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                            id = '';
-                            currentItemName = '';
-                            const newPropValues = [info, []];
-                            cy.confirmUsingQuery(query, extraQueryName, categoryId, propNames, newPropValues);
+                cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
+                    const categoryId = res.body.data[extraMutationName][extraDataPath].id;
+                    extraIds.push({itemId: categoryId, deleteName: "deleteCategory"});
+                    const propNames = [infoName, "discounts"];
+                    const propValues = [info, discounts];
+                    cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                nodes {
+                                    id
+                                    discounts {
+                                        id
+                                        name
+                                        discountAmount {
+                                            amount
+                                            currency
+                                        }
+                                        discountType
+                                    }
+                                    ${infoName} {
+                                        name
+                                        description
+                                        languageCode
+                                    }
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, extraQueryName, categoryId, propNames, propValues).then(() => {
+                            const mutation = `mutation {
+                                ${mutationName}(input: { id: "${id}" }) {
+                                    ${standardMutationBody}
+                                }
+                            }`;
+                            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
+                                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
+                                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
+                                    id = '';
+                                    currentItemName = '';
+                                    const newPropValues = [info, []];
+                                    cy.confirmUsingQuery(query, extraQueryName, categoryId, propNames, newPropValues);
+                                });
+                            });
                         });
                     });
                 });
@@ -200,49 +227,46 @@ describe('Mutation: deleteDiscount', () => {
     });
 
     it("Deleting an item connected to a manufacturer will will disassociate the item from the manufacturer" , () => {
-        const extraMutationName = "createManufacturer";
-        const extraDataPath = "manufacturer";
-        const extraQueryName = "manufacturers";
-        const infoName = "manufacturerInfo";
-        const discounts = [{id: id, name: currentItemName, discountAmount: {amount: 15, currency: "USD"}}];
-        const info = [{name: `Cypress ${mutationName} manufacturer test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
-        const mutation = `mutation {
-            ${extraMutationName}(
-                input: { 
-                    discountIds: ["${id}"]
-                    ${infoName}: ${toFormattedString(info)}
+        const discountType = "ASSIGNED_TO_MANUFACTURERS";
+        const discount = {id: id, name: currentItemName, discountType: discountType, discountAmount: {amount: 15, currency: "USD"}}
+        const updateMutation = `mutation {
+            updateDiscount(
+                input: {
+                    id: "${id}"
+                    name: "${currentItemName}"
+                    discountType: ${discountType}
+                    discountAmount: ${toFormattedString(discount.discountAmount)}
                 }
             ) {
                 code
                 message
                 error
-                ${extraDataPath} {
+                discount {
                     id
-                    discounts {
-                        id
-                        name
-                        discountAmount {
-                            amount
-                            currency
-                        }
-                    }
-                    ${infoName} {
-                        name
-                        description
-                        languageCode
-                    }
+                    name
+                    discountType
                 }
             }
         }`;
-        cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-            const manufacturerId = res.body.data[extraMutationName][extraDataPath].id;
-            extraIds.push({itemId: manufacturerId, deleteName: "deleteManufacturer"});
-            const propNames = [infoName, "discounts"];
-            const propValues = [info, discounts];
-            cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
-                const query = `{
-                    ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                        nodes {
+        cy.postMutAndValidate(updateMutation, "updateDiscount", "discount").then((response) => {
+            cy.confirmMutationSuccess(response, "updateDiscount", "discount", ["discountType"], [discountType]).then(() => {
+                const extraMutationName = "createManufacturer";
+                const extraDataPath = "manufacturer";
+                const extraQueryName = "manufacturers";
+                const infoName = "manufacturerInfo";
+                const discounts = [discount];
+                const info = [{name: `Cypress ${mutationName} manufacturer test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
+                const mutation = `mutation {
+                    ${extraMutationName}(
+                        input: { 
+                            discountIds: ["${id}"]
+                            ${infoName}: ${toFormattedString(info)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${extraDataPath} {
                             id
                             discounts {
                                 id
@@ -251,6 +275,7 @@ describe('Mutation: deleteDiscount', () => {
                                     amount
                                     currency
                                 }
+                                discountType
                             }
                             ${infoName} {
                                 name
@@ -260,19 +285,48 @@ describe('Mutation: deleteDiscount', () => {
                         }
                     }
                 }`;
-                cy.confirmUsingQuery(query, extraQueryName, manufacturerId, propNames, propValues).then(() => {
-                    const mutation = `mutation {
-                        ${mutationName}(input: { id: "${id}" }) {
-                            ${standardMutationBody}
-                        }
-                    }`;
-                    cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                        expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                        cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                            id = '';
-                            currentItemName = '';
-                            const newPropValues = [info, []];
-                            cy.confirmUsingQuery(query, extraQueryName, manufacturerId, propNames, newPropValues);
+                cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
+                    const manufacturerId = res.body.data[extraMutationName][extraDataPath].id;
+                    extraIds.push({itemId: manufacturerId, deleteName: "deleteManufacturer"});
+                    const propNames = [infoName, "discounts"];
+                    const propValues = [info, discounts];
+                    cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                nodes {
+                                    id
+                                    discounts {
+                                        id
+                                        name
+                                        discountAmount {
+                                            amount
+                                            currency
+                                        }
+                                        discountType
+                                    }
+                                    ${infoName} {
+                                        name
+                                        description
+                                        languageCode
+                                    }
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, extraQueryName, manufacturerId, propNames, propValues).then(() => {
+                            const mutation = `mutation {
+                                ${mutationName}(input: { id: "${id}" }) {
+                                    ${standardMutationBody}
+                                }
+                            }`;
+                            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
+                                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
+                                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
+                                    id = '';
+                                    currentItemName = '';
+                                    const newPropValues = [info, []];
+                                    cy.confirmUsingQuery(query, extraQueryName, manufacturerId, propNames, newPropValues);
+                                });
+                            });
                         });
                     });
                 });
