@@ -1,24 +1,20 @@
 /// <reference types="cypress" />
 // TEST COUNT: 26
 // request count: 36
-describe('Query: products', () => {
+describe('Query: languages', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
-    const queryName = "products";
+    const queryName = "languages";
     // Standard query body to use when we don't need special data but do need special input arguments
     const standardQueryBody = `edges {
                 cursor
                 node {
                     id
-                    productInfo {
-                        name
-                    }
+                    name
                 }
             }
             nodes {
                 id
-                productInfo {
-                    name
-                }
+                name
             }
             pageInfo {
                 endCursor
@@ -29,31 +25,29 @@ describe('Query: products', () => {
             totalCount`;
     // Standard query to use when we don't need any specialized data or input arguments
     const standardQuery = `{
-        products(orderBy: {direction: ASC, field: TIMESTAMP}) {
+        languages(orderBy: {direction: ASC, field: TIMESTAMP}) {
             ${standardQueryBody}
         }
     }`;
-    // Name of the info field
-    const infoPath = "productInfo";
 
     it("Query with valid 'orderBy' input argument returns valid data types", () => {
         cy.postAndValidate(standardQuery, queryName);
     });
-
+    
     it("Query will fail without 'orderBy' input argument", () => {
         const gqlQuery = `{
-            products {
+            languages {
                 ${standardQueryBody}
             }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
+        cy.postGQL(gqlQuery).then((res) => {
             cy.confirmOrderByError(res);
         });
     });
 
-    it('Query fails if the orderBy argument is null', () => {
+    it("Query fails if the 'orderBy' input argument is null", () => {
         const gqlQuery = `{
-            products(orderBy: null) {
+            languages(orderBy: null) {
                 totalCount
             }
         }`;
@@ -62,7 +56,7 @@ describe('Query: products', () => {
 
     it("Query fails if 'orderBy' input argument only has field", () => {
         const fieldQuery = `{
-            products(orderBy: {field: TIMESTAMP}) {
+            languages(orderBy: {field: TIMESTAMP}) {
                 totalCount
             }
         }`;
@@ -71,7 +65,7 @@ describe('Query: products', () => {
 
     it("Query fails if 'orderBy' input argument only has direction", () => {
         const directionQuery = `{
-            products(orderBy: {direction: ASC}) {
+            languages(orderBy: {direction: ASC}) {
                 totalCount
             }
         }`;
@@ -80,7 +74,7 @@ describe('Query: products', () => {
 
     it('Query will fail if no return type is provided', () => {
         const gqlQuery = `{
-            products(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 
             }
         }`;
@@ -89,7 +83,7 @@ describe('Query: products', () => {
 
     it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
         const gqlQuery = `{
-            products(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 totalCount
             }
         }`;
@@ -103,7 +97,7 @@ describe('Query: products', () => {
             // has data
             assert.exists(res.body.data);
             // validate data types
-            assert.isNotNaN(res.body.data.products.totalCount);
+            assert.isNotNaN(res.body.data.languages.totalCount);
         });
     });
 
@@ -121,7 +115,7 @@ describe('Query: products', () => {
             // Get half the items, rounding down
             const first = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                products(first: ${first}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(first: ${first}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -140,7 +134,7 @@ describe('Query: products', () => {
             // Get half the items, rounding down
             const last = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                products(last: ${last}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(last: ${last}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -151,10 +145,10 @@ describe('Query: products', () => {
             });
         });
     });
-    
+
     it("Query with invalid 'first' input argument will fail", () => {
         const gqlQuery = `{
-            products(first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -166,7 +160,7 @@ describe('Query: products', () => {
 
     it("Query with invalid 'last' input argument will fail", () => {
         const gqlQuery = `{
-            products(last: "5", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(last: "5", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -175,10 +169,10 @@ describe('Query: products', () => {
             expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
         });
     });
-    
+
     it("Query with both 'first' and 'last' input arguments will fail", () => {
         const gqlQuery = `{
-            products(first: 7, last: 3, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(first: 7, last: 3, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -186,20 +180,20 @@ describe('Query: products', () => {
     });
 
     it("Query with a valid 'searchString' input argument will return the specific item", () => {
-        cy.returnRandomInfoName(standardQuery, queryName, infoPath).then((name: string) => {
+        cy.returnRandomName(standardQuery, queryName).then((name: string) => {
             const searchQuery = `{
-                products(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
             cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                cy.validateInfoNameSearch(resp, queryName, infoPath, name, true);
+                cy.validateNameSearch(resp, queryName, name, true);
             });
         });
     });
 
     it("Query with a valid partial 'searchString' input argument will return all items containing the string", () => {
-        cy.returnRandomInfoName(standardQuery, queryName, infoPath).then((name: string) => {
+        cy.returnRandomName(standardQuery, queryName).then((name: string) => {
             // Get the first word if the name has multiple words. Otherwise, get a random segment of the name
             var newWordIndex = name.search(" ");
             var searchText = "";
@@ -210,19 +204,19 @@ describe('Query: products', () => {
                 searchText = name.substring(0, segmentIndex);
             }
             const searchQuery = `{
-                products(searchString: "${searchText}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(searchString: "${searchText}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
             cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                cy.validateInfoNameSearch(resp, queryName, infoPath, searchText, false);
+                cy.validateNameSearch(resp, queryName, searchText, false);
             });
         });
     });
-    
+
     it("Query with an invalid 'searchString' input argument will fail", () => {
         const gqlQuery = `{
-            products(searchString: 7, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(searchString: 7, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -235,7 +229,7 @@ describe('Query: products', () => {
     it("Query with a valid 'before' input argument will return all items before that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             const beforeQuery = `{
-                products(before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -250,7 +244,7 @@ describe('Query: products', () => {
     it("Query with a valid 'after' input argument will return all items after that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, false).then((cursor: string) => {
             const afterQuery = `{
-                products(after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                languages(after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -264,7 +258,7 @@ describe('Query: products', () => {
 
     it("Query with invalid 'before' input argument will fail", () => {
         const gqlQuery = `{
-            products(before: 123, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(before: 123, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -276,7 +270,7 @@ describe('Query: products', () => {
 
     it("Query with invalid 'after' input argument will fail", () => {
         const gqlQuery = `{
-            products(after: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(after: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -288,7 +282,7 @@ describe('Query: products', () => {
     
     it("Query with both 'before' and 'after' input arguments will fail", () => {
         const gqlQuery = `{
-            products(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -309,7 +303,7 @@ describe('Query: products', () => {
                 const first = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `first: ${first}`});
                 const beforeQuery = `{
-                    products(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    languages(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -330,7 +324,7 @@ describe('Query: products', () => {
                     const first = diff >= 2 ? Math.floor(diff / 2): diff;
                     Cypress.log({message: `first: ${first}`});
                     const afterQuery = `{
-                        products(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        languages(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             ${standardQueryBody}
                         }
                     }`;
@@ -350,7 +344,7 @@ describe('Query: products', () => {
                 const last = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `last: ${last}`});
                 const beforeQuery = `{
-                    products(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    languages(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -371,7 +365,7 @@ describe('Query: products', () => {
                     const last = diff >= 2 ? Math.floor(diff / 2): diff;
                     Cypress.log({message: `last: ${last}`});
                     const afterQuery = `{
-                        products(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        languages(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             ${standardQueryBody}
                         }
                     }`;
@@ -387,7 +381,7 @@ describe('Query: products', () => {
 
     it("Query with customData field will return valid value", () => {
         const gqlQuery = `{
-            products(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            languages(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 edges {
                     cursor
                     node {

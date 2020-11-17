@@ -39,8 +39,16 @@ Cypress.Commands.add('validateQueryRes', (gqlQuery, res, dataPath: string) => {
     // should be 200 ok
     expect(res.isOkStatusCode).to.be.equal(true);
     
+    var errorMessage = `No errors while executing query: \n${gqlQuery}`;
+    if (res.body.errors) {
+        errorMessage = `One or more errors ocuured while executing query: \n${gqlQuery}`;
+        res.body.errors.forEach((item) => {
+            errorMessage = errorMessage + " \n" + item.extensions.code + ". " + item.message;
+        });
+        errorMessage = errorMessage + "\n";
+    }
     // no errors
-    assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+    assert.notExists(res.body.errors, errorMessage);
 
     // has data
     assert.exists(res.body.data);
@@ -348,9 +356,9 @@ Cypress.Commands.add("validateValues", (res, dataPath: string) => {
                 if (val.displayOrder !== null) {
                     expect(val.displayOrder).to.be.a('number');
                 }
-                expect(val).to.have.property('isPreselected');
+                expect(val).to.have.property('isPreSelected');
                 if (val.isPreselected !== null) {
-                    expect(val.isPreselected).to.be.a('boolean');
+                    expect(val.isPreSelected).to.be.a('boolean');
                 }
                 expect(val).to.have.property('name');
                 if (val.name !== null) {
@@ -358,7 +366,10 @@ Cypress.Commands.add("validateValues", (res, dataPath: string) => {
                 }
                 expect(val).to.have.property('priceAdjustment');
                 if (val.priceAdjustment !== null) {
-                    expect(val.priceAdjustment).to.be.a('number');
+                    expect(val.priceAdjustment).to.have.property('amount');
+                    expect(val.priceAdjustment.amount).to.be.a('number');
+                    expect(val.priceAdjustment).to.have.property('currency');
+                    expect(val.priceAdjustment.currency).to.be.a('string');
                 }
                 expect(val).to.have.property('weightAdjustment');
                 if (val.weightAdjustment !== null) {
@@ -367,7 +378,10 @@ Cypress.Commands.add("validateValues", (res, dataPath: string) => {
                 if (dataPath === "productAttributes") {
                     expect(val).to.have.property('cost');
                     if (val.cost !== null) {
-                        expect(val.cost).to.be.a('number');
+                        expect(val.cost).to.have.property('amount');
+                        expect(val.cost.amount).to.be.a('number');
+                        expect(val.cost).to.have.property('currency');
+                        expect(val.cost.currency).to.be.a('string');
                     }
                 }
             });
@@ -523,6 +537,67 @@ Cypress.Commands.add('returnRandomName', (gqlQuery: string, dataPath: string) =>
     });
 });
 
+// For queries that have a info field instead of a name field.
+// Runs the query and grabs a random node to take the name from. Query body should look for name
+Cypress.Commands.add("returnRandomInfoName", (gqlQuery: string, dataPath: string, infoPath: string) => {
+    Cypress.log({
+        name: "returnRandomInfoName",
+        message: `${dataPath}, ${infoPath}`,
+        consoleProps: () => {
+            return {
+                "Query Body": gqlQuery,
+                "Query name / dataPath": dataPath,
+                "Info path": infoPath
+            };
+        },
+    });
+
+    function runNameFilter(node) {
+        var info = node[infoPath].filter((val) => {
+            return val.languageCode === "Standard" &&  val.name !== "";
+        });
+        if (info.length < 1) {
+            info = node[infoPath].filter((val) => {
+                return val.name !== "";
+            });
+            expect(info.length).to.be.gte(1); // Need to have a name we can search with
+        }
+        info = info[0];
+        return info;
+    };
+
+    return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
+        var randomIndex = 0;
+        const totalCount = res.body.data[dataPath].totalCount;
+        if (totalCount > 1) {
+            randomIndex = Cypress._.random(0, totalCount - 1);
+        }
+        var randomNode = res.body.data[dataPath].nodes[randomIndex];
+        var infoNode = runNameFilter(randomNode);
+        const duplicateArray = res.body.data[dataPath].nodes.filter((val) => {
+            const infoArray = val[infoPath].filter((item) => {
+                return item.name === infoNode.name;
+            });
+            return infoArray.length > 0;
+        });
+        if (duplicateArray.length > 1) {
+            const uniqueArray = res.body.data[dataPath].nodes.filter((val) => {
+                const infoArray = val[infoPath].filter((item) => {
+                    return item.name != infoNode.name && item.name != "";
+                });
+                return infoArray.length > 0;
+            });
+            randomIndex = 0;
+            if (uniqueArray.length > 1) {
+                randomIndex = Cypress._.random(0, uniqueArray.length - 1);
+            }
+            randomNode = uniqueArray[randomIndex];
+            infoNode = runNameFilter(randomNode);
+        }
+        return cy.wrap(infoNode.name);
+    });
+});
+
 // Validates that a query with searchString returned the node with the correct name or nodes that contain the string
 Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: string, fullName: boolean) => {
     Cypress.log({
@@ -552,6 +627,55 @@ Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: 
         for (var i = 0; i < nodes.length; i++) {
             expect(nodes[i].name).to.include(searchValue, `Node[${i}]`);
             expect(edges[i].node.name).to.include(searchValue, `Edge[${i}]`);
+        }
+    }
+});
+
+// For queries that have a info field instead of a name field.
+// Validates that a query with searchString returned the node with the correct name or nodes that contain the string
+Cypress.Commands.add("validateInfoNameSearch", (res, dataPath: string, infoPath: string, searchValue: string, fullName: boolean) => {
+    Cypress.log({
+        name: "validateInfoNameSearch",
+        message: `${dataPath}, ${infoPath}, searchString: ${searchValue}, fullName: ${fullName}`,
+        consoleProps: () => {
+            return {
+                "Response": res,
+                "Query name / dataPath": dataPath,
+                "Info name": infoPath,
+                "searchString": searchValue,
+                "fullName": fullName
+            };
+        },
+    });
+    const totalCount = res.body.data[dataPath].totalCount;
+    const nodes = res.body.data[dataPath].nodes;
+    const edges = res.body.data[dataPath].edges;
+    if (fullName) {
+        expect(totalCount).to.be.eql(1);
+        expect(nodes.length).to.be.eql(1);
+        expect(edges.length).to.be.eql(1);
+        const infoArray = nodes[0][infoPath].filter((val) => {
+            return val.name === searchValue;
+        });
+        expect(infoArray.length).to.be.gte(1);
+        const edgeInfoArray = edges[0].node[infoPath].filter((val) => {
+            return val.name === searchValue;
+        });
+        expect(edgeInfoArray.length).to.be.gte(1);
+        expect(infoArray.length).to.be.eql(edgeInfoArray.length);
+    } else {
+        expect(totalCount).to.be.eql(nodes.length);
+        expect(totalCount).to.be.eql(edges.length);
+        for (var i = 0; i < nodes.length; i++) {
+            var infoArray = nodes[i][infoPath].filter((val) => {
+                return val.name.includes(searchValue);
+            });
+            expect(infoArray.length).to.be.gte(1, `Node[${i}]`);
+            var edgeInfoArray = edges[i].node[infoPath].filter((val) => {
+                return  val.name.includes(searchValue);
+            });
+            expect(edgeInfoArray.length).to.be.gte(1, `Edge[${i}]`);
+            expect(infoArray.length).to.be.eql(edgeInfoArray.length);
         }
     }
 });
@@ -661,8 +785,10 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
             expect(edges).not.to.deep.include(data.edges[g]);
         }
     }
-    expect(pageInfo.startCursor).to.be.eql(sCursor);
-    expect(pageInfo.endCursor).not.to.eql(eCursor);
+    if (nodes.length !== 1 && edges.length !== 1) {
+        expect(pageInfo.startCursor).to.be.eql(sCursor);
+        expect(pageInfo.endCursor).not.to.eql(eCursor);
+    }
 });
 
 // Validate the response from a query using after. Can optionally validate first/last input as well.
@@ -713,8 +839,10 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
             expect(edges).not.to.deep.include(data.edges[g]);
         }
     }
-    expect(pageInfo.startCursor).not.to.be.eql(sCursor);
-    expect(pageInfo.endCursor).to.eql(eCursor);
+    if (nodes.length !== 1 && edges.length !== 1) {
+        expect(pageInfo.startCursor).not.to.be.eql(sCursor);
+        expect(pageInfo.endCursor).to.eql(eCursor);
+    }
 });
 
 // Should be called after returnRandomCursor
