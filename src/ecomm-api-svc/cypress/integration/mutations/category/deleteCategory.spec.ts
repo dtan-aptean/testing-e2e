@@ -2,7 +2,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 7
+// TEST COUNT: 9
 describe('Mutation: deleteCategory', () => {
     let id = '';
     let currentItemName = '';
@@ -117,9 +117,93 @@ describe('Mutation: deleteCategory', () => {
         });
     });
 
-    // TODO: Cannot delete category with sub categories
+    it("Mutation will fail if attempting to delete a parent category with children", () => {
+        const additionalFields = `parent {
+            id
+        }`;
+        const subCatOne = {parentCategoryId: id, categoryInfo: [{name: `Cypress ${mutationName} subCat 1`, languageCode: "Standard"}] };
+        cy.createAndGetId("createCategory", "category", toFormattedString(subCatOne), additionalFields).then((returnedBody) => {
+            assert.exists(returnedBody.id);
+            extraIds.push({itemId: returnedBody.id, deleteName: "deleteCategory"});
+            expect(returnedBody.parent.id).to.be.eql(id);
+            const subCatTwo = {parentCategoryId: id, categoryInfo: [{name: `Cypress ${mutationName} subCat 2`, languageCode: "Standard"}] };
+            cy.createAndGetId("createCategory", "category", toFormattedString(subCatTwo), additionalFields).then((returnedData) => {
+                assert.exists(returnedData.id);
+                extraIds.push({itemId: returnedData.id, deleteName: "deleteCategory"});
+                expect(returnedData.parent.id).to.be.eql(id);
+                // Now attempt to delete the parent
+                const mutation = `mutation {
+                    ${mutationName}(input: { id: "${id}" }) {
+                        ${standardMutationBody}
+                    }
+                }`;
+                cy.postAndConfirmMutationError(mutation, mutationName);
+            });
+        });
+    });
 
-    // TODO: Able to delete category after all child categories have been deleted
+    it("Mutation will successfully delete parent category if all children are deleted first", () => {
+        const additionalFields = `parent {
+            id
+        }`;
+        const subCatOne = {parentCategoryId: id, categoryInfo: [{name: `Cypress ${mutationName} subCat 3`, languageCode: "Standard"}] };
+        cy.createAndGetId("createCategory", "category", toFormattedString(subCatOne), additionalFields).then((returnedBody) => {
+            assert.exists(returnedBody.id);
+            const subCatOneId = returnedBody.id;
+            extraIds.push({itemId: subCatOneId, deleteName: "deleteCategory"});
+            expect(returnedBody.parent.id).to.be.eql(id);
+            const subCatTwo = {parentCategoryId: id, categoryInfo: [{name: `Cypress ${mutationName} subCat 4`, languageCode: "Standard"}] };
+            cy.createAndGetId("createCategory", "category", toFormattedString(subCatTwo), additionalFields).then((returnedData) => {
+                assert.exists(returnedData.id);
+                const subCatTwoId = returnedData.id;
+                extraIds.push({itemId: subCatTwoId.id, deleteName: "deleteCategory"});
+                expect(returnedData.parent.id).to.be.eql(id);
+                // Now attempt to delete the parent
+                const mutation = `mutation {
+                    ${mutationName}(input: { id: "${id}" }) {
+                        ${standardMutationBody}
+                    }
+                }`;
+                cy.postAndConfirmMutationError(mutation, mutationName).then(() => {
+                    // Delete first child
+                    const firstMutation = `mutation {
+                        ${mutationName}(input: { id: "${subCatOneId}" }) {
+                            ${standardMutationBody}
+                        }
+                    }`;
+                    cy.postAndConfirmDelete(firstMutation, mutationName).then((res) => {
+                        expect(res.body.data[mutationName].message).to.be.eql(`${queryName} deleted`);
+                        cy.queryForDeleted(true, subCatOne.categoryInfo[0].name, subCatOneId, queryName, infoName).then(() => {
+                            extraIds.shift();
+                            // Now attempt to delete the parent again
+                            cy.postAndConfirmMutationError(mutation, mutationName).then(() => {
+                                // Delete second child
+                                const secondMutation = `mutation {
+                                    ${mutationName}(input: { id: "${subCatTwoId}" }) {
+                                        ${standardMutationBody}
+                                    }
+                                }`;
+                                cy.postAndConfirmDelete(secondMutation, mutationName).then((res) => {
+                                    expect(res.body.data[mutationName].message).to.be.eql(`${queryName} deleted`);
+                                    cy.queryForDeleted(true, subCatTwo.categoryInfo[0].name, subCatTwoId, queryName, infoName).then(() => {
+                                        extraIds.shift();
+                                        // Now attempt to delete the parent again. Should pass this time
+                                        cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
+                                            expect(res.body.data[mutationName].message).to.be.eql(`${queryName} deleted`);
+                                            cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
+                                                id = '';
+                                                currentItemName = '';
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                })
+            });
+        });
+    });
 
     it("Deleting an item connected to a discount will disassociate the item from the discount", () => {
         const extraMutationName = "createDiscount";

@@ -1030,6 +1030,18 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
 // Create a new item, validate it, and return the id. Pass in the full input value as a string
 // If you need more information than just the id, pass in the additional fields as a string and the entire new item will be returned
 Cypress.Commands.add("createAndGetId", (mutationName: string, dataPath: string, input: string, additionalFields?: string) => {
+    Cypress.log({
+        name: "createAndGetId",
+        message: `Creating ${dataPath}. Additional fields: ${!!additionalFields}`,
+        consoleProps: () => {
+            return {
+                "Mutation": mutationName,
+                "Path": dataPath,
+                "Input string": input,
+                "Additional fields string": additionalFields ? additionalFields : "Not provided"
+            };
+        }
+    });
     const mutation = `mutation {
         ${mutationName}(input: ${input}) {
             code

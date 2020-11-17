@@ -2,7 +2,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 5
+// TEST COUNT: 6
 describe('Mutation: deleteVendor', () => {
     let id = '';
     let currentItemName = '';
@@ -103,7 +103,7 @@ describe('Mutation: deleteVendor', () => {
         });
     });
 
-    it.only("Deleting an item connected to a product will disassociate the item from the product", () => {
+    it("Deleting an item connected to a product will disassociate the item from the product", () => {
         const extraMutationName = "createProduct";
         const extraDataPath = "product";
         const extraQueryName = "products";
