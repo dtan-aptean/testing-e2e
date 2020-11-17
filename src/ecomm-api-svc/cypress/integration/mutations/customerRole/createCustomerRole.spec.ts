@@ -1,10 +1,10 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
-// request count: 7
-describe('Mutation: createReturnReason', () => {
+describe('Mutation: createCustomerRole', () => {
     let id = '';
-    const mutationName = 'createReturnReason';
-    const dataPath = 'returnReason';
+    const mutationName = 'createCustomerRole';
+    const queryName = "customerRoles";
+    const dataPath = 'customerRole';
     const standardMutationBody = `
         code
         message
@@ -17,7 +17,7 @@ describe('Mutation: createReturnReason', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteReturnReason";
+            const deletionName = "deleteCustomerRole";
             const removalMutation = `mutation {
                 ${deletionName}(input: { id: "${id}" }) {
                     code
@@ -59,7 +59,7 @@ describe('Mutation: createReturnReason', () => {
     });
 
     it("Mutation with valid 'Name' input will create a new item", () => {
-        const name = "Cypress API Return Reason";
+        const name = "Cypress API Role";
         const mutation = `mutation {
             ${mutationName}(input: { name: "${name}" }) {
                 ${standardMutationBody}
@@ -67,12 +67,24 @@ describe('Mutation: createReturnReason', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            cy.confirmMutationSuccess(res, mutationName, dataPath, ["name"], [name]);
+            const propNames = ["name"];
+            const propValues = [name];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            name
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 
     it("Mutation with all required input and 'customData' input creates item with customData", () => {
-        const name = "Cypress ReturnReason customData";
+        const name = "Cypress CustomerRole customData";
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
             ${mutationName}(
@@ -93,10 +105,10 @@ describe('Mutation: createReturnReason', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["name", "customData"];
-            const testValues = [name, customData];
+            const names = ["customData", "name"];
+            const testValues = [customData, name];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
-                const queryName = "returnReasons";
+                const queryName = "customerRoles";
                 const query = `{
                     ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         nodes {
@@ -111,12 +123,18 @@ describe('Mutation: createReturnReason', () => {
     });
 
     it("Mutation creates item that has all included input", () => {
-        const displayOrder = Cypress._.random(1, 20);
-        const name = "Cypress ReturnReason Input";
+        const isTaxExempt = Cypress._.random(0, 1) === 1;
+        const freeShipping = Cypress._.random(0, 1) === 1;
+        const active = Cypress._.random(0, 1) === 1;
+        const enablePasswordLifetime = Cypress._.random(0, 1) === 1;
+        const name = "Cypress Role Input";
         const mutation = `mutation {
             ${mutationName}(
                 input: {
-                    displayOrder: ${displayOrder}
+                    isTaxExempt: ${isTaxExempt}
+                    freeShipping: ${freeShipping}
+                    active: ${active}
+                    enablePasswordLifetime: ${enablePasswordLifetime}
                     name: "${name}"
                 }
             ) {
@@ -125,16 +143,33 @@ describe('Mutation: createReturnReason', () => {
                 error
                 ${dataPath} {
                     id
-                    displayOrder
+                    isTaxExempt
+                    freeShipping
+                    active
+                    enablePasswordLifetime
                     name
                 }
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["displayOrder", "name"];
-            const values = [displayOrder, name];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, values);
+            const propNames = ["name", "isTaxExempt", "freeShipping", "active", "enablePasswordLifetime"];
+            const propValues = [name, isTaxExempt, freeShipping, active, enablePasswordLifetime];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            name
+                            isTaxExempt
+                            freeShipping
+                            active
+                            enablePasswordLifetime
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 });

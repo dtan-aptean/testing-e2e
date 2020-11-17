@@ -1,10 +1,10 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
-// request count: 7
-describe('Mutation: createProduct', () => {
+describe('Mutation: createReturnReason', () => {
     let id = '';
-    const mutationName = 'createProduct';
-    const dataPath = 'product';
+    const mutationName = 'createReturnReason';
+    const queryName = "returnReasons";
+    const dataPath = 'returnReason';
     const standardMutationBody = `
         code
         message
@@ -17,7 +17,7 @@ describe('Mutation: createProduct', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteProduct";
+            const deletionName = "deleteReturnReason";
             const removalMutation = `mutation {
                 ${deletionName}(input: { id: "${id}" }) {
                     code
@@ -59,7 +59,7 @@ describe('Mutation: createProduct', () => {
     });
 
     it("Mutation with valid 'Name' input will create a new item", () => {
-        const name = "Cypress API Product";
+        const name = "Cypress API Return Reason";
         const mutation = `mutation {
             ${mutationName}(input: { name: "${name}" }) {
                 ${standardMutationBody}
@@ -67,12 +67,24 @@ describe('Mutation: createProduct', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            cy.confirmMutationSuccess(res, mutationName, dataPath, ["name"], [name]);
+            const propNames = ["name"];
+            const propValues = [name];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            name
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 
     it("Mutation with all required input and 'customData' input creates item with customData", () => {
-        const name = "Cypress Product customData";
+        const name = "Cypress ReturnReason customData";
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
             ${mutationName}(
@@ -93,10 +105,10 @@ describe('Mutation: createProduct', () => {
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["name", "customData"];
-            const testValues = [name, customData];
+            const names = ["customData", "name"];
+            const testValues = [customData, name];
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
-                const queryName = "products";
+                const queryName = "returnReasons";
                 const query = `{
                     ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         nodes {
@@ -111,13 +123,13 @@ describe('Mutation: createProduct', () => {
     });
 
     it("Mutation creates item that has all included input", () => {
-        const name = "Cypress Product Input";
-        const shortDescription = "Cypress testing 'create' mutation input";
+        const displayOrder = Cypress._.random(1, 20);
+        const name = "Cypress ReturnReason Input";
         const mutation = `mutation {
             ${mutationName}(
                 input: {
+                    displayOrder: ${displayOrder}
                     name: "${name}"
-                    shortDescription: "${shortDescription}"
                 }
             ) {
                 code
@@ -125,16 +137,27 @@ describe('Mutation: createProduct', () => {
                 error
                 ${dataPath} {
                     id
+                    displayOrder
                     name
-                    shortDescription
                 }
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
             id = res.body.data[mutationName][dataPath].id;
-            const names = ["name", "shortDescription"];
-            const values = [name, shortDescription];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, values);
+            const propNames = ["name", "displayOrder"];
+            const propValues = [name, displayOrder];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            name
+                            displayOrder
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 });

@@ -2,15 +2,14 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 12
-describe('Mutation: updateCheckoutAttribute', () => {
+// TEST COUNT: 11
+describe('Mutation: updateProductAttribute', () => {
     let id = '';
     let updateCount = 0;
-    let taxCategoryId = '';
     let values = '';
-    const mutationName = 'updateCheckoutAttribute';
-    const queryName = "checkoutAttributes";
-    const dataPath = 'checkoutAttribute';
+    const mutationName = 'updateProductAttribute';
+    const queryName = "productAttributes";
+    const dataPath = 'productAttribute';
     const additionalFields = `values {
         id
         name
@@ -25,12 +24,11 @@ describe('Mutation: updateCheckoutAttribute', () => {
             ${additionalFields}
         }
     `;
-    const createName = 'createCheckoutAttribute';
+    const createName = 'createProductAttribute';
 
     before(() => {
-        // Create an item for the tests to update
         const name = `Cypress ${mutationName} Test`;
-        const input = `{name: "${name}", values: [{name: "Cypress CA update test"}]}`;
+        const input = `{name: "${name}", values: [{name: "Cypress PA update test"}]}`;
         cy.createAndGetId(createName, dataPath, input, additionalFields).then((createdItem) => {
             assert.exists(createdItem.id);
             assert.exists(createdItem.values);
@@ -40,21 +38,9 @@ describe('Mutation: updateCheckoutAttribute', () => {
     });
 
     after(() => {
-        if (taxCategoryId !== "") {
-            const taxDeletionName = "deleteTaxCategory";
-            const taxRemovalMutation = `mutation {
-                ${taxDeletionName}(input: { id: "${taxCategoryId}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(taxRemovalMutation, taxDeletionName);
-            cy.wait(1000);
-        }
         if (id !== "") {
             // Delete the item we've been updating
-            const deletionName = "deleteCheckoutAttribute";
+            const deletionName = "deleteProductAttribute";
             const removalMutation = `mutation {
                 ${deletionName}(input: { id: "${id}" }) {
                     code
@@ -92,7 +78,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
         }`;
         cy.postAndConfirmError(mutation);
     });
-    
+
     it("Mutation will fail if the only input provided is 'id'", () => {
         const mutation = `mutation {
             ${mutationName}(input: { id: "${id}" }) {
@@ -103,7 +89,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
     });
 
     it("Mutation will fail with no 'Name' input", () => {
-        const values = [{name: 'Cypress CA v1'}, {name: 'Cypress CA v2'}];
+        const values = [{name: 'Cypress PA v1'}, {name: 'Cypress PA v2'}];
         const mutation = `mutation {
             ${mutationName}(
                 input: {
@@ -114,7 +100,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 ${standardMutationBody}
             }
         }`;
-        cy.postAndConfirmError(mutation);
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
     });
 
     it("Mutation will fail with invalid 'Name' input", () => {
@@ -137,7 +123,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
     });
 
     it("Mutation will fail with invalid 'Values' input", () => {
-        const name = "Cypress API Checkout Attribute Invalid values";
+        const name = "Cypress API Product Attribute Invalid values";
         const mutation = `mutation {
             ${mutationName}(input: { id: "${id}", name: "${name}", values: true }) {
                 ${standardMutationBody}
@@ -149,7 +135,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
     it("Mutation will succeed with valid 'id', 'name', and 'values' input", () => {
         updateCount++;
         const valuesCopy = JSON.parse(JSON.stringify(values));
-        valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
+        valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
         const mutation = `mutation {
             ${mutationName}(input: { id: "${id}", name: "${newName}", values: ${toFormattedString(valuesCopy)} }) {
@@ -174,65 +160,10 @@ describe('Mutation: updateCheckoutAttribute', () => {
         });
     });
 
-    it("Mutation connects item with correct taxCategory when valid 'taxCategoryId' input is used", () => {
-        const taxCategoryName = "Cypress updateAttribute TC";
-        cy.searchOrCreate(taxCategoryName, "taxCategories", "createTaxCategory").then((returnedId: string) => {
-            const taxCategoryId = returnedId;
-            const dummyTaxCategory = {id: taxCategoryId, name: taxCategoryName};
-            updateCount++;
-            const valuesCopy = JSON.parse(JSON.stringify(values));
-            valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
-            const newName = `Cypress ${mutationName} Update ${updateCount}`;
-            const mutation = `mutation {
-                ${mutationName}(
-                    input: {
-                        id: "${id}"
-                        name: "${newName}"
-                        values: ${toFormattedString(valuesCopy)}
-                        taxCategoryId: "${returnedId}"
-                    }
-                ) {
-                    code
-                    message
-                    error
-                    ${dataPath} {
-                        id
-                        name
-                        ${additionalFields}
-                        taxCategory {
-                            id
-                            name
-                        }
-                    }
-                }
-            }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                const propNames = ["name", "taxCategory", "values"];
-                const propValues = [newName, dummyTaxCategory, valuesCopy];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                    const query = `{
-                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                            nodes {
-                                id
-                                name
-                                ${additionalFields}
-                                taxCategory {
-                                    id
-                                    name
-                                }
-                            }
-                        }
-                    }`;
-                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
-                });
-            });
-        });
-    });
-
     it("Mutation with all required input and 'customData' input updates item with customData", () => {
         updateCount++;
         const valuesCopy = JSON.parse(JSON.stringify(values));
-        valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
+        valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
@@ -279,39 +210,33 @@ describe('Mutation: updateCheckoutAttribute', () => {
         const newValue = {
             displayOrder: Cypress._.random(0, 10),
             isPreSelected: Cypress._.random(0, 1) === 1,
-            name: "Cypress CA new value",
+            name: "Cypress PA new value",
             priceAdjustment: {
                 amount: Cypress._.random(1, 5),
                 currency: "USD"
             },
-            weightAdjustment: Cypress._.random(1, 10)
+            weightAdjustment: Cypress._.random(1, 10),
+            cost: {
+                amount: Cypress._.random(1, 5),
+                currency: "USD"
+            }
         };
         const valuesCopy = [JSON.parse(JSON.stringify(values[0])), newValue];
         updateCount++;
-        valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
         valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
         valuesCopy[0].displayOrder = Cypress._.random(0, 10);
         valuesCopy[0].isPreSelected = Cypress._.random(0, 1) === 1;
         valuesCopy[0].priceAdjustment = {amount: Cypress._.random(1, 5), currency: "USD"};
         valuesCopy[0].weightAdjustment = Cypress._.random(1, 10);
+        valuesCopy[0].cost = {amount: Cypress._.random(1, 5), currency: "USD"};
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
-        const displayOrder = Cypress._.random(0, 10);
-        const defaultValue = `Cypress ${mutationName}`;
-        const displayName = "Updated Cypress";
-        const isRequired = Cypress._.random(0, 1) === 1;
-        const isTaxExempt = Cypress._.random(0, 1) === 1;
-        const shippableProductRequired = Cypress._.random(0, 1) === 1;
+        const newDescription = `Cypress ${mutationName} description`;
         const mutation = `mutation {
             ${mutationName}(
                 input: {
                     id: "${id}"
-                    displayOrder: ${displayOrder}
                     name: "${newName}"
-                    defaultValue: "${defaultValue}"
-                    displayName: "${displayName}"
-                    isRequired: ${isRequired}
-                    isTaxExempt: ${isTaxExempt}
-                    shippableProductRequired: ${shippableProductRequired}
+                    description: "${newDescription}"
                     values: ${toFormattedString(valuesCopy)}
                 }
             ) {
@@ -320,14 +245,10 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 error
                 ${dataPath} {
                     id
-                    displayOrder
                     name
-                    defaultValue
-                    displayName
-                    isRequired
-                    isTaxExempt
-                    shippableProductRequired
+                    description
                     values {
+                        id
                         displayOrder
                         isPreSelected
                         name
@@ -336,25 +257,24 @@ describe('Mutation: updateCheckoutAttribute', () => {
                             currency
                         }
                         weightAdjustment
+                        cost {
+                            amount
+                            currency
+                        }
                     }
                 }
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            const propNames = ["name", "displayOrder", "defaultValue", "displayName", "isRequired", "isTaxExempt", "shippableProductRequired", "values"];
-            const propValues = [newName, displayOrder, defaultValue, displayName, isRequired, isTaxExempt, shippableProductRequired, valuesCopy];
+            const propNames = ["name", "description", "values"];
+            const propValues = [newName, newDescription, valuesCopy];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         nodes {
                             id
-                            displayOrder
                             name
-                            defaultValue
-                            displayName
-                            isRequired
-                            isTaxExempt
-                            shippableProductRequired
+                            description
                             values {
                                 id
                                 displayOrder
@@ -365,12 +285,15 @@ describe('Mutation: updateCheckoutAttribute', () => {
                                     currency
                                 }
                                 weightAdjustment
+                                cost {
+                                    amount
+                                    currency
+                                }
                             }
                         }
                     }
                 }`;
-                const propTest = [newName, displayOrder, defaultValue, displayName, isRequired, isTaxExempt, shippableProductRequired, valuesCopy];
-                cy.confirmUsingQuery(query, queryName, id, propNames, propTest);
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
             });
         });
     });
