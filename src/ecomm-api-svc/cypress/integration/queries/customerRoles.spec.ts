@@ -1,7 +1,10 @@
 /// <reference types="cypress" />
-// TEST COUNT: 24
+// TEST COUNT: 26
+// request count: 36
 describe('Query: customerRoles', () => {
+    // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "customerRoles";
+    // Standard query body to use when we don't need special data but do need special input arguments
     const standardQueryBody = `edges {
                 cursor
                 node {
@@ -20,6 +23,7 @@ describe('Query: customerRoles', () => {
                 startCursor
             }
             totalCount`;
+    // Standard query to use when we don't need any specialized data or input arguments
     const standardQuery = `{
         customerRoles(orderBy: {direction: ASC, field: TIMESTAMP}) {
             ${standardQueryBody}
@@ -252,6 +256,30 @@ describe('Query: customerRoles', () => {
         });
     });
 
+    it("Query with invalid 'before' input argument will fail", () => {
+        const gqlQuery = `{
+            customerRoles(before: 123, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.postAndConfirmError(gqlQuery).then((res) => {
+            expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 123');
+            expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+        });
+    });
+
+    it("Query with invalid 'after' input argument will fail", () => {
+        const gqlQuery = `{
+            customerRoles(after: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.postAndConfirmError(gqlQuery).then((res) => {
+            expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: true');
+            expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+        });
+    });
+    
     it("Query with both 'before' and 'after' input arguments will fail", () => {
         const gqlQuery = `{
             customerRoles(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -272,7 +300,7 @@ describe('Query: customerRoles', () => {
     it("Query with both 'before' and 'first' input arguments will return a specific amount of items before that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             cy.get('@cursorIndex').then((index: number) => {
-                const first = Math.floor(index / 2);
+                const first = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `first: ${first}`});
                 const beforeQuery = `{
                     customerRoles(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -281,7 +309,7 @@ describe('Query: customerRoles', () => {
                 }`;
                 cy.postAndValidate(beforeQuery, queryName).then((resp) => {
                     // Verify that the pageInfo's cursors match up with the edges array's cursors
-                    cy.verifyPageInfo(resp, queryName, true, true);
+                    cy.verifyPageInfo(resp, queryName);
                     cy.validateCursor(resp, queryName, "before", "first", first);
                 });
             });
@@ -313,7 +341,7 @@ describe('Query: customerRoles', () => {
     it("Query with both 'before' and 'last' input arguments will return a specific amount of items before that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             cy.get('@cursorIndex').then((index: number) => {
-                const last = Math.floor(index / 2);
+                const last = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `last: ${last}`});
                 const beforeQuery = `{
                     customerRoles(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -322,7 +350,7 @@ describe('Query: customerRoles', () => {
                 }`;
                 cy.postAndValidate(beforeQuery, queryName).then((resp) => {
                     // Verify that the pageInfo's cursors match up with the edges array's cursors
-                    cy.verifyPageInfo(resp, queryName, true, true);
+                    cy.verifyPageInfo(resp, queryName);
                     cy.validateCursor(resp, queryName, "before", "last", last);
                 });
             });
