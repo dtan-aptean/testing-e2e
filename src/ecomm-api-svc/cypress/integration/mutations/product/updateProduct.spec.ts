@@ -172,7 +172,6 @@ describe('Mutation: updateProduct', () => {
         cy.postAndConfirmError(mutation);
     });
 
-
     it("Mutation will fail with invalid 'shortDescription'input", () => {
         const mutation = `mutation {
             ${mutationName}(
@@ -487,14 +486,10 @@ describe('Mutation: updateProduct', () => {
         const categoryOne = { categoryInfo: [{ name:`Cypress ${mutationName} category 1`, languageCode: "Standard" }] };
         cy.createAndGetId("createCategory", "category", toFormattedString(categoryOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteCategory"});
-            categoryOne.id = returnedId;
-            const categories = [categoryOne];
             const categoryIds = [returnedId];
             const categoryTwo = {categoryInfo: [{name: `Cypress ${mutationName} category 2`, languageCode: "Standard"}] };
             cy.createAndGetId("createCategory", "category", toFormattedString(categoryTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteCategory"});
-                categoryTwo.id = secondId;
-                categories.push(categoryTwo);
                 categoryIds.push(secondId);
                 updateCount++;
                 const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, shortDescription: `Test #${updateCount} for ${mutationName}`, languageCode: "Standard"}];
@@ -514,13 +509,6 @@ describe('Mutation: updateProduct', () => {
                         ${dataPath} {
                             id
                             ${additionalFields}
-                            categories {
-                                id
-                                categoryInfo {
-                                    name
-                                    languageCode
-                                }
-                            }
                             ${infoName} {
                                 name
                                 shortDescription
@@ -531,31 +519,10 @@ describe('Mutation: updateProduct', () => {
                     }
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                    const propNames = ["categories", infoName, "inventoryInformation"];
-                    const propValues = [categories, info, inventoryInfo];
+                    const propNames = [infoName, "inventoryInformation"];
+                    const propValues = [info, inventoryInfo];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                        const query = `{
-                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                                nodes {
-                                    id
-                                    ${additionalFields}
-                                    categories {
-                                        id
-                                        categoryInfo {
-                                            name
-                                            languageCode
-                                        }
-                                    }
-                                    ${infoName} {
-                                        name
-                                        shortDescription
-                                        fullDescription
-                                        languageCode
-                                    }
-                                }
-                            }
-                        }`;
-                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                        cy.queryByProductId("categoriesByProductId", id, categoryIds);
                     });
                 });
             });
@@ -566,14 +533,10 @@ describe('Mutation: updateProduct', () => {
         const manufacturerOne = {manufacturerInfo: [{ name: `Cypress ${mutationName} manufacturer 1`, languageCode: "Standard" }] };
         cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteManufacturer"});
-            manufacturerOne.id = returnedId;
-            const manufacturers = [manufacturerOne];
             const manufacturerIds = [returnedId];
             const manufacturerTwo = {manufacturerInfo: [{ name: `Cypress ${mutationName} manufacturer 2`, languageCode: "Standard" }] };
             cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteManufacturer"});
-                manufacturerTwo.id = secondId;
-                manufacturers.push(manufacturerTwo);
                 manufacturerIds.push(secondId);
                 updateCount++;
                 const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, shortDescription: `Test #${updateCount} for ${mutationName}`, languageCode: "Standard"}];
@@ -593,13 +556,6 @@ describe('Mutation: updateProduct', () => {
                         ${dataPath} {
                             id
                             ${additionalFields}
-                            manufacturers {
-                                id
-                                manufacturerInfo {
-                                    name
-                                    languageCode
-                                }
-                            }
                             ${infoName} {
                                 name
                                 shortDescription
@@ -610,31 +566,10 @@ describe('Mutation: updateProduct', () => {
                     }
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                    const propNames = ["manufacturers", infoName, "inventoryInformation"];
-                    const propValues = [manufacturers, info, inventoryInfo];
+                    const propNames = [infoName, "inventoryInformation"];
+                    const propValues = [info, inventoryInfo];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                        const query = `{
-                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                                nodes {
-                                    id
-                                    ${additionalFields}
-                                    manufacturers {
-                                        id
-                                        manufacturerInfo {
-                                            name
-                                            languageCode
-                                        }
-                                    }
-                                    ${infoName} {
-                                        name
-                                        shortDescription
-                                        fullDescription
-                                        languageCode
-                                    }
-                                }
-                            }
-                        }`;
-                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                        cy.queryByProductId("manufacturersByProductId", id, manufacturerIds);
                     });
                 });
             });
@@ -645,14 +580,10 @@ describe('Mutation: updateProduct', () => {
         const attributeOne = {name: `Cypress ${mutationName} attribute 1`, values: [{name: "attribute 1"}] };
         cy.createAndGetId("createProductAttribute", "productAttribute", toFormattedString(attributeOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteProductAttribute"});
-            attributeOne.id = returnedId;
-            const attributes = [attributeOne];
             const attributeIds = [returnedId];
             const attributeTwo = {name: `Cypress ${mutationName} attribute 2`, values: [{name: "attribute 2"}] };
             cy.createAndGetId("createProductAttribute", "productAttribute", toFormattedString(attributeTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteProductAttribute"});
-                attributeTwo.id = secondId;
-                attributes.push(attributeTwo);
                 attributeIds.push(secondId);
                 updateCount++;
                 const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, shortDescription: `Test #${updateCount} for ${mutationName}`, languageCode: "Standard"}];
@@ -672,13 +603,6 @@ describe('Mutation: updateProduct', () => {
                         ${dataPath} {
                             id
                             ${additionalFields}
-                            attributes {
-                                id
-                                name
-                                values {
-                                    name
-                                }
-                            }
                             ${infoName} {
                                 name
                                 shortDescription
@@ -689,31 +613,10 @@ describe('Mutation: updateProduct', () => {
                     }
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                    const propNames = ["attributes", infoName, "inventoryInformation"];
-                    const propValues = [attributes, info, inventoryInfo];
+                    const propNames = [infoName, "inventoryInformation"];
+                    const propValues = [info, inventoryInfo];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                        const query = `{
-                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                                nodes {
-                                    id
-                                    ${additionalFields}
-                                    attributes {
-                                        id
-                                        name
-                                        values {
-                                            name
-                                        }
-                                    }
-                                    ${infoName} {
-                                        name
-                                        shortDescription
-                                        fullDescription
-                                        languageCode
-                                    }
-                                }
-                            }
-                        }`;
-                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                        cy.queryByProductId("productAttributesByProductId", id, attributeIds);
                     });
                 });
             });
@@ -749,10 +652,6 @@ describe('Mutation: updateProduct', () => {
                     ${dataPath} {
                         id
                         ${additionalFields}
-                        specificationOptions {
-                            id
-                            name
-                        }
                         ${infoName} {
                             name
                             shortDescription
@@ -763,28 +662,10 @@ describe('Mutation: updateProduct', () => {
                 }
             }`;
             cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                const propNames = ["specificationOptions", infoName, "inventoryInformation"];
-                const propValues = [returnedItem.options, info, inventoryInfo];
+                const propNames = [infoName, "inventoryInformation"];
+                    const propValues = [info, inventoryInfo];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                    const query = `{
-                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                            nodes {
-                                id
-                                ${additionalFields}
-                                specificationOptions {
-                                    id
-                                    name
-                                }
-                                ${infoName} {
-                                    name
-                                    shortDescription
-                                    fullDescription
-                                    languageCode
-                                }
-                            }
-                        }
-                    }`;
-                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    cy.queryByProductId("productSpecificationOptionsByProductId", id, specificationOptionIds);
                 });
             });
        });
