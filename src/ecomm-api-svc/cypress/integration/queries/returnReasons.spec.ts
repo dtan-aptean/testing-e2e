@@ -25,7 +25,7 @@ describe('Query: returnReasons', () => {
             totalCount`;
     // Standard query to use when we don't need any specialized data or input arguments
     const standardQuery = `{
-        returnReasons(orderBy: {direction: ASC, field: TIMESTAMP}) {
+        ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
             ${standardQueryBody}
         }
     }`;
@@ -36,7 +36,7 @@ describe('Query: returnReasons', () => {
 
     it("Query will fail without 'orderBy' input argument", () => {
         const gqlQuery = `{
-            returnReasons {
+            ${queryName} {
                 ${standardQueryBody}
             }
         }`;
@@ -47,7 +47,7 @@ describe('Query: returnReasons', () => {
 
     it("Query fails if the 'orderBy' input argument is null", () => {
       const gqlQuery = `{
-          returnReasons(orderBy: null) {
+          ${queryName}(orderBy: null) {
               totalCount
           }
       }`;
@@ -56,7 +56,7 @@ describe('Query: returnReasons', () => {
 
     it("Query fails if 'orderBy' input argument only has field", () => {
         const fieldQuery = `{
-            returnReasons(orderBy: {field: TIMESTAMP}) {
+            ${queryName}(orderBy: {field: TIMESTAMP}) {
                 totalCount
             }
         }`;
@@ -65,7 +65,7 @@ describe('Query: returnReasons', () => {
 
     it("Query fails if 'orderBy' input argument only has direction", () => {
         const directionQuery = `{
-            returnReasons(orderBy: {direction: ASC}) {
+            ${queryName}(orderBy: {direction: ASC}) {
                 totalCount
             }
         }`;
@@ -74,7 +74,7 @@ describe('Query: returnReasons', () => {
 
     it('Query will fail if no return type is provided', () => {
         const gqlQuery = `{
-            returnReasons(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 
             }
         }`;
@@ -83,7 +83,7 @@ describe('Query: returnReasons', () => {
 
     it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
       const gqlQuery = `{
-          returnReasons(orderBy: {direction: ASC, field: TIMESTAMP}) {
+          ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
               totalCount
           }
       }`;
@@ -97,7 +97,7 @@ describe('Query: returnReasons', () => {
           // has data
           assert.exists(res.body.data);
           // validate data types
-          assert.isNotNaN(res.body.data.returnReasons.totalCount);
+          assert.isNotNaN(res.body.data[queryName].totalCount);
       });
   });
 
@@ -115,7 +115,7 @@ describe('Query: returnReasons', () => {
             // Get half the items, rounding down
             const first = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                returnReasons(first: ${first}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(first: ${first}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -134,7 +134,7 @@ describe('Query: returnReasons', () => {
             // Get half the items, rounding down
             const last = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                returnReasons(last: ${last}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(last: ${last}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -148,7 +148,7 @@ describe('Query: returnReasons', () => {
 
     it("Query with invalid 'first' input argument will fail", () => {
         const gqlQuery = `{
-            returnReasons(first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -160,7 +160,7 @@ describe('Query: returnReasons', () => {
 
     it("Query with invalid 'last' input argument will fail", () => {
         const gqlQuery = `{
-            returnReasons(last: "5", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(last: "5", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -172,7 +172,7 @@ describe('Query: returnReasons', () => {
 
     it("Query with invalid 'before' input argument will fail", () => {
         const gqlQuery = `{
-            returnReasons(before: 123, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(before: 123, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -184,7 +184,7 @@ describe('Query: returnReasons', () => {
 
     it("Query with invalid 'after' input argument will fail", () => {
         const gqlQuery = `{
-            returnReasons(after: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(after: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -196,7 +196,7 @@ describe('Query: returnReasons', () => {
     
     it("Query with both 'first' and 'last' input arguments will fail", () => {
         const gqlQuery = `{
-            returnReasons(first: 7, last: 3, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(first: 7, last: 3, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -206,7 +206,7 @@ describe('Query: returnReasons', () => {
     it("Query with a valid 'searchString' input argument will return the specific item", () => {
         cy.returnRandomName(standardQuery, queryName).then((name: string) => {
             const searchQuery = `{
-                returnReasons(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -228,7 +228,7 @@ describe('Query: returnReasons', () => {
                 searchText = name.substring(0, segmentIndex);
             }
             const searchQuery = `{
-                returnReasons(searchString: "${searchText}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(searchString: "${searchText}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -240,7 +240,7 @@ describe('Query: returnReasons', () => {
 
     it("Query with an invalid 'searchString' input argument will fail", () => {
         const gqlQuery = `{
-            returnReasons(searchString: 7, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(searchString: 7, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -253,7 +253,7 @@ describe('Query: returnReasons', () => {
     it("Query with a valid 'before' input argument will return all items before that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             const beforeQuery = `{
-                returnReasons(before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -268,7 +268,7 @@ describe('Query: returnReasons', () => {
     it("Query with a valid 'after' input argument will return all items after that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, false).then((cursor: string) => {
             const afterQuery = `{
-                returnReasons(after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -282,7 +282,7 @@ describe('Query: returnReasons', () => {
 
     it("Query with both 'before' and 'after' input arguments will fail", () => {
         const gqlQuery = `{
-            returnReasons(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -303,7 +303,7 @@ describe('Query: returnReasons', () => {
                 const first = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `first: ${first}`});
                 const beforeQuery = `{
-                    returnReasons(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -324,7 +324,7 @@ describe('Query: returnReasons', () => {
                     const first = diff >= 2 ? Math.floor(diff / 2): diff;
                     Cypress.log({message: `first: ${first}`});
                     const afterQuery = `{
-                        returnReasons(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             ${standardQueryBody}
                         }
                     }`;
@@ -344,7 +344,7 @@ describe('Query: returnReasons', () => {
                 const last = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `last: ${last}`});
                 const beforeQuery = `{
-                    returnReasons(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -365,7 +365,7 @@ describe('Query: returnReasons', () => {
                     const last = diff >= 2 ? Math.floor(diff / 2): diff;
                     Cypress.log({message: `last: ${last}`});
                     const afterQuery = `{
-                        returnReasons(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             ${standardQueryBody}
                         }
                     }`;
@@ -381,7 +381,7 @@ describe('Query: returnReasons', () => {
 
     it("Query with customData field will return valid value", () => {
         const gqlQuery = `{
-            returnReasons(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 edges {
                     cursor
                     node {
