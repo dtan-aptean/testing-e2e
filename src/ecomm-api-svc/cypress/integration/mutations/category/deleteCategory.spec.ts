@@ -295,7 +295,6 @@ describe('Mutation: deleteCategory', () => {
     it("Deleting an item connected to a product will disassociate the item from the product", () => {
         const extraMutationName = "createProduct";
         const extraDataPath = "product";
-        const extraQueryName = "products";
         const productInfoName = "productInfo";
         const categories = [{id: id, categoryInfo: [{name: currentItemName, languageCode: "Standard"}]}];
         const info = [{name: `Cypress ${mutationName} product test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
@@ -316,13 +315,6 @@ describe('Mutation: deleteCategory', () => {
                     inventoryInformation {
                         minimumStockQuantity
                     }
-                    categories {
-                        id
-                        categoryInfo {
-                            name
-                            languageCode
-                        }
-                    }
                     ${productInfoName} {
                         name
                         shortDescription
@@ -335,33 +327,17 @@ describe('Mutation: deleteCategory', () => {
         cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
             const productId = res.body.data[extraMutationName][extraDataPath].id;
             extraIds.push({itemId: productId, deleteName: "deleteProduct"});
-            const propNames = ["categories", productInfoName, "inventoryInformation"];
-            const propValues = [categories, info, inventoryInfo];
+            const propNames = [productInfoName, "inventoryInformation"];
+            const propValues = [info, inventoryInfo];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
-                const query = `{
-                    ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                        nodes {
-                            id
-                            inventoryInformation {
-                                minimumStockQuantity
-                            }
-                            categories {
-                                id
-                                categoryInfo {
-                                    name
-                                    languageCode
-                                }
-                            }
-                            ${productInfoName} {
-                                name
-                                shortDescription
-                                fullDescription
-                                languageCode
-                            }
-                        }
+                const queryBody = `categories {
+                    id
+                    categoryInfo {
+                        name
+                        languageCode
                     }
-                }`;
-                cy.confirmUsingQuery(query, extraQueryName, productId, propNames, propValues).then(() => {
+                }`
+                cy.queryByProductId("categoriesByProductId", queryBody, "categories", productId, categories).then(() => {
                     const mutation = `mutation {
                         ${mutationName}(input: { id: "${id}" }) {
                             ${standardMutationBody}
@@ -372,8 +348,7 @@ describe('Mutation: deleteCategory', () => {
                         cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
                             id = '';
                             currentItemName = '';
-                            const newPropValues = [[], info, inventoryInfo];
-                            cy.confirmUsingQuery(query, extraQueryName, productId, propNames, newPropValues);
+                            cy.queryByProductId("categoriesByProductId", queryBody, "categories", productId, []);
                         });
                     });
                 });

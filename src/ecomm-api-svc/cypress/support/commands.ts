@@ -47,7 +47,7 @@ Cypress.Commands.add('postGQL', query => {
         consoleProps: () => {
             return {
                 "Query/Mutation Body": query,
-                "Headers": `"x-aptean-apim": ${Cypress.env('x-aptean-apim')} \n\t\t\t "x-aptean-tenant": ${Cypress.env('x-aptean-tenant')}`, 
+                "Headers": `"x-aptean-apim": ${Cypress.env('x-aptean-apim')} \n\t\t\t "x-aptean-tenant": ${Cypress.env('x-aptean-tenant')} \n\t\t\t "x-aptean-tenant-secret": ${Cypress.env('x-aptean-tenant-secret')}`, 
             };
         },
     });
@@ -57,6 +57,7 @@ Cypress.Commands.add('postGQL', query => {
       headers: {
         'x-aptean-apim': Cypress.env('x-aptean-apim'),
         'x-aptean-tenant': Cypress.env('x-aptean-tenant'),
+        'x-aptean-tenant-secret': Cypress.env('x-aptean-tenant-secret')
       },
       body: { query },
       failOnStatusCode: false,
@@ -1191,110 +1192,6 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, dataPath: string, 
     });
 });
 
-// Confirms that a mutation has updated an item by querying for the item and matching the values to the array given
-Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, itemId: string, propNames: string[], values: []) => {
-    Cypress.log({
-        name: "confirmUsingQuery",
-        message: `querying ${dataPath} for ${itemId}`,
-        consoleProps: () => {
-            return {
-                "Query Body": query,
-                "Query name": dataPath,
-                "Id of item to verify": itemId,
-                "Properties to check": toFormattedString(propNames),
-                "Expected Values": toFormattedString(values)
-            };
-        },
-    });
-    // Primarily used for filtering objects in an array, so it won't fail unless failOnNoMatch is passed
-    // failOnNoMatch allows us to verify a regular object, instead of looking for specific objects that we expect in an array
-    function matchObject(item, itemToMatch, failOnNoMatch?: boolean, parentPropName?: string) {
-        var matchFound = false;
-        const props = Object.getOwnPropertyNames(itemToMatch);
-        for (var p = 0; p < props.length; p++) {
-            var propMatches = false
-            // For better documentation of the specific problem field if something isn't right
-            const descendingPropName = `${parentPropName ? parentPropName + "." : ""}${props[p]}`;
-            if (itemToMatch[props[p]] && item[props[p]] === null) {
-                if (failOnNoMatch) {
-                    assert.exists(item[props[p]], `${descendingPropName} Should not be null`);
-                } else {
-                    break;
-                }
-            }
-            if (Array.isArray(itemToMatch[props[p]])) {
-                var useAsFilter = props[p].includes("Info");
-                // If the property value is an array, start the whole process over again to verify the array's items
-                propMatches = matchArrayItems(item[props[p]], itemToMatch[props[p]], descendingPropName, useAsFilter);
-            } else if (typeof itemToMatch[props[p]] === 'object') {
-                // If the property value is an object, verify the object's properties match
-                propMatches = matchObject(item[props[p]], itemToMatch[props[p]], !!failOnNoMatch, descendingPropName);
-            } else {
-                if (failOnNoMatch) {
-                    expect(item[props[p]]).to.be.eql(itemToMatch[props[p]], `Verify ${descendingPropName}`);
-                }
-                propMatches = item[props[p]] === itemToMatch[props[p]];
-            }
-            if (!propMatches) {
-                break;
-            }
-            if (propMatches && p === props.length - 1) {
-                matchFound = true;
-            }
-        }
-        return matchFound;
-    };
-    // Searches through the array for the items we expect to be there
-    // ex, if we updated 2 items, but the array has 4 items, it runs a filter looking for those items and fails if they aren't there
-    // Returns a boolean to use with matchObject above
-    function matchArrayItems(resArray: [], matchArray: [], originalProperty: string, useAsFilter?: boolean) {
-        if (!useAsFilter && matchArray.length === 0) {
-            expect(resArray).to.be.eql(matchArray, `Expecting ${originalProperty} to be an empty array`);
-        } else {
-            const matchingItems = resArray.filter((item) => {
-                var itemMatches = false;
-                for (var f = 0; f < matchArray.length; f++) {
-                    itemMatches = matchObject(item, matchArray[f], undefined, `${originalProperty}[${f}]`);
-                    if (itemMatches) {
-                        break;
-                    }
-                }
-                return itemMatches;
-            });
-            if (!useAsFilter) {
-                expect(matchingItems.length).to.be.eql(matchArray.length, `Expecting ${matchArray.length} updated items in ${originalProperty}`);
-            }
-            return matchingItems.length === matchArray.length;
-        }
-    };
-    
-    return cy.postGQL(query).then((resp) => {
-        expect(resp.isOkStatusCode).to.be.equal(true, "Status Code is 200");
-        assert.notExists(resp.body.errors, "No errors");
-        assert.exists(resp.body.data, "Data exists");
-        assert.isArray(resp.body.data[dataPath].nodes, "Has Nodes array");
-
-        const targetNode = resp.body.data[dataPath].nodes.filter((item) => {
-            return item.id === itemId;
-        });
-        expect(targetNode.length).to.be.eql(1, "Specific item found in nodes");
-        const node = targetNode[0];
-        expect(propNames.length).to.be.eql(values.length, "Same number of properties and values passed in");
-        for (var i = 0; i < propNames.length; i++) {
-            if (values[i] && node[propNames[i]] === null) {
-                assert.exists(node[propNames[i]], `${propNames[i]} should not be null`);
-            }
-            if (Array.isArray(values[i])) {
-                matchArrayItems(node[propNames[i]], values[i], propNames[i]);
-            } else if (!!values[i] && typeof values[i] === 'object') {
-                matchObject(node[propNames[i]], values[i], true, propNames[i]);
-            } else {
-                expect(node[propNames[i]]).to.be.eql(values[i], `Verify ${propNames[i]}`);
-            }
-        }
-    });
-});
-
 /**
  * Search for an item we expect to have been deleted. Can be used as part of a test, or for after/afterEach hooks performing clean up
  * If asTest = false, it acts more as filter and does not fail if item is found. Returns true/false value depending on item presence
@@ -1375,33 +1272,166 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
     });
 });
 
+/**
+ * Functions used between multiple query commands. Commands that use these functions below them
+ */
+
+// Primarily used for filtering objects in an array, so it won't fail unless failOnNoMatch is passed
+// failOnNoMatch allows us to verify a regular object, instead of looking for specific objects that we expect in an array
+const matchObject = (item, itemToMatch, failOnNoMatch?: boolean, parentPropName?: string): boolean => {
+    var matchFound = false;
+    const props = Object.getOwnPropertyNames(itemToMatch);
+    for (var p = 0; p < props.length; p++) {
+        var propMatches = false
+        // For better documentation of the specific problem field if something isn't right
+        const descendingPropName = `${parentPropName ? parentPropName + "." : ""}${props[p]}`;
+        if (itemToMatch[props[p]] && item[props[p]] === null) {
+            if (failOnNoMatch) {
+                assert.exists(item[props[p]], `${descendingPropName} Should not be null`);
+            } else {
+                break;
+            }
+        }
+        if (Array.isArray(itemToMatch[props[p]])) {
+            var useAsFilter = props[p].includes("Info");
+            // If the property value is an array, start the whole process over again to verify the array's items
+            propMatches = matchArrayItems(item[props[p]], itemToMatch[props[p]], descendingPropName, useAsFilter);
+        } else if (typeof itemToMatch[props[p]] === 'object') {
+            // If the property value is an object, verify the object's properties match
+            propMatches = matchObject(item[props[p]], itemToMatch[props[p]], !!failOnNoMatch, descendingPropName);
+        } else {
+            if (failOnNoMatch) {
+                expect(item[props[p]]).to.be.eql(itemToMatch[props[p]], `Verify ${descendingPropName}`);
+            }
+            propMatches = item[props[p]] === itemToMatch[props[p]];
+        }
+        if (!propMatches) {
+            break;
+        }
+        if (propMatches && p === props.length - 1) {
+            matchFound = true;
+        }
+    }
+    return matchFound;
+};
+// Searches through the array for the items we expect to be there
+// ex, if we updated 2 items, but the array has 4 items, it runs a filter looking for those items and fails if they aren't there
+// Returns a boolean to use with matchObject above
+const matchArrayItems = (resArray: [], matchArray: [], originalProperty: string, useAsFilter?: boolean): boolean => {
+    if (!useAsFilter && matchArray.length === 0) {
+        expect(resArray).to.be.eql(matchArray, `Expecting ${originalProperty} to be an empty array`);
+    } else if (matchArray.length === resArray.length) {
+        for (var i = 0; i < matchArray.length; i++) {
+            matchObject(resArray[i], matchArray[i], true, `${originalProperty}[${i}]`);
+        }
+    } else {
+        const matchingItems = resArray.filter((item) => {
+            var itemMatches = false;
+            for (var f = 0; f < matchArray.length; f++) {
+                itemMatches = matchObject(item, matchArray[f], undefined, `${originalProperty}[${f}]`);
+                if (itemMatches) {
+                    break;
+                }
+            }
+            return itemMatches;
+        });
+        if (!useAsFilter) {
+            expect(matchingItems.length).to.be.eql(matchArray.length, `Expecting ${matchArray.length} updated items in ${originalProperty}`);
+        }
+        return matchingItems.length === matchArray.length;
+    }
+};
+
+// Function that iterates through array and calls above functions
+const compareExpectedToResults = (subject, propertyNames: string[], expectedValues: []) => {
+    for (var i = 0; i < propertyNames.length; i++) {
+        if (expectedValues[i] && subject[propertyNames[i]] === null) {
+            assert.exists(subject[propertyNames[i]], `${propertyNames[i]} should not be null`);
+        }
+        if (Array.isArray(expectedValues[i])) {
+            matchArrayItems(subject[propertyNames[i]], expectedValues[i], propertyNames[i]);
+        } else if (!!expectedValues[i] && typeof expectedValues[i] === 'object') {
+            matchObject(subject[propertyNames[i]], expectedValues[i], true, propertyNames[i]);
+        } else {
+            expect(subject[propertyNames[i]]).to.be.eql(expectedValues[i], `Verify ${propertyNames[i]}`);
+        }
+    }
+}
+
+/**
+ * The commands that use these functions
+ */
+
+// Confirms that a mutation has updated an item by querying for the item and matching the values to the array given
+Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, itemId: string, propNames: string[], values: []) => {
+    Cypress.log({
+        name: "confirmUsingQuery",
+        message: `querying ${dataPath} for ${itemId}`,
+        consoleProps: () => {
+            return {
+                "Query Body": query,
+                "Query name": dataPath,
+                "Id of item to verify": itemId,
+                "Properties to check": toFormattedString(propNames),
+                "Expected Values": toFormattedString(values)
+            };
+        },
+    });
+    
+    return cy.postGQL(query).then((resp) => {
+        expect(resp.isOkStatusCode).to.be.equal(true, "Status Code is 200");
+        assert.notExists(resp.body.errors, "No errors");
+        assert.exists(resp.body.data, "Data exists");
+        assert.isArray(resp.body.data[dataPath].nodes, "Has Nodes array");
+
+        const targetNode = resp.body.data[dataPath].nodes.filter((item) => {
+            return item.id === itemId;
+        });
+        expect(targetNode.length).to.be.eql(1, "Specific item found in nodes");
+        const node = targetNode[0];
+        expect(propNames.length).to.be.eql(values.length, "Same number of properties and values passed in");
+        compareExpectedToResults(node, propNames, values);
+    });
+});
+
 // Command for verifying the ByProductId queries
-Cypress.Commands.add('queryByProductId', (queryName: string, productId: string, expectedIds: string[]) => {
+Cypress.Commands.add('queryByProductId', (queryName: string, queryBody: string, path: string, productId: string, expectedItems: []) => {
+    const query = `query {
+        ${queryName}(productId: "${productId}") {
+            ${queryBody}
+        }
+    }`;
     Cypress.log({
         name: "queryByProductId",
         message: `${queryName} for product "${productId}"`,
         consoleProps: () => {
             return {
                 "Query used": queryName,
+                "Query Body": queryBody,
                 "Id of Product": productId,
-                "Expected Ids": toFormattedString(expectedIds)
+                "Expected Items": toFormattedString(expectedItems),
+                "Full query": query
             };
         },
     });
-    const query = `query {
-        ${queryName}(productId: "${productId}")
-    }`;
     return cy.postGQL(query).then((res) => {
         // has data
         assert.exists(res.body.data);
         assert.exists(res.body.data[queryName]);
-        assert.isArray(res.body.data[queryName]);
-        expect(res.body.data[queryName].length).to.be.eql(expectedIds.length, `Expect ${expectedIds.length} returned ids`);
-        var returnedIds = res.body.data[queryName];
-        const idType = queryName.substring(0, queryName.search("ByProductId"));
-        expectedIds.forEach((item, i) => {
-            expect(returnedIds[i]).to.be.eql(item, `Verify returned ${idType} id`);
-        });
+        assert.exists(res.body.data[queryName][path]);
+        var returnedItems = res.body.data[queryName][path];
+        assert.isArray(returnedItems);
+        // Begin comparisons
+        expect(returnedItems.length).to.be.eql(expectedItems.length, `Expect ${expectedItems.length} returned item`);
+        for (var i = 0; i < expectedItems.length; i++) {
+            const currentItem = expectedItems[i];
+            const properties = Object.getOwnPropertyNames(currentItem);
+            const values = [];
+            properties.forEach((prop) => {
+                values.push(currentItem[prop]);
+            });
+            compareExpectedToResults(returnedItems[i], properties, values);
+        }
         return res;
     });
 });

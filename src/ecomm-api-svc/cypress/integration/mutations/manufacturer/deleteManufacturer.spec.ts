@@ -207,7 +207,6 @@ describe('Mutation: deleteManufacturer', () => {
     it("Deleting an item connected to a product will disassociate the item from the product", () => {
         const extraMutationName = "createProduct";
         const extraDataPath = "product";
-        const extraQueryName = "products";
         const productInfoName = "productInfo";
         const manufacturers = [{id: id, manufacturerInfo: [{name: currentItemName, languageCode: "Standard"}]}];
         const info = [{name: `Cypress ${mutationName} product test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
@@ -228,13 +227,6 @@ describe('Mutation: deleteManufacturer', () => {
                     inventoryInformation {
                         minimumStockQuantity
                     }
-                    manufacturers {
-                        id
-                        manufacturerInfo {
-                            name
-                            languageCode
-                        }
-                    }
                     ${productInfoName} {
                         name
                         shortDescription
@@ -247,33 +239,17 @@ describe('Mutation: deleteManufacturer', () => {
         cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
             const productId = res.body.data[extraMutationName][extraDataPath].id;
             extraIds.push({itemId: productId, deleteName: "deleteProduct"});
-            const propNames = ["manufacturers", productInfoName, "inventoryInformation"];
-            const propValues = [manufacturers, info, inventoryInfo];
+            const propNames = [productInfoName, "inventoryInformation"];
+            const propValues = [info, inventoryInfo];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
-                const query = `{
-                    ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                        nodes {
-                            id
-                            inventoryInformation {
-                                minimumStockQuantity
-                            }
-                            manufacturers {
-                                id
-                                manufacturerInfo {
-                                    name
-                                    languageCode
-                                }
-                            }
-                            ${productInfoName} {
-                                name
-                                shortDescription
-                                fullDescription
-                                languageCode
-                            }
-                        }
+                const queryBody = `manufacturers {
+                    id
+                    manufacturerInfo {
+                        name
+                        languageCode
                     }
                 }`;
-                cy.confirmUsingQuery(query, extraQueryName, productId, propNames, propValues).then(() => {
+                cy.queryByProductId("manufacturersByProductId", queryBody, "manufacturers", productId, manufacturers).then(() => {
                     const mutation = `mutation {
                         ${mutationName}(input: { id: "${id}" }) {
                             ${standardMutationBody}
@@ -284,8 +260,7 @@ describe('Mutation: deleteManufacturer', () => {
                         cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
                             id = '';
                             currentItemName = '';
-                            const newPropValues = [[], info, inventoryInfo];
-                            cy.confirmUsingQuery(query, extraQueryName, productId, propNames, newPropValues);
+                            cy.queryByProductId("manufacturersByProductId", queryBody, "manufacturers", productId, []);
                         });
                     });
                 });
