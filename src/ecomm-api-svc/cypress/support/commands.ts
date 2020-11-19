@@ -1435,38 +1435,3 @@ Cypress.Commands.add('queryByProductId', (queryName: string, queryBody: string, 
         return res;
     });
 });
-
-// Command for verifying the ByProductId queries
-Cypress.Commands.add('queryByProductId', (queryName: string, productId: string, expectedIds: string[]) => {
-    Cypress.log({
-        name: "queryByProductId",
-        message: `${queryName} for product "${productId}"`,
-        consoleProps: () => {
-            return {
-                "Query used": queryName,
-                "Id of Product": productId,
-                "Expected Ids": toFormattedString(expectedIds)
-            };
-        },
-    });
-    const query = `query {
-        ${queryName}(productId: "${productId}")
-    }`;
-    return cy.postGQL(query).then((res) => {
-        // has data
-        assert.exists(res.body.data);
-        assert.exists(res.body.data[queryName]);
-        assert.isArray(res.body.data[queryName]);
-        var returnedIds = res.body.data[queryName];
-        if (expectedIds.length === 0) {
-            assert.isEmpty(returnedIds, "Expected response to be an empty array");
-        } else {
-            expect(returnedIds.length).to.be.eql(expectedIds.length, `Expect ${expectedIds.length} returned ids`);
-        }
-        const idType = queryName.substring(0, queryName.search("ByProductId"));
-        expectedIds.forEach((item, i) => {
-            expect(returnedIds[i]).to.be.eql(item, `Verify returned ${idType} id`);
-        });
-        return res;
-    });
-});
