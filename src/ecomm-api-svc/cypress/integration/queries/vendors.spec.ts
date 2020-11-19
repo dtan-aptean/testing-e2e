@@ -184,7 +184,7 @@ describe('Query: vendors', () => {
         cy.postAndConfirmError(gqlQuery);
     });
 
-    it.only("Query with a valid 'searchString' input argument will return the specific item", () => {
+    it("Query with a valid 'searchString' input argument will return the specific item", () => {
         cy.returnRandomInfoName(standardQuery, queryName, infoPath).then((name: string) => {
             const searchQuery = `{
                 vendors(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {

@@ -228,7 +228,7 @@ describe('Query: productSpecifications', () => {
     it("Query with a valid 'before' input argument will return all items before that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             const beforeQuery = `{
-                customerRoles(before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                productSpecifications(before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -243,7 +243,7 @@ describe('Query: productSpecifications', () => {
     it("Query with a valid 'after' input argument will return all items after that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, false).then((cursor: string) => {
             const afterQuery = `{
-                customerRoles(after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                productSpecifications(after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -281,7 +281,7 @@ describe('Query: productSpecifications', () => {
     
     it("Query with both 'before' and 'after' input arguments will fail", () => {
         const gqlQuery = `{
-            customerRoles(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            productSpecifications(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -302,7 +302,7 @@ describe('Query: productSpecifications', () => {
                 const first = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `first: ${first}`});
                 const beforeQuery = `{
-                    customerRoles(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    productSpecifications(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -323,7 +323,7 @@ describe('Query: productSpecifications', () => {
                     const first = diff >= 2 ? Math.floor(diff / 2): diff;
                     Cypress.log({message: `first: ${first}`});
                     const afterQuery = `{
-                        customerRoles(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        productSpecifications(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             ${standardQueryBody}
                         }
                     }`;
@@ -343,7 +343,7 @@ describe('Query: productSpecifications', () => {
                 const last = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `last: ${last}`});
                 const beforeQuery = `{
-                    customerRoles(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    productSpecifications(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -364,7 +364,7 @@ describe('Query: productSpecifications', () => {
                     const last = diff >= 2 ? Math.floor(diff / 2): diff;
                     Cypress.log({message: `last: ${last}`});
                     const afterQuery = `{
-                        customerRoles(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        productSpecifications(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             ${standardQueryBody}
                         }
                     }`;
