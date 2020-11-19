@@ -2,9 +2,10 @@
 
 import { toFormattedString } from "../../support/commands";
 
-// TEST COUNT: 0
+// TEST COUNT: 5
 describe('Query: productSpecificationOptionsByProductId', () => {
     const queryName = "productSpecificationOptionsByProductId";
+    const queryPath = "options";
     const creationName = "createProduct";
     const createPath = "product";
     const itemCreationName = "createProductSpecification";
@@ -14,6 +15,7 @@ describe('Query: productSpecificationOptionsByProductId', () => {
     const productInput = {
         productInfo: [{
             name: `Cypress ${queryName} product`,
+            shortDescription: 'Cypress testing ByProductId queries',
             languageCode: "Standard",
         }],
         inventoryInformation: {
@@ -74,24 +76,34 @@ describe('Query: productSpecificationOptionsByProductId', () => {
     it("Query using id of a product with no associated items will return an empty array", () => {
         cy.createAndGetId(creationName, createPath, toFormattedString(productInput)).then((returnedId: string) => {
             createdProducts.push(returnedId);
-            cy.queryByProductId(queryName, returnedId, []);
+            const queryBody = `options {
+                id
+                displayOrder
+                name
+            }`;
+            cy.queryByProductId(queryName, queryBody, queryPath, returnedId, []);
         });
     });
 
-    it("Query using the valid id of a product with associated items will return those items' ids", () => {
+    it("Query using the valid id of a product with associated items will return those items", () => {
         productInput.productInfo[0].name = productInput.productInfo[0].name + "2";
-        const itemInputOne = {name: `Cypress ${queryName} productSpecification`, options: [{name: "Option 1"}, {name: "Option 2"}]};
+        const itemInputOne = {name: `Cypress ${queryName} productSpecification`, options: [{name: "Option 1", displayOrder: Cypress._.random(0, 5)}, {name: "Option 2", displayOrder: Cypress._.random(6, 11)}]};
         const itemIds = [] as string[];
-        const extraInput = "options{id}";
+        const extraInput = `options {
+            id
+            displayOrder
+            name
+        }`;
         cy.createAndGetId(itemCreationName, itemCreatePath, toFormattedString(itemInputOne), extraInput).then((returnedItem) => {
-            returnedItem.options.forEach((item) => {
+            const options = returnedItem.options;
+            options.forEach((item) => {
                 itemIds.push(item.id);
             });
             createdItems.push(returnedItem.id);
-            productInput.specificationOptionsIds = itemIds;
+            productInput.specificationOptionIds = itemIds;
             cy.createAndGetId(creationName, createPath, toFormattedString(productInput)).then((finalId: string) => {
                 createdProducts.push(finalId);
-                cy.queryByProductId(queryName, finalId, itemIds);
+                cy.queryByProductId(queryName, extraInput, queryPath, finalId, options);
             });
         });
     });

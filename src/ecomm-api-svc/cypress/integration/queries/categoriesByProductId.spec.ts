@@ -5,6 +5,7 @@ import { toFormattedString } from "../../support/commands";
 // TEST COUNT: 5
 describe('Query: categoriesByProductId', () => {
     const queryName = "categoriesByProductId";
+    const queryPath = "categories";
     const creationName = "createProduct";
     const createPath = "product";
     const itemCreationName = "createCategory";
@@ -14,6 +15,7 @@ describe('Query: categoriesByProductId', () => {
     const productInput = {
         productInfo: [{
             name: `Cypress ${queryName} product`,
+            shortDescription: 'Cypress testing ByProductId queries',
             languageCode: "Standard",
         }],
         inventoryInformation: {
@@ -74,25 +76,44 @@ describe('Query: categoriesByProductId', () => {
     it("Query using id of a product with no associated items will return an empty array", () => {
         cy.createAndGetId(creationName, createPath, toFormattedString(productInput)).then((returnedId: string) => {
             createdProducts.push(returnedId);
-            cy.queryByProductId(queryName, returnedId, []);
+            const queryBody = `categories {
+                id
+                categoryInfo {
+                    name
+                    languageCode
+                }
+            }`;
+            cy.queryByProductId(queryName, queryBody, queryPath, returnedId, []);
         });
     });
 
-    it("Query using the valid id of a product with associated items will return those items' ids", () => {
+    it("Query using the valid id of a product with associated items will return those items", () => {
         productInput.productInfo[0].name = productInput.productInfo[0].name + "2";
-        const itemInputOne = {categoryInfo: [{name: `Cypress ${queryName} category 1`, languageCode: "Standard"}]};
+        const itemOne = {categoryInfo: [{name: `Cypress ${queryName} category 1`, languageCode: "Standard"}]};
+        const items = [];
         const itemIds = [] as string[];
-        cy.createAndGetId(itemCreationName, itemCreatePath, toFormattedString(itemInputOne)).then((returnedId: string) => {
+        cy.createAndGetId(itemCreationName, itemCreatePath, toFormattedString(itemOne)).then((returnedId: string) => {
+            itemOne.id = returnedId;
+            items.push(itemOne);
             itemIds.push(returnedId);
             createdItems.push(returnedId);
-            const itemInputTwo = {categoryInfo: [{name: `Cypress ${queryName} category 2`, languageCode: "Standard"}]};
-            cy.createAndGetId(itemCreationName, itemCreatePath, toFormattedString(itemInputTwo)).then((secondId: string) => {
+            const itemTwo = {categoryInfo: [{name: `Cypress ${queryName} category 2`, languageCode: "Standard"}]};
+            cy.createAndGetId(itemCreationName, itemCreatePath, toFormattedString(itemTwo)).then((secondId: string) => {
+                itemTwo.id = secondId;
+                items.push(itemTwo);
                 itemIds.push(secondId);
                 createdItems.push(secondId);
                 productInput.categoryIds = itemIds;
                 cy.createAndGetId(creationName, createPath, toFormattedString(productInput)).then((finalId: string) => {
                     createdProducts.push(finalId);
-                    cy.queryByProductId(queryName, finalId, itemIds);
+                    const queryBody = `categories {
+                        id
+                        categoryInfo {
+                            name
+                            languageCode
+                        }
+                    }`;
+                    cy.queryByProductId(queryName, queryBody, queryPath, finalId, items);
                 });
             });
         });

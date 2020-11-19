@@ -2,9 +2,10 @@
 
 import { toFormattedString } from "../../support/commands";
 
-// TEST COUNT: 0
+// TEST COUNT: 5
 describe('Query: productAttributesByProductId', () => {
     const queryName = "productAttributesByProductId";
+    const queryPath = "attributes";
     const creationName = "createProduct";
     const createPath = "product";
     const itemCreationName = "createProductAttribute";
@@ -14,6 +15,7 @@ describe('Query: productAttributesByProductId', () => {
     const productInput = {
         productInfo: [{
             name: `Cypress ${queryName} product`,
+            shortDescription: 'Cypress testing ByProductId queries',
             languageCode: "Standard",
         }],
         inventoryInformation: {
@@ -74,25 +76,44 @@ describe('Query: productAttributesByProductId', () => {
     it("Query using id of a product with no associated items will return an empty array", () => {
         cy.createAndGetId(creationName, createPath, toFormattedString(productInput)).then((returnedId: string) => {
             createdProducts.push(returnedId);
-            cy.queryByProductId(queryName, returnedId, []);
+            const queryBody = `attributes {
+                id
+                name
+                values {
+                    name
+                }
+            }`;
+            cy.queryByProductId(queryName, queryBody, queryPath, returnedId, []);
         });
     });
 
-    it("Query using the valid id of a product with associated items will return those items' ids", () => {
+    it("Query using the valid id of a product with associated items will return those items", () => {
         productInput.productInfo[0].name = productInput.productInfo[0].name + "2";
-        const itemInputOne = {name: `Cypress ${queryName} productAttribute 1`, values: [{name: "Obligitory value"}]};
+        const itemOne = {name: `Cypress ${queryName} productAttribute 1`, values: [{name: "Obligitory value"}]};
+        const items = [];
         const itemIds = [] as string[];
-        cy.createAndGetId(itemCreationName, itemCreatePath, toFormattedString(itemInputOne)).then((returnedId: string) => {
+        cy.createAndGetId(itemCreationName, itemCreatePath, toFormattedString(itemOne)).then((returnedId: string) => {
+            itemOne.id = returnedId;
+            items.push(itemOne);
             itemIds.push(returnedId);
             createdItems.push(returnedId);
-            const itemInputTwo = {name: `Cypress ${queryName} productAttribute 2`, values: [{name: "Obligitory value"}]};
-            cy.createAndGetId(itemCreationName, itemCreatePath, toFormattedString(itemInputTwo)).then((secondId: string) => {
+            const itemTwo = {name: `Cypress ${queryName} productAttribute 2`, values: [{name: "Obligitory value"}]};
+            cy.createAndGetId(itemCreationName, itemCreatePath, toFormattedString(itemTwo)).then((secondId: string) => {
+                itemTwo.id = secondId;
+                items.push(itemTwo);
                 itemIds.push(secondId);
                 createdItems.push(secondId);
                 productInput.attributeIds = itemIds;
                 cy.createAndGetId(creationName, createPath, toFormattedString(productInput)).then((finalId: string) => {
                     createdProducts.push(finalId);
-                    cy.queryByProductId(queryName, finalId, itemIds);
+                    const queryBody = `attributes {
+                        id
+                        name
+                        values {
+                            name
+                        }
+                    }`;
+                    cy.queryByProductId(queryName, queryBody, queryPath, finalId, items);
                 });
             });
         });
