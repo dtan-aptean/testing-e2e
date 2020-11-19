@@ -319,6 +319,7 @@ describe('Mutation: updateDiscount', () => {
                     amount: discountAmount.amount + Cypress._.random(1, 5),
                     currency: "USD"
                 };
+                const discountType = "ASSIGNED_TO_PRODUCTS";
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -326,6 +327,7 @@ describe('Mutation: updateDiscount', () => {
                             discountAmount: ${toFormattedString(newDiscountAmount)}
                             productIds: ${toFormattedString(productIds)}
                             name: "${newName}"
+                            discountType: ${discountType}
                         }
                     ) {
                         code
@@ -348,13 +350,14 @@ describe('Mutation: updateDiscount', () => {
                                     minimumStockQuantity
                                 }
                             }
+                            discountType
                             name
                         }
                     }
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                    const propNames = ["name", "discountAmount", "products"];
-                    const propValues = [newName, newDiscountAmount, products];
+                    const propNames = ["name", "discountType", "discountAmount", "products"];
+                    const propValues = [newName, discountType, newDiscountAmount, products];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
                             ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -375,6 +378,7 @@ describe('Mutation: updateDiscount', () => {
                                             minimumStockQuantity
                                         }
                                     }
+                                    discountType
                                     name
                                 }
                             }
@@ -405,6 +409,7 @@ describe('Mutation: updateDiscount', () => {
                     amount: discountAmount.amount + Cypress._.random(1, 5),
                     currency: "USD"
                 };
+                const discountType = "ASSIGNED_TO_CATEGORIES";
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -412,6 +417,7 @@ describe('Mutation: updateDiscount', () => {
                             discountAmount: ${toFormattedString(newDiscountAmount)}
                             categoryIds: ${toFormattedString(categoryIds)}
                             name: "${newName}"
+                            discountType: ${discountType}
                         }
                     ) {
                         code
@@ -430,13 +436,14 @@ describe('Mutation: updateDiscount', () => {
                                     languageCode
                                 }
                             }
+                            discountType
                             name
                         }
                     }
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                    const propNames = ["categories", "name", "discountAmount"];
-                    const propValues = [categories, newName, newDiscountAmount];
+                    const propNames = ["categories", "name", "discountType", "discountAmount"];
+                    const propValues = [categories, newName, discountType, newDiscountAmount];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
                             ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -453,6 +460,7 @@ describe('Mutation: updateDiscount', () => {
                                             languageCode
                                         }
                                     }
+                                    discountType
                                     name
                                 }
                             }
@@ -483,6 +491,7 @@ describe('Mutation: updateDiscount', () => {
                     amount: discountAmount.amount + Cypress._.random(1, 5),
                     currency: "USD"
                 };
+                const discountType = "ASSIGNED_TO_MANUFACTURERS";
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -490,6 +499,7 @@ describe('Mutation: updateDiscount', () => {
                             discountAmount:${toFormattedString(newDiscountAmount)}
                             manufacturerIds: ${toFormattedString(manufacturerIds)}
                             name: "${newName}"
+                            discountType: ${discountType}
                         }
                     ) {
                         code
@@ -508,13 +518,14 @@ describe('Mutation: updateDiscount', () => {
                                     languageCode
                                 }
                             }
+                            discountType
                             name
                         }
                     }
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                    const propNames = ["manufacturers", "name", "discountAmount"];
-                    const propValues = [manufacturers, newName, newDiscountAmount];
+                    const propNames = ["manufacturers", "name", "discountType", "discountAmount"];
+                    const propValues = [manufacturers, newName, discountType, newDiscountAmount];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
                             ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -531,6 +542,7 @@ describe('Mutation: updateDiscount', () => {
                                             languageCode
                                         }
                                     }
+                                    discountType
                                     name
                                 }
                             }
