@@ -109,8 +109,9 @@ describe('Query: manufacturers', () => {
 
     it("Query without 'first' or 'last' input arguments will return all items", () => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
-            cy.confirmCount(res, queryName);
-            cy.verifyPageInfo(res, queryName, false, false);
+            cy.confirmCount(res, queryName).then((hitUpperLimit: boolean) => {
+                cy.verifyPageInfo(res, queryName, hitUpperLimit, false);
+            });
         });
     });
 
@@ -182,7 +183,7 @@ describe('Query: manufacturers', () => {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndConfirmError(gqlQuery);
+        cy.postAndConfirmError(gqlQuery, true);
     });
 
     it("Query with a valid 'searchString' input argument will return the specific item", () => {

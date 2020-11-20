@@ -218,19 +218,25 @@ Cypress.Commands.add("postAndConfirmDelete", (gqlMut: string, mutationName: stri
     });
 });
 
-// Tests the response for errors. Use when we expect it to fail
-Cypress.Commands.add("confirmError", (res) => {
+// Tests the response for errors. Use when we expect it to fail. Add expect200 when we expect to get a 200 status code
+Cypress.Commands.add("confirmError", (res, expect200?: boolean) => {
     Cypress.log({
         name: "confirmError",
-        message: `Confirm expected error are present`,
+        message: `Confirm expected errors. ${expect200? "Expecting 200 status code": ""}`,
         consoleProps: () => {
             return {
                 "Response": res,
+                "Expected a 200 status code": !!expect200
             };
         },
     });
-    // should not be 200 ok
-    expect(res.isOkStatusCode).to.be.equal(false);
+    if (expect200) {
+        // Should be 200 ok
+        expect(res.isOkStatusCode).to.be.equal(true);
+    } else {
+        // should not be 200 ok
+        expect(res.isOkStatusCode).to.be.equal(false);
+    }
 
     // should have errors
     assert.exists(res.body.errors);
@@ -267,18 +273,20 @@ Cypress.Commands.add("confirmMutationError", (res, mutationName: string, dataPat
     }
 });
 
-// Post Query and confirm it has errors
-Cypress.Commands.add("postAndConfirmError", (gqlQuery: string) => {
+// Post Query and confirm it has errors. Add expect200 when we expect to get a 200 status code
+Cypress.Commands.add("postAndConfirmError", (gqlQuery: string, expect200?: boolean) => {
     Cypress.log({
         name: "postAndConfirmError",
+        message: `${expect200 ? "expect200" + expect200 : ""}`,
         consoleProps: () => {
             return {
-                "Query Body": gqlQuery
+                "Query Body": gqlQuery,
+                "expect200": expect200 ? expect200 : "Not provided"
             };
         },
     });
     return cy.postGQL(gqlQuery).then((res) => {
-        cy.confirmError(res).then(() => {
+        cy.confirmError(res, expect200).then(() => {
             return res;
         });
     });
@@ -302,6 +310,22 @@ Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutati
     });
 });
 
+// Post Query and confirm it has errors: Use when we expect the status to be okay
+Cypress.Commands.add("postAndConfirmErrorStatus", (gqlQuery: string) => {
+    Cypress.log({
+        name: "postAndConfirmError",
+        consoleProps: () => {
+            return {
+                "Query Body": gqlQuery
+            };
+        },
+    });
+    return cy.postGQL(gqlQuery).then((res) => {
+        cy.confirmError(res).then(() => {
+            return res;
+        });
+    });
+});
 // Tests the response for errors. Should specifically use when we omit the orderBy input
 Cypress.Commands.add("confirmOrderByError", (res) => {
     Cypress.log({
@@ -343,9 +367,15 @@ Cypress.Commands.add("confirmCount", (res, dataPath: string) => {
     });
     const totalCount = res.body.data[dataPath].totalCount;
     const nodeCount = res.body.data[dataPath].nodes.length;
-    expect(nodeCount).to.be.eql(totalCount);
     const edgeCount = res.body.data[dataPath].edges.length;
-    expect(edgeCount).to.be.eql(totalCount);
+    if (totalCount > 25) {
+        expect(nodeCount).to.be.eql(25);
+        expect(edgeCount).to.be.eql(25);
+    } else {
+        expect(nodeCount).to.be.eql(totalCount);
+        expect(edgeCount).to.be.eql(totalCount);
+    }
+    return totalCount > 25;
 });
 
 // Checks for customData property. If expectData and expectedData are included, will compare nodes' customData to the expectedData
@@ -489,7 +519,8 @@ Cypress.Commands.add("returnCount", (gqlQuery: string, dataPath: string) => {
     });
     return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
         cy.wrap(res.body.data[dataPath]).as('orgData');
-        return cy.wrap(res.body.data[dataPath].totalCount);
+        const totalCount = res.body.data[dataPath].totalCount > 25 ? 25 : res.body.data[dataPath].totalCount;
+        return cy.wrap(totalCount);
     });
 });
 
@@ -601,7 +632,7 @@ Cypress.Commands.add('returnRandomName', (gqlQuery: string, dataPath: string) =>
     });
     return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
         var randomIndex = 0;
-        const totalCount = res.body.data[dataPath].totalCount;
+        var totalCount = res.body.data[dataPath].totalCount > 25 ? 25 : res.body.data[dataPath].totalCount;
         if (totalCount > 1) {
             randomIndex = Cypress._.random(0, totalCount - 1);
         }
@@ -654,7 +685,7 @@ Cypress.Commands.add("returnRandomInfoName", (gqlQuery: string, dataPath: string
 
     return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
         var randomIndex = 0;
-        const totalCount = res.body.data[dataPath].totalCount;
+        const totalCount = res.body.data[dataPath].totalCount > 25 ? 25 : res.body.data[dataPath].totalCount;
         if (totalCount > 1) {
             randomIndex = Cypress._.random(0, totalCount - 1);
         }
@@ -781,7 +812,7 @@ Cypress.Commands.add("returnRandomCursor", (gqlQuery: string, dataPath: string, 
     });
     return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
         var randomIndex = 0;
-        const totalCount = res.body.data[dataPath].totalCount;
+        var totalCount = res.body.data[dataPath].totalCount > 25 ? 25 : res.body.data[dataPath].totalCount;
         expect(totalCount).to.be.gte(2, "Need >=2 items to test with"); // If there's only one item, we can't do any pagination
         if (totalCount > 2) {
             const lowerBound = laterHalf ? Math.ceil((totalCount - 1) / 2) : 0;
@@ -827,7 +858,7 @@ Cypress.Commands.add('confirmCursorEffects', (newData, data, cursorIndex: number
 Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: string, value?: number) => {
     Cypress.log({
         name: "validateBeforeCursor",
-        message: `${index} ${firstLast ? ", " + firstLast + ", " : ""}${value ? value : ""}`,
+        message: `${index}${firstLast ? ", " + firstLast + ", " : ""}${value ? value : ""}`,
         consoleProps: () => {
             return {
                 "New query data": newData,
@@ -840,7 +871,10 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
     });
 
     const {edges, nodes, totalCount, pageInfo} = newData;
-    expect(totalCount).to.be.eql(index);
+    // Confirm expected total count
+    const expectedTotal = data.nodes.length % 2 === 0 ? index: index - 1;
+    expect(totalCount).to.be.eql(expectedTotal);
+    // Confirm expected node/edge count
     var includedStart = 0;
     var excludedStart = index;
     var sCursor = data.pageInfo.startCursor;
@@ -881,7 +915,7 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
 Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: string, value?: number) => {
     Cypress.log({
         name: "validateAfterCursor",
-        message: `${index} ${firstLast ? ", " + firstLast + ", " : ""}${value ? value : ""}`,
+        message: `${index}${firstLast ? ", " + firstLast + ", " : ""}${value ? value : ""}`,
         consoleProps: () => {
             return {
                 "New query data": newData,
