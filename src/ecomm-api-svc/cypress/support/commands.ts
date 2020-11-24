@@ -519,8 +519,8 @@ Cypress.Commands.add("returnCount", (gqlQuery: string, dataPath: string) => {
     });
     return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
         cy.wrap(res.body.data[dataPath]).as('orgData');
-        const totalCount = res.body.data[dataPath].totalCount > 25 ? 25 : res.body.data[dataPath].totalCount;
-        return cy.wrap(totalCount);
+        const count = res.body.data[dataPath].nodes.length;
+        return cy.wrap(count);
     });
 });
 
@@ -571,7 +571,8 @@ Cypress.Commands.add("verifyFirstOrLast", (res, dataPath: string, value: number,
             }
         } else if (firstOrLast.toLowerCase() === "last") {
             var f = value + 1;
-            if (value === orgRes.totalCount / 2){
+            const totalLength = orgRes.totalCount > 25 ? orgNodes.length : orgRes.totalCount;
+            if (value === totalLength / 2){
                 f = value;
             }
             expect(pageInfo.startCursor).not.to.be.eql(orgPageInfo.startCursor);
@@ -716,84 +717,59 @@ Cypress.Commands.add("returnRandomInfoName", (gqlQuery: string, dataPath: string
 });
 
 // Validates that a query with searchString returned the node with the correct name or nodes that contain the string
-Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: string, fullName: boolean) => {
+Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: string) => {
     Cypress.log({
         name: "validateNameSearch",
-        message: `${dataPath}, searchString: ${searchValue}, fullName: ${fullName}`,
+        message: `${dataPath}, searchString: ${searchValue}`,
         consoleProps: () => {
             return {
                 "Response": res,
                 "Query name / dataPath": dataPath,
-                "searchString": searchValue,
-                "fullName": fullName
+                "searchString": searchValue
             };
         },
     });
     const totalCount = res.body.data[dataPath].totalCount;
     const nodes = res.body.data[dataPath].nodes;
     const edges = res.body.data[dataPath].edges;
-    if (fullName) {
-        expect(totalCount).to.be.eql(1);
-        expect(nodes.length).to.be.eql(1);
-        expect(edges.length).to.be.eql(1);
-        expect(nodes[0].name).to.be.eql(searchValue);
-        expect(edges[0].node.name).to.be.eql(searchValue);
-    } else {
-        expect(totalCount).to.be.eql(nodes.length);
-        expect(totalCount).to.be.eql(edges.length);
-        for (var i = 0; i < nodes.length; i++) {
-            expect(nodes[i].name).to.include(searchValue, `Node[${i}]`);
-            expect(edges[i].node.name).to.include(searchValue, `Edge[${i}]`);
-        }
+    expect(totalCount).to.be.eql(nodes.length);
+    expect(totalCount).to.be.eql(edges.length);
+    for (var i = 0; i < nodes.length; i++) {
+        expect(nodes[i].name.toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
+        expect(edges[i].node.name.toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
     }
 });
 
 // For queries that have a info field instead of a name field.
 // Validates that a query with searchString returned the node with the correct name or nodes that contain the string
-Cypress.Commands.add("validateInfoNameSearch", (res, dataPath: string, infoPath: string, searchValue: string, fullName: boolean) => {
+Cypress.Commands.add("validateInfoNameSearch", (res, dataPath: string, infoPath: string, searchValue: string) => {
     Cypress.log({
         name: "validateInfoNameSearch",
-        message: `${dataPath}, ${infoPath}, searchString: ${searchValue}, fullName: ${fullName}`,
+        message: `${dataPath}, ${infoPath}, searchString: ${searchValue}`,
         consoleProps: () => {
             return {
                 "Response": res,
                 "Query name / dataPath": dataPath,
                 "Info name": infoPath,
-                "searchString": searchValue,
-                "fullName": fullName
+                "searchString": searchValue
             };
         },
     });
     const totalCount = res.body.data[dataPath].totalCount;
     const nodes = res.body.data[dataPath].nodes;
     const edges = res.body.data[dataPath].edges;
-    if (fullName) {
-        expect(totalCount).to.be.eql(1);
-        expect(nodes.length).to.be.eql(1);
-        expect(edges.length).to.be.eql(1);
-        const infoArray = nodes[0][infoPath].filter((val) => {
-            return val.name === searchValue;
+    expect(totalCount).to.be.eql(nodes.length);
+    expect(totalCount).to.be.eql(edges.length);
+    for (var i = 0; i < nodes.length; i++) {
+        var infoArray = nodes[i][infoPath].filter((val) => {
+            return val.name.includes(searchValue);
         });
-        expect(infoArray.length).to.be.gte(1);
-        const edgeInfoArray = edges[0].node[infoPath].filter((val) => {
-            return val.name === searchValue;
+        expect(infoArray.length).to.be.gte(1, `Node[${i}]`);
+        var edgeInfoArray = edges[i].node[infoPath].filter((val) => {
+            return  val.name.includes(searchValue);
         });
-        expect(edgeInfoArray.length).to.be.gte(1);
+        expect(edgeInfoArray.length).to.be.gte(1, `Edge[${i}]`);
         expect(infoArray.length).to.be.eql(edgeInfoArray.length);
-    } else {
-        expect(totalCount).to.be.eql(nodes.length);
-        expect(totalCount).to.be.eql(edges.length);
-        for (var i = 0; i < nodes.length; i++) {
-            var infoArray = nodes[i][infoPath].filter((val) => {
-                return val.name.includes(searchValue);
-            });
-            expect(infoArray.length).to.be.gte(1, `Node[${i}]`);
-            var edgeInfoArray = edges[i].node[infoPath].filter((val) => {
-                return  val.name.includes(searchValue);
-            });
-            expect(edgeInfoArray.length).to.be.gte(1, `Edge[${i}]`);
-            expect(infoArray.length).to.be.eql(edgeInfoArray.length);
-        }
     }
 });
 
@@ -872,8 +848,7 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
 
     const {edges, nodes, totalCount, pageInfo} = newData;
     // Confirm expected total count
-    const expectedTotal = data.nodes.length % 2 === 0 ? index: index - 1;
-    expect(totalCount).to.be.eql(expectedTotal);
+    expect(totalCount).to.be.eql(index, `Verify totalCount is ${index}`);
     // Confirm expected node/edge count
     var includedStart = 0;
     var excludedStart = index;
@@ -928,7 +903,7 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
     });
 
     const {edges, nodes, totalCount, pageInfo} = newData;
-    expect(totalCount).to.be.eql(data.totalCount - (index + 1));
+    expect(totalCount).to.be.eql(data.totalCount - (index + 1), `Verify totalCount is ${data.totalCount - (index + 1)}`);
     var includedStart = index + 1;
     var excludedAfter = data.length;
     var sCursor = data.pageInfo.startCursor;
@@ -944,6 +919,8 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
             includedStart = index + value;
             sCursor = data.edges[includedStart].cursor;
         }
+    } else if (totalCount > nodes.length) {
+        eCursor = data.edges[index + 25].cursor;
     }
     for (var i = includedStart; i < excludedAfter; i++) {
         expect(nodes).to.deep.include(data.nodes[i]);
