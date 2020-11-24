@@ -310,22 +310,6 @@ Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutati
     });
 });
 
-// Post Query and confirm it has errors: Use when we expect the status to be okay
-Cypress.Commands.add("postAndConfirmErrorStatus", (gqlQuery: string) => {
-    Cypress.log({
-        name: "postAndConfirmError",
-        consoleProps: () => {
-            return {
-                "Query Body": gqlQuery
-            };
-        },
-    });
-    return cy.postGQL(gqlQuery).then((res) => {
-        cy.confirmError(res).then(() => {
-            return res;
-        });
-    });
-});
 // Tests the response for errors. Should specifically use when we omit the orderBy input
 Cypress.Commands.add("confirmOrderByError", (res) => {
     Cypress.log({
