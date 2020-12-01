@@ -12,7 +12,7 @@ describe('Mutation: upsertPerson', () => {
         id
       }
     }`
-    cy.postGQL(personGqlQuery).then(res => {
+    cy.postGQLBearer(personGqlQuery).then(res => {
       if (!res.body.errors && res.body.data.person) {
         personId = res.body.data.person.id;
         const gqlQuery = `mutation {
@@ -22,7 +22,7 @@ describe('Mutation: upsertPerson', () => {
             error
           }
         }`;
-        cy.postGQL(gqlQuery).then(res => {
+        cy.postGQLBearer(gqlQuery).then(res => {
           cy.expect(res.isOkStatusCode).to.be.equal(true);
           assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
         });              
@@ -40,7 +40,7 @@ describe('Mutation: upsertPerson', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -66,7 +66,7 @@ describe('Mutation: upsertPerson', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -96,6 +96,7 @@ describe('Mutation: upsertPerson', () => {
   });
 
   it('should pass if the mutation create a person with all valid arguments', () => {
+    cy.cleanupPerson(personId).then(res => console.log(res));
     const gqlQuery = `mutation {
       upsertPerson(
         input: {
@@ -113,7 +114,7 @@ describe('Mutation: upsertPerson', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -151,7 +152,7 @@ describe('Mutation: upsertPerson', () => {
       ) {}
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then(res => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -174,7 +175,7 @@ describe('Mutation: upsertPerson', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
