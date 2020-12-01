@@ -96,7 +96,6 @@ describe('Mutation: upsertPerson', () => {
   });
 
   it('should pass if the mutation create a person with all valid arguments', () => {
-    cy.cleanupPerson(personId).then(res => console.log(res));
     const gqlQuery = `mutation {
       upsertPerson(
         input: {
