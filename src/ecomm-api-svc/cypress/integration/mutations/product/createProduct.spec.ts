@@ -515,7 +515,7 @@ describe('Mutation: createProduct', () => {
                                 name
                                 languageCode
                             }
-                        }`
+                        }`;
                         cy.queryByProductId("categoriesByProductId", queryBody, "categories", id, categories);
                     });
                 });
