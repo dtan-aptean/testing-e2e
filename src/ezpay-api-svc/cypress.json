@@ -1,17 +1,17 @@
 {
-  "baseUrl": "http://localhost:4000",
+  "baseUrl": "#{EZPAY_API_URL}#",
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
   "env": {
-    "api-svc-url": "https://dev.api.apteanpay.com",
-    "authorization": "bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ilg1ZVhrNHh5b2pORnVtMWtsMll0djhkbE5QNC1jNTdkTzZRR1RWQndhTmsifQ.eyJpc3MiOiJodHRwczovL2FwdGVhbmlkZGV2LmIyY2xvZ2luLmNvbS9hMTAyYjZjOS0zYjFkLTQ4NmMtYWU2OS0wODE0N2E5ZDc2ZTUvdjIuMC8iLCJleHAiOjE2MDY5MDgzMjksIm5iZiI6MTYwNjgyMTkyOSwiYXVkIjoiOWE5NjYzYWYtOGE0Mi00ZDk2LWJhMDgtYTNiM2E0NGQ0NDgzIiwib2lkIjoiMDEwMDYxYmQtM2MyMi00YTI5LWFlNzYtM2U5ODg0YjRkOTk3Iiwic3ViIjoiMDEwMDYxYmQtM2MyMi00YTI5LWFlNzYtM2U5ODg0YjRkOTk3IiwibmFtZSI6InVua25vd24iLCJlbWFpbHMiOlsiZmpvbmdtYW5zQGFwdGVhbi5jb20iXSwidGZwIjoiQjJDXzFfc3Vfc2lfMl8xIiwibm9uY2UiOiJkZWZhdWx0Tm9uY2UiLCJzY3AiOiJyZWFkIHdyaXRlIiwiYXpwIjoiYTM2YjgwM2QtYjVkOS00OTkzLThmM2MtMWZjNjE4ZTRjYzEzIiwidmVyIjoiMS4wIiwiaWF0IjoxNjA2ODIxOTI5fQ.gOtPY-CSK1fP4XsMVm1fVGI3Iat6cUMdlB9itgjeLkuX7BsrNUZW-nTJeBt9TmaLM5D2n911gYSRBJG3rIIgr-8DHagpBKtFnyRK-GSg-yP7uCZfK9TuClZnB-rW2DJmpEU8rD0yZaUdoTrmqOcPIre6-iBhHk-hnKcNja__pPmAfvkICkdFxyGOKSC1JiXVzdD5LbXE4WW6yP0HEPtQjTiuo21CHDxdFax-ZyyVaCiSzeqcao6WiT0F2Qj68KY8EnE7STtuvQzUTFol2vadZA3A05qDNxp1tvXDns7zVwgvPX78aL4jtwRKAm5uOa_FG8yhXq3tWAmgS6_gu6-P9g",
-    "x-aptean-apim": "7c9b3eea-ae36-4ca0-b18c-cd4c11d07596",
-    "x-aptean-tenant": "8bb52743-8808-40d6-91da-9946aee81ebb",
-    "x-aptean-tenant-secret": "SuperSecretPassword123!",
-    "wepay-base-url": "https://stage-api.wepay.com/tokens",
-    "wepay-app-id": "596464",
-    "wepay-app-secret": "stage_MzI0NV81MDhjMWZmMC1mYjMyLTQxMDEtOWFjZi00ZThkZmYyYzlmNGE",
-    "wepay-api-version": "3.0"
+    "api-svc-url": "#{EZPAY_API_URL}#",
+    "authorization": "bearer --BEARER_TOKEN---",
+    "x-aptean-apim": "#{X_APTEAN_APIM}#",
+    "x-aptean-tenant": "#{X_APTEAN_TENANT}#",
+    "x-aptean-tenant-secret": "#{X_APTEAN_TENANT_SECRET}#",
+    "wepay-base-url": "#{WEPAY_API_URL}#",
+    "wepay-app-id": "#{WEPAY_APP_ID}#",
+    "wepay-app-secret": "#{WEPAY_APP_SECRET}#",
+    "wepay-api-version": "#{WEPAY_API_VERSION}#"
   },
   "supportFile": "cypress/support/index.ts"
 }
