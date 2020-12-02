@@ -63,7 +63,6 @@ Cypress.Commands.add('getInvoiceRef', () => {
     method: 'POST',
     headers: {
       accept: ' */*',
-      authorization: Cypress.env('authorization'),
       'content-type': [' multipart/form-data; boundary=----WebKitFormBoundaryyvKAJwzxkixBJ6vF'],
       'x-aptean-tenant': Cypress.env('x-aptean-tenant'),
       'x-aptean-apim': Cypress.env('x-aptean-apim'),
@@ -141,6 +140,52 @@ Cypress.Commands.add('generateWePayToken', () => {
   });
 });
 
+Cypress.Commands.add('convertPayfacPaymentMethodTokenCreditCard', (token: string) => {
+  const gqlQuery = `mutation {
+    convertPayfacPaymentMethodToken(
+      input: {
+        token: "${token}"
+        type: CREDIT_CARD
+        holder: {
+          email: "bortbort@snortgort.com"
+          name: "John Snow"
+          address: { postalCode: "12222", country: "US" }
+        }
+      }
+    ) {
+      code
+      message
+      error
+      token {
+        id
+        livemode
+        type
+        used
+      }
+    }
+  }
+  `
+
+  cy.postGQL(gqlQuery).then(res => {
+    return res.body.data.convertPayfacPaymentMethodToken.token.id;
+  });
+});
+
+Cypress.Commands.add('getPaymentMethodStatus', (paymentMethodId: string) => {
+  const gqlQuery = `query {
+    paymentMethods(id: "${paymentMethodId}") {
+      nodes {
+        status
+      }
+    }
+  }
+  `
+
+  cy.postGQL(gqlQuery).then(res => {
+    return res.body.data.paymentMethods.nodes[0].status;
+  });
+});
+
 Cypress.Commands.add('convertPayfacPaymentMethodToken', (token: string) => {
   const gqlQuery = `mutation {
     convertPayfacPaymentMethodToken(input: {
@@ -212,6 +257,22 @@ Cypress.Commands.add('createPaymentMethod', () => {
       return cy.postGQL(gqlQuery);
     });
   });
+});
+
+Cypress.Commands.add('generateWepayTokenCreditCard', () => {
+  const settings = {
+    "url": "https://stage-api.wepay.com/tokens",
+    "method": "POST",
+    "timeout": 0,
+    "headers": {
+      "Content-Type": "application/json",
+      "app-id": `${Cypress.env('wepay-app-id')}`,
+      "app-token": `${Cypress.env('wepay-app-secret')}`,
+      "api-version": `${Cypress.env('wepay-api-version')}`
+    },
+    "data": JSON.stringify({"resource":"payment_methods","payment_methods":{"type":"credit_card","credit_card":{"card_number":"4111111111111111","expiration_month":12,"expiration_year":2025,"cvv":"007"}}}),
+  };
+  return Cypress.$.ajax(settings);
 });
 
 //generates a payment method id either from an existing payment method on the tenant or creating a new payment method for the tenant
