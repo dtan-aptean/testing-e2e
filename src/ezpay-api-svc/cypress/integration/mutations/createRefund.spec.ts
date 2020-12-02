@@ -1,110 +1,108 @@
 /// <reference types="cypress" />
 
 describe("Mutation: createRefund", () => {
-  //   it("should fail when no idempotency-key header is sent with the request", () => {
-  //     const gqlQuery = `mutation createRefund {
-  //         createRefund(
-  //           input: {
-  //             paymentId: "4e769d71-bc7f-43e8-b9cc-f264fe5604ek"
-  //             refundReason: "Product does not meet expectations"
-  //           }
-  //         ) {
-  //           code
-  //           message
-  //           error
-  //           refund {
-  //             id
-  //           }
-  //         }
-  //       }
-  //       `;
+    it("should fail when no idempotency-key header is sent with the request", () => {
+      const gqlQuery = `mutation createRefund {
+          createRefund(
+            input: {
+              paymentId: "4e769d71-bc7f-43e8-b9cc-f264fe5604ek"
+              refundReason: "Product does not meet expectations"
+            }
+          ) {
+            code
+            message
+            error
+            refund {
+              id
+            }
+          }
+        }
+        `;
 
-  //     cy.postGQL(gqlQuery).then((res) => {
-  //       // should be 200 ok
-  //       cy.expect(res.isOkStatusCode).to.be.equal(true);
+      cy.postGQL(gqlQuery).then((res) => {
+        // should be 200 ok
+        cy.expect(res.isOkStatusCode).to.be.equal(true);
 
-  //       // should have errors
-  //       assert.exists(
-  //         res.body.errors,
-  //         `One or more errors ocuured while executing query: ${gqlQuery}`
-  //       );
+        // should have errors
+        assert.exists(
+          res.body.errors,
+          `One or more errors ocuured while executing query: ${gqlQuery}`
+        );
 
-  //       // has error
-  //       assert.notExists(res.body.data);
-  //     });
-  //   });
+        // has error
+        assert.notExists(res.body.data);
+      });
+    });
 
-  //   it("should pass when creating a full refund and test reject with same idempotency key", () => {
-  //     let paymentId = "";
-  //     let amount = 0;
-  //     cy.generatePaymentRequestAndPay().then((res) => {
-  //       paymentId = res.id;
-  //       amount = res.amount;
-  //       console.log(paymentId);
+    it("should pass when creating a full refund and test reject with same idempotency key", () => {
+      let paymentId = "";
+      let amount = 0;
+      cy.generatePaymentRequestAndPay().then((res) => {
+        paymentId = res.id;
+        amount = res.amount;
 
-  //       cy.wait(120000);
-  //       const gqlQuery = `mutation createRefund {
-  //         createRefund(
-  //           input: {
-  //             paymentId: "${paymentId}"
-  //             refundReason: "Product does not meet expectations"
-  //           }
-  //         ) {
-  //           code
-  //           message
-  //           error
-  //           refund {
-  //             id
-  //           }
-  //         }
-  //       }
-  //       `;
-  //       cy.postGQLWithIdempotencyKey(gqlQuery, paymentId).then((res) => {
-  //         console.log(res);
-  //         cy.expect(res.isOkStatusCode).to.be.equal(true);
+        cy.wait(120000);
+        const gqlQuery = `mutation createRefund {
+          createRefund(
+            input: {
+              paymentId: "${paymentId}"
+              refundReason: "Product does not meet expectations"
+            }
+          ) {
+            code
+            message
+            error
+            refund {
+              id
+            }
+          }
+        }
+        `;
+        cy.postGQLWithIdempotencyKey(gqlQuery, paymentId).then((res) => {
+          cy.expect(res.isOkStatusCode).to.be.equal(true);
 
-  //         // should have no errors
-  //         assert.notExists(
-  //           res.body.errors,
-  //           `One or more errors ocuured while executing query: ${gqlQuery}`
-  //         );
+          // should have no errors
+          assert.notExists(
+            res.body.errors,
+            `One or more errors ocuured while executing query: ${gqlQuery}`
+          );
 
-  //         // has data
-  //         assert.exists(res.body.data);
-  //         assert.exists(res.body.data.createRefund.code);
-  //         assert.isNull(res.body.data.createRefund.error);
-  //         assert.exists(res.body.data.createRefund.refund);
-  //         assert.exists(res.body.data.createRefund.refund.id);
-  //       });
+          // has data
+          assert.exists(res.body.data);
+          assert.exists(res.body.data.createRefund.code);
+          assert.isNull(res.body.data.createRefund.error);
+          assert.exists(res.body.data.createRefund.refund);
+          assert.exists(res.body.data.createRefund.refund.id);
+        });
 
-  //       // Should fail when calling again with same Idempotency Key
-  //       cy.postGQLWithIdempotencyKey(gqlQuery, paymentId).then((res) => {
-  //         // should be bad request
-  //         cy.expect(res.isOkStatusCode).to.be.equal(true);
+        // Should fail when calling again with same Idempotency Key
+        cy.postGQLWithIdempotencyKey(gqlQuery, paymentId).then((res) => {
+          // should be bad request
+          cy.expect(res.isOkStatusCode).to.be.equal(true);
 
-  //         // should have errors
-  //         assert.exists(
-  //           res.body.errors,
-  //           `One or more errors ocuured while executing query: ${gqlQuery}`
-  //         );
+          // should have errors
+          assert.exists(
+            res.body.errors,
+            `One or more errors ocuured while executing query: ${gqlQuery}`
+          );
 
-  //         // should have no data
-  //         assert.notExists(res.body.data);
-  //       });
+          // should have no data
+          assert.notExists(res.body.data);
+        });
 
-  //       // Should fail when calling again with new Idempotency Key, is already refunded check
-  //       cy.postGQLWithIdempotencyKey(gqlQuery, paymentId + "1").then((res) => {
-  //         // should be bad request
-  //         cy.expect(res.isOkStatusCode).to.be.equal(true);
+        // Should fail when calling again with new Idempotency Key, is already refunded check
+        cy.postGQLWithIdempotencyKey(gqlQuery, paymentId + "1").then((res) => {
+          // should be bad request
+          cy.expect(res.isOkStatusCode).to.be.equal(true);
 
-  //         // should have error code
-  //         assert.equal(res.body.data.createRefund.code, "ERROR");
+          // should have error code
+          assert.equal(res.body.data.createRefund.code, "ERROR");
 
-  //         // should have no refund
-  //         assert.isNull(res.body.data.createRefund.refund);
-  //       });
-  //     });
-  //   });
+          // should have no refund
+          assert.isNull(res.body.data.createRefund.refund);
+        });
+      });
+    });
 
   it("should pass when creating a partial refund", () => {
     cy.generatePaymentRequestAndPay().then((res) => {
@@ -113,7 +111,6 @@ describe("Mutation: createRefund", () => {
 
       paymentId = res.id;
       originalAmount = res.amount;
-      console.log(paymentId);
 
       let partialAmount1 = originalAmount - 100;
       let partialAmount2 = originalAmount - partialAmount1;
@@ -140,7 +137,6 @@ describe("Mutation: createRefund", () => {
 
       // First partial refund
       cy.postGQLWithIdempotencyKey(gqlQuery, paymentId).then((res) => {
-        console.log(res);
         // should be bad request
         cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -180,7 +176,6 @@ describe("Mutation: createRefund", () => {
 
       // Second partial refund
       cy.postGQLWithIdempotencyKey(gqlQuery, paymentId + "1").then((res) => {
-        console.log(res);
         cy.expect(res.isOkStatusCode).to.be.equal(true);
 
         // should have no errors
