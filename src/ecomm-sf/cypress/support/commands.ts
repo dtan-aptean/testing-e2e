@@ -370,6 +370,29 @@ Cypress.Commands.add("addNewCampaign", (name, subject, body, date, role) => {
   cy.wait(500);
 });
 
+// Go to customers page. Can be done from public or admin
+Cypress.Commands.add("goToCustomers", () => {
+  Cypress.log({ name: "goToCustomers" });
+
+  cy.location("pathname").then((loc) => {
+    cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+    if (!loc.includes("Customer/List")) {
+      if (!loc.includes("Admin")) {
+        cy.goToAdmin();
+        cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+      }
+      cy.get(".sidebar-menu.tree").find("li").contains("Customers").click();
+    }
+    cy.get(".sidebar-menu.tree")
+      .find("li")
+      .find(".treeview-menu")
+      .find("li")
+      .contains("Customers")
+      .click();
+    cy.wait(500);
+  });
+});
+
 // Send a test email for a specific campaign. Assumes you're on the campaign list page
 Cypress.Commands.add("sendCampaignTest", (campaignName) => {
   Cypress.log({
