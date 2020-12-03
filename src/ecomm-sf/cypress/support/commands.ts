@@ -93,11 +93,15 @@ Cypress.Commands.add("login", () => {
   Cypress.log({
     name: "login",
   });
-  cy.get(".header-links").find(".ico-login").click();
-  cy.wait(200);
-  cy.get(".email").type(Cypress.config("username"));
-  cy.get(".password").type(Cypress.config("password"));
-  cy.get(".login-button").click();
+  cy.get(".header-links").then(($el) => {
+    if (!$el[0].innerText.includes('LOG OUT')) {
+      cy.get(".header-links").find(".ico-login").click();
+      cy.wait(200);
+      cy.get(".email").type(Cypress.config("username"));
+      cy.get(".password").type(Cypress.config("password"));
+      cy.get(".login-button").click();
+    }
+  });
 });
 
 // Go to cart
@@ -343,13 +347,59 @@ Cypress.Commands.add("goToCampaigns", () => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("Promotions").click();
+      cy.get(".sidebar-menu.tree").find("li").contains("Promotions").click({force: true});
     }
     cy.get(".sidebar-menu.tree")
       .find("li")
       .find(".treeview-menu")
       .find("li")
       .contains("Campaigns")
+      .click({force: true});
+    cy.wait(500);
+  });
+});
+
+// Go to customers page. Can be done from public or admin
+Cypress.Commands.add("goToCustomers", () => {
+  Cypress.log({ name: "goToCustomers" });
+
+  cy.location("pathname").then((loc) => {
+    cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+    if (!loc.includes("/Customer/List")) {
+      if (!loc.includes("Admin")) {
+        cy.goToAdmin();
+        cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+      }
+      cy.get(".sidebar-menu.tree").find("li").contains("Customers").click();
+    }
+    cy.get(".sidebar-menu.tree")
+      .find("li")
+      .find(".treeview-menu")
+      .find("li")
+      .contains("Customers")
+      .click();
+    cy.wait(500);
+  });
+});
+
+// Go to message queue page. Can be done from public or admin
+Cypress.Commands.add("goToMessageQueue", () => {
+  Cypress.log({ name: "goToMessageQueue" });
+
+  cy.location("pathname").then((loc) => {
+    cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+    if (!loc.includes("/QueuedEmail/List")) {
+      if (!loc.includes("Admin")) {
+        cy.goToAdmin();
+        cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+      }
+      cy.get(".sidebar-menu.tree").find("li").contains("System").click();
+    }
+    cy.get(".sidebar-menu.tree")
+      .find("li")
+      .find(".treeview-menu")
+      .find("li")
+      .contains("Message queue")
       .click();
     cy.wait(500);
   });
@@ -370,27 +420,57 @@ Cypress.Commands.add("addNewCampaign", (name, subject, body, date, role) => {
   cy.wait(500);
 });
 
-// Go to customers page. Can be done from public or admin
-Cypress.Commands.add("goToCustomers", () => {
-  Cypress.log({ name: "goToCustomers" });
-
-  cy.location("pathname").then((loc) => {
-    cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
-    if (!loc.includes("Customer/List")) {
-      if (!loc.includes("Admin")) {
-        cy.goToAdmin();
-        cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
-      }
-      cy.get(".sidebar-menu.tree").find("li").contains("Customers").click();
-    }
-    cy.get(".sidebar-menu.tree")
-      .find("li")
-      .find(".treeview-menu")
-      .find("li")
-      .contains("Customers")
-      .click();
-    cy.wait(500);
+// Delete a specific campaign
+Cypress.Commands.add("deleteCampaign", (campaignName) => {
+  Cypress.log({
+    name: "deleteCampaign",
+    message: campaignName,
+    consoleProps: () => {
+      return {
+        "Campaign name": campaignName,
+      };
+    },
   });
+  // Make sure campaign name is valid
+  expect(campaignName).to.not.be.null;
+  expect(campaignName).to.not.be.undefined;
+  assert.isString(campaignName);
+  const checkAndDelete = (campaignName: string) => {
+    cy.get("#campaigns-grid")
+      .find("tbody")
+      .find("tr")
+      .then(($rows) => {
+        const row = $rows.filter((index, item) => {
+          return item.cells[0].innerText === campaignName;
+        });
+        if (row.length === 0) {
+          // If we don't find it, check for extra pages
+          cy.get(".pagination").invoke('children').then(($li) => {
+            const currentPage = $li.filter((index, item) => {return item.className.includes("active")})[0];
+            if ($li.length > 3 && currentPage.innerText != $li.length - 2) {
+              // If there are more pages and we're not on the last page, go to the next page
+              cy.get("#campaigns-grid_next").click({force: true});
+              cy.wait(200);
+              // Call the function again to look for the item on this page
+              checkAndDelete(campaignName);
+            }
+            // If there aren't more pages, then the item isn't in the table and has already been deleted.
+          });
+        } else {
+          // Item was found, time to delete it
+          cy.wrap(row).find("td").contains("Edit").click({force: true});
+          cy.wait(500);
+          cy.get("#campaign-delete").click({force: true});
+          cy.wait(200);
+          cy.get("#campaignmodel-Delete-delete-confirmation")
+            .find(".modal-footer")
+            .find("button")
+            .contains("Delete")
+            .click({force: true});
+        }
+      }); 
+  };
+  checkAndDelete(campaignName);
 });
 
 // Send a test email for a specific campaign. Assumes you're on the campaign list page
@@ -422,10 +502,10 @@ Cypress.Commands.add("sendCampaignTest", (campaignName) => {
     });
 });
 
-// Delete a specific campaign
-Cypress.Commands.add("deleteCampaign", (campaignName) => {
+// Sends a mass email for a campaign test
+Cypress.Commands.add("sendMassCampaign", (campaignName) => {
   Cypress.log({
-    name: "deleteCampaign",
+    name: "sendMassCampaign",
     message: campaignName,
     consoleProps: () => {
       return {
@@ -433,7 +513,7 @@ Cypress.Commands.add("deleteCampaign", (campaignName) => {
       };
     },
   });
-  // Make sure campaign name is valid
+  // Make sure campaign name and email are valid
   expect(campaignName).to.not.be.null;
   expect(campaignName).to.not.be.undefined;
   assert.isString(campaignName);
@@ -446,14 +526,126 @@ Cypress.Commands.add("deleteCampaign", (campaignName) => {
       });
       cy.wrap(row).find("td").contains("Edit").click();
       cy.wait(500);
-      cy.get("#campaign-delete").click();
-      cy.wait(200);
-      cy.get("#campaignmodel-Delete-delete-confirmation")
-        .find(".modal-footer")
-        .find("button")
-        .contains("Delete")
-        .click();
+      //cy.get("#TestEmail").type("cypress.reg@testenvironment.com");
+      cy.get("button[name=send-mass-email").click();
     });
+});
+
+// Search message queue for a specific message. Searches by subject
+Cypress.Commands.add("searchMessageQueue", (subject) => {
+  Cypress.log({
+    name: "searchMessageQueue",
+    message: subject,
+    consoleProps: () => {
+      return {
+        "Campaign subject": subject,
+      };
+    },
+  });
+  return cy
+    .get("#queuedEmails-grid")
+    .find("tbody")
+    .find("tr")
+    .then(($rows) => {
+      const campaignRows = $rows.filter((index, item) => {
+        return item.cells[2].innerText === subject;
+      });
+      const today = new Date();
+      const formatedToday = today.toLocaleString(undefined, {month: "2-digit", day: "2-digit", year: "numeric"});
+      const currentCampaign =  campaignRows.filter((index, item) => {
+        return item.cells[5].innerText.includes(formatedToday);
+      });
+      expect(currentCampaign.length).to.be.gte(1, "Expecting at least one email in the queue");
+      return currentCampaign;
+    });
+});
+
+// Creates a new customer
+Cypress.Commands.add("addNewCustomer", (roleObject) => {
+  assert.exists(roleObject);
+  assert.isNotEmpty(roleObject);
+  const displayObject = (obj) => {
+    const props = Object.getOwnPropertyNames(obj);
+    var message = "";
+    props.forEach((prop) => {
+      message = message + `${prop}:\t${obj[prop]}\n`;
+    });
+    return message;
+  };
+  Cypress.log({
+    name: "addNewCustomer",
+    message: `${roleObject.email} as ${roleObject.role}`,
+    consoleProps: () => {
+      return {
+        "Customer Object": displayObject(roleObject),
+      };
+    },
+  });
+  cy.get('a').contains("Add new").click();
+  cy.get('#Email').type(roleObject.email);
+  cy.get('#Password').type(roleObject.password);
+  cy.get('#FirstName').type(roleObject.first);
+  cy.get('#LastName').type(roleObject.last);
+  cy.get(`#Gender_${roleObject.gender}`).check();
+  cy.get('#DateOfBirth').type(roleObject.dob);
+  const roles = [roleObject.role];
+  if (roleObject.role.includes('Guest')) {
+    cy.get('#SelectedCustomerRoleIds_taglist').within(() => {
+      cy.get("span[title=delete]").click();
+    });
+  } else if (!roleObject.role.includes('Registered')) {
+    roles.push('Registered');
+  }
+  cy.get('#SelectedCustomerRoleIds').select(roles, {force: true});
+  cy.get('#AdminComment').type('Created for Cypress testing');
+  cy.get("button[name=save]").click();
+  cy.wait(500);
+  cy.get(".alert").should(
+    "contain.text",
+    "The new customer has been added successfully"
+  );
+});
+
+// Searches for a customer
+Cypress.Commands.add("searchForCustomer", (firstName: string, lastName: string) => {
+  Cypress.log({
+    name: "searchForCustomer",
+    message: `${firstName} ${lastName}`,
+    consoleProps: () => {
+      return {
+        "Customer Name": `${firstName} ${lastName}`,
+      };
+    },
+  });
+
+  return cy.get('#SelectedCustomerRoleIds').then(($el) => {
+    if ($el.val().length > 0) {
+      cy.get('#SelectedCustomerRoleIds_taglist').within(() => {
+        cy.get("span[title=delete]").click();
+      });
+    }
+    cy.get('#SelectedCustomerRoleIds').invoke('val').should('be.a', 'array').and('be.empty');
+    cy.get('#SearchFirstName').type(firstName);
+    cy.get('#SearchLastName').type(lastName);
+    cy.get('#search-customers').click();
+    cy.wait(500);
+    cy.get('#SearchFirstName').clear();
+    cy.get('#SearchLastName').clear();
+    cy.get('#customers-grid')
+      .find('tbody')
+      .find('tr')
+      .then(($rows) => {
+        if ($rows.length === 1 && $rows[0].innerText === "No data available in table") {
+          return null;
+        } else if ($rows.length === 1) {
+          if ($rows[0].cells[2].innerText === `${firstName} ${lastName}`) {
+            return $rows[0];
+          }
+        } else {
+          return null;
+        }
+      });
+  });
 });
 
 // Goes to discounts page. Can be done from public or admin
