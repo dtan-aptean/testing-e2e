@@ -324,27 +324,29 @@ Cypress.Commands.add("getPaymentMethodById", (id: string) => {
   });
 });
 
-Cypress.Commands.add("generatePaymentRequestAndPay", () => {
-  cy.generatePaymentRequest().then((paymentRequest) => {
-    cy.generateWepayTokenCreditCard()
-      .then((payfacToken) => {
-        cy.wait(1).then(() => {
-          return cy
-            .convertPayfacPaymentMethodTokenCreditCard(payfacToken.id)
-            .then((paymentMethodId) => {
-              return paymentMethodId;
-            });
-        });
-      })
-      .then((paymentMethodId) => {
-        // payment
-        const gqlQuery = `mutation {
+Cypress.Commands.add(
+  "generatePaymentRequestAndPay",
+  (immediateCapture: Boolean = true) => {
+    cy.generatePaymentRequest().then((paymentRequest) => {
+      cy.generateWepayTokenCreditCard()
+        .then((payfacToken) => {
+          cy.wait(1).then(() => {
+            return cy
+              .convertPayfacPaymentMethodTokenCreditCard(payfacToken.id)
+              .then((paymentMethodId) => {
+                return paymentMethodId;
+              });
+          });
+        })
+        .then((paymentMethodId) => {
+          // payment
+          const gqlQuery = `mutation {
           createPayment(
             input: {
               paymentMethodId: "${paymentMethodId}",
               paymentRequestId: "${paymentRequest.paymentRequestId}"
               amount: ${paymentRequest.amount}
-              immediateCapture: true
+              immediateCapture: ${immediateCapture}
               currency: USD
               riskMetadata: {
                 address: { postalCode: "12222", country: "US" }
@@ -369,39 +371,40 @@ Cypress.Commands.add("generatePaymentRequestAndPay", () => {
         }
         `;
 
-        cy.wait(15000).then(() => {
-          cy.postGQLWithIdempotencyKey(
-            gqlQuery,
-            paymentRequest.paymentRequestId
-          ).then((res) => {
-            // should be 200 ok
-            cy.expect(res.isOkStatusCode).to.be.equal(true);
+          cy.wait(15000).then(() => {
+            cy.postGQLWithIdempotencyKey(
+              gqlQuery,
+              paymentRequest.paymentRequestId
+            ).then((res) => {
+              // should be 200 ok
+              cy.expect(res.isOkStatusCode).to.be.equal(true);
 
-            // should have errors
-            assert.notExists(
-              res.body.errors,
-              `One or more errors ocuured while executing query: ${gqlQuery}`
-            );
+              // should have errors
+              assert.notExists(
+                res.body.errors,
+                `One or more errors ocuured while executing query: ${gqlQuery}`
+              );
 
-            // has data
-            assert.exists(res.body.data);
+              // has data
+              assert.exists(res.body.data);
 
-            // assertions
-            assert.isNotNull(res.body.data.createPayment);
-            assert.isNotNull(res.body.data.createPayment.code);
-            assert.isNotNull(res.body.data.createPayment.payment.id);
-            assert.isNull(res.body.data.createPayment.error);
-            assert.equal(
-              res.body.data.createPayment.code,
-              "SUCCESS",
-              "Code is not SUCCESS"
-            );
+              // assertions
+              assert.isNotNull(res.body.data.createPayment);
+              assert.isNotNull(res.body.data.createPayment.code);
+              assert.isNotNull(res.body.data.createPayment.payment.id);
+              assert.isNull(res.body.data.createPayment.error);
+              assert.equal(
+                res.body.data.createPayment.code,
+                "SUCCESS",
+                "Code is not SUCCESS"
+              );
 
-            const id = res.body.data.createPayment.payment.id;
-            const amount = paymentRequest.amount;
-            return { id: id, amount: amount };
+              const id = res.body.data.createPayment.payment.id;
+              const amount = paymentRequest.amount;
+              return { id: id, amount: amount };
+            });
           });
         });
-      });
-  });
-});
+    });
+  }
+);
