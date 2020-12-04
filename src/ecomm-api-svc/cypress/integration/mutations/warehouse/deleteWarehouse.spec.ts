@@ -14,7 +14,7 @@ describe('Mutation: deleteWarehouse', () => {
         error
     `;
 
-    beforeEach(() => {
+    /* beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         cy.searchOrCreate(name, queryName, creationName).then((returnedId: string) => {
             id = returnedId;
@@ -54,9 +54,9 @@ describe('Mutation: deleteWarehouse', () => {
                 }
             });
         }
-    });
+    }); */
 
-    it("Mutation will fail without input", () => {
+    it.skip("Mutation will fail without input", () => {
         const mutation = `mutation {
             ${mutationName} {
                 ${standardMutationBody}
@@ -65,7 +65,7 @@ describe('Mutation: deleteWarehouse', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will fail when input is an empty object", () => {
+    it.skip("Mutation will fail when input is an empty object", () => {
         const mutation = `mutation {
             ${mutationName}(input: {}) {
                 ${standardMutationBody}
@@ -74,7 +74,7 @@ describe('Mutation: deleteWarehouse', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will fail with invalid 'id' input", () => {
+    it.skip("Mutation will fail with invalid 'id' input", () => {
         const mutation = `mutation {
             ${mutationName}(input: { id: true }) {
                 ${standardMutationBody}
@@ -83,7 +83,7 @@ describe('Mutation: deleteWarehouse', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will succeed with valid 'id' input from an existing item", () => {
+    it.skip("Mutation will succeed with valid 'id' input from an existing item", () => {
         const mutation = `mutation {
             ${mutationName}(input: { id: "${id}" }) {
                 ${standardMutationBody}
@@ -98,7 +98,7 @@ describe('Mutation: deleteWarehouse', () => {
         });
     });
 
-    it("Mutation will fail when given 'id' input from an deleted item", () => {
+    it.skip("Mutation will fail when given 'id' input from an deleted item", () => {
         const mutation = `mutation {
             ${mutationName}(input: { id: "${id}" }) {
                 ${standardMutationBody}
@@ -113,5 +113,4 @@ describe('Mutation: deleteWarehouse', () => {
             });
         });
     });
-
 });

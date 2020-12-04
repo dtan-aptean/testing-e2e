@@ -18,7 +18,7 @@ describe('Mutation: createWarehouse', () => {
         }
     `;
 
-    afterEach(() => {
+    /* afterEach(() => {
         if (id !== "") {
             const deletionName = "deleteWarehouse";
             const removalMutation = `mutation {
@@ -32,9 +32,9 @@ describe('Mutation: createWarehouse', () => {
                 id = "";
             });
         }
-    });
+    }); */
 
-    it("Mutation will fail without input", () => {
+    it.skip("Mutation will fail without input", () => {
         const mutation = `mutation {
             ${mutationName} {
                 ${standardMutationBody}
@@ -43,7 +43,7 @@ describe('Mutation: createWarehouse', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will fail when input is an empty object", () => {
+    it.skip("Mutation will fail when input is an empty object", () => {
         const mutation = `mutation {
             ${mutationName}(input: {}) {
                 ${standardMutationBody}
@@ -52,7 +52,7 @@ describe('Mutation: createWarehouse', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will fail with invalid 'Name' input", () => {
+    it.skip("Mutation will fail with invalid 'Name' input", () => {
         const mutation = `mutation {
             ${mutationName}(input: { name: 7 }) {
                 ${standardMutationBody}
@@ -61,7 +61,7 @@ describe('Mutation: createWarehouse', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation with valid 'Name' input will create a new item", () => {
+    it.skip("Mutation with valid 'Name' input will create a new item", () => {
         const name = "Cypress API Warehouse";
         const mutation = `mutation {
             ${mutationName}(input: { name: "${name}" }) {
@@ -86,7 +86,7 @@ describe('Mutation: createWarehouse', () => {
         });
     });
 
-    it("Mutation with all required input and 'customData' input creates item with customData", () => {
+    it.skip("Mutation with all required input and 'customData' input creates item with customData", () => {
         const name = "Cypress Warehouse customData";
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
@@ -125,7 +125,7 @@ describe('Mutation: createWarehouse', () => {
         });
     });
 
-    it("Mutation creates item that has all included input", () => {
+    it.skip("Mutation creates item that has all included input", () => {
         const name = "Cypress Warehouse Input";
         const address = {
             city: "Alpharetta",

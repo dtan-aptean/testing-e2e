@@ -31,7 +31,7 @@ describe('Query: warehouses', () => {
 
     var trueTotal = null;
 
-    before(() => {
+    /* before(() => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
             const { nodes, edges, totalCount } = res.body.data[queryName];
             expect(nodes.length).to.be.eql(edges.length);
@@ -39,13 +39,13 @@ describe('Query: warehouses', () => {
                 trueTotal = totalCount;
             }
         });
-    });
+    }); */
 
-    it("Query with valid 'orderBy' input argument returns valid data types", () => {
+    it.skip("Query with valid 'orderBy' input argument returns valid data types", () => {
         cy.postAndValidate(standardQuery, queryName);
     });
     
-    it("Query will fail without 'orderBy' input argument", () => {
+    it.skip("Query will fail without 'orderBy' input argument", () => {
         const gqlQuery = `{
             ${queryName} {
                 ${standardQueryBody}
@@ -56,7 +56,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query fails if the 'orderBy' input argument is null", () => {
+    it.skip("Query fails if the 'orderBy' input argument is null", () => {
         const gqlQuery = `{
             ${queryName}(orderBy: null) {
                 totalCount
@@ -65,7 +65,7 @@ describe('Query: warehouses', () => {
         cy.postAndConfirmError(gqlQuery);
     });
 
-    it("Query fails if 'orderBy' input argument only has field", () => {
+    it.skip("Query fails if 'orderBy' input argument only has field", () => {
         const fieldQuery = `{
             ${queryName}(orderBy: {field: TIMESTAMP}) {
                 totalCount
@@ -74,7 +74,7 @@ describe('Query: warehouses', () => {
         cy.postAndConfirmError(fieldQuery);
     });
 
-    it("Query fails if 'orderBy' input argument only has direction", () => {
+    it.skip("Query fails if 'orderBy' input argument only has direction", () => {
         const directionQuery = `{
             ${queryName}(orderBy: {direction: ASC}) {
                 totalCount
@@ -83,7 +83,7 @@ describe('Query: warehouses', () => {
         cy.postAndConfirmError(directionQuery);
     });
 
-    it('Query will fail if no return type is provided', () => {
+    it.skip('Query will fail if no return type is provided', () => {
         const gqlQuery = `{
             ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 
@@ -92,7 +92,7 @@ describe('Query: warehouses', () => {
         cy.postAndConfirmError(gqlQuery);
     });
 
-    it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
+    it.skip("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
         const gqlQuery = `{
             ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 totalCount
@@ -112,7 +112,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query without 'first' or 'last' input arguments will return up to 25 items", () => {
+    it.skip("Query without 'first' or 'last' input arguments will return up to 25 items", () => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
             cy.confirmCount(res, queryName).then((hitUpperLimit: boolean) => {
                 cy.verifyPageInfo(res, queryName, hitUpperLimit, false);
@@ -120,7 +120,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with valid 'first' input argument will return only that amount of items", () => {
+    it.skip("Query with valid 'first' input argument will return only that amount of items", () => {
         cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
             // If there's only one item, we can't do any pagination
             expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
@@ -139,7 +139,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with valid 'last' input argument will return only that amount of items", () => {
+    it.skip("Query with valid 'last' input argument will return only that amount of items", () => {
         const trueTotalQuery = `{
             ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -163,7 +163,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with invalid 'first' input argument will fail", () => {
+    it.skip("Query with invalid 'first' input argument will fail", () => {
         const gqlQuery = `{
             ${queryName}(first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -175,7 +175,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with invalid 'last' input argument will fail", () => {
+    it.skip("Query with invalid 'last' input argument will fail", () => {
         const gqlQuery = `{
             ${queryName}(last: "5", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -187,7 +187,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with both 'first' and 'last' input arguments will fail", () => {
+    it.skip("Query with both 'first' and 'last' input arguments will fail", () => {
         const gqlQuery = `{
             ${queryName}(first: 7, last: 3, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -196,7 +196,7 @@ describe('Query: warehouses', () => {
         cy.postAndConfirmError(gqlQuery, true);
     });
 
-    it("Query with a valid 'searchString' input argument will return the specific item", () => {
+    it.skip("Query with a valid 'searchString' input argument will return the specific item", () => {
         cy.returnRandomName(standardQuery, queryName).then((name: string) => {
             const searchQuery = `{
                 ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -209,7 +209,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with a valid partial 'searchString' input argument will return all items containing the string", () => {
+    it.skip("Query with a valid partial 'searchString' input argument will return all items containing the string", () => {
         cy.returnRandomName(standardQuery, queryName).then((name: string) => {
             // Get the first word if the name has multiple words. Otherwise, get a random segment of the name
             var newWordIndex = name.search(" ");
@@ -231,7 +231,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with an invalid 'searchString' input argument will fail", () => {
+    it.skip("Query with an invalid 'searchString' input argument will fail", () => {
         const gqlQuery = `{
             ${queryName}(searchString: 7, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -243,7 +243,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with a valid 'before' input argument will return all items before that value", () => {
+    it.skip("Query with a valid 'before' input argument will return all items before that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             const beforeQuery = `{
                 ${queryName}(before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -258,7 +258,7 @@ describe('Query: warehouses', () => {
         });
     });
     
-    it("Query with a valid 'after' input argument will return all items after that value", () => {
+    it.skip("Query with a valid 'after' input argument will return all items after that value", () => {
         const trueTotalQuery = `{
             ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -279,7 +279,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with invalid 'before' input argument will fail", () => {
+    it.skip("Query with invalid 'before' input argument will fail", () => {
         const gqlQuery = `{
             ${queryName}(before: 123, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -291,7 +291,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with invalid 'after' input argument will fail", () => {
+    it.skip("Query with invalid 'after' input argument will fail", () => {
         const gqlQuery = `{
             ${queryName}(after: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -303,7 +303,7 @@ describe('Query: warehouses', () => {
         });
     });
     
-    it("Query with both 'before' and 'after' input arguments will fail", () => {
+    it.skip("Query with both 'before' and 'after' input arguments will fail", () => {
         const gqlQuery = `{
             ${queryName}(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -320,7 +320,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with both 'before' and 'first' input arguments will return a specific amount of items before that value", () => {
+    it.skip("Query with both 'before' and 'first' input arguments will return a specific amount of items before that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             cy.get('@cursorIndex').then((index: number) => {
                 const first = index > 1 ? Math.floor(index / 2) : 1;
@@ -339,7 +339,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with both 'after' and 'first' input will arguments return a specific amount of items after that value", () => {
+    it.skip("Query with both 'after' and 'first' input will arguments return a specific amount of items after that value", () => {
         const trueTotalQuery = `{
             ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -366,7 +366,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with both 'before' and 'last' input arguments will return a specific amount of items before that value", () => {
+    it.skip("Query with both 'before' and 'last' input arguments will return a specific amount of items before that value", () => {
         const trueTotalQuery = `{
             ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -390,7 +390,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with both 'after' and 'last' input will return a specific amount of items after that value", () => {
+    it.skip("Query with both 'after' and 'last' input will return a specific amount of items after that value", () => {
         const trueTotalQuery = `{
             ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -417,7 +417,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it("Query with customData field will return valid value", () => {
+    it.skip("Query with customData field will return valid value", () => {
         const gqlQuery = `{
             ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 edges {
@@ -443,7 +443,7 @@ describe('Query: warehouses', () => {
         });
     });
 
-    it('Query with address field will return valid data and correct fields', () => {
+    it.skip('Query with address field will return valid data and correct fields', () => {
         const gqlQuery = `{
             ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 edges {
