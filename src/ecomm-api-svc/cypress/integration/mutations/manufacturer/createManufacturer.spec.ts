@@ -213,8 +213,8 @@ describe('Mutation: createManufacturer', () => {
                                     amount
                                     currency
                                 }
+                                discountType
                             }
-                            discountType
                             ${infoName} {
                                 name
                                 description
@@ -239,8 +239,8 @@ describe('Mutation: createManufacturer', () => {
                                             amount
                                             currency
                                         }
+                                        discountType
                                     }
-                                    discountType
                                     ${infoName} {
                                         name
                                         description
