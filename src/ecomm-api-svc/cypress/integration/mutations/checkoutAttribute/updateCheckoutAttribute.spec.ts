@@ -149,7 +149,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
     it("Mutation will succeed with valid 'id', 'name', and 'values' input", () => {
         updateCount++;
         const valuesCopy = JSON.parse(JSON.stringify(values));
-        valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
+        valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
         const mutation = `mutation {
             ${mutationName}(input: { id: "${id}", name: "${newName}", values: ${toFormattedString(valuesCopy)} }) {
@@ -181,7 +181,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
             const dummyTaxCategory = {id: taxCategoryId, name: taxCategoryName};
             updateCount++;
             const valuesCopy = JSON.parse(JSON.stringify(values));
-            valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
+            valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
             const newName = `Cypress ${mutationName} Update ${updateCount}`;
             const mutation = `mutation {
                 ${mutationName}(
@@ -232,7 +232,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
     it("Mutation with all required input and 'customData' input updates item with customData", () => {
         updateCount++;
         const valuesCopy = JSON.parse(JSON.stringify(values));
-        valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
+        valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
         const newName = `Cypress ${mutationName} Update ${updateCount}`;
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
@@ -288,7 +288,6 @@ describe('Mutation: updateCheckoutAttribute', () => {
         };
         const valuesCopy = [JSON.parse(JSON.stringify(values[0])), newValue];
         updateCount++;
-        valuesCopy[0].name = `"Cypress CA update test #${updateCount}"`;
         valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
         valuesCopy[0].displayOrder = Cypress._.random(0, 10);
         valuesCopy[0].isPreSelected = Cypress._.random(0, 1) === 1;
@@ -328,6 +327,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                     isTaxExempt
                     shippableProductRequired
                     values {
+                        id
                         displayOrder
                         isPreSelected
                         name
@@ -341,6 +341,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            valuesCopy[1].id = res.body.data[mutationName][dataPath].values[1].id;
             const propNames = ["name", "displayOrder", "defaultValue", "displayName", "isRequired", "isTaxExempt", "shippableProductRequired", "values"];
             const propValues = [newName, displayOrder, defaultValue, displayName, isRequired, isTaxExempt, shippableProductRequired, valuesCopy];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
@@ -369,8 +370,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                         }
                     }
                 }`;
-                const propTest = [newName, displayOrder, defaultValue, displayName, isRequired, isTaxExempt, shippableProductRequired, valuesCopy];
-                cy.confirmUsingQuery(query, queryName, id, propNames, propTest);
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
             });
         });
     });

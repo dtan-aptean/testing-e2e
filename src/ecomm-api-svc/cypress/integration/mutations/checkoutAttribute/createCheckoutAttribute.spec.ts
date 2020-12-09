@@ -262,14 +262,14 @@ describe('Mutation: createCheckoutAttribute', () => {
         const displayOrder = Cypress._.random(1, 20);
         const name = "Cypress CheckoutAttribute Input";
         const defaultValue = "Cypress CheckoutAttribute";
-        const displayName = "Cypres CAI";
+        const displayName = "Cypress CAI";
         const isRequired = Cypress._.random(0, 1) === 1;
         const isTaxExempt = Cypress._.random(0, 1) === 1;
         const shippableProductRequired = Cypress._.random(0, 1) === 1;
         const values = [
             {
                 displayOrder: Cypress._.random(1, 20),
-                isPreselected: Cypress._.random(0, 1) === 1,
+                isPreSelected: Cypress._.random(0, 1) === 1,
                 name: 'Cypress CA Input',
                 priceAdjustment: {
                     amount: Cypress._.random(1, 5),
@@ -278,7 +278,7 @@ describe('Mutation: createCheckoutAttribute', () => {
                 weightAdjustment: Cypress._.random(1, 10)
             }, {
                 displayOrder: Cypress._.random(1, 20),
-                isPreselected: Cypress._.random(0, 1) === 1,
+                isPreSelected: Cypress._.random(0, 1) === 1,
                 name: 'Cypress CA Input 2',
                 priceAdjustment: {
                     amount: Cypress._.random(1, 5),
@@ -314,7 +314,7 @@ describe('Mutation: createCheckoutAttribute', () => {
                     shippableProductRequired
                     values {
                         displayOrder
-                        isPreselected
+                        isPreSelected
                         name
                         priceAdjustment {
                           amount
