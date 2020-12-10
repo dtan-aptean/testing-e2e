@@ -2,10 +2,11 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 11
+// TEST COUNT: 12
 describe('Mutation: updateVendor', () => {
     let id = '';
     let updateCount = 0;
+    const extraIds = []; // Should push objects formatted as {itemId: "example", deleteName: "example"}
     const mutationName = 'updateVendor';
     const queryName = "vendors";
     const dataPath = 'vendor';
@@ -36,6 +37,20 @@ describe('Mutation: updateVendor', () => {
 
     after(() => {
         if (id !== "") {
+            // Delete any supplemental items we created
+            if (extraIds.length > 0) {
+                for (var i = 0; i < extraIds.length; i++) {
+                    cy.wait(2000);
+                    var extraRemoval = `mutation {
+                        ${extraIds[i].deleteName}(input: { id: "${extraIds[i].itemId}" }) {
+                            code
+                            message
+                            error
+                        }
+                    }`;
+                    cy.postAndConfirmDelete(extraRemoval, extraIds[i].deleteName);
+                }
+            }
             // Delete the item we've been updating
             const deletionName = "deleteVendor";
             const removalMutation = `mutation {
@@ -189,6 +204,56 @@ describe('Mutation: updateVendor', () => {
                     }
                 }`;
                 cy.postAndCheckCustom(query, queryName, id, customData);
+            });
+        });
+    });
+
+    it("Mutation with all required input and 'customData' input will overwrite the customData on an existing object", () => {
+        const info = [{name: `Cypress ${mutationName} customData extra`, description: `${mutationName} CD cypress test`, languageCode: "Standard"}];
+        const customData = {data: `${dataPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+        const input = `{${infoName}: ${toFormattedString(info)}, customData: ${toFormattedString(customData)}}`;
+        cy.createAndGetId(createName, dataPath, input, "customData").then((createdItem) => {
+            assert.exists(createdItem.id);
+            assert.exists(createdItem.customData);
+            extraIds.push({itemId: createdItem.id, deleteName: "deleteVendor"});
+            const newInfo = [{name: `Cypress ${mutationName} CD extra updated`, description: `${mutationName} CD cypress test`, languageCode: "Standard"}];
+            const newCustomData = {data: `${dataPath} customData`, newDataField: { canDelete: true }};
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${createdItem.id}"
+                        ${infoName}: ${toFormattedString(newInfo)}
+                        customData: ${toFormattedString(newCustomData)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${dataPath} {
+                        id
+                        ${infoName} {
+                            name
+                            description
+                            languageCode
+                        }
+                        customData
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                const propNames = ["customData", infoName];
+                const propValues = [newCustomData, newInfo];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${newInfo[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            nodes {
+                                id
+                                customData
+                            }
+                        }
+                    }`;
+                    cy.postAndCheckCustom(query, queryName, id, newCustomData);
+                });
             });
         });
     });

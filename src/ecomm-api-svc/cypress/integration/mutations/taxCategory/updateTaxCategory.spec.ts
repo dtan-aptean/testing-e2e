@@ -1,8 +1,12 @@
 /// <reference types="cypress" />
-// TEST COUNT: 8
+
+import { toFormattedString } from "../../../support/commands";
+
+// TEST COUNT: 9
 describe('Mutation: updateTaxCategory', () => {
     let id = '';
     let updateCount = 0;
+    const extraIds = []; // Should push objects formatted as {itemId: "example", deleteName: "example"}
     const mutationName = 'updateTaxCategory';
     const queryName = "taxCategories";
     const dataPath = 'taxCategory';
@@ -28,6 +32,20 @@ describe('Mutation: updateTaxCategory', () => {
 
     after(() => {
         if (id !== "") {
+            // Delete any supplemental items we created
+            if (extraIds.length > 0) {
+                for (var i = 0; i < extraIds.length; i++) {
+                    cy.wait(2000);
+                    var extraRemoval = `mutation {
+                        ${extraIds[i].deleteName}(input: { id: "${extraIds[i].itemId}" }) {
+                            code
+                            message
+                            error
+                        }
+                    }`;
+                    cy.postAndConfirmDelete(extraRemoval, extraIds[i].deleteName);
+                }
+            }
             // Delete the item we've been updating
             const deletionName = "deleteTaxCategory";
             const removalMutation = `mutation {
@@ -146,6 +164,52 @@ describe('Mutation: updateTaxCategory', () => {
                     }
                 }`;
                 cy.postAndCheckCustom(query, queryName, id, customData);
+            });
+        });
+    });
+
+    it("Mutation with all required input and 'customData' input will overwrite the customData on an existing object", () => {
+        const name = `Cypress ${mutationName} customData extra`;
+        const customData = {data: `${dataPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+        const input = `{name: "${name}", customData: ${toFormattedString(customData)}}`;
+        cy.createAndGetId(createName, dataPath, input, "customData").then((createdItem) => {
+            assert.exists(createdItem.id);
+            assert.exists(createdItem.customData);
+            extraIds.push({itemId: createdItem.id, deleteName: "deleteTaxCategory"});
+            const newName = `Cypress ${mutationName} CD extra updated`;
+            const newCustomData = {data: `${dataPath} customData`, newDataField: { canDelete: true }};
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${createdItem.id}"
+                        name: "${newName}"
+                        customData: ${toFormattedString(newCustomData)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${dataPath} {
+                        id
+                        name
+                        customData
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                const propNames = ["customData", "name"];
+                const propValues = [newCustomData, newName];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            nodes {
+                                id
+                                customData
+                            }
+                        }
+                    }`;
+                    cy.postAndCheckCustom(query, queryName, id, newCustomData);
+                });
             });
         });
     });

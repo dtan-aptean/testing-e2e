@@ -1005,6 +1005,7 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataP
         for (var p = 0; p < props.length; p++) {
             // For better documentation of the specific problem field if something isn't right
             const descendingPropName = `${parentProperty ? parentProperty + "." : ""}${props[p]}`; 
+            expect(item).to.have.ownPropertyDescriptor(props[p], `The item should have a ${props[p]} property`);
             if (itemToMatch[props[p]] && item[props[p]] === null) {
                 assert.exists(item[props[p]], `${descendingPropName} should not be null`);
             }
@@ -1280,6 +1281,9 @@ const matchObject = (item, itemToMatch, failOnNoMatch?: boolean, parentPropName?
         var propMatches = false
         // For better documentation of the specific problem field if something isn't right
         const descendingPropName = `${parentPropName ? parentPropName + "." : ""}${props[p]}`;
+        if (failOnNoMatch) {
+            expect(item).to.have.ownPropertyDescriptor(props[p], `The item should have a ${props[p]} property`);
+        }
         if (itemToMatch[props[p]] && item[props[p]] === null) {
             if (failOnNoMatch) {
                 assert.exists(item[props[p]], `${descendingPropName} Should not be null`);
