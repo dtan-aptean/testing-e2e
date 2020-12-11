@@ -543,15 +543,16 @@ Cypress.Commands.add("verifyFirstOrLast", (res, dataPath: string, value: number,
         expect(orgEdges.length).to.be.greaterThan(value);
         expect(orgNodes.length).to.be.greaterThan(value);
         var orgPageInfo = orgRes.pageInfo;
+        var idFormat = dataPath === "refunds" ? "id" : "order.id";
         if (firstOrLast.toLowerCase() === "first") {
-            expect(pageInfo.startCursor).to.be.eql(orgPageInfo.startCursor);
-            expect(pageInfo.endCursor).not.to.be.eql(orgPageInfo.endCursor);
-            expect(pageInfo.endCursor).to.be.eql(orgEdges[value - 1].cursor);
+            expect(pageInfo.startCursor).to.be.eql(orgPageInfo.startCursor, 'Verify startCursor');
+            expect(pageInfo.endCursor).not.to.be.eql(orgPageInfo.endCursor, 'Verify endCursor');
+            expect(pageInfo.endCursor).to.be.eql(orgEdges[value - 1].cursor, 'Verify endCursor');
             for(var i = 0; i < value; i++){
-                expect(nodes[i].id).to.be.eql(orgNodes[i].id);
-                expect(edges[i].cursor).to.be.eql(orgEdges[i].cursor);
-                expect(edges[i].node.id).to.be.eql(orgEdges[i].node.id);
-                expect(nodes[i].id).to.be.eql(orgEdges[i].node.id);
+                expect(nodes[i][idFormat]).to.be.eql(orgNodes[i][idFormat], 'Verifying included nodes');
+                expect(edges[i].cursor).to.be.eql(orgEdges[i].cursor, 'Verifying included cursors');
+                expect(edges[i].node[idFormat]).to.be.eql(orgEdges[i].node[idFormat], "Verifying edge's included nodes");
+                expect(nodes[i][idFormat]).to.be.eql(orgEdges[i].node[idFormat], `Verifying node[${i}] matches original edge[${i}].node`);
             }
         } else if (firstOrLast.toLowerCase() === "last") {
             var f = value + 1;
@@ -559,14 +560,14 @@ Cypress.Commands.add("verifyFirstOrLast", (res, dataPath: string, value: number,
             if (value === totalLength / 2){
                 f = value;
             }
-            expect(pageInfo.startCursor).not.to.be.eql(orgPageInfo.startCursor);
-            expect(pageInfo.startCursor).to.be.eql(orgEdges[f].cursor);
-            expect(pageInfo.endCursor).to.be.eql(orgPageInfo.endCursor);
+            expect(pageInfo.startCursor).not.to.be.eql(orgPageInfo.startCursor, 'Verify startCursor');
+            expect(pageInfo.startCursor).to.be.eql(orgEdges[f].cursor, 'Verify startCursor');
+            expect(pageInfo.endCursor).to.be.eql(orgPageInfo.endCursor, 'Verify endCursor');
             for(var i = 0; i < value; i++){
-                expect(nodes[i].id).to.be.eql(orgNodes[f].id);
-                expect(edges[i].cursor).to.be.eql(orgEdges[f].cursor);
-                expect(edges[i].node.id).to.be.eql(orgEdges[f].node.id);
-                expect(nodes[i].id).to.be.eql(orgEdges[f].node.id);
+                expect(nodes[i][idFormat]).to.be.eql(orgNodes[f][idFormat], 'Verifying included nodes');
+                expect(edges[i].cursor).to.be.eql(orgEdges[f].cursor, 'Verifying included cursors');
+                expect(edges[i].node[idFormat]).to.be.eql(orgEdges[f].node[idFormat], "Verifying edge's included nodes");
+                expect(nodes[i][idFormat]).to.be.eql(orgEdges[f].node[idFormat], `Verifying node[${i}] matches original edge[${f}].node`);
                 f++;
             }
         } 
@@ -776,7 +777,18 @@ Cypress.Commands.add('returnRandomId', (gqlQuery: string, dataPath: string, idNa
             randomIndex = Cypress._.random(0, totalCount - 1);
         }
         var randomNode = res.body.data[dataPath].nodes[randomIndex];
-        return cy.wrap(randomNode[idName ? idName : "id"]);
+        var id;
+        if (!idName) {
+            id = randomNode.id;
+        } else {
+            if (idName.includes(".id")) {
+                var split = idName.split(".");
+                id = randomNode[split[0]][split[1]];
+            } else {
+                id = randomNode[idName];
+            }
+        }
+        return cy.wrap(id);
     });
 });
 
@@ -858,10 +870,24 @@ Cypress.Commands.add("validateIdSearch", (res, dataPath: string, searchValue: st
     const edges = res.body.data[dataPath].edges;
     expect(totalCount).to.be.eql(nodes.length);
     expect(totalCount).to.be.eql(edges.length);
-    const idFieldName = idName ? idName : "id";
     for (var i = 0; i < nodes.length; i++) {
-        expect(nodes[i][idFieldName].toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
-        expect(edges[i].node[idFieldName].toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
+        var node;
+        var edge;
+        if (!idName) {
+            node = nodes[i].id;
+            edge = edges[i].node.id;
+        } else {
+            if (idName.includes(".id")) {
+                var split = idName.split(".");
+                node = nodes[i][split[0]][split[1]];
+                edge = edges[i].node[split[0]][split[1]];
+            } else {
+                node = nodes[i][idName];
+                edge = edges[i].node[idName];
+            }
+        }
+        expect(node.toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
+        expect(edge.toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
     }
 });
 
