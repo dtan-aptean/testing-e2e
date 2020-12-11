@@ -603,6 +603,62 @@ Cypress.Commands.add("verifyPageInfo", (res, dataPath: string, expectNext?: bool
     expect(pageInfo.endCursor).to.be.eql(edges[edges.length-1].cursor);
 });
 
+// Verifies that changing orderBy direction changes the order of the nodes and edges
+Cypress.Commands.add("verifyReverseOrder", (dataPath: string, ascRes, descRes) => {
+    Cypress.log({
+        name: "verifyReverseOrder",
+        message: dataPath,
+        consoleProps: () => {
+            return {
+                "Query name": dataPath,
+                "ASC query response": ascRes.body.data,
+                "DESC query response": descRes.body.data
+            };
+        },
+    });
+    expect(descRes.body.data[dataPath].totalCount).to.be.eql(ascRes.body.data[dataPath].totalCount, "TotalCount should be the same");
+    expect(descRes.body.data[dataPath].nodes.length).to.be.eql(ascRes.body.data[dataPath].nodes.length, "nodes length should be the same");
+    expect(descRes.body.data[dataPath].edges.length).to.be.eql(ascRes.body.data[dataPath].edges.length, "edges length should be the same");
+    const ascNodes = ascRes.body.data[dataPath].nodes;
+    const aNoReversed = ascNodes.slice(0).reverse();
+    const descNodes = descRes.body.data[dataPath].nodes;
+    const dNoReversed = descNodes.slice(0).reverse();
+    expect(descNodes).not.to.be.eql(ascNodes, "DESC nodes !== ASC nodes");
+    for (var i = 0; i < descNodes.length; i++) {
+        if (descNodes.length % 2 !== 0 && i !== Math.floor(descNodes.length /2 )) {
+            expect(descNodes[i]).not.to.be.eql(ascNodes[i], `DESC nodes !== ASC nodes. index ${i}, id ${descNodes[i].id}`);
+        }
+        expect(descNodes[i]).to.be.eql(aNoReversed[i], `DESC nodes === ASC nodes. index ${i}, id ${descNodes[i].id}`);
+        expect(ascNodes[i]).to.be.eql(dNoReversed[i], `ASC nodes === DESC nodes. index ${i}, id ${ascNodes[i].id}`);
+    }
+    const ascEdges = ascRes.body.data[dataPath].edges;
+    const aEdReversed = ascEdges.slice(0).reverse();
+    const descEdges = descRes.body.data[dataPath].edges;
+    const dEdReversed = descEdges.slice(0).reverse();
+    expect(descEdges).not.to.be.eql(ascEdges, "DESC edges !== ASC edges");
+    for (var i = 0; i < descEdges.length; i++) {
+        if (descEdges.length % 2 !== 0 && i !== Math.floor(descEdges.length /2 )) {
+            expect(descEdges[i].node).not.to.be.eql(ascEdges[i].node, `DESC edges !== ASC edges. index ${i}, id ${descEdges[i].node.id}`);
+        }
+        expect(descEdges[i].node).to.be.eql(aEdReversed[i].node, `DESC edges === ASC edges. index ${i}, id ${descEdges[i].node.id}`);
+        expect(ascEdges[i].node).to.be.eql(dEdReversed[i].node, `ASC edges === DESC edges. index ${i}, id ${descEdges[i].node.id}`);
+    }
+    const ascStartCursor = ascRes.body.data[dataPath].pageInfo.startCursor;
+    const ascStCurNode = ascEdges[0].node;
+    const ascEndCursor = ascRes.body.data[dataPath].pageInfo.endCursor;
+    const ascEndCurNode = ascEdges[ascEdges.length - 1].node;
+    const descStartCursor = descRes.body.data[dataPath].pageInfo.startCursor;
+    const descStCurNode = descEdges[0].node;
+    const descEndCursor = descRes.body.data[dataPath].pageInfo.endCursor;
+    const descEndCurNode = descEdges[descEdges.length - 1].node;
+    expect(descStartCursor).not.to.be.eql(ascStartCursor, "DESC pageInfo shouldn't have the same startCursor as ASC");
+    expect(descStCurNode).not.to.be.eql(ascStCurNode, "Verifing the above with the matching nodes");
+    expect(descEndCursor).not.to.be.eql(ascEndCursor, "DESC pageInfo shouldn't have the same endCursor as ASC");
+    expect(descEndCurNode).not.to.be.eql(ascEndCurNode, "Verifing the above with the matching nodes");
+    expect(descStCurNode).to.be.eql(ascEndCurNode, "DESC pageInfo's startCursor node should be ASC pageInfo's endCursor node");
+    expect(descEndCurNode).to.be.eql(ascStCurNode, "DESC pageInfo's endCursor node should be ASC pageInfo's startCursor node");
+});
+
 // Runs the query and grabs a random node to take the name from. Query body should look for name
 Cypress.Commands.add('returnRandomName', (gqlQuery: string, dataPath: string) => {
     Cypress.log({
@@ -700,6 +756,31 @@ Cypress.Commands.add("returnRandomInfoName", (gqlQuery: string, dataPath: string
     });
 });
 
+// Runs the query and grabs a random node to take the id from. Pass in the id name for queries whose id field names aren't standard
+Cypress.Commands.add('returnRandomId', (gqlQuery: string, dataPath: string, idName?: string) => {
+    Cypress.log({
+        name: "returnRandomId",
+        message: dataPath + `${idName ? ", " + idName : ""}`,
+        consoleProps: () => {
+            return {
+                "Query Body": gqlQuery,
+                "Query name / dataPath": dataPath,
+                "Name of id field": idName ? idName : "id"
+            };
+        },
+    });
+    return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
+        var randomIndex = 0;
+        var totalCount = res.body.data[dataPath].totalCount > 25 ? 25 : res.body.data[dataPath].totalCount;
+        if (totalCount > 1) {
+            randomIndex = Cypress._.random(0, totalCount - 1);
+        }
+        var randomNode = res.body.data[dataPath].nodes[randomIndex];
+        return cy.wrap(randomNode[idName ? idName : "id"]);
+    });
+});
+
+
 // Validates that a query with searchString returned the node with the correct name or nodes that contain the string
 Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: string) => {
     Cypress.log({
@@ -754,6 +835,33 @@ Cypress.Commands.add("validateInfoNameSearch", (res, dataPath: string, infoPath:
         });
         expect(edgeInfoArray.length).to.be.gte(1, `Edge[${i}]`);
         expect(infoArray.length).to.be.eql(edgeInfoArray.length);
+    }
+});
+
+// For queries that search by id instead of name. Pass in the id name for queries whose id field names aren't standard
+// Validates that a query with searchString returned the node with the correct id or nodes with ids that contain the string
+Cypress.Commands.add("validateIdSearch", (res, dataPath: string, searchValue: string, idName?: string) => {
+    Cypress.log({
+        name: "validateIdSearch",
+        message: `${dataPath}, searchString: ${searchValue}${idName ? ", " + idName : ""}`,
+        consoleProps: () => {
+            return {
+                "Response": res,
+                "Query name / dataPath": dataPath,
+                "searchString": searchValue,
+                "Name of id field": idName ? idName : "id"
+            };
+        },
+    });
+    const totalCount = res.body.data[dataPath].totalCount;
+    const nodes = res.body.data[dataPath].nodes;
+    const edges = res.body.data[dataPath].edges;
+    expect(totalCount).to.be.eql(nodes.length);
+    expect(totalCount).to.be.eql(edges.length);
+    const idFieldName = idName ? idName : "id";
+    for (var i = 0; i < nodes.length; i++) {
+        expect(nodes[i][idFieldName].toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
+        expect(edges[i].node[idFieldName].toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
     }
 });
 

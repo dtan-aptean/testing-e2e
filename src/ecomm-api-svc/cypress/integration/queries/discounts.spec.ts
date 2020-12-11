@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 35
+// TEST COUNT: 37
 describe('Query: discounts', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "discounts";
@@ -116,6 +116,42 @@ describe('Query: discounts', () => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
             cy.confirmCount(res, queryName).then((hitUpperLimit: boolean) => {
                 cy.verifyPageInfo(res, queryName, hitUpperLimit, false);
+            });
+        });
+    });
+
+    it("Query with orderBy direction: DESC, field: TIMESTAMP will return items in a reverse order from direction: ASC", () => {
+        const trueTotalQuery = `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
+            const descQuery = `{
+                ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: DESC, field: TIMESTAMP}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(descQuery, queryName).then((descRes) => {
+                cy.verifyReverseOrder(queryName, ascRes, descRes);
+            });
+        });
+    });
+
+    it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
+        const trueTotalQuery = `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
+            const descQuery = `{
+                ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: DESC, field: NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(descQuery, queryName).then((descRes) => {
+                cy.verifyReverseOrder(queryName, ascRes, descRes);
             });
         });
     });
