@@ -120,7 +120,7 @@ describe('Query: returnReasons', () => {
         });
     });
 
-    it.only("Query with orderBy direction: DESC, field: TIMESTAMP will return items in a reverse order from direction: ASC", () => {
+    it("Query with orderBy direction: DESC, field: TIMESTAMP will return items in a reverse order from direction: ASC", () => {
         const trueTotalQuery = `{
             ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
@@ -138,7 +138,7 @@ describe('Query: returnReasons', () => {
         });
     });
 
-    it.only("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
+    it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
         const trueTotalQuery = `{
             ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
