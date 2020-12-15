@@ -8,6 +8,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
     cy.generatePaymentRequest().then(response => {
       const qsTokenIndex = 1;
       urlToken = response.paymentUrl.split('?')[qsTokenIndex];
+      console.log(urlToken);
     });
   });
 
@@ -28,7 +29,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 			}
 		}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -115,7 +116,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 				}
 			}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -142,7 +143,7 @@ describe('Query: paymentRequestFromUrlToken', () => {
 		}
 	}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 

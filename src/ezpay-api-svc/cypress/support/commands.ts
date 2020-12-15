@@ -32,7 +32,6 @@ Cypress.Commands.add("postGQL", (query) => {
     headers: {
       "x-aptean-apim": Cypress.env("x-aptean-apim"),
       "x-aptean-tenant": Cypress.env("x-aptean-tenant"),
-      "x-ezpay-pmt": Cypress.env("x-ezpay-pmt"),
       "x-aptean-tenant-secret": Cypress.env("x-aptean-tenant-secret"),
     },
     body: { query },
@@ -83,9 +82,10 @@ Cypress.Commands.add("generatePaymentRequest", () => {
       return uploadResponse.data.upload.uniqueId;
     })
     .then((uniqueId) => {
-      const amount = Cypress._.random(0, 1e3);
-      const referenceNumber = Cypress._.random(0, 1e20);
-      const gqlQuery = `mutation {
+      cy.wait(5000).then(() => {
+        const amount = Cypress._.random(0, 1e3);
+        const referenceNumber = Cypress._.random(0, 1e20);
+        const gqlQuery = `mutation {
         upsertPaymentRequest(
           input: {
             referenceNumber: "${referenceNumber}"
@@ -98,19 +98,21 @@ Cypress.Commands.add("generatePaymentRequest", () => {
           paymentRequestId
         }
       }`;
-      cy.postGQL(gqlQuery).then((paymentRequest) => {
-        // should be 200 ok
-        cy.expect(paymentRequest.isOkStatusCode).to.be.equal(true);
+        cy.postGQL(gqlQuery).then((paymentRequest) => {
+          // should be 200 ok
+          cy.expect(paymentRequest.isOkStatusCode).to.be.equal(true);
 
-        const response = {
-          amount,
-          invoiceRef: uniqueId,
-          paymentUrl: paymentRequest.body.data.upsertPaymentRequest.paymentUrl,
-          referenceNumber,
-          paymentRequestId:
-            paymentRequest.body.data.upsertPaymentRequest.paymentRequestId,
-        };
-        return response;
+          const response = {
+            amount,
+            invoiceRef: uniqueId,
+            paymentUrl:
+              paymentRequest.body.data.upsertPaymentRequest.paymentUrl,
+            referenceNumber,
+            paymentRequestId:
+              paymentRequest.body.data.upsertPaymentRequest.paymentRequestId,
+          };
+          return response;
+        });
       });
     });
 });
@@ -330,7 +332,7 @@ Cypress.Commands.add(
     cy.generatePaymentRequest().then((paymentRequest) => {
       cy.generateWepayTokenCreditCard()
         .then((payfacToken) => {
-          cy.wait(1).then(() => {
+          cy.wait(1000).then(() => {
             return cy
               .convertPayfacPaymentMethodTokenCreditCard(payfacToken.id)
               .then((paymentMethodId) => {
