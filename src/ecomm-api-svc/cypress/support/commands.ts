@@ -41,7 +41,7 @@ export const toFormattedString = (item): string => {
 };
 
 // -- This will post GQL query --
-Cypress.Commands.add('postGQL', query => {
+Cypress.Commands.add('postGQL', (query, altUrl?: string) => {
     Cypress.log({
         name: "postGQL",
         consoleProps: () => {
@@ -51,9 +51,14 @@ Cypress.Commands.add('postGQL', query => {
             };
         },
     });
+    if (altUrl) {
+        if (altUrl.charAt(altUrl.length -1 ) === "/") {
+            altUrl = altUrl.slice(0, altUrl.length - 1)
+        }
+    }
     return cy.request({
       method: 'POST',
-      url: '/graphql',
+      url: altUrl ? altUrl + '/graphql' : '/graphql',
       headers: {
         'x-aptean-apim': Cypress.env('x-aptean-apim'),
         'x-aptean-tenant': Cypress.env('x-aptean-tenant'),
@@ -162,7 +167,7 @@ Cypress.Commands.add("postAndValidate", (gqlQuery: string, dataPath: string) => 
 });
 
 // Post mutation and validate
-Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string, dataPath: string) => {
+Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string, dataPath: string, altUrl?: string) => {
     Cypress.log({
         name: "postMutAndValidate",
         message: mutationName,
@@ -174,7 +179,7 @@ Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string
             };
         },
     });
-    return cy.postGQL(gqlMut).then((res) => {
+    return cy.postGQL(gqlMut, altUrl).then((res) => {
         cy.validateMutationRes(gqlMut, res, mutationName, dataPath).then(() => {
             return res;
         });
@@ -182,7 +187,7 @@ Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string
 });
 
 // Post and confirm Deletion
-Cypress.Commands.add("postAndConfirmDelete", (gqlMut: string, mutationName: string) => {
+Cypress.Commands.add("postAndConfirmDelete", (gqlMut: string, mutationName: string, altUrl?: string) => {
     Cypress.log({
         name: "postAndConfirmDelete",
         message: mutationName,
@@ -193,7 +198,7 @@ Cypress.Commands.add("postAndConfirmDelete", (gqlMut: string, mutationName: stri
             };
         },
     });
-    return cy.postGQL(gqlMut).then((res) => {
+    return cy.postGQL(gqlMut, altUrl).then((res) => {
         // should be 200 ok
         expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -274,7 +279,7 @@ Cypress.Commands.add("confirmMutationError", (res, mutationName: string, dataPat
 });
 
 // Post Query and confirm it has errors. Add expect200 when we expect to get a 200 status code
-Cypress.Commands.add("postAndConfirmError", (gqlQuery: string, expect200?: boolean) => {
+Cypress.Commands.add("postAndConfirmError", (gqlQuery: string, expect200?: boolean, altUrl?: string) => {
     Cypress.log({
         name: "postAndConfirmError",
         message: `${expect200 ? "expect200" + expect200 : ""}`,
@@ -285,7 +290,7 @@ Cypress.Commands.add("postAndConfirmError", (gqlQuery: string, expect200?: boole
             };
         },
     });
-    return cy.postGQL(gqlQuery).then((res) => {
+    return cy.postGQL(gqlQuery, altUrl).then((res) => {
         cy.confirmError(res, expect200).then(() => {
             return res;
         });
@@ -1496,7 +1501,7 @@ const compareExpectedToResults = (subject, propertyNames: string[], expectedValu
  */
 
 // Confirms that a mutation has updated an item by querying for the item and matching the values to the array given
-Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, itemId: string, propNames: string[], values: []) => {
+Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, itemId: string, propNames: string[], values: [], altUrl?: string) => {
     Cypress.log({
         name: "confirmUsingQuery",
         message: `querying ${dataPath} for ${itemId}`,
@@ -1511,7 +1516,7 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
         },
     });
     
-    return cy.postGQL(query).then((resp) => {
+    return cy.postGQL(query, altUrl).then((resp) => {
         expect(resp.isOkStatusCode).to.be.equal(true, "Status Code is 200");
         assert.notExists(resp.body.errors, "No errors");
         assert.exists(resp.body.data, "Data exists");
@@ -1566,5 +1571,207 @@ Cypress.Commands.add('queryByProductId', (queryName: string, queryBody: string, 
             compareExpectedToResults(returnedItems[i], properties, values);
         }
         return res;
+    });
+});
+
+// STOREFRONT STUFF: For creating orders to use for refunds
+const getVisibleMenu = () => {
+    if (Cypress.$(".menu-toggle:visible").length === 0) {
+        return cy.get(".top-menu.notmobile").then(cy.wrap);
+    } else {
+        cy.get(".menu-toggle").click();
+        return cy.get(".top-menu.mobile").then(cy.wrap);
+    }
+};
+
+const goToCart = () => {
+    cy.get(".header-links").find(".ico-cart").click({ force: true });
+    cy.wait(500);
+};
+
+Cypress.Commands.add("goToPublicHome", () => {
+    Cypress.log({
+        name: "goToPublicHome"
+    });
+    cy.location("pathname").then((path) => {
+        if (path.includes("Admin")) {
+            cy.get(".navbar-nav").find("li").eq(4).find("a").click({force: true});
+            cy.wait(1000);
+            cy.location("pathname").should("not.contain", "Admin");
+        } else if (path.includes("en")) {
+            getVisibleMenu()
+                .find("li")
+                .contains("Home page")
+                .click({force: true});
+            cy.wait(500); 
+        }
+    });
+});
+
+Cypress.Commands.add("clearCart", () => {
+    Cypress.log({
+        name: "clearCart"
+    });
+    goToCart();
+    cy.get(".cart > tbody")
+        .find("tr")
+        .each(($tr, $i, $all) => {
+            cy.wrap($tr).find("td").eq(0).find("input").check({ force: true });
+        })
+        .then(() => {
+            cy.get(".update-cart-button").click({ force: true });
+            cy.wait(500);
+        });
+});
+
+Cypress.Commands.add("storefrontLogin", () => {
+    Cypress.log({
+        name: "storefrontLogin"
+    });
+    cy.get(".header-links").then(($el) => {
+        if (!$el[0].innerText.includes('LOG OUT')) {
+            cy.wrap($el).find(".ico-login").click();
+            cy.wait(200);
+            cy.get(".email").type("cypress.tester@testenvironment.com");
+            cy.get(".password").type("CypressTester1");
+            cy.get(".login-button").click({force: true});
+            cy.wait(200);
+        }
+    });
+});
+
+Cypress.Commands.add("addCypressProductToCart", () => {
+    Cypress.log({
+        displayName: " ",
+        message: "addCypressProductToCart"
+    });
+    getVisibleMenu()
+        .find("li")
+        .contains("Cypress Trees")
+        .click({force: true});
+    cy.wait(500); 
+    cy.get(".item-box")
+        .eq(0)
+        .find(".product-box-add-to-cart-button")
+        .click({force: true});
+    cy.wait(200);
+    goToCart();
+});
+
+Cypress.Commands.add("completeCheckout", () => {
+    Cypress.log({
+        displayName: " ",
+        message: "completeCheckout"
+    });
+    cy.get("#termsofservice").check({force: true});
+    cy.get("#checkout").click({force: true});
+    cy.get("#co-billing-form").then(($el) => {
+        const select = $el.find(".select-billing-address");
+        if (select.length === 0) {
+            // Inputting Aptean's address
+            cy.get("#BillingNewAddress_CountryId").select("United States");
+            cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
+            cy.get("#BillingNewAddress_City").type("Alpharetta");
+            cy.get("#BillingNewAddress_Address1").type("4325 Alexander Dr #100");
+            cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
+            cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
+            cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
+            cy.get(".field-validation-error").should("have.length", 0);
+        }
+      });
+    cy.get(".new-address-next-step-button").eq(0).click();
+    cy.wait(200);
+
+    // Pick shipping method
+    cy.get("#shippingoption_1").check();
+    cy.get(".shipping-method-next-step-button").click();
+    cy.wait(2000);
+
+    // Payment Method
+    cy.get("#payment-method-block").find("#paymentmethod_0").check();
+    cy.get(".payment-method-next-step-button").click();
+    cy.wait(1000);
+    // Payment Information
+    cy.get("#CreditCardType").select("Discover");
+    cy.get("#CardholderName").type("Cypress McTester")
+    cy.get("#CardNumber")
+        .type("6011111111111117");
+    cy.get("#ExpireMonth")
+        .select("03");
+    cy.get("#ExpireYear")
+        .select("2024");
+    cy.get("#CardCode")
+        .type("123");
+    cy.get(".payment-info-next-step-button").click();
+    cy.wait(1000);
+    // Confirm order
+    cy.get(".confirm-order-next-step-button")
+        .should("exist")
+        .and("be.visible");
+    cy.get(".confirm-order-next-step-button").click();
+    cy.wait(2000);
+});
+
+Cypress.Commands.add("getToOrders", () => {
+    Cypress.log({
+        displayName: " ",
+        message: "getToOrders"
+    });
+    // Admin site has undefined Globalize, causes Cypress to autofail tests
+    cy.on("uncaught:exception", (err, runnable) => {
+        return false;
+    });
+    cy.get(".administration").click({ force: true });
+    cy.wait(1000);
+    cy.location("pathname").should("eq", "/Admin");
+    cy.get(".sidebar-menu.tree").find("li").contains("Sales").click({force: true});
+    cy.get(".sidebar-menu.tree")
+      .find("li")
+      .find(".treeview-menu")
+      .find("li")
+      .contains("Orders")
+      .click({force: true});
+    cy.wait(500);
+});
+
+// Places an order and returns the order guid
+Cypress.Commands.add("createOrder", () => {
+    Cypress.log({
+        name: "createOrder"
+    });
+    cy.addCypressProductToCart();
+    cy.location("pathname").should("include", "cart");
+    cy.completeCheckout();
+    cy.location("pathname").should("include", "checkout/completed/");
+    return cy.get(".order-number").find('strong').invoke("text").then(($el) => {
+        var orderNumber = $el.slice(0).replace("Order number: ", "");
+        Cypress.log({message: `Order number: ${orderNumber}`})
+        cy.get(".order-completed-continue-button").click({force: true});
+        cy.getToOrders();
+        cy.location("pathname").should("include", "/Order/List");
+        cy.get("#orders-grid")
+            .contains(orderNumber)
+            .parent()
+            .find("a")
+            .contains("View")
+            .click({force: true});
+        cy.wait(500);
+        cy.location("pathname").should("include", `/Order/Edit/${orderNumber}`);
+        return cy.contains("Order GUID")
+            .parents(".form-group")
+            .find('.form-text-row')
+            .invoke("text")
+            .then(($rowText) => {
+                var guidText = $rowText.slice(0);
+                Cypress.log({message: `orderId: "${guidText}"`});
+                return cy.contains("Order total")
+                    .parents(".form-group")
+                    .find('.form-text-row')
+                    .invoke("text")
+                    .then(($totalText) => {
+                        var orderTotal = Number($rowText.slice(0).replace("$", ""));
+                        return cy.wrap({orderId: guidText, orderAmount: orderTotal});
+                    });
+            });
     });
 });
