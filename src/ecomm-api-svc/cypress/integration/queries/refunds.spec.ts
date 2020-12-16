@@ -1,22 +1,20 @@
 /// <reference types="cypress" />
 // TEST COUNT: 36
-describe('Query: products', () => {
+describe('Query: refunds', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
-    const queryName = "products";
+    const queryName = "refunds";
     // Standard query body to use when we don't need special data but do need special input arguments
     const standardQueryBody = `edges {
                 cursor
                 node {
-                    id
-                    productInfo {
-                        name
+                    order {
+                        id
                     }
                 }
             }
             nodes {
-                id
-                productInfo {
-                    name
+                order {
+                    id                    
                 }
             }
             pageInfo {
@@ -32,10 +30,8 @@ describe('Query: products', () => {
             ${standardQueryBody}
         }
     }`;
-    // Name of the info field
-    const infoPath = "productInfo";
 
-    var trueTotal = null;
+    var trueTotal = null as null | number;
 
     before(() => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
@@ -62,14 +58,14 @@ describe('Query: products', () => {
         });
     });
 
-    it('Query fails if the orderBy argument is null', () => {
-        const gqlQuery = `{
-            ${queryName}(orderBy: null) {
-                totalCount
-            }
-        }`;
-        cy.postAndConfirmError(gqlQuery);
-    });
+    it("Query fails if the 'orderBy' input argument is null", () => {
+      const gqlQuery = `{
+          ${queryName}(orderBy: null) {
+              totalCount
+          }
+      }`;
+      cy.postAndConfirmError(gqlQuery);
+  });
 
     it("Query fails if 'orderBy' input argument only has field", () => {
         const fieldQuery = `{
@@ -99,24 +95,24 @@ describe('Query: products', () => {
     });
 
     it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
-        const gqlQuery = `{
-            ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
-                totalCount
-            }
-        }`;
-        cy.postGQL(gqlQuery).then(res => {
-            // should be 200 ok
-            cy.expect(res.isOkStatusCode).to.be.equal(true);
-    
-            // no errors
-            assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+      const gqlQuery = `{
+          ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
+              totalCount
+          }
+      }`;
+      cy.postGQL(gqlQuery).then(res => {
+          // should be 200 ok
+          cy.expect(res.isOkStatusCode).to.be.equal(true);
+  
+          // no errors
+          assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
 
-            // has data
-            assert.exists(res.body.data);
-            // validate data types
-            assert.isNotNaN(res.body.data[queryName].totalCount);
-        });
-    });
+          // has data
+          assert.exists(res.body.data);
+          // validate data types
+          assert.isNotNaN(res.body.data[queryName].totalCount);
+      });
+  });
 
     it("Query without 'first' or 'last' input arguments will return up to 25 items", () => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
@@ -204,7 +200,7 @@ describe('Query: products', () => {
             });
         });
     });
-    
+
     it("Query with invalid 'first' input argument will fail", () => {
         const gqlQuery = `{
             ${queryName}(first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -228,7 +224,7 @@ describe('Query: products', () => {
             expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
         });
     });
-    
+
     it("Query with both 'first' and 'last' input arguments will fail", () => {
         const gqlQuery = `{
             ${queryName}(first: 7, last: 3, orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -239,40 +235,34 @@ describe('Query: products', () => {
     });
 
     it("Query with a valid 'searchString' input argument will return the specific item", () => {
-        cy.returnRandomInfoName(standardQuery, queryName, infoPath).then((name: string) => {
+        cy.returnRandomId(standardQuery, queryName, "order.id").then((id: string) => {
             const searchQuery = `{
-                ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
             cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                cy.validateInfoNameSearch(resp, queryName, infoPath, name);
+                cy.validateIdSearch(resp, queryName, id, "order.id");
             });
         });
     });
 
     it("Query with a valid partial 'searchString' input argument will return all items containing the string", () => {
-        cy.returnRandomInfoName(standardQuery, queryName, infoPath).then((name: string) => {
-            // Get the first word if the name has multiple words. Otherwise, get a random segment of the name
-            var newWordIndex = name.search(" ");
-            var searchText = "";
-            if (newWordIndex !== -1 && newWordIndex !== 0) {
-                searchText = name.substring(0, newWordIndex);
-            } else {
-                const segmentIndex = Cypress._.random(name.length / 2, name.length - 1);
-                searchText = name.substring(0, segmentIndex);
-            }
+        cy.returnRandomId(standardQuery, queryName, "order.id").then((id: string) => {
+            // Get a random segment of the id
+            const halfway = Math.ceil(id.length / 2);
+            const searchId = id.slice(Cypress._.random(0, halfway - 1), Cypress._.random(halfway, id.length));
             const searchQuery = `{
-                ${queryName}(searchString: "${searchText}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(searchString: "${searchId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
             cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                cy.validateInfoNameSearch(resp, queryName, infoPath, searchText);
+                cy.validateIdSearch(resp, queryName, searchId, "order.id");
             });
         });
     });
-    
+
     it("Query with an invalid 'searchString' input argument will fail", () => {
         const gqlQuery = `{
             ${queryName}(searchString: 7, orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -344,7 +334,7 @@ describe('Query: products', () => {
             expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
         });
     });
-    
+
     it("Query with both 'before' and 'after' input arguments will fail", () => {
         const gqlQuery = `{
             ${queryName}(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -612,17 +602,29 @@ describe('Query: products', () => {
         });
     });
 
-    it("Query with customData field will return valid value", () => {
-        const gqlQuery = `{
-            ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
+    it("Query returns a refundAmount that matches the refundedAmount field on the corresponding order", () => {
+        const gqlQuery =  `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
                 edges {
                     cursor
                     node {
-                        id
+                        order {
+                            id
+                        }
                     }
                 }
                 nodes {
-                    customData
+                    order {
+                        id  
+                        refundedAmount {
+                            amount
+                            currency
+                        }                  
+                    }
+                    refundAmount {
+                        amount
+                        currency
+                    }
                 }
                 pageInfo {
                     endCursor
@@ -634,7 +636,11 @@ describe('Query: products', () => {
             }
         }`;
         cy.postAndValidate(gqlQuery, queryName).then((res) => {
-            cy.checkCustomData(res, queryName);
+            const nodes = res.body.data[queryName].nodes;
+            nodes.forEach((node, index) => {
+                expect(node.refundAmount.currency).to.be.eql(node.order.refundedAmount.currency, "Expect the same refunded currency");
+                expect(node.refundAmount.amount).to.be.eql(node.order.refundedAmount.amount, "Expect the same refunded amount");
+            });
         });
     });
 });
