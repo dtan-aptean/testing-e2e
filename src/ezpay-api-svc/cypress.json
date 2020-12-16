@@ -9,7 +9,6 @@
     "x-aptean-apim": "#{X_APTEAN_APIM}#",
     "x-aptean-tenant": "#{X_APTEAN_TENANT}#",
     "x-aptean-tenant-secret": "#{X_APTEAN_TENANT_SECRET}#",
-    "x-ezpay-pmt": "#{X_EZPAY_PMT}#",
     "wepay-base-url": "#{WEPAY_API_URL}#",
     "wepay-app-id": "#{WEPAY_APP_ID}#",
     "wepay-app-secret": "#{WEPAY_APP_SECRET}#",

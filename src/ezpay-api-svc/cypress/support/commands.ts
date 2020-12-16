@@ -48,7 +48,6 @@ Cypress.Commands.add("postGQLBearer", (query) => {
       authorization: Cypress.env("authorization"),
       "x-aptean-apim": Cypress.env("x-aptean-apim"),
       "x-aptean-tenant": Cypress.env("x-aptean-tenant"),
-      "x-ezpay-pmt": Cypress.env("x-ezpay-pmt"),
     },
     body: { query },
     failOnStatusCode: false,
