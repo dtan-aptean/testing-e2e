@@ -219,7 +219,7 @@ describe('Query: viewer', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then(res => {
       // should be 200 ok
       console.log(res);
       cy.expect(res.isOkStatusCode).to.be.equal(true);
@@ -262,7 +262,7 @@ describe('Query: viewer', () => {
 				}
       }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
