@@ -326,6 +326,30 @@ Cypress.Commands.add("getPaymentMethodById", (id: string) => {
   });
 });
 
+Cypress.Commands.add("deletePerson", (personId) => {
+  const gqlQuery = `mutation {
+    deletePerson(input: { id: "${personId}" }) {
+      code
+      message
+      error
+    }
+  }`;
+
+  cy.postGQLBearer(gqlQuery).then((res) => {
+    // should be 200 ok
+    cy.expect(res.isOkStatusCode).to.be.equal(true);
+
+    // should have errors
+    assert.notExists(
+      res.body.errors,
+      `One or more errors ocuured while executing query: ${gqlQuery}`
+    );
+
+    // has data
+    assert.exists(res.body.data);
+  });
+});
+
 Cypress.Commands.add(
   "generatePaymentRequestAndPay",
   (immediateCapture: Boolean = true) => {
