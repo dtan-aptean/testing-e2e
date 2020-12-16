@@ -8,7 +8,6 @@ describe('Query: paymentRequestFromUrlToken', () => {
     cy.generatePaymentRequest().then(response => {
       const qsTokenIndex = 1;
       urlToken = response.paymentUrl.split('?')[qsTokenIndex];
-      console.log(urlToken);
     });
   });
 
