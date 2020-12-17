@@ -1,19 +1,10 @@
 /// <reference types="cypress" />
 // @ts-check
 
-describe('Query: person', () => {
-  let email = '';
-
-  before(() => {
-    cy.fixture('person').then(testData => {
-      // load test data
-      ({ email } = testData);
-    });
-  });
-
-  it('should pass if the query has an email argument and returns valid return types', () => {
+describe("Query: person", () => {
+  it("should pass if the query has an email argument and returns valid return types", () => {
     const gqlQuery = `{
-		person(email: "${email}") {
+		person(email: "${Cypress.env("email-of-bearer-token-user")}") {
 			id
 			address {
 				city
@@ -186,12 +177,16 @@ describe('Query: person', () => {
 		}
 	}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then((res) => {
+      console.log(res);
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
       // no errors
-      assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+      assert.notExists(
+        res.body.errors,
+        `One or more errors ocuured while executing query: ${gqlQuery}`
+      );
 
       // has data
       assert.exists(res.body.data);
@@ -206,20 +201,22 @@ describe('Query: person', () => {
       assert.isNotNull(res.body.data.person.account.capabilities);
       assert.isNotNull(res.body.data.person.account.capabilities.cardPayments);
       assert.isNotNull(res.body.data.person.account.capabilities.achPayments);
-      assert.isNotNull(res.body.data.person.account.capabilities.accountPayouts);
+      assert.isNotNull(
+        res.body.data.person.account.capabilities.accountPayouts
+      );
       assert.isNotNull(res.body.data.person.account.owner);
       assert.isNotNull(res.body.data.person.account.owner.tenantId);
     });
   });
 
-  it('should fail if the email argument is null', () => {
+  it("should fail if the email argument is null", () => {
     const gqlQuery = `{
 				person(email: null) {
 					id
 				}
 			}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then((res) => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -231,14 +228,14 @@ describe('Query: person', () => {
     });
   });
 
-  it('should fail if the email argument is not passed', () => {
+  it("should fail if the email argument is not passed", () => {
     const gqlQuery = `{
 				person {
 					id
 				}
 			}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then((res) => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -250,13 +247,13 @@ describe('Query: person', () => {
     });
   });
 
-  it('should fail if no return type is provided', () => {
+  it("should fail if no return type is provided", () => {
     const gqlQuery = `{
-				person(email: "${email}") {
+				person(email: "${Cypress.env("email-of-bearer-token-user")}") {
 				}
 			}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then((res) => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -268,19 +265,22 @@ describe('Query: person', () => {
     });
   });
 
-  it('should pass if the query has at least one return type', () => {
+  it("should pass if the query has at least one return type", () => {
     const gqlQuery = `{
-				person(email: "${email}") {
+				person(email: "${Cypress.env("email-of-bearer-token-user")}") {
 					id
 				}
 			}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQLBearer(gqlQuery).then((res) => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
       // no errors
-      assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+      assert.notExists(
+        res.body.errors,
+        `One or more errors ocuured while executing query: ${gqlQuery}`
+      );
 
       // has data
       assert.exists(res.body.data);
