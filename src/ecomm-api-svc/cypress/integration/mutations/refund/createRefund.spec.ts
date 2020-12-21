@@ -2,19 +2,32 @@
 
 import { toFormattedString } from "../../../support/commands";
 
+// TEST COUNT: 10
+
 describe('Mutation: createRefund', () => {
     let id = '';
     const mutationName = 'createRefund';
     const queryName = "refunds";
     const dataPath = 'refund';
+    const responseBody = `
+                order {
+                    id
+                    refundedAmount {
+                        amount
+                        currency
+                    }
+                }
+                isPartialRefund
+                refundAmount {
+                    amount
+                    currency
+                }`;
     const standardMutationBody = `
         code
         message
         error
         ${dataPath} {
-            order {
-                id
-            }
+            ${responseBody}
         }
     `;
     var originalBaseUrl = "";   // The original baseUrl config. We will need it for making api calls
@@ -25,9 +38,14 @@ describe('Mutation: createRefund', () => {
         // This only lasts for the single file
         var config = `${Cypress.config("baseUrl")}`;
         originalBaseUrl = config.slice(0);  // Save the original baseUrl so we can use it for api calls
-        Cypress.config("baseUrl", "https://tst.apteanecommerce.com/");
+        var storefrontUrl = "https://tst.apteanecommerce.com/";
+        if (originalBaseUrl.includes('dev')) {
+            storefrontUrl = "https://dev.apteanecommerce.com/";
+        }
+        Cypress.config("baseUrl", storefrontUrl);
         cy.visit("/");  // Go to the storefront and login
         cy.storefrontLogin();
+        
     });
 
     beforeEach(() => {
@@ -42,7 +60,7 @@ describe('Mutation: createRefund', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteReturnReason";
+            const deletionName = "deleteRefund";
             const removalMutation = `mutation {
                 ${deletionName}(input: { orderId: "${id}" }) {
                     code
@@ -93,26 +111,80 @@ describe('Mutation: createRefund', () => {
         cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
     });
 
-    it("Mutation with valid 'orderId' input will create a new item", () => {
-        cy.createOrder().then((orderInfo) => {
-            const { orderId } = orderInfo;
-            const dummyOrder = {id: orderId};
+    it("Mutation will fail with 'orderId' of an unpaid order", () => {
+        cy.createOrderRetrieveId(originalBaseUrl, true).then((orderInfo) => {
+            const { orderId, orderAmount } = orderInfo;
+            const refundAmount = {
+                amount: orderAmount,
+                currency: "USD"
+            };
             const mutation = `mutation {
-                ${mutationName}(input: { orderId: "${orderId}" }) {
+                ${mutationName}(
+                    input: {
+                        orderId: "${orderId}",
+                        refundAmount: ${toFormattedString(refundAmount)} 
+                    }
+                ) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+                expect(res.body.errors[0].message).to.include("Cannot Refund Unpaid Orders");
+            });
+        });
+    });
+
+    it("Mutation that attempts to refund more than the order's total will fail", () => {
+        cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
+            const { orderId, orderAmount } = orderInfo;
+            const refundAmount = {
+                amount: orderAmount * 2,
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        orderId: "${orderId}"
+                        refundAmount: ${toFormattedString(refundAmount)} 
+                    }
+                ) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postAndConfirmError(mutation, true, originalBaseUrl);
+        });
+    });
+
+    it("Mutation with valid 'orderId' input will create a full refund", () => {
+        cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo) => {
+            const { orderId, orderAmount } = orderInfo;
+            const refundAmount = {
+                amount: orderAmount,
+                currency: "USD"
+            };
+            const dummyOrder = {
+                id: orderId,
+                refundedAmount: refundAmount
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        orderId: "${orderId}"
+                        refundAmount: ${toFormattedString(refundAmount)} 
+                    }
+                ) {
                     ${standardMutationBody}
                 }
             }`;
             cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
                 id = res.body.data[mutationName][dataPath].order.id;
-                const propNames = ["order"];
-                const propValues = [dummyOrder];
+                const propNames = ["isPartialRefund", "refundAmount", "order"];
+                const propValues = [false, refundAmount, dummyOrder];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${orderId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
-                                order {
-                                    id
-                                }
+                                ${responseBody}
                             }
                         }
                     }`;
@@ -122,46 +194,26 @@ describe('Mutation: createRefund', () => {
         });
     });
 
-    it("Mutation can create a partial refund", () => {
-        cy.createOrder().then((orderInfo: {orderId: string, orderAmount: number}) => {
+    it("Mutation with valid 'orderId' will create a partial refund", () => {
+        cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
             const { orderId, orderAmount } = orderInfo;
             const refundAmount = {
-                amount: Cypress._.random(1, orderAmount / 2), // Will probably need to math this
+                amount: Cypress._.random(1, orderAmount / 2),
                 currency: "USD"
             };
             const dummyOrder = {
                 id: orderId,
-                totalAmount: {
-                    amount: orderAmount, // Will probably need to math this
-                    currency: "USD"
-                },
                 refundedAmount: refundAmount
             };
-            const responseBody = `
-                order {
-                    id
-                    totalAmount {
-                        amount
-                        currency
-                    }
-                    refundedAmount {
-                        amount
-                        currency
-                    }
-                }
-                isPartialRefund
-                refundAmount {
-                    amount
-                    currency
-                }`;
             const mutation = `mutation {
-                ${mutationName}(input: { orderId: "${orderId}", isPartialRefund: true, refundAmount: ${toFormattedString(refundAmount)} }) {
-                    code
-                    message
-                    error
-                    ${dataPath} {
-                        ${responseBody}
+                ${mutationName}(
+                    input: {
+                        orderId: "${orderId}"
+                        isPartialRefund: true 
+                        refundAmount: ${toFormattedString(refundAmount)} 
                     }
+                ) {
+                    ${standardMutationBody}
                 }
             }`;
             cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
@@ -182,39 +234,119 @@ describe('Mutation: createRefund', () => {
         });
     });
 
-    it("Mutation creates item that has all included input", () => {
-        cy.createOrder().then((orderInfo: {orderId: string, orderAmount: number}) => {
+    it("Mutation that creates a partial refund will update the order's payment status to 'PARTIALLY_REFUNDED'", () => {
+        cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
             const { orderId, orderAmount } = orderInfo;
-            const isPartialRefund = Cypress._.random(0, 1);
+            const refundAmount = {
+                amount: Cypress._.random(1, orderAmount / 2),
+                currency: "USD"
+            };
+            const dummyOrder = {
+                id: orderId,
+                paymentStatus: "PARTIALLY_REFUNDED"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        orderId: "${orderId}"
+                        isPartialRefund: true 
+                        refundAmount: ${toFormattedString(refundAmount)} 
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    refund {
+                        order {
+                            id
+                            paymentStatus
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+                id = res.body.data[mutationName][dataPath].order.id;
+                const propNames = ["order"];
+                const propValues = [dummyOrder];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${orderId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            nodes {
+                                order {
+                                    id
+                                    paymentStatus
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl);
+                });
+            });
+        });
+    });
+
+    it("Mutation that creates a full refund will update the order's payment status to 'REFUNDED'", () => {
+        cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
+            const { orderId, orderAmount } = orderInfo;
+            const refundAmount = {
+                amount: orderAmount,
+                currency: "USD"
+            };
+            const dummyOrder = {
+                id: orderId,
+                paymentStatus: "REFUNDED"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        orderId: "${orderId}"
+                        refundAmount: ${toFormattedString(refundAmount)} 
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    refund {
+                        order {
+                            id
+                            paymentStatus
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+                id = res.body.data[mutationName][dataPath].order.id;
+                const propNames = ["order"];
+                const propValues = [dummyOrder];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${orderId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            nodes {
+                                order {
+                                    id
+                                    paymentStatus
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl);
+                });
+            });
+        });
+    });
+
+    it("Mutation creates item that has all included input", () => {
+        cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
+            const { orderId, orderAmount } = orderInfo;
+            const isPartialRefund = Cypress._.random(0, 1) === 1;
             const refundAmount = {
                 amount: isPartialRefund ? Cypress._.random(1, orderAmount / 2) : orderAmount, // Will probably need to math this
                 currency: "USD"
             };
             const dummyOrder = {
                 id: orderId,
-                totalAmount: {
-                    amount: orderAmount, // Will probably need to math this
-                    currency: "USD"
-                },
                 refundedAmount: refundAmount
             };
-            const responseBody = `
-                order {
-                    id
-                    totalAmount {
-                        amount
-                        currency
-                    }
-                    refundedAmount {
-                        amount
-                        currency
-                    }
-                }
-                isPartialRefund
-                refundAmount {
-                    amount
-                    currency
-                }`;
             const mutation = `mutation {
                 ${mutationName}(
                     input: { 
@@ -223,12 +355,7 @@ describe('Mutation: createRefund', () => {
                         refundAmount: ${toFormattedString(refundAmount)}
                     }
                 ) {
-                    code
-                    message
-                    error
-                    ${dataPath} {
-                        ${responseBody}
-                    }
+                    ${standardMutationBody}
                 }
             }`;
             cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {

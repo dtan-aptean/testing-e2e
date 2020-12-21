@@ -297,7 +297,7 @@ Cypress.Commands.add("postAndConfirmError", (gqlQuery: string, expect200?: boole
     });
 });
 
-Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutationName: string, dataPath: string) => {
+Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutationName: string, dataPath: string, altUrl?: string) => {
     Cypress.log({
         name: "postAndConfirmMutationError",
         consoleProps: () => {
@@ -308,7 +308,7 @@ Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutati
             };
         },
     });
-    return cy.postGQL(gqlMutation).then((res) => {
+    return cy.postGQL(gqlMutation, altUrl).then((res) => {
         cy.confirmMutationError(res, mutationName, dataPath).then(() => {
             return res;
         });
@@ -1523,7 +1523,8 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
         assert.isArray(resp.body.data[dataPath].nodes, "Has Nodes array");
 
         const targetNode = resp.body.data[dataPath].nodes.filter((item) => {
-            return item.id === itemId;
+            const id = dataPath === "refunds" ? item.order.id : item.id;
+            return id === itemId;
         });
         expect(targetNode.length).to.be.eql(1, "Specific item found in nodes");
         const node = targetNode[0];
@@ -1630,10 +1631,16 @@ Cypress.Commands.add("storefrontLogin", () => {
     });
     cy.get(".header-links").then(($el) => {
         if (!$el[0].innerText.includes('LOG OUT')) {
+            var email = "cypress.tester@testenvironment.com"
+            var password = "CypressTester1";
+            if (Cypress.config("baseUrl").includes("dev")) {
+                email = "bhargava.deshpande@aptean.com";
+                password = "admin";
+            }
             cy.wrap($el).find(".ico-login").click();
             cy.wait(200);
-            cy.get(".email").type("cypress.tester@testenvironment.com");
-            cy.get(".password").type("CypressTester1");
+            cy.get(".email").type(email);
+            cy.get(".password").type(password);
             cy.get(".login-button").click({force: true});
             cy.wait(200);
         }
@@ -1653,6 +1660,20 @@ Cypress.Commands.add("addCypressProductToCart", () => {
     cy.get(".item-box")
         .eq(0)
         .find(".product-box-add-to-cart-button")
+        .click({force: true});
+    cy.wait(200);
+    goToCart();
+});
+
+Cypress.Commands.add("addDevProductToCart", () => {
+    Cypress.log({
+        displayName: " ",
+        message: "addDevProductToCart"
+    });
+    cy.contains("Chocolate Muffin BD 2")
+        .click({force: true});
+    cy.wait(500);
+    cy.get(".add-to-cart-button")
         .click({force: true});
     cy.wait(200);
     goToCart();
@@ -1703,7 +1724,7 @@ Cypress.Commands.add("completeCheckout", () => {
     cy.get("#CardCode")
         .type("123");
     cy.get(".payment-info-next-step-button").click();
-    cy.wait(1000);
+    cy.wait(2000);
     // Confirm order
     cy.get(".confirm-order-next-step-button")
         .should("exist")
@@ -1735,11 +1756,15 @@ Cypress.Commands.add("getToOrders", () => {
 });
 
 // Places an order and returns the order guid
-Cypress.Commands.add("createOrder", () => {
+Cypress.Commands.add("createOrder", (doNotPayOrder?: boolean) => {
     Cypress.log({
         name: "createOrder"
     });
-    cy.addCypressProductToCart();
+    if (Cypress.config("baseUrl").includes("tst")) {
+        cy.addCypressProductToCart();
+    } else if (Cypress.config("baseUrl").includes("dev")) {
+        cy.addDevProductToCart();
+    }
     cy.location("pathname").should("include", "cart");
     cy.completeCheckout();
     cy.location("pathname").should("include", "checkout/completed/");
@@ -1769,9 +1794,57 @@ Cypress.Commands.add("createOrder", () => {
                     .find('.form-text-row')
                     .invoke("text")
                     .then(($totalText) => {
-                        var orderTotal = Number($rowText.slice(0).replace("$", ""));
+                        var orderTotal = Number($totalText.slice(0).replace("$", ""));
+                        orderTotal = orderTotal * 100;
+                        if (!doNotPayOrder) {
+                            cy.get("#markorderaspaid").click({force: true});
+                            cy.wait(100);
+                            cy.get("#markorderaspaid-action-confirmation-submit-button").click({force: true});
+                            cy.wait(500);
+                        }
                         return cy.wrap({orderId: guidText, orderAmount: orderTotal});
                     });
             });
+    });
+});
+
+Cypress.Commands.add("createOrderRetrieveId", (gqlUrl: string, doNotPayOrder?: boolean) => {
+    const trueCountQuery = `{
+        orders(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            totalCount
+        }
+    }`;
+    return cy.postGQL(trueCountQuery, gqlUrl).then((re) => {
+        const trueCount = re.body.data.orders.totalCount;
+        const orderQuery = `{
+            orders(${trueCount >= 25 ? "first: " + (trueCount + 1) + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                nodes {
+                    id
+                }
+            }
+        }`;
+        return cy.postGQL(orderQuery, gqlUrl).then((res) => {
+            const orgOrders =  res.body.data.orders.nodes;
+            return cy.createOrder(doNotPayOrder).then((orderInfo) => {
+                const {orderAmount} = orderInfo;
+                cy.wait(1000);
+                return cy.postGQL(orderQuery, gqlUrl).then((resp) => {
+                    const newOrders = resp.body.data.orders.nodes;
+                    expect(newOrders.length).to.be.greaterThan(orgOrders.length, "Should be a new order");
+                    const relevantOrder = newOrders.filter((order) => {
+                        var notPresent = true;
+                        for(var i = 0; i < orgOrders.length; i++) {
+                            if (orgOrders[i].id === order.id) {
+                                notPresent = false;
+                                break;
+                            }
+                        }
+                        return notPresent;
+                    });
+                    const trueId = relevantOrder[0].id;
+                    return cy.wrap({orderId: trueId, orderAmount: orderAmount});
+                });
+            });
+        });
     });
 });
