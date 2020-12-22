@@ -297,7 +297,7 @@ Cypress.Commands.add("postAndConfirmError", (gqlQuery: string, expect200?: boole
     });
 });
 
-Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutationName: string, dataPath: string, altUrl?: string) => {
+Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutationName: string, dataPath?: string, altUrl?: string) => {
     Cypress.log({
         name: "postAndConfirmMutationError",
         consoleProps: () => {
@@ -1293,7 +1293,7 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
 
 // Create a new item, validate it, and return the id. Pass in the full input value as a string
 // If you need more information than just the id, pass in the additional fields as a string and the entire new item will be returned
-Cypress.Commands.add("createAndGetId", (mutationName: string, dataPath: string, input: string, additionalFields?: string) => {
+Cypress.Commands.add("createAndGetId", (mutationName: string, dataPath: string, input: string, additionalFields?: string, altUrl?: string) => {
     Cypress.log({
         name: "createAndGetId",
         message: `Creating ${dataPath}. Additional fields: ${!!additionalFields}`,
@@ -1306,19 +1306,22 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, dataPath: string, 
             };
         }
     });
+    const refundIdFormat = `order {
+        id
+    }`;
     const mutation = `mutation {
         ${mutationName}(input: ${input}) {
             code
             message
             error
             ${dataPath} {
-                id
+                ${dataPath === "refund" ? refundIdFormat: "id"}
                 ${additionalFields ? additionalFields : ""}
             }
         }
     }`;
-    return cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-        const id = res.body.data[mutationName][dataPath].id;
+    return cy.postMutAndValidate(mutation, mutationName, dataPath, altUrl).then((res) => {
+        const id = dataPath === "refund" ? res.body.data[mutationName][dataPath].order.id : res.body.data[mutationName][dataPath].id;
         if (additionalFields) {
             return res.body.data[mutationName][dataPath];
         } else {
@@ -1395,6 +1398,64 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
                     return item.id === itemId && item.name === itemName;
                 });
             }
+            if (matchingItems.length > 0) {
+                message = "Query returned item, deletion failed";
+            }
+            if (!asTest) {
+                return true;
+            }
+            assert.isEmpty(matchingItems, message);
+            return res;
+        }
+    });
+});
+
+// Same as above but for items that don't have a name and instead works by the id field
+Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, searchParameter: string, queryName: string, altUrl?: string) => {
+    Cypress.log({
+        name: "queryForDeleted",
+        message: `querying ${queryName} for deleted item "${itemId}"`,
+        consoleProps: () => {
+            return {
+                "Used as a test": asTest,
+                "Query Name": queryName,
+                "Item's Id": itemId,
+                "searchParameter": searchParameter,
+                "Url used": altUrl? altUrl : Cypress.config('baseUrl')
+            };
+        },
+    });
+    var idField = queryName === "refunds" ? "order { id }" : "id";
+    const searchQuery = `{
+        ${queryName}(${searchParameter}: "${itemId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            nodes {
+                ${idField}
+            }
+        }
+    }`;
+    return cy.postGQL(searchQuery, altUrl).then((res) => {
+        // should be 200 ok
+        expect(res.isOkStatusCode).to.be.equal(true);
+        // no errors
+        assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${searchQuery}`);
+        // has data
+        assert.exists(res.body.data);
+        // has nodes
+        assert.isArray(res.body.data[queryName].nodes);
+        const nodes = res.body.data[queryName].nodes;
+        var message = "Query did not return item, assumed successful deletion"
+        if (nodes.length === 0) {
+            if (!asTest) {
+                return false;
+            }
+            assert.isEmpty(nodes, message);
+            return res;
+        } else {
+            // Compare ids to make sure it's not there.
+            var matchingItems = nodes.filter((item) => {
+                var id = queryName === "refunds" ? item.order.id : item.id;
+                return id === itemId;
+            });
             if (matchingItems.length > 0) {
                 message = "Query returned item, deletion failed";
             }
@@ -1730,7 +1791,7 @@ Cypress.Commands.add("completeCheckout", () => {
         .should("exist")
         .and("be.visible");
     cy.get(".confirm-order-next-step-button").click();
-    cy.wait(2000);
+    cy.wait(5000);
 });
 
 Cypress.Commands.add("getToOrders", () => {
