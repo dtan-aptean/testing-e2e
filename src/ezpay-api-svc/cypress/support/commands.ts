@@ -82,7 +82,7 @@ Cypress.Commands.add("generatePaymentRequest", () => {
     })
     .then((uniqueId) => {
       cy.wait(5000).then(() => {
-        const amount = Cypress._.random(0, 1e3);
+        const amount = Cypress._.random(100, 1e3);
         const referenceNumber = Cypress._.random(0, 1e20);
         const gqlQuery = `mutation {
         upsertPaymentRequest(
