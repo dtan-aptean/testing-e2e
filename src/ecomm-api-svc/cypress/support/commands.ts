@@ -1203,7 +1203,7 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
         }`;
     }
     const searchQuery = `{
-        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
             nodes {
                 id
                 ${nameField}
@@ -1351,7 +1351,7 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
         }`;
     }
     const searchQuery = `{
-        ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+        ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: NAME}) {
             nodes {
                 id
                 ${nameField}

@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 36
+// TEST COUNT: 35
 describe('Query: orders', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "orders";
@@ -136,23 +136,6 @@ describe('Query: orders', () => {
         });
     });
 
-    it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
-        const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
-                ${standardQueryBody}
-            }
-        }`;
-        cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
-            const descQuery = `{
-                ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: DESC, field: NAME}) {
-                    ${standardQueryBody}
-                }
-            }`;
-            cy.postAndValidate(descQuery, queryName).then((descRes) => {
-                cy.verifyReverseOrder(queryName, ascRes, descRes);
-            });
-        });
-    });
 
     it("Query with valid 'first' input argument will return only that amount of items", () => {
         cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
