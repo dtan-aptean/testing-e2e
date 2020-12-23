@@ -120,7 +120,7 @@ describe('Mutation: deleteProductSpecification', () => {
 
     it("Deleting an item connected to a product will disassociate the item from the product", () => {
         const optionsQuery = `{
-            ${queryName}(searchString: "${currentItemName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(searchString: "${currentItemName}", orderBy: {direction: ASC, field: NAME}) {
                 nodes {
                     id
                     name
