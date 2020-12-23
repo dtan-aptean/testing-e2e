@@ -1393,11 +1393,11 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
             if (matchingItems.length > 0) {
                 message = "Query returned item, deletion failed";
             }
-            if (!asTest) {
+            if (!asTest && matchingItems.length > 0) {
                 return true;
             }
             assert.isEmpty(matchingItems, message);
-            return res;
+            return false;
         }
     });
 });
