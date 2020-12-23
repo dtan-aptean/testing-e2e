@@ -165,7 +165,7 @@ describe('Mutation: deleteManufacturer', () => {
             const propValues = [manufacturers, name, discountType];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${extraQueryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${extraQueryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             discountAmount {
