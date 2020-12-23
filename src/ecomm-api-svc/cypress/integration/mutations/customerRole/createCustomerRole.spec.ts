@@ -71,7 +71,7 @@ describe('Mutation: createCustomerRole', () => {
             const propValues = [name];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name
@@ -110,7 +110,7 @@ describe('Mutation: createCustomerRole', () => {
             cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
                 const queryName = "customerRoles";
                 const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -157,7 +157,7 @@ describe('Mutation: createCustomerRole', () => {
             const propValues = [name, isTaxExempt, freeShipping, active, enablePasswordLifetime];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name

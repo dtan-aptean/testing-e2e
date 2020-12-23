@@ -118,7 +118,7 @@ describe('Mutation: updateCustomerRole', () => {
             const propValues = [newName];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name
@@ -157,7 +157,7 @@ describe('Mutation: updateCustomerRole', () => {
             const propValues = [customData, newName];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -202,7 +202,7 @@ describe('Mutation: updateCustomerRole', () => {
                 const propValues = [newCustomData, newName];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 customData
@@ -251,7 +251,7 @@ describe('Mutation: updateCustomerRole', () => {
             const propValues = [newName, isTaxExempt, freeShipping, active, enablePasswordLifetime];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name
