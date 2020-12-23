@@ -161,7 +161,7 @@ describe('Mutation: updateDiscount', () => {
             const propValues = [newName, newDiscountAmount];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name
@@ -213,7 +213,7 @@ describe('Mutation: updateDiscount', () => {
             const propValues = [customData, newName, newDiscountAmount];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -271,7 +271,7 @@ describe('Mutation: updateDiscount', () => {
                 const propValues = [newCustomData, newName, newDiscountAmount];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 customData
@@ -419,7 +419,7 @@ describe('Mutation: updateDiscount', () => {
                     const propValues = [newName, discountType, newDiscountAmount, products];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
                                     id
                                     discountAmount {
@@ -505,7 +505,7 @@ describe('Mutation: updateDiscount', () => {
                     const propValues = [categories, newName, discountType, newDiscountAmount];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
                                     id
                                     discountAmount {
@@ -587,7 +587,7 @@ describe('Mutation: updateDiscount', () => {
                     const propValues = [manufacturers, newName, discountType, newDiscountAmount];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
                                     id
                                     discountAmount {
@@ -676,7 +676,7 @@ describe('Mutation: updateDiscount', () => {
             const propValues = [isCumulative, requiresCouponCode, couponCode, usePercentageForDiscount, discountPercentage, discountLimitationCount, applyDiscountToSubCategories, newName, newDiscountAmount, maximumDiscountAmount];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name
