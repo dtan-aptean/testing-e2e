@@ -2,7 +2,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 23
+// TEST COUNT: 24
 describe('Mutation: updateProduct', () => {
     let id = '';
     let updateCount = 0;
@@ -339,6 +339,61 @@ describe('Mutation: updateProduct', () => {
                     }
                 }`;
                 cy.postAndCheckCustom(query, queryName, id, customData);
+            });
+        });
+    });
+
+    it("Mutation with all required input and 'customData' input will overwrite the customData on an existing object", () => {
+        const info = [{name: `Cypress ${mutationName} customData extra`, shortDescription: `${mutationName} CD cypress test`, languageCode: "Standard"}];
+        const customData = {data: `${dataPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+        const input = `{${infoName}: ${toFormattedString(info)}, customData: ${toFormattedString(customData)}, inventoryInformation: {minimumStockQuantity: 5}}`;
+        cy.createAndGetId(createName, dataPath, input, "customData").then((createdItem) => {
+            assert.exists(createdItem.id);
+            assert.exists(createdItem.customData);
+            extraIds.push({itemId: createdItem.id, deleteName: "deleteProduct"});
+            const newInfo = [{name: `Cypress ${mutationName} CD extra updated`, shortDescription: `${mutationName} CD cypress test`, languageCode: "Standard"}];
+            const newCustomData = {data: `${dataPath} customData`, newDataField: { canDelete: true }};
+            const newInventoryInfo = {
+                minimumStockQuantity: 6
+            }
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${createdItem.id}"
+                        ${infoName}: ${toFormattedString(newInfo)}
+                        inventoryInformation: ${toFormattedString(newInventoryInfo)}
+                        customData: ${toFormattedString(newCustomData)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${dataPath} {
+                        id
+                        ${infoName} {
+                            name
+                            shortDescription
+                            languageCode
+                        }
+                        ${additionalFields}
+                        customData
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                const propNames = ["customData", infoName, "inventoryInformation"];
+                const propValues = [newCustomData, newInfo, newInventoryInfo];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${newInfo[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            nodes {
+                                id
+                                customData
+                            }
+                        }
+                    }`;
+                    cy.postAndCheckCustom(query, queryName, id, newCustomData);
+                });
             });
         });
     });

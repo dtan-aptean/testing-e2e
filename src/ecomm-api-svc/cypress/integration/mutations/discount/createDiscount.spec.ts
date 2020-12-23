@@ -105,7 +105,7 @@ describe('Mutation: createDiscount', () => {
     it("Mutation will fail without 'discountAmount' input", () => {
         const name = `Cypress ${mutationName} no discountAmount`;
         const mutation = `mutation {
-            ${mutationName}(input: { id: "${id}", name: "${name}" }) {
+            ${mutationName}(input: { name: "${name}" }) {
                 ${standardMutationBody}
             }
         }`;
@@ -520,7 +520,7 @@ describe('Mutation: createDiscount', () => {
     it("Mutation creates item that has all included input", () => {
         const isCumulative = Cypress._.random(0, 1) === 1;
         const requiresCouponCode = Cypress._.random(0, 1) === 1;
-        const couponCode = requiresCouponCode ? Cypress._.random(0, 1e5) : null;
+        const couponCode = requiresCouponCode ? `A${Cypress._.random(0, 1e5)}` : null;
         const usePercentageForDiscount = Cypress._.random(0, 1) === 1;
         const discountPercentage = usePercentageForDiscount ? Cypress._.random(1, 20) : 0;
         const discountAmount = {

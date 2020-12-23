@@ -2,7 +2,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 15
+// TEST COUNT: 16
 describe('Mutation: updateDiscount', () => {
     let id = '';
     let updateCount = 0;
@@ -221,6 +221,65 @@ describe('Mutation: updateDiscount', () => {
                     }
                 }`;
                 cy.postAndCheckCustom(query, queryName, id, customData);
+            });
+        });
+    });
+
+    it("Mutation with all required input and 'customData' input will overwrite the customData on an existing object", () => {
+        const name = `Cypress ${mutationName} customData extra`;
+        const customData = {data: `${dataPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+        const extraDiscountAmount = {
+            amount: Cypress._.random(1, 5),
+            currency: "USD"
+        };
+        const input = `{name: "${name}", discountAmount: ${toFormattedString(extraDiscountAmount)}, customData: ${toFormattedString(customData)}}`;
+        cy.createAndGetId(createName, dataPath, input, "customData").then((createdItem) => {
+            assert.exists(createdItem.id);
+            assert.exists(createdItem.customData);
+            extraIds.push({itemId: createdItem.id, deleteName: "deleteDiscount"});
+            const newName = `Cypress ${mutationName} CD extra updated`;
+            const newCustomData = {data: `${dataPath} customData`, newDataField: { canDelete: true }};
+            const newDiscountAmount = {
+                amount: extraDiscountAmount.amount + Cypress._.random(1, 5),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${createdItem.id}"
+                        name: "${newName}"
+                        discountAmount: ${toFormattedString(newDiscountAmount)}
+                        customData: ${toFormattedString(newCustomData)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${dataPath} {
+                        id
+                        name
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                        customData
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                const propNames = ["customData", "name", "discountAmount"];
+                const propValues = [newCustomData, newName, newDiscountAmount];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            nodes {
+                                id
+                                customData
+                            }
+                        }
+                    }`;
+                    cy.postAndCheckCustom(query, queryName, id, newCustomData);
+                });
             });
         });
     });

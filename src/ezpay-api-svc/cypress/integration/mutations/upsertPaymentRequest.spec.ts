@@ -3,7 +3,7 @@
 describe('Mutation: upsertPaymentRequest', () => {
   let email = '';
   let invoiceRef = '';
-  const amount = Cypress._.random(0, 1e3);
+  const amount = Cypress._.random(100, 1e3);
   const phoneNumber = '';
 
   before(() => {
@@ -59,6 +59,39 @@ describe('Mutation: upsertPaymentRequest', () => {
       assert.equal(res.body.data.upsertPaymentRequest.code, 'SUCCESS', 'Code is not SUCCESS');
     });
   });
+
+  it('should fail if the mutation upsert a payment request with amount < 100', () => {
+    const gqlQuery = `mutation {
+      upsertPaymentRequest(
+        input: {
+          referenceNumber: "${Cypress._.random(0, 1e20)}"
+          type: NONE
+          email: "${email}"
+          phoneNumber: "${phoneNumber}"
+          amount: 99
+          invoiceRef: "${invoiceRef}"
+          sendCommunication: false
+        }
+      ) {
+        code
+        message
+        error
+        paymentRequestId
+        paymentUrl
+      }
+    }`;
+
+    cy.postGQL(gqlQuery).then(res => {      
+      // Should be 200 OK
+      cy.expect(res.isOkStatusCode).to.be.equal(true);
+
+      // should have errors
+      assert.exists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+
+      // has no data
+      assert.notExists(res.body.data);
+    });
+  });  
 
   it('should fail if input argument is empty', () => {
     const gqlQuery = `mutation {

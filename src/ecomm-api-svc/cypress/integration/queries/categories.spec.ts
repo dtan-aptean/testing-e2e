@@ -1,6 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 26
-// request count: 36
+// TEST COUNT: 36
 describe('Query: categories', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "categories";
@@ -126,6 +125,42 @@ describe('Query: categories', () => {
         });
     });
 
+    it("Query with orderBy direction: DESC, field: TIMESTAMP will return items in a reverse order from direction: ASC", () => {
+        const trueTotalQuery = `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
+            const descQuery = `{
+                ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: DESC, field: TIMESTAMP}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(descQuery, queryName).then((descRes) => {
+                cy.verifyReverseOrder(queryName, ascRes, descRes);
+            });
+        });
+    });
+
+    it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
+        const trueTotalQuery = `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
+            const descQuery = `{
+                ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: DESC, field: NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(descQuery, queryName).then((descRes) => {
+                cy.verifyReverseOrder(queryName, ascRes, descRes);
+            });
+        });
+    });
+    
     it("Query with valid 'first' input argument will return only that amount of items", () => {
         cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
             // If there's only one item, we can't do any pagination
@@ -147,7 +182,7 @@ describe('Query: categories', () => {
 
     it("Query with valid 'last' input argument will return only that amount of items", () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -266,7 +301,7 @@ describe('Query: categories', () => {
     
     it("Query with a valid 'after' input argument will return all items after that value", () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -347,7 +382,7 @@ describe('Query: categories', () => {
 
     it("Query with both 'after' and 'first' input will arguments return a specific amount of items after that value", () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -374,7 +409,7 @@ describe('Query: categories', () => {
 
     it("Query with both 'before' and 'last' input arguments will return a specific amount of items before that value", () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -398,7 +433,7 @@ describe('Query: categories', () => {
 
     it("Query with both 'after' and 'last' input will return a specific amount of items after that value", () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
@@ -419,6 +454,159 @@ describe('Query: categories', () => {
                         cy.validateCursor(resp, queryName, "after", "last", last);
                     });
                 });
+            });
+        });
+    });
+
+    it('Query with invalid "Before" input and valid "first" input will fail', () => {
+        cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
+            // If there's only one item, we can't do any pagination
+            expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
+            // Get half the items, rounding down
+            const first = Math.floor(totalCount / 2);
+            const gqlQuery = `{
+                ${queryName}(before: 123, first: ${first}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 123');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            });
+        });
+    });
+
+    it('Query with valid "Before" input and invalid "first" input will fail', () => {
+        cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
+            const gqlQuery = `{
+                ${queryName}(before: "${cursor}", first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string('Int cannot represent non-integer value: "4"');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            });
+        });
+    });
+
+    it('Query with invalid "After" input and valid "first" input will fail', () => {
+        cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
+            // If there's only one item, we can't do any pagination
+            expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
+            // Get half the items, rounding down
+            const first = Math.floor(totalCount / 2);
+            const gqlQuery = `{
+                ${queryName}(after: 123, first: ${first}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 123');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            });
+        });
+    });
+
+    it('Query with valid "After" input and invalid "first" input will fail', () => {
+        const trueTotalQuery = `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.returnRandomCursor(trueTotalQuery, queryName, false).then((cursor: string) => {
+            const gqlQuery = `{
+                ${queryName}(after: "${cursor}", first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string('Int cannot represent non-integer value: "4"');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            });
+        });
+    });
+
+    it('Query with invalid "Before" input and valid "last" input will fail', () => {
+        const trueTotalQuery = `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.returnCount(trueTotalQuery, queryName).then((totalCount: number) => {
+            // If there's only one item, we can't do any pagination
+            expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
+            // Get half the items, rounding down
+            const last = Math.floor(totalCount / 2);
+            const gqlQuery = `{
+                ${queryName}(before: 123, last: ${last}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 123');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            });
+        });
+    });
+
+    it('Query with valid "Before" input and invalid "last" input will fail', () => {
+        const trueTotalQuery = `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
+            const gqlQuery = `{
+                ${queryName}(before: "${cursor}", last: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string('Int cannot represent non-integer value: "4"');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            });
+        });
+    });
+
+    it('Query with invalid "After" input and valid "last" input will fail', () => {
+        const trueTotalQuery = `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.returnCount(trueTotalQuery, queryName).then((totalCount: number) => {
+            // If there's only one item, we can't do any pagination
+            expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
+            // Get half the items, rounding down
+            const last = Math.floor(totalCount / 2);
+            const gqlQuery = `{
+                ${queryName}(after: 123, last: ${last}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 123');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            });
+        });
+    });
+
+    it('Query with valid "After" input and invalid "last" input will fail', () => {
+        const trueTotalQuery = `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.returnRandomCursor(trueTotalQuery, queryName, false).then((cursor: string) => {
+            const gqlQuery = `{
+                ${queryName}(after: "${cursor}", last: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string('Int cannot represent non-integer value: "4"');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
             });
         });
     });
