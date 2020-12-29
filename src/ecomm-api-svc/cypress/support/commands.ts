@@ -1094,6 +1094,20 @@ Cypress.Commands.add("validateCursor", (res, dataPath: string, beforeAfter: stri
     });
 });
 
+const verifySeoData = (seo, expectedSeo) => {
+    expectedSeo.forEach((seoItem, index) => {
+        var currSeo = seo[index];
+        const props = Object.getOwnPropertyNames(seoItem);
+        for (var i = 0; i < props.length; i++) {
+            if (props[i] === "searchEngineFriendlyPageName" && seoItem[props[i]].length > 0) {
+                expect(currSeo[props[i]]).to.include(seoItem[props[i]].toLowerCase().replace(' ', '-'), `Verify seoData[${index}].${props[i]}`);
+            }  else {
+                expect(currSeo[props[i]]).to.be.eql(seoItem[props[i]], `Verify seoData[${index}].${props[i]}`);
+            }
+        }
+    });
+};
+
 // Confirms the mutation data that you instruct it to. Checks descendents with the eql() which is a deep equal
 Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataPath: string, propNames: string[], values: []) => {
     Cypress.log({
@@ -1167,15 +1181,19 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataP
         }
     };
     for (var i = 0; i < propNames.length; i++) {
-        if (values[i] && result[propNames[i]] === null) {
-            assert.exists(result[propNames[i]], `${propNames[i]} should not be null`);
-        }
-        if (Array.isArray(values[i])) {
-            matchArray(result[propNames[i]], values[i], propNames[i]);
-        } else if (!!values[i] && typeof values[i] === 'object') {
-            matchObject(result[propNames[i]], values[i], propNames[i]);
+        if (propNames[i] === "seoData"){
+            verifySeoData(result[propNames[i]], values[i]);
         } else {
-            expect(result[propNames[i]]).to.be.eql(values[i], `Verifying ${propNames[i]}`);
+            if (values[i] && result[propNames[i]] === null) {
+                assert.exists(result[propNames[i]], `${propNames[i]} should not be null`);
+            }
+            if (Array.isArray(values[i])) {
+                matchArray(result[propNames[i]], values[i], propNames[i]);
+            } else if (!!values[i] && typeof values[i] === 'object') {
+                matchObject(result[propNames[i]], values[i], propNames[i]);
+            } else {
+                expect(result[propNames[i]]).to.be.eql(values[i], `Verifying ${propNames[i]}`);
+            }
         }
     }
 });
@@ -1478,15 +1496,19 @@ const matchArrayItems = (resArray: [], matchArray: [], originalProperty: string,
 // Function that iterates through array and calls above functions
 const compareExpectedToResults = (subject, propertyNames: string[], expectedValues: []) => {
     for (var i = 0; i < propertyNames.length; i++) {
-        if (expectedValues[i] && subject[propertyNames[i]] === null) {
-            assert.exists(subject[propertyNames[i]], `${propertyNames[i]} should not be null`);
-        }
-        if (Array.isArray(expectedValues[i])) {
-            matchArrayItems(subject[propertyNames[i]], expectedValues[i], propertyNames[i]);
-        } else if (!!expectedValues[i] && typeof expectedValues[i] === 'object') {
-            matchObject(subject[propertyNames[i]], expectedValues[i], true, propertyNames[i]);
+        if (propertyNames[i] === "seoData"){
+            verifySeoData(subject[propertyNames[i]], expectedValues[i]);
         } else {
-            expect(subject[propertyNames[i]]).to.be.eql(expectedValues[i], `Verify ${propertyNames[i]}`);
+            if (expectedValues[i] && subject[propertyNames[i]] === null) {
+                assert.exists(subject[propertyNames[i]], `${propertyNames[i]} should not be null`);
+            }
+            if (Array.isArray(expectedValues[i])) {
+                matchArrayItems(subject[propertyNames[i]], expectedValues[i], propertyNames[i]);
+            } else if (!!expectedValues[i] && typeof expectedValues[i] === 'object') {
+                matchObject(subject[propertyNames[i]], expectedValues[i], true, propertyNames[i]);
+            } else {
+                expect(subject[propertyNames[i]]).to.be.eql(expectedValues[i], `Verify ${propertyNames[i]}`);
+            }
         }
     }
 }

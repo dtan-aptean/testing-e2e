@@ -458,15 +458,21 @@ describe('Mutation: updateCategory', () => {
             });
         });
     });
-    
+   
     it("Mutation will correctly use all input", () => {
         updateCount++;
         const info = [
-            {name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"},
-            {name: "Zypresse aktualisierenKategorie Aktualisieren2", description: "Translate desc to German", languageCode: "de-DE"}
+            {name: "Zypresse aktualisierenKategorie Aktualisieren2", description: "Translate desc to German", languageCode: "de-DE"},
+            {name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}
         ];
         const displayOrder = Cypress._.random(0, 10);
         const seoData = [{
+            searchEngineFriendlyPageName: "Zypressen",
+            metaKeywords:  "Zypressen",
+            metaDescription: "Zypressen desc",
+            metaTitle: "Zypressen",
+            languageCode: "de-DE"
+        }, {
             searchEngineFriendlyPageName: "Cypress Update",
             metaKeywords:  "Cypress",
             metaDescription: "Cypress Update metaTag",
@@ -517,7 +523,7 @@ describe('Mutation: updateCategory', () => {
             const propValues = [info, displayOrder, seoData, priceRanges, published, showOnHomePage];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                    ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             displayOrder

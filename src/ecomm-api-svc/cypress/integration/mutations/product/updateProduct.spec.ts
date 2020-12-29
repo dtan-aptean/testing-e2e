@@ -757,8 +757,8 @@ describe('Mutation: updateProduct', () => {
     it("Mutation will correctly use all input", () => {
         updateCount++;
         const info = [
-            {name: `Cypress ${mutationName} Update ${updateCount}`, shortDescription: `Test #${updateCount}`, fullDescription: `Test #${updateCount} for ${mutationName}`, languageCode: "Standard"},
-            {name: "Zypresse aktualisierenKategorie Aktualisieren2", shortDescription: `Prüfung #${updateCount}`, fullDescription: `Prüfung #${updateCount} for ${mutationName}`, languageCode: "de-DE"}
+            {name: "Zypresse aktualisierenKategorie Aktualisieren2", shortDescription: `Prüfung #${updateCount}`, fullDescription: `Prüfung #${updateCount} for ${mutationName}`, languageCode: "de-DE"},
+            {name: `Cypress ${mutationName} Update ${updateCount}`, shortDescription: `Test #${updateCount}`, fullDescription: `Test #${updateCount} for ${mutationName}`, languageCode: "Standard"}
         ];
         const today = new Date();
         const nextWeek = new Date(today.valueOf() + 604800000);
@@ -781,7 +781,7 @@ describe('Mutation: updateProduct', () => {
         const cartInfo = {
             minimumCartQuantity: Cypress._.random(1, 100),
             maximumCartQuantity: Cypress._.random(100, 500),
-            allowedQuantities: Cypress._.random(1, 500)
+            allowedQuantities: [Cypress._.random(1, 500)]
         };
         const preOrder = Cypress._.random(0, 1) === 1
         const priceInformation = {
@@ -795,6 +795,12 @@ describe('Mutation: updateProduct', () => {
         }; 
         const published = Cypress._.random(0, 1) === 1;
         const seoData = [{
+            searchEngineFriendlyPageName: "German z",
+            metaKeywords:  "German z",
+            metaDescription: "DE Input desc z",
+            metaTitle: "DE Input z",
+            languageCode: "de-DE"
+        }, {
             searchEngineFriendlyPageName: "Cypress Update",
             metaKeywords:  "Cypress",
             metaDescription: "Cypress Update metaTag",
@@ -899,7 +905,7 @@ describe('Mutation: updateProduct', () => {
             const propValues = [sku, info, inventoryInfo, manufacturerPartNumber, shippingInformation, cartInfo, priceInformation, seoData, published];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                    ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             sku

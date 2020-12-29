@@ -175,8 +175,17 @@ describe('Mutation: createVendor', () => {
         };
         const displayOrder = Cypress._.random(1, 20);
         const email = "cypressVendorTest@testenvironment.com";
-        const info = [{name: "Cypress Vendor Input", description: "Cypress testing 'create' mutation input", languageCode: "Standard"}, {name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE"}];
+        const info = [
+            {name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE"}, 
+            {name: "Cypress Vendor Input", description: "Cypress testing 'create' mutation input", languageCode: "Standard"}
+        ];
         const seoData = [{
+            searchEngineFriendlyPageName: "",
+            metaKeywords:  "",
+            metaDescription: "",
+            metaTitle: "",
+            languageCode: "de-DE"
+        }, {
             searchEngineFriendlyPageName: "Cypress Input",
             metaKeywords:  "Cypress",
             metaDescription: "Cypress Input metaTag",
@@ -231,7 +240,7 @@ describe('Mutation: createVendor', () => {
             const propValues = [info, active, address, displayOrder, email, seoData];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                    ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             active

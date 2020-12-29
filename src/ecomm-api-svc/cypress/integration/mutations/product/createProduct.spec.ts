@@ -687,8 +687,8 @@ describe('Mutation: createProduct', () => {
 
     it("Mutation creates item that has all included input", () => {
         const info = [
-            {name: "Cypress Product Input", shortDescription: "Cypress testing 'create' mutation input", fullDescription: "Cypress testing createProduct mutation input, to see if the input is added properly", languageCode: "Standard"},
-            {name: "Translate name to German", shortDescription: "Translate short desc to German", fullDescription: "Translate full desc to German", languageCode: "de-DE"}
+            {name: "Translate name to German", shortDescription: "Translate short desc to German", fullDescription: "Translate full desc to German", languageCode: "de-DE"},
+            {name: "Cypress Product Input", shortDescription: "Cypress testing 'create' mutation input", fullDescription: "Cypress testing createProduct mutation input, to see if the input is added properly", languageCode: "Standard"}
         ];
         const today = new Date();
         const nextWeek = new Date(today.valueOf() + 604800000);
@@ -711,7 +711,7 @@ describe('Mutation: createProduct', () => {
         const cartInfo = {
             minimumCartQuantity: Cypress._.random(1, 100),
             maximumCartQuantity: Cypress._.random(100, 500),
-            allowedQuantities: Cypress._.random(1, 500)
+            allowedQuantities: [Cypress._.random(1, 500), Cypress._.random(1, 500)]
         };
         const preOrder = Cypress._.random(0, 1) === 1
         const priceInformation = {
@@ -829,7 +829,7 @@ describe('Mutation: createProduct', () => {
             const propValues = [sku, info, inventoryInfo, manufacturerPartNumber, shippingInformation, cartInfo, priceInformation, seoData, published];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                    ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             sku
