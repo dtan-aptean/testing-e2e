@@ -1528,10 +1528,12 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
 });
 
 // Command for verifying the ByProductId queries
-Cypress.Commands.add('queryByProductId', (queryName: string, queryBody: string, path: string, productId: string, expectedItems: []) => {
+Cypress.Commands.add('queryByProductId', (queryName: string, queryBody: string, productId: string, expectedItems: []) => {
     const query = `query {
-        ${queryName}(productId: "${productId}") {
-            ${queryBody}
+        ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
+            nodes {
+                ${queryBody}                
+            }
         }
     }`;
     Cypress.log({
@@ -1551,8 +1553,8 @@ Cypress.Commands.add('queryByProductId', (queryName: string, queryBody: string, 
         // has data
         assert.exists(res.body.data);
         assert.exists(res.body.data[queryName]);
-        assert.exists(res.body.data[queryName][path]);
-        var returnedItems = res.body.data[queryName][path];
+        assert.exists(res.body.data[queryName].nodes);
+        var returnedItems = res.body.data[queryName].nodes;
         assert.isArray(returnedItems);
         // Begin comparisons
         expect(returnedItems.length).to.be.eql(expectedItems.length, `Expect ${expectedItems.length} returned item`);

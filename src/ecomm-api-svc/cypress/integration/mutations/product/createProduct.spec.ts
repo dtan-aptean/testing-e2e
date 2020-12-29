@@ -509,14 +509,12 @@ describe('Mutation: createProduct', () => {
                     const propNames = [infoName, "inventoryInformation"];
                     const propValues = [info, inventoryInfo];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                        const queryBody = `categories {
-                            id
+                        const queryBody = `id
                             categoryInfo {
                                 name
                                 languageCode
-                            }
-                        }`;
-                        cy.queryByProductId("categoriesByProductId", queryBody, "categories", id, categories);
+                            }`;
+                        cy.queryByProductId("categories", queryBody, id, categories);
                     });
                 });
             });
@@ -568,14 +566,12 @@ describe('Mutation: createProduct', () => {
                     const propNames = [infoName, "inventoryInformation"];
                     const propValues = [info, inventoryInfo];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                        const queryBody = `manufacturers {
-                            id
+                        const queryBody = `id
                             manufacturerInfo {
                                 name
                                 languageCode
-                            }
-                        }`;
-                        cy.queryByProductId("manufacturersByProductId", queryBody, "manufacturers", id, manufacturers);
+                            }`;
+                        cy.queryByProductId("manufacturers", queryBody, id, manufacturers);
                     });
                 });
             });
@@ -627,14 +623,12 @@ describe('Mutation: createProduct', () => {
                     const propNames = [infoName, "inventoryInformation"];
                     const propValues = [info, inventoryInfo];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                        const queryBody = `attributes {
-                            id
+                        const queryBody = `id
                             name
                             values {
                                 name
-                            }
-                        }`;
-                        cy.queryByProductId("productAttributesByProductId", queryBody, "attributes", id, attributes);
+                            }`;
+                        cy.queryByProductId("productAttributes", queryBody, id, attributes);
                     });
                 });
             });
@@ -685,7 +679,7 @@ describe('Mutation: createProduct', () => {
                 const propNames = [infoName, "inventoryInformation"];
                 const propValues = [info, inventoryInfo];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                    cy.queryByProductId("productSpecificationOptionsByProductId", optionsField, "options", id, options);
+                    cy.queryByProductId("productSpecifications", optionsField, id, options);
                 });
             });
        });
