@@ -28,13 +28,11 @@ describe("Mutation: concede dispute", () => {
           (d) => d.node.owner.paymentId === paymentId
         );
 
-        console.log(dispute);
         gqlQuery = `mutation {
             concedeDispute(input: {id: "${dispute.node.id}", explanation: "Customer is right"})
           }`;
 
         cy.postGQLBearer(gqlQuery).then((res) => {
-          console.log(res);
           assert.exists(res.body.data);
           assert.notExists(res.body.errors);
           assert.equal(res.body.data.concedeDispute, "SUCCESS");
