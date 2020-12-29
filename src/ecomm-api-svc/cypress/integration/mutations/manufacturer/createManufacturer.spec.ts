@@ -335,10 +335,10 @@ describe('Mutation: createManufacturer', () => {
         const info = [{name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE"}, {name: "Cypress Manufacturer Input", description: "Cypress testing 'create' mutation input", languageCode: "Standard"}];
         const seoData = [
             {
-                searchEngineFriendlyPageName: "German",
-                metaKeywords:  "German",
-                metaDescription: "DE Input desc",
-                metaTitle: "DE Input",
+                searchEngineFriendlyPageName: "",
+                metaKeywords:  "",
+                metaDescription: "",
+                metaTitle: "",
                 languageCode: "de-DE"
             }, {
                 searchEngineFriendlyPageName: "Cypress Input",

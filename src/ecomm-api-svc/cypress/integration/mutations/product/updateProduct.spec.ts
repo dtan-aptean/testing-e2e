@@ -795,10 +795,10 @@ describe('Mutation: updateProduct', () => {
         }; 
         const published = Cypress._.random(0, 1) === 1;
         const seoData = [{
-            searchEngineFriendlyPageName: "German z",
-            metaKeywords:  "German z",
-            metaDescription: "DE Input desc z",
-            metaTitle: "DE Input z",
+            searchEngineFriendlyPageName: "",
+            metaKeywords:  "",
+            metaDescription: "",
+            metaTitle: "",
             languageCode: "de-DE"
         }, {
             searchEngineFriendlyPageName: "Cypress Update",

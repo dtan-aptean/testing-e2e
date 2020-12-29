@@ -418,10 +418,10 @@ describe('Mutation: updateManufacturer', () => {
         ];
         const displayOrder = Cypress._.random(1, 20);
         const seoData = [{
-            searchEngineFriendlyPageName: "Zypresse",
-            metaKeywords:  "Zypressen",
-            metaDescription: "DE Zypresse desc",
-            metaTitle: "DE Zypresse",
+            searchEngineFriendlyPageName: "",
+            metaKeywords:  "",
+            metaDescription: "",
+            metaTitle: "",
             languageCode: "de-DE"
         }, {
             searchEngineFriendlyPageName: "Cypress Input",

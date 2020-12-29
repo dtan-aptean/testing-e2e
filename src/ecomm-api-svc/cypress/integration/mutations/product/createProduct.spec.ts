@@ -724,13 +724,21 @@ describe('Mutation: createProduct', () => {
             preOrderAvailabilityStartDateTimeUtc: preOrder ? today.toUTCString(): null
         }; 
         const published = Cypress._.random(0, 1) === 1;
-        const seoData = [{
-            searchEngineFriendlyPageName: "Cypress Update",
-            metaKeywords:  "Cypress",
-            metaDescription: "Cypress Update metaTag",
-            metaTitle: "Cypress Update test",
-            languageCode: "Standard"
-        }];
+        const seoData = [
+            {
+                searchEngineFriendlyPageName: "",
+                metaKeywords:  "",
+                metaDescription: "",
+                metaTitle: "",
+                languageCode: "de-DE"
+            }, {
+                searchEngineFriendlyPageName: "Cypress Update",
+                metaKeywords:  "Cypress",
+                metaDescription: "Cypress Update metaTag",
+                metaTitle: "Cypress Update test",
+                languageCode: "Standard"
+            }
+        ];
         const inventoryInfo = {
             displayStockAvailability: Cypress._.random(0, 1) === 1,
             notifyAdminForQuantityBelow: Cypress._.random(1, 5),

@@ -467,10 +467,10 @@ describe('Mutation: updateCategory', () => {
         ];
         const displayOrder = Cypress._.random(0, 10);
         const seoData = [{
-            searchEngineFriendlyPageName: "Zypressen",
-            metaKeywords:  "Zypressen",
-            metaDescription: "Zypressen desc",
-            metaTitle: "Zypressen",
+            searchEngineFriendlyPageName: "",
+            metaKeywords:  "",
+            metaDescription: "",
+            metaTitle: "",
             languageCode: "de-DE"
         }, {
             searchEngineFriendlyPageName: "Cypress Update",

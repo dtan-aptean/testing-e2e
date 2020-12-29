@@ -401,10 +401,10 @@ describe('Mutation: createCategory', () => {
         const info = [{name: "Same name but in german", description: "Translate desc to German", languageCode: "de-DE"}, {name: name, description: description, languageCode: "Standard"}];
         const seoData = [
             {
-                searchEngineFriendlyPageName: "Cypress German",
-                metaKeywords:  "German",
-                metaDescription: "Cypress DE Input desc",
-                metaTitle: "Cypress DE Input",
+                searchEngineFriendlyPageName: "",
+                metaKeywords:  "",
+                metaDescription: "",
+                metaTitle: "",
                 languageCode: "de-DE"
             }, {
                 searchEngineFriendlyPageName: "Cypress Input",
