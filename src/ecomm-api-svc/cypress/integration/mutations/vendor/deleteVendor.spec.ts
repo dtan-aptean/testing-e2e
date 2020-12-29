@@ -179,7 +179,7 @@ describe('Mutation: deleteVendor', () => {
                         }
                     }`;
                     cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                        expect(res.body.data[mutationName].message).to.be.eql(`${queryName} deleted`);
+                        expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
                         cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
                             id = '';
                             currentItemName = '';
