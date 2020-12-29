@@ -11,25 +11,24 @@ describe("Mutation: concede dispute", () => {
     // Wait 13 minutes to process the dispute
     cy.wait(800000).then(() => {
       let gqlQuery = `query {
-                    disputes(orderBy: { direction: ASC, field: TIMESTAMP }) {
-                      edges {
-                        node {
-                          id
-                          owner {
-                            paymentId
-    
-                          }
-                          status
-                        }
-                      }
-                    }
-                  }`;
+        disputes(orderBy: { direction: ASC, field: TIMESTAMP }, status: AWAITING_MERCHANT_RESPONSE) {
+          edges {
+            node {
+              id
+              owner {
+                paymentId
+              }
+            }
+          }
+        }
+      }`;
 
       cy.postGQLBearer(gqlQuery).then((res) => {
         const dispute = res.body.data.disputes.edges.find(
           (d) => d.node.owner.paymentId === paymentId
         );
 
+        console.log(dispute);
         gqlQuery = `mutation {
             concedeDispute(input: {id: "${dispute.node.id}", explanation: "Customer is right"})
           }`;
