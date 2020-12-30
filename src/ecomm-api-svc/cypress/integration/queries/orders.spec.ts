@@ -136,21 +136,139 @@ describe('Query: orders', () => {
         });
     });
 
-    it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
-        const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
-                ${standardQueryBody}
+    const createdDateQueryBody = `edges {
+        cursor
+        node {
+            id
+        }
+    }
+    nodes {
+        id
+        createdDateUtc
+    }
+    pageInfo {
+        endCursor
+        hasNextPage
+        hasPreviousPage
+        startCursor
+    }
+    totalCount`;
+
+    it("Query using valid 'startDate' input will return only items with a createdDateUtc >= that startDate", () => {
+        const firstInput = trueTotal ? "first: " + trueTotal + ", ": "";
+        const query = `{
+            ${queryName}(${firstInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${createdDateQueryBody}
             }
         }`;
-        cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
-            const descQuery = `{
-                ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: DESC, field: NAME}) {
-                    ${standardQueryBody}
+        cy.returnRandomDate(query, queryName).then((randomDate) => {
+            const startDateQuery = `{
+                ${queryName}(${firstInput}startDate: "${randomDate}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${createdDateQueryBody}
                 }
             }`;
-            cy.postAndValidate(descQuery, queryName).then((descRes) => {
-                cy.verifyReverseOrder(queryName, ascRes, descRes);
+            cy.postAndValidate(startDateQuery, queryName).then((res) => {
+                cy.verifyDateInput(res, queryName, randomDate);
             });
+        });
+    });
+
+    it("Query using valid 'endDate' input will return only items with a createdDateUtc < that endDate", () => {
+        const firstInput = trueTotal ? "first: " + trueTotal + ", ": "";
+        const query = `{
+            ${queryName}(${firstInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${createdDateQueryBody}
+            }
+        }`;
+        cy.returnRandomDate(query, queryName).then((randomDate) => {
+            const startDateQuery = `{
+                ${queryName}(${firstInput}endDate: "${randomDate}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${createdDateQueryBody}
+                }
+            }`;
+            cy.postAndValidate(startDateQuery, queryName).then((res) => {
+                cy.verifyDateInput(res, queryName, undefined, randomDate);
+            });
+        });
+    });
+
+    it("Query using valid 'startDate' and 'endDate' input will return only items that obey startDate <= createdDateUtc < endDate", () => {
+        const firstInput = trueTotal ? "first: " + trueTotal + ", ": "";
+        const query = `{
+            ${queryName}(${firstInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${createdDateQueryBody}
+            }
+        }`;
+        cy.returnRandomDate(query, queryName, true).then((startDate) => {
+            cy.returnRandomDate(query, queryName, undefined, startDate).then((endDate) => {
+                const startEndQuery = `{
+                    ${queryName}(${firstInput}startDate: "${startDate}", endDate: "${endDate}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${createdDateQueryBody}
+                    }
+                }`;
+                cy.postAndValidate(startEndQuery, queryName).then((res) => {
+                    cy.verifyDateInput(res, queryName, startDate, endDate);
+                });
+            });
+        });
+    });
+
+    it("Query using an invalid 'startDate' input will return an error", () => {
+        const query = `{
+            ${queryName}(startDate: false, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${createdDateQueryBody}
+            }
+        }`;
+        cy.postAndConfirmError(query);
+    });
+
+    it("Query using an invalid 'endDate' input will return an error", () => {
+        const query = `{
+            ${queryName}(endDate: false, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${createdDateQueryBody}
+            }
+        }`;
+        cy.postAndConfirmError(query);
+    });
+
+    it("Query using invalid 'startDate' and 'endDate' inputs will return an error", () => {
+        const query = `{
+            ${queryName}(startDate: [], endDate: false, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${createdDateQueryBody}
+            }
+        }`;
+        cy.postAndConfirmError(query);
+    });
+
+    it("Query using valid 'startDate' and invalid 'endDate' inputs will return an error", () => {
+        const query = `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${createdDateQueryBody}
+            }
+        }`;
+        cy.returnRandomDate(query, queryName).then((randomDate) => {
+            const invalidQuery = `{
+                ${queryName}(startDate: "${randomDate}", endDate: false, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${createdDateQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(invalidQuery);
+        });
+    });
+
+    it("Query using invalid 'startDate' and valid 'endDate' inputs will return an error", () => {
+        const query = `{
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${createdDateQueryBody}
+            }
+        }`;
+        cy.returnRandomDate(query, queryName).then((randomDate) => {
+            const invalidQuery = `{
+                ${queryName}(startDate: false, endDate: "${randomDate}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${createdDateQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(invalidQuery);
         });
     });
 

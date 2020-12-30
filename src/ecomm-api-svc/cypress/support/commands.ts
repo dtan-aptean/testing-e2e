@@ -61,7 +61,7 @@ Cypress.Commands.add('postGQL', query => {
       },
       body: { query },
       failOnStatusCode: false,
-      timeout: 5000,
+      timeout: Cypress.env('gqlTimeout'),
       retryOnNetworkFailure: true,
     });
 });
@@ -660,6 +660,34 @@ Cypress.Commands.add("verifyReverseOrder", (dataPath: string, ascRes, descRes) =
     expect(descEndCurNode).to.be.eql(ascStCurNode, "DESC pageInfo's endCursor node should be ASC pageInfo's startCursor node");
 });
 
+// Verifies that the createdDateUtc of all nodes is before the provided startDate and/or after the provided endDate
+Cypress.Commands.add("verifyDateInput", (res, dataPath: string, startDate?: string, endDate?: string) => {
+    Cypress.log({
+        name: "verifyDateInput",
+        message: `${dataPath}: ${startDate ? "startDate: " + startDate : ""}${startDate && endDate ? ", " : ""}${endDate ? "endDate: " + endDate : ""}`,
+        consoleProps: () => {
+            return {
+                "Query name": dataPath,
+                "startDate": startDate ? startDate : "not used",
+                "endDate": endDate ? endDate : "not used",
+                "Query response": res.body.data
+            };
+        },
+    });
+    const { nodes } = res.body.data[dataPath];
+    const start = startDate ? new Date(startDate): null;
+    const end = endDate ? new Date(endDate): null;
+    nodes.forEach((node, index) => {
+        const createdDate = new Date(node.createdDateUtc);
+        if (startDate && start) {
+            expect(createdDate).to.be.gte(start, `Node[${index}].createdDateUtc should be >= provided startDate`);
+        }
+        if (endDate && end) {
+            expect(createdDate).to.be.lessThan(end, `Node[${index}].createdDateUtc should be < provided endDate`);
+        }
+    });
+});
+
 // Runs the query and grabs a random node to take the name from. Query body should look for name
 Cypress.Commands.add('returnRandomName', (gqlQuery: string, dataPath: string) => {
     Cypress.log({
@@ -789,6 +817,59 @@ Cypress.Commands.add('returnRandomId', (gqlQuery: string, dataPath: string, idNa
             }
         }
         return cy.wrap(id);
+    });
+});
+
+// Runs the query and grabs the createdDateUtc from a random node, as long as the created date starts with 20 (aka was created in the 2000s)
+Cypress.Commands.add('returnRandomDate', (gqlQuery: string, dataPath: string, getLowerStart?: boolean, after?: string) => {
+    Cypress.log({
+        name: "returnRandomName",
+        message: `${dataPath}${after ? ". Return date after: " + after : ""}`,
+        consoleProps: () => {
+            return {
+                "Query Body": gqlQuery,
+                "Query name / dataPath": dataPath,
+                "Date chosen from lower half": !!getLowerStart,
+                "Date to use as lower limit": after ? after : "not provided"
+            };
+        },
+    });
+
+    return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
+        const { nodes } = res.body.data[dataPath];
+        assert.isNotEmpty(nodes, "Query returned nodes");
+        const validValues = nodes.filter((node) => {
+            return node.createdDateUtc.startsWith("20");
+        });
+        assert.isNotEmpty(validValues, "There are existing valid items");
+        validValues.sort(function(a, b){
+            const dateA = new Date(a.createdDateUtc);
+            const dateB = new Date(b.createdDateUtc);
+            var returnVal;
+            if (dateA < dateB) {
+                returnVal = -1;
+            } else if (dateA > dateB) {
+                returnVal = 1;
+            } else {
+                returnVal = 0;
+            }
+            return returnVal;
+        });
+        var upperLimit = getLowerStart ? Math.floor((validValues.length - 1) / 2) : validValues.length - 1;
+        var afterValues;
+        if (after) {
+            const afterDate = new Date(after);
+            afterValues = validValues.filter((node) => {
+                const createdDate = new Date(node.createdDateUtc);
+                return createdDate > afterDate;
+            });
+            assert.isNotEmpty(afterValues, `There are items with a date after ${after}`);
+            upperLimit = afterValues.length - 1;
+        }
+        const randomIndex = Cypress._.random(0, upperLimit);
+        const randomNode = after && afterValues ? afterValues[randomIndex] : validValues[randomIndex];
+        const randomDate = randomNode.createdDateUtc;
+        return cy.wrap(randomDate);
     });
 });
 
@@ -1203,7 +1284,7 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
         }`;
     }
     const searchQuery = `{
-        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
             nodes {
                 id
                 ${nameField}
@@ -1351,7 +1432,7 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
         }`;
     }
     const searchQuery = `{
-        ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+        ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: NAME}) {
             nodes {
                 id
                 ${nameField}
