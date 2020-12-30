@@ -241,7 +241,7 @@ describe('Mutation: updateProduct', () => {
             const propValues = [info, inventoryInfo];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             ${infoName} {
@@ -278,7 +278,7 @@ describe('Mutation: updateProduct', () => {
             const propValues = [info, inventoryInfo];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             ${infoName} {
@@ -331,7 +331,7 @@ describe('Mutation: updateProduct', () => {
             const propValues = [customData, info, inventoryInfo];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -385,7 +385,7 @@ describe('Mutation: updateProduct', () => {
                 const propValues = [newCustomData, newInfo, newInventoryInfo];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${newInfo[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${newInfo[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 customData
@@ -442,7 +442,7 @@ describe('Mutation: updateProduct', () => {
                 const propValues = [vendor, info, inventoryInfo];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 ${additionalFields}
@@ -512,7 +512,7 @@ describe('Mutation: updateProduct', () => {
                 const propValues = [info, inventoryInfo, dummyPriceInfo];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 ${additionalFields}
@@ -905,7 +905,7 @@ describe('Mutation: updateProduct', () => {
             const propValues = [sku, info, inventoryInfo, manufacturerPartNumber, shippingInformation, cartInfo, priceInformation, seoData, published];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             sku

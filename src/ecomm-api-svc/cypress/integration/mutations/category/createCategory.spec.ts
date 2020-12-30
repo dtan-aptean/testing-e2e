@@ -123,7 +123,7 @@ describe('Mutation: createCategory', () => {
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 ${infoName} {
@@ -169,7 +169,7 @@ describe('Mutation: createCategory', () => {
             const propValues = [customData, info];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -220,7 +220,7 @@ describe('Mutation: createCategory', () => {
                 const propValues = [parentCategory, info];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 ${infoName} {
@@ -293,7 +293,7 @@ describe('Mutation: createCategory', () => {
                     const propValues = [info, discounts];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
                                     id
                                     discounts {
@@ -369,7 +369,7 @@ describe('Mutation: createCategory', () => {
                     const propValues = [info, roleAccess];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
                                     id
                                     roleBasedAccess {
@@ -450,7 +450,7 @@ describe('Mutation: createCategory', () => {
             const propValues = [displayOrder, info, seoData, priceRanges, published, showOnHomePage];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             displayOrder

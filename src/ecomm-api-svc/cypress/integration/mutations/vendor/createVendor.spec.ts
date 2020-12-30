@@ -105,7 +105,7 @@ describe('Mutation: createVendor', () => {
             const propValues = [info];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             ${infoName} {
@@ -151,7 +151,7 @@ describe('Mutation: createVendor', () => {
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const queryName = "vendors";
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -231,7 +231,7 @@ describe('Mutation: createVendor', () => {
             const propValues = [info, active, address, displayOrder, email, seoData];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             active

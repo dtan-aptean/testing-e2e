@@ -176,7 +176,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
             const propValues = [newName, valuesCopy];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name
@@ -226,7 +226,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 const propValues = [newName, dummyTaxCategory, valuesCopy];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 name
@@ -275,7 +275,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
             const propValues = [customData, newName, valuesCopy];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -325,7 +325,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 const propValues = [newCustomData, newName, newValues];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 customData
@@ -409,7 +409,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
             const propValues = [newName, displayOrder, defaultValue, displayName, isRequired, isTaxExempt, shippableProductRequired, valuesCopy];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             displayOrder

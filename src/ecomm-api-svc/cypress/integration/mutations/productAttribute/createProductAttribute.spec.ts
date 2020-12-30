@@ -112,7 +112,7 @@ describe('Mutation: createProductAttribute', () => {
             const propValues = [name, values];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name
@@ -159,7 +159,7 @@ describe('Mutation: createProductAttribute', () => {
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const queryName = "productAttributes";
                 const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -241,7 +241,7 @@ describe('Mutation: createProductAttribute', () => {
             const propValues = [name, description, values];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name
