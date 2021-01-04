@@ -665,7 +665,7 @@ Cypress.Commands.add("verifyReverseOrder", (dataPath: string, ascRes, descRes) =
     expect(descEndCurNode).to.be.eql(ascStCurNode, "DESC pageInfo's endCursor node should be ASC pageInfo's startCursor node");
 });
 
-// Verifies that the createdDateUtc of all nodes is before the provided startDate and/or after the provided endDate
+// Verifies that the createdDate of all nodes is before the provided startDate and/or after the provided endDate
 Cypress.Commands.add("verifyDateInput", (res, dataPath: string, startDate?: string, endDate?: string) => {
     Cypress.log({
         name: "verifyDateInput",
@@ -683,12 +683,12 @@ Cypress.Commands.add("verifyDateInput", (res, dataPath: string, startDate?: stri
     const start = startDate ? new Date(startDate): null;
     const end = endDate ? new Date(endDate): null;
     nodes.forEach((node, index) => {
-        const createdDate = new Date(node.createdDateUtc);
+        const createdDate = new Date(node.createdDate);
         if (startDate && start) {
-            expect(createdDate).to.be.gte(start, `Node[${index}].createdDateUtc should be >= provided startDate`);
+            expect(createdDate).to.be.gte(start, `Node[${index}].createdDate should be >= provided startDate`);
         }
         if (endDate && end) {
-            expect(createdDate).to.be.lessThan(end, `Node[${index}].createdDateUtc should be < provided endDate`);
+            expect(createdDate).to.be.lte(end, `Node[${index}].createdDate should be <= provided endDate`);
         }
     });
 });
@@ -825,7 +825,7 @@ Cypress.Commands.add('returnRandomId', (gqlQuery: string, dataPath: string, idNa
     });
 });
 
-// Runs the query and grabs the createdDateUtc from a random node, as long as the created date starts with 20 (aka was created in the 2000s)
+// Runs the query and grabs the createdDate from a random node, as long as the created date starts with 20 (aka was created in the 2000s)
 Cypress.Commands.add('returnRandomDate', (gqlQuery: string, dataPath: string, getLowerStart?: boolean, after?: string) => {
     Cypress.log({
         name: "returnRandomName",
@@ -844,12 +844,12 @@ Cypress.Commands.add('returnRandomDate', (gqlQuery: string, dataPath: string, ge
         const { nodes } = res.body.data[dataPath];
         assert.isNotEmpty(nodes, "Query returned nodes");
         const validValues = nodes.filter((node) => {
-            return node.createdDateUtc.startsWith("20");
+            return node.createdDate.startsWith("20");
         });
         assert.isNotEmpty(validValues, "There are existing valid items");
         validValues.sort(function(a, b){
-            const dateA = new Date(a.createdDateUtc);
-            const dateB = new Date(b.createdDateUtc);
+            const dateA = new Date(a.createdDate);
+            const dateB = new Date(b.createdDate);
             var returnVal;
             if (dateA < dateB) {
                 returnVal = -1;
@@ -865,7 +865,7 @@ Cypress.Commands.add('returnRandomDate', (gqlQuery: string, dataPath: string, ge
         if (after) {
             const afterDate = new Date(after);
             afterValues = validValues.filter((node) => {
-                const createdDate = new Date(node.createdDateUtc);
+                const createdDate = new Date(node.createdDate);
                 return createdDate > afterDate;
             });
             assert.isNotEmpty(afterValues, `There are items with a date after ${after}`);
@@ -873,7 +873,7 @@ Cypress.Commands.add('returnRandomDate', (gqlQuery: string, dataPath: string, ge
         }
         const randomIndex = Cypress._.random(0, upperLimit);
         const randomNode = after && afterValues ? afterValues[randomIndex] : validValues[randomIndex];
-        const randomDate = randomNode.createdDateUtc;
+        const randomDate = randomNode.createdDate;
         return cy.wrap(randomDate);
     });
 });

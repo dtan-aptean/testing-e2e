@@ -155,7 +155,7 @@ describe('Query: manufacturers', () => {
         ${infoPath} {
             name
         }
-        createdDateUtc
+        createdDate
     }
     pageInfo {
         endCursor
@@ -165,7 +165,7 @@ describe('Query: manufacturers', () => {
     }
     totalCount`;
 
-    it("Query using valid 'startDate' input will return only items with a createdDateUtc >= that startDate", () => {
+    it("Query using valid 'startDate' input will return only items with a createdDate >= that startDate", () => {
         const firstInput = trueTotal ? "first: " + trueTotal + ", ": "";
         const query = `{
             ${queryName}(${firstInput}orderBy: {direction: ASC, field: NAME}) {
@@ -184,7 +184,7 @@ describe('Query: manufacturers', () => {
         });
     });
 
-    it("Query using valid 'endDate' input will return only items with a createdDateUtc < that endDate", () => {
+    it("Query using valid 'endDate' input will return only items with a createdDate <= that endDate", () => {
         const firstInput = trueTotal ? "first: " + trueTotal + ", ": "";
         const query = `{
             ${queryName}(${firstInput}orderBy: {direction: ASC, field: NAME}) {
@@ -203,7 +203,7 @@ describe('Query: manufacturers', () => {
         });
     });
 
-    it("Query using valid 'startDate' and 'endDate' input will return only items that obey startDate <= createdDateUtc < endDate", () => {
+    it("Query using valid 'startDate' and 'endDate' input will return only items that obey startDate <= createdDate <= endDate", () => {
         const firstInput = trueTotal ? "first: " + trueTotal + ", ": "";
         const query = `{
             ${queryName}(${firstInput}orderBy: {direction: ASC, field: NAME}) {
