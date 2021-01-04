@@ -53,7 +53,7 @@ describe('Mutation: createProduct', () => {
                     error
                 }
             }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName, dataPath).then(() => {
+            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
                 id = "";
             });
         }
