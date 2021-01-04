@@ -66,7 +66,7 @@ Cypress.Commands.add('postGQL', (query, altUrl?: string) => {
       },
       body: { query },
       failOnStatusCode: false,
-      //timeout: 5000,
+      timeout: 5000,
       retryOnNetworkFailure: true,
     });
 });
@@ -797,7 +797,6 @@ Cypress.Commands.add('returnRandomId', (gqlQuery: string, dataPath: string, idNa
     });
 });
 
-
 // Validates that a query with searchString returned the node with the correct name or nodes that contain the string
 Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: string) => {
     Cypress.log({
@@ -1293,7 +1292,7 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
 
 // Create a new item, validate it, and return the id. Pass in the full input value as a string
 // If you need more information than just the id, pass in the additional fields as a string and the entire new item will be returned
-Cypress.Commands.add("createAndGetId", (mutationName: string, dataPath: string, input: string, additionalFields?: string) => {
+Cypress.Commands.add("createAndGetId", (mutationName: string, dataPath: string, input: string, additionalFields?: string, altUrl?: string) => {
     Cypress.log({
         name: "createAndGetId",
         message: `Creating ${dataPath}. Additional fields: ${!!additionalFields}`,
@@ -1317,7 +1316,7 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, dataPath: string, 
             }
         }
     }`;
-    return cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+    return cy.postMutAndValidate(mutation, mutationName, dataPath, altUrl).then((res) => {
         const id = res.body.data[mutationName][dataPath].id;
         if (additionalFields) {
             return res.body.data[mutationName][dataPath];

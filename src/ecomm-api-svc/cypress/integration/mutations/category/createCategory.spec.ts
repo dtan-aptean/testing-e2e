@@ -2,7 +2,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 12
+// TEST COUNT: 13
 describe('Mutation: createCategory', () => {
     let id = '';
     let extraIds = []; // Should push objects formatted as {itemId: "example", deleteName: "example"}
@@ -22,24 +22,16 @@ describe('Mutation: createCategory', () => {
             }
         }
     `;
-    var originalBaseUrl = "";
+    var originalBaseUrl = Cypress.config("baseUrl");
     var storefrontUrl = Cypress.config("baseUrl").includes('dev') ? "https://dev.apteanecommerce.com/" : "https://tst.apteanecommerce.com/";
-
-    before(() => {
-        var config = `${Cypress.config("baseUrl")}`;
-        originalBaseUrl = config.slice(0);  // Save the original baseUrl so we can use it for api calls
-/*         storefrontUrl = ;
-        if (originalBaseUrl.includes('dev')) {
-            storefrontUrl = ;
-        } */
-    });
 
     afterEach(() => {
         if (originalBaseUrl !== "" && Cypress.config("baseUrl") !== originalBaseUrl) {
+            Cypress.log({message: "Switching the baseUrl back to the original"});
             Cypress.config("baseUrl", originalBaseUrl);
             cy.wait(1000);
         }
-        /* if (id !== "") {
+        if (id !== "") {
             // Delete any supplemental items we created
             if (extraIds.length > 0) {
                 for (var i = 0; i < extraIds.length; i++) {
@@ -67,10 +59,10 @@ describe('Mutation: createCategory', () => {
             cy.postAndConfirmDelete(removalMutation, deletionName, dataPath).then(() => {
                 id = "";
             });
-        } */
+        }
     });
     
-    it.only("Mutation will fail without input", () => {
+    it("Mutation will fail without input", () => {
         const mutation = `mutation {
             ${mutationName} {
                 ${standardMutationBody}
@@ -137,7 +129,7 @@ describe('Mutation: createCategory', () => {
             const propValues = [info];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             ${infoName} {
@@ -182,7 +174,7 @@ describe('Mutation: createCategory', () => {
             const propValues = [customData, info];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -233,7 +225,7 @@ describe('Mutation: createCategory', () => {
                 const propValues = [parentCategory, info];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 ${infoName} {
@@ -306,7 +298,7 @@ describe('Mutation: createCategory', () => {
                     const propValues = [info, discounts];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
                                     id
                                     discounts {
@@ -382,7 +374,7 @@ describe('Mutation: createCategory', () => {
                     const propValues = [info, roleAccess];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
                                     id
                                     roleBasedAccess {
@@ -463,7 +455,7 @@ describe('Mutation: createCategory', () => {
             const propValues = [displayOrder, info, seoData, priceRanges, published, showOnHomePage];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             displayOrder
@@ -490,8 +482,11 @@ describe('Mutation: createCategory', () => {
         });
     });
 
-    it.only("Mutation using showInTopMenu creates an item that shows in the storefront top menu", { baseUrl: `${storefrontUrl}` }, () => {
-        console.log(originalBaseUrl);
+    // This cannot be run on its own without another test run before it.
+    // The baseUrl changes too fast for us to save it as originalBaseUrl if it's run on its own. This prevents us from making API calls
+    // This is only a problem if it's run on its own. If run after other tests (which is the normal use case), originalBaseUrl is saved with no issue.
+    // If you want to run just this test, I recommend changing this test and the first test to use it.only() instead of it().
+    it("Mutation using showInTopMenu creates an item that shows in the storefront top menu", { baseUrl: `${storefrontUrl}` }, () => {
         const info = [{name: "Cypress TopMenu Category", languageCode: "Standard"}];
         const showInTopMenu = true;
         const mutation = `mutation {
@@ -537,7 +532,6 @@ describe('Mutation: createCategory', () => {
                     }
                 }`;
                 cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl).then(() => {
-                    console.log(Cypress.config('baseUrl'));
                     cy.visit("/");
                     cy.wait(2000);
                     const getVisibleMenu = () => {
