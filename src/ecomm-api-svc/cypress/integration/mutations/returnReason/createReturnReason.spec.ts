@@ -25,7 +25,7 @@ describe('Mutation: createReturnReason', () => {
                     error
                 }
             }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName, dataPath).then(() => {
+            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
                 id = "";
             });
         }
