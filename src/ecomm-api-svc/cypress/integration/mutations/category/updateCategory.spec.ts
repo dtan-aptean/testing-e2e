@@ -556,7 +556,6 @@ describe('Mutation: updateCategory', () => {
     // This is only a problem if it's run on its own. If run after other tests (which is the normal use case), originalBaseUrl is saved with no issue.
     // If you want to run just this test, I recommend changing this test and the first test to use it.only() instead of it().
     it("Mutation using showInTopMenu creates an item that shows in the storefront top menu", { baseUrl: `${storefrontUrl}` }, () => {
-        console.log(originalBaseUrl);
         var name = "Cypress TopMenu Cat";
         const published = true;
         const displayOrder = 10;
@@ -610,18 +609,7 @@ describe('Mutation: updateCategory', () => {
                         }
                     }`;
                     cy.confirmUsingQuery(query, queryName, returnedId, propNames, propValues, originalBaseUrl).then(() => {
-                        console.log(Cypress.config('baseUrl'));
-                        cy.visit("/");
-                        cy.wait(2000);
-                        const getVisibleMenu = () => {
-                            if (Cypress.$(".menu-toggle:visible").length === 0) {
-                                return cy.get(".top-menu.notmobile").then(cy.wrap);
-                            } else {
-                                cy.get(".menu-toggle").click();
-                                return cy.get(".top-menu.mobile").then(cy.wrap);
-                            }
-                        };
-                        getVisibleMenu().get('li').should('include.text', name);
+                        cy.findCategoryInMenu(name);
                     });
                 });
             });

@@ -532,17 +532,7 @@ describe('Mutation: createCategory', () => {
                     }
                 }`;
                 cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl).then(() => {
-                    cy.visit("/");
-                    cy.wait(2000);
-                    const getVisibleMenu = () => {
-                        if (Cypress.$(".menu-toggle:visible").length === 0) {
-                            return cy.get(".top-menu.notmobile").then(cy.wrap);
-                        } else {
-                            cy.get(".menu-toggle").click();
-                            return cy.get(".top-menu.mobile").then(cy.wrap);
-                        }
-                    };
-                    getVisibleMenu().get('li').should('include.text', info[0].name);
+                    cy.findCategoryInMenu(info[0].name);
                 });
             });
         });

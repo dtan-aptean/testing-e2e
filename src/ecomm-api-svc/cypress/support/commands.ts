@@ -1908,3 +1908,20 @@ Cypress.Commands.add("createOrderRetrieveId", (gqlUrl: string, doNotPayOrder?: b
         });
     });
 });
+
+Cypress.Commands.add("findCategoryInMenu", (categoryName: string) => {
+    Cypress.log({
+        name: "findCategoryInMenu",
+        message: categoryName,
+        consoleProps: () => {
+            return {
+                "Name of Category": categoryName
+            };
+        },
+    });
+    cy.visit("/");
+    cy.wait(2000);
+    cy.storefrontLogin().then(() => {
+        getVisibleMenu().get('li').should('include.text', categoryName);
+    });
+});
