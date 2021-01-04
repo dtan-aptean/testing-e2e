@@ -25,6 +25,7 @@ describe('Mutation: updateCategory', () => {
         }
     `;
     const createName = 'createCategory';
+    var originalBaseUrl = "";
 
     before(() => {
         // Create an item for the tests to update
@@ -37,6 +38,10 @@ describe('Mutation: updateCategory', () => {
     });
 
     after(() => {
+        if (originalBaseUrl !== "" && Cypress.config("baseUrl") !== originalBaseUrl) {
+            Cypress.config("baseUrl", originalBaseUrl);
+            cy.wait(1000);
+        }
         if (id !== '') {
             // Delete any supplemental items we created
             if (extraIds.length > 0) {

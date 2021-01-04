@@ -41,7 +41,7 @@ export const toFormattedString = (item): string => {
 };
 
 // -- This will post GQL query --
-Cypress.Commands.add('postGQL', query => {
+Cypress.Commands.add('postGQL', (query, altUrl?: string) => {
     Cypress.log({
         name: "postGQL",
         consoleProps: () => {
@@ -51,9 +51,14 @@ Cypress.Commands.add('postGQL', query => {
             };
         },
     });
+    if (altUrl) {
+        if (altUrl.charAt(altUrl.length -1 ) === "/") {
+            altUrl = altUrl.slice(0, altUrl.length - 1)
+        }
+    }
     return cy.request({
       method: 'POST',
-      url: '/graphql',
+      url: altUrl ? altUrl + '/graphql' : '/graphql',
       headers: {
         'x-aptean-apim': Cypress.env('x-aptean-apim'),
         'x-aptean-tenant': Cypress.env('x-aptean-tenant'),
@@ -61,7 +66,7 @@ Cypress.Commands.add('postGQL', query => {
       },
       body: { query },
       failOnStatusCode: false,
-      timeout: 5000,
+      //timeout: 5000,
       retryOnNetworkFailure: true,
     });
 });
@@ -162,7 +167,7 @@ Cypress.Commands.add("postAndValidate", (gqlQuery: string, dataPath: string) => 
 });
 
 // Post mutation and validate
-Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string, dataPath: string) => {
+Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string, dataPath: string, altUrl?: string) => {
     Cypress.log({
         name: "postMutAndValidate",
         message: mutationName,
@@ -174,7 +179,7 @@ Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string
             };
         },
     });
-    return cy.postGQL(gqlMut).then((res) => {
+    return cy.postGQL(gqlMut, altUrl).then((res) => {
         cy.validateMutationRes(gqlMut, res, mutationName, dataPath).then(() => {
             return res;
         });
@@ -1496,7 +1501,7 @@ const compareExpectedToResults = (subject, propertyNames: string[], expectedValu
  */
 
 // Confirms that a mutation has updated an item by querying for the item and matching the values to the array given
-Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, itemId: string, propNames: string[], values: []) => {
+Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, itemId: string, propNames: string[], values: [], altUrl?: string) => {
     Cypress.log({
         name: "confirmUsingQuery",
         message: `querying ${dataPath} for ${itemId}`,
@@ -1511,7 +1516,7 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
         },
     });
     
-    return cy.postGQL(query).then((resp) => {
+    return cy.postGQL(query, altUrl).then((resp) => {
         expect(resp.isOkStatusCode).to.be.equal(true, "Status Code is 200");
         assert.notExists(resp.body.errors, "No errors");
         assert.exists(resp.body.data, "Data exists");

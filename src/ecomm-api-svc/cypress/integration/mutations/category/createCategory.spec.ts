@@ -22,9 +22,24 @@ describe('Mutation: createCategory', () => {
             }
         }
     `;
+    var originalBaseUrl = "";
+    var storefrontUrl = Cypress.config("baseUrl").includes('dev') ? "https://dev.apteanecommerce.com/" : "https://tst.apteanecommerce.com/";
+
+    before(() => {
+        var config = `${Cypress.config("baseUrl")}`;
+        originalBaseUrl = config.slice(0);  // Save the original baseUrl so we can use it for api calls
+/*         storefrontUrl = ;
+        if (originalBaseUrl.includes('dev')) {
+            storefrontUrl = ;
+        } */
+    });
 
     afterEach(() => {
-        if (id !== "") {
+        if (originalBaseUrl !== "" && Cypress.config("baseUrl") !== originalBaseUrl) {
+            Cypress.config("baseUrl", originalBaseUrl);
+            cy.wait(1000);
+        }
+        /* if (id !== "") {
             // Delete any supplemental items we created
             if (extraIds.length > 0) {
                 for (var i = 0; i < extraIds.length; i++) {
@@ -52,10 +67,10 @@ describe('Mutation: createCategory', () => {
             cy.postAndConfirmDelete(removalMutation, deletionName, dataPath).then(() => {
                 id = "";
             });
-        }
+        } */
     });
     
-    it("Mutation will fail without input", () => {
+    it.only("Mutation will fail without input", () => {
         const mutation = `mutation {
             ${mutationName} {
                 ${standardMutationBody}
@@ -121,21 +136,19 @@ describe('Mutation: createCategory', () => {
             const propNames = [infoName];
             const propValues = [info];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                    const query = `{
-                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                            nodes {
-                                id
-                                ${infoName} {
-                                    name
-                                    languageCode
-                                }
+                const query = `{
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
                             }
                         }
-                    }`;
-                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
-                });
-            })
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 
@@ -473,6 +486,70 @@ describe('Mutation: createCategory', () => {
                     }
                 }`;
                 cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
+        });
+    });
+
+    it.only("Mutation using showInTopMenu creates an item that shows in the storefront top menu", { baseUrl: `${storefrontUrl}` }, () => {
+        console.log(originalBaseUrl);
+        const info = [{name: "Cypress TopMenu Category", languageCode: "Standard"}];
+        const showInTopMenu = true;
+        const mutation = `mutation {
+            ${mutationName}(
+                input: { 
+                    ${infoName}: ${toFormattedString(info)}
+                    published: true
+                    displayOrder: 10
+                    pageSize: 10
+                    showInTopMenu: ${showInTopMenu}
+                }
+            ) {
+                code
+                error
+                message
+                ${dataPath} {
+                    id
+                    ${infoName} {
+                        name
+                        languageCode
+                    }
+                    published
+                    showInTopMenu
+                }
+            }
+        }`;
+        cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+            id = res.body.data[mutationName][dataPath].id;
+            const propNames = ["showInTopMenu", "published", infoName];
+            const propValues = [showInTopMenu, true, info];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                        nodes {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            published
+                            showInTopMenu
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl).then(() => {
+                    console.log(Cypress.config('baseUrl'));
+                    cy.visit("/");
+                    cy.wait(2000);
+                    const getVisibleMenu = () => {
+                        if (Cypress.$(".menu-toggle:visible").length === 0) {
+                            return cy.get(".top-menu.notmobile").then(cy.wrap);
+                        } else {
+                            cy.get(".menu-toggle").click();
+                            return cy.get(".top-menu.mobile").then(cy.wrap);
+                        }
+                    };
+                    getVisibleMenu().get('li').should('include.text', info[0].name);
+                });
             });
         });
     });
