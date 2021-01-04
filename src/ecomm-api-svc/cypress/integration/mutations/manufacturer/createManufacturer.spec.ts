@@ -49,7 +49,7 @@ describe('Mutation: createManufacturer', () => {
                     error
                 }
             }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName, dataPath).then(() => {
+            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
                 id = "";
             });
         }
