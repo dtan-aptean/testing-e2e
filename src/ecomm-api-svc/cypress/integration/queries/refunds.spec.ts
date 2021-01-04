@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 36
+// TEST COUNT: 38
 describe('Query: refunds', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "refunds";
@@ -59,13 +59,13 @@ describe('Query: refunds', () => {
     });
 
     it("Query fails if the 'orderBy' input argument is null", () => {
-      const gqlQuery = `{
-          ${queryName}(orderBy: null) {
-              totalCount
-          }
-      }`;
-      cy.postAndConfirmError(gqlQuery);
-  });
+        const gqlQuery = `{
+            ${queryName}(orderBy: null) {
+                totalCount
+            }
+        }`;
+        cy.postAndConfirmError(gqlQuery);
+    });
 
     it("Query fails if 'orderBy' input argument only has field", () => {
         const fieldQuery = `{
@@ -95,24 +95,24 @@ describe('Query: refunds', () => {
     });
 
     it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
-      const gqlQuery = `{
-          ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
-              totalCount
-          }
-      }`;
-      cy.postGQL(gqlQuery).then(res => {
-          // should be 200 ok
-          cy.expect(res.isOkStatusCode).to.be.equal(true);
-  
-          // no errors
-          assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+        const gqlQuery = `{
+            ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
+                totalCount
+            }
+        }`;
+        cy.postGQL(gqlQuery).then(res => {
+            // should be 200 ok
+            cy.expect(res.isOkStatusCode).to.be.equal(true);
+    
+            // no errors
+            assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
 
-          // has data
-          assert.exists(res.body.data);
-          // validate data types
-          assert.isNotNaN(res.body.data[queryName].totalCount);
-      });
-  });
+            // has data
+            assert.exists(res.body.data);
+            // validate data types
+            assert.isNotNaN(res.body.data[queryName].totalCount);
+        });
+    });
 
     it("Query without 'first' or 'last' input arguments will return up to 25 items", () => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
@@ -641,6 +641,57 @@ describe('Query: refunds', () => {
                 expect(node.refundAmount.currency).to.be.eql(node.order.refundedAmount.currency, "Expect the same refunded currency");
                 expect(node.refundAmount.amount).to.be.eql(node.order.refundedAmount.amount, "Expect the same refunded amount");
             });
+        });
+    });
+
+    const partialRefundQuery = `{
+        ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            edges {
+                cursor
+                node {
+                    order {
+                        id
+                    }
+                }
+            }
+            nodes {
+                order {
+                    id
+                    paymentStatus                    
+                }
+                isPartialRefund;
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+                hasPreviousPage
+                startCursor
+            }
+            totalCount
+    }`;
+
+    const comparePaymentStatus = (nodes, isPartial: boolean, expectedStatus: string) => {
+        const filteredRefunds = nodes.filter((refund) => {
+            return refund.isPartialRefund === isPartial;
+        });
+        if (filteredRefunds.length > 0) {
+            filteredRefunds.forEach((refund) => {
+                expect(refund.order.paymentStatus).to.be.eql(expectedStatus, `${isPartial ? "Partial" : "Full"} refunds' order's paymentStatus should be ${expectedStatus}`);
+            });
+        }
+    };
+
+    it("A query item that has isPartialRefund = true, will have an order with a paymentStatus of 'PARTIALLY_REFUNDED'", () => {
+        cy.postAndValidate(partialRefundQuery, queryName).then((res) => {
+            const nodes = res.body.data[queryName].nodes;
+            comparePaymentStatus(nodes, true, "PARTIALLY_REFUNDED");
+        });
+    });
+
+    it("A query item that has isPartialRefund = false, will have an order with a paymentStatus of 'REFUNDED'", () => {
+        cy.postAndValidate(partialRefundQuery, queryName).then((res) => {
+            const nodes = res.body.data[queryName].nodes;
+            comparePaymentStatus(nodes, false, "REFUNDED");
         });
     });
 });
