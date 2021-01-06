@@ -209,7 +209,7 @@ describe('Mutation: deleteManufacturer', () => {
         const extraDataPath = "product";
         const productInfoName = "productInfo";
         const manufacturers = [{id: id, manufacturerInfo: [{name: currentItemName, languageCode: "Standard"}]}];
-        const info = [{name: `Cypress ${mutationName} product test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+        const info = [{name: `Cypress ${mutationName} product test`, languageCode: "Standard"}];
         const mutation = `mutation {
             ${extraMutationName}(
                 input: { 
@@ -224,8 +224,6 @@ describe('Mutation: deleteManufacturer', () => {
                     id
                     ${productInfoName} {
                         name
-                        shortDescription
-                        fullDescription
                         languageCode
                     }
                 }

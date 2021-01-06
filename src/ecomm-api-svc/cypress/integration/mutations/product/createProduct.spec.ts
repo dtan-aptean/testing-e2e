@@ -18,8 +18,6 @@ describe('Mutation: createProduct', () => {
             id
             ${infoName} {
                 name
-                shortDescription
-                fullDescription
                 languageCode
             }
         }
@@ -92,15 +90,6 @@ describe('Mutation: createProduct', () => {
         cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
     });
 
-    it("Mutation will fail with no 'shortDescription' or 'fullDescription' input", () => {
-        const mutation = `mutation {
-            ${mutationName}(input: { ${infoName}: [{name: "Cypress no descriptions", languageCode: "Standard"}] }) {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
-    });
-
     it("Mutation will fail with invalid 'languageCode' input", () => {
         const mutation = `mutation {
             ${mutationName}(input: { ${infoName}: [{name: "Cypress invalid languageCode", languageCode: 6}] }) {
@@ -119,31 +108,12 @@ describe('Mutation: createProduct', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will fail with invalid 'shortDescription'input", () => {
-        const mutation = `mutation {
-            ${mutationName}(
-                input: {
-                    ${infoName}: [{
-                        name: "Cypress invalid shortDescription",
-                        shortDescription: 5,
-                        fullDescription: "Cypress testing invalid types",
-                        languageCode: "Standard"
-                    }]
-                }
-            ) {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmError(mutation);
-    });
-
     it("Mutation will fail with invalid 'fullDescription' input", () => {
         const mutation = `mutation {
             ${mutationName}(
                 input: { 
                     ${infoName}: [{
                         name: "Cypress invalid fullDescription",
-                        shortDescription: "Cypress testing invalid types",
                         fullDescription: 5,
                         languageCode: "Standard"
                     }]
@@ -155,10 +125,9 @@ describe('Mutation: createProduct', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will succeed with valid 'name', 'shortDescription', input", () => {
+    it("Mutation will succeed with valid 'name' and 'languageCode' input", () => {
         const info = [{
             name: "Cypress API Product SD",
-            shortDescription: "Testing creation",
             languageCode: "Standard"
         }];
         const mutation = `mutation {
@@ -181,8 +150,6 @@ describe('Mutation: createProduct', () => {
                             id
                             ${infoName} {
                                 name
-                                shortDescription
-                                fullDescription
                                 languageCode
                             }
                         }
@@ -219,7 +186,6 @@ describe('Mutation: createProduct', () => {
                             id
                             ${infoName} {
                                 name
-                                shortDescription
                                 fullDescription
                                 languageCode
                             }
@@ -232,7 +198,7 @@ describe('Mutation: createProduct', () => {
     });
 
     it("Mutation with all required input and 'customData' input creates item with customData", () => {
-        const info = [{name: "Cypress Product customData", shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+        const info = [{name: "Cypress Product customData", languageCode: "Standard"}];
         const customData = {data: `${dataPath} customData`, canDelete: true};
         const mutation = `mutation {
             ${mutationName}(
@@ -248,8 +214,6 @@ describe('Mutation: createProduct', () => {
                     id
                     ${infoName} {
                         name
-                        shortDescription
-                        fullDescription
                         languageCode
                     }
                     customData
@@ -279,7 +243,7 @@ describe('Mutation: createProduct', () => {
         cy.createAndGetId("createVendor", "vendor", toFormattedString(vendor)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteVendor"});
             vendor.id = returnedId;
-            const info = [{name: `Cypress ${mutationName} vendorId test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+            const info = [{name: `Cypress ${mutationName} vendorId test`, languageCode: "Standard"}];
             const mutation = `mutation {
                 ${mutationName}(
                     input: { 
@@ -301,8 +265,6 @@ describe('Mutation: createProduct', () => {
                         }
                         ${infoName} {
                             name
-                            shortDescription
-                            fullDescription
                             languageCode
                         }
                     }
@@ -326,8 +288,6 @@ describe('Mutation: createProduct', () => {
                                 }
                                 ${infoName} {
                                     name
-                                    shortDescription
-                                    fullDescription
                                     languageCode
                                 }
                             }
@@ -344,7 +304,7 @@ describe('Mutation: createProduct', () => {
         cy.createAndGetId("createTaxCategory", "taxCategory", toFormattedString(taxCategory)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteTaxCategory"});
             taxCategory.id = returnedId;
-            const info = [{name: `Cypress ${mutationName} taxCategoryId test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+            const info = [{name: `Cypress ${mutationName} taxCategoryId test`, languageCode: "Standard"}];
             const dummyPriceInfo = {taxCategory: taxCategory};
             const mutation = `mutation {
                 ${mutationName}(
@@ -366,8 +326,6 @@ describe('Mutation: createProduct', () => {
                         }
                         ${infoName} {
                             name
-                            shortDescription
-                            fullDescription
                             languageCode
                         }
                     }
@@ -390,8 +348,6 @@ describe('Mutation: createProduct', () => {
                                 }
                                 ${infoName} {
                                     name
-                                    shortDescription
-                                    fullDescription
                                     languageCode
                                 }
                             }
@@ -416,7 +372,7 @@ describe('Mutation: createProduct', () => {
                 categoryTwo.id = secondId;
                 categories.push(categoryTwo);
                 categoryIds.push(secondId);   
-                const info = [{name: `Cypress ${mutationName} categoryIds test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+                const info = [{name: `Cypress ${mutationName} categoryIds test`, languageCode: "Standard"}];
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -431,8 +387,6 @@ describe('Mutation: createProduct', () => {
                             id
                             ${infoName} {
                                 name
-                                shortDescription
-                                fullDescription
                                 languageCode
                             }
                         }
@@ -468,7 +422,7 @@ describe('Mutation: createProduct', () => {
                 manufacturerTwo.id = secondId;
                 manufacturers.push(manufacturerTwo);
                 manufacturerIds.push(secondId);  
-                const info = [{name: `Cypress ${mutationName} manufacturerIds test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+                const info = [{name: `Cypress ${mutationName} manufacturerIds test`, languageCode: "Standard"}];
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -483,8 +437,6 @@ describe('Mutation: createProduct', () => {
                             id
                             ${infoName} {
                                 name
-                                shortDescription
-                                fullDescription
                                 languageCode
                             }
                         }
@@ -520,7 +472,7 @@ describe('Mutation: createProduct', () => {
                 attributeTwo.id = secondId;
                 attributes.push(attributeTwo);
                 attributeIds.push(secondId); 
-                const info = [{name: `Cypress ${mutationName} attributeIds test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+                const info = [{name: `Cypress ${mutationName} attributeIds test`, languageCode: "Standard"}];
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -535,8 +487,6 @@ describe('Mutation: createProduct', () => {
                             id
                             ${infoName} {
                                 name
-                                shortDescription
-                                fullDescription
                                 languageCode
                             }
                         }
@@ -571,7 +521,7 @@ describe('Mutation: createProduct', () => {
             extraIds.push({itemId: returnedItem.id, deleteName: "deleteProductSpecification"});
             const specificationOptionIds = [returnedItem.options[0].id, returnedItem.options[1].id];
             const options = returnedItem.options;
-            const info = [{name: `Cypress ${mutationName} specificationOptionsIds test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+            const info = [{name: `Cypress ${mutationName} specificationOptionsIds test`, languageCode: "Standard"}];
             const mutation = `mutation {
                 ${mutationName}(
                     input: { 
@@ -586,8 +536,6 @@ describe('Mutation: createProduct', () => {
                         id
                         ${infoName} {
                             name
-                            shortDescription
-                            fullDescription
                             languageCode
                         }
                     }

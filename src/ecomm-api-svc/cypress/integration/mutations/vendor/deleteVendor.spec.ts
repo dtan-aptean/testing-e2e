@@ -109,7 +109,7 @@ describe('Mutation: deleteVendor', () => {
         const extraQueryName = "products";
         const productInfoName = "productInfo";
         const vendor = {id: id, vendorInfo: [{name: currentItemName, languageCode: "Standard"}]};
-        const info = [{name: `Cypress ${mutationName} product test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+        const info = [{name: `Cypress ${mutationName} product test`, languageCode: "Standard"}];
         const mutation = `mutation {
             ${extraMutationName}(
                 input: { 
@@ -131,8 +131,6 @@ describe('Mutation: deleteVendor', () => {
                     }
                     ${productInfoName} {
                         name
-                        shortDescription
-                        fullDescription
                         languageCode
                     }
                 }
@@ -157,8 +155,6 @@ describe('Mutation: deleteVendor', () => {
                             }
                             ${productInfoName} {
                                 name
-                                shortDescription
-                                fullDescription
                                 languageCode
                             }
                         }

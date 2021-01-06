@@ -148,7 +148,7 @@ describe('Mutation: deleteProductSpecification', () => {
             const extraMutationName = "createProduct";
             const extraDataPath = "product";
             const productInfoName = "productInfo";
-            const info = [{name: `Cypress ${mutationName} product test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+            const info = [{name: `Cypress ${mutationName} product test`, languageCode: "Standard"}];
             const mutation = `mutation {
                 ${extraMutationName}(
                     input: { 
@@ -163,8 +163,6 @@ describe('Mutation: deleteProductSpecification', () => {
                         id
                         ${productInfoName} {
                             name
-                            shortDescription
-                            fullDescription
                             languageCode
                         }
                     }

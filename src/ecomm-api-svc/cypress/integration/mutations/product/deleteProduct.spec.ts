@@ -20,7 +20,7 @@ describe('Mutation: deleteProduct', () => {
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
-        const input = `${infoName}: [{name: "${name}", shortDescription: "Cypress testing ${mutationName}", languageCode: "Standard"}]`;
+        const input = `${infoName}: [{name: "${name}", languageCode: "Standard"}]`;
         cy.searchOrCreate(name, queryName, creationName, input, infoName).then((returnedId: string) => {
             id = returnedId;
             currentItemName = name;
@@ -127,7 +127,6 @@ describe('Mutation: deleteProduct', () => {
             id: id, 
             productInfo: [{
                 name: currentItemName, 
-                shortDescription: `Cypress testing ${mutationName}`, 
                 languageCode: "Standard"
             }]
         }];
@@ -159,7 +158,6 @@ describe('Mutation: deleteProduct', () => {
                         id
                         productInfo {
                             name
-                            shortDescription
                             languageCode
                         }
                     }
@@ -186,7 +184,6 @@ describe('Mutation: deleteProduct', () => {
                                 id
                                 productInfo {
                                     name
-                                    shortDescription
                                     languageCode
                                 }
                             }

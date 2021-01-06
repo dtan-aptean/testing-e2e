@@ -360,13 +360,13 @@ describe('Mutation: updateDiscount', () => {
     });
 
     it("Mutation with 'productIds' input will successfully attach the products", () => {
-        const productOne = {productInfo: [{ name:`Cypress ${mutationName} product 1`, shortDescription: "desc", languageCode: "Standard"}]};
+        const productOne = {productInfo: [{ name:`Cypress ${mutationName} product 1`, languageCode: "Standard"}]};
         cy.createAndGetId("createProduct", "product", toFormattedString(productOne)).then((returnedId: string) => {
             extraIds.push({itemId: returnedId, deleteName: "deleteProduct"});
             productOne.id = returnedId;
             const products = [productOne];
             const productIds = [returnedId];
-            const productTwo = {productInfo: [{ name: `Cypress ${mutationName} product 2`, shortDescription: "desc", languageCode: "Standard"}]};
+            const productTwo = {productInfo: [{ name: `Cypress ${mutationName} product 2`, languageCode: "Standard"}]};
             cy.createAndGetId("createProduct", "product", toFormattedString(productTwo)).then((secondId: string) => {
                 extraIds.push({itemId: secondId, deleteName: "deleteProduct"});
                 productTwo.id = secondId;
@@ -401,7 +401,6 @@ describe('Mutation: updateDiscount', () => {
                             products {
                                 productInfo {
                                     name
-                                    shortDescription
                                     languageCode
                                 }
                                 id
@@ -426,7 +425,6 @@ describe('Mutation: updateDiscount', () => {
                                     products {
                                         productInfo {
                                             name
-                                            shortDescription
                                             languageCode
                                         }
                                         id

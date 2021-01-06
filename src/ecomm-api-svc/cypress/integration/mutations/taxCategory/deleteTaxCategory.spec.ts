@@ -196,7 +196,7 @@ describe('Mutation: deleteTaxCategory', () => {
         const productInfoName = "productInfo";
         const taxCategory = {id: id, name: currentItemName};
         const priceInformation = {taxCategory: taxCategory};
-        const info = [{name: `Cypress ${mutationName} product test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
+        const info = [{name: `Cypress ${mutationName} product test`, languageCode: "Standard"}];
         const mutation = `mutation {
             ${extraMutationName}(
                 input: { 
@@ -217,8 +217,6 @@ describe('Mutation: deleteTaxCategory', () => {
                     }
                     ${productInfoName} {
                         name
-                        shortDescription
-                        fullDescription
                         languageCode
                     }
                 }
@@ -242,8 +240,6 @@ describe('Mutation: deleteTaxCategory', () => {
                             }
                             ${productInfoName} {
                                 name
-                                shortDescription
-                                fullDescription
                                 languageCode
                             }
                         }
