@@ -20,7 +20,7 @@ describe('Mutation: deleteProduct', () => {
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
-        const input = `${infoName}: [{name: "${name}", shortDescription: "Cypress testing ${mutationName}", languageCode: "Standard"}], inventoryInformation: {minimumStockQuantity: 5}`;
+        const input = `${infoName}: [{name: "${name}", shortDescription: "Cypress testing ${mutationName}", languageCode: "Standard"}]`;
         cy.searchOrCreate(name, queryName, creationName, input, infoName).then((returnedId: string) => {
             id = returnedId;
             currentItemName = name;
@@ -129,10 +129,7 @@ describe('Mutation: deleteProduct', () => {
                 name: currentItemName, 
                 shortDescription: `Cypress testing ${mutationName}`, 
                 languageCode: "Standard"
-            }],
-            inventoryInformation: {
-                minimumStockQuantity: 5
-            }
+            }]
         }];
         const name = `Cypress ${mutationName} discount test`;
         const discountAmount = {
@@ -165,9 +162,6 @@ describe('Mutation: deleteProduct', () => {
                             shortDescription
                             languageCode
                         }
-                        inventoryInformation {
-                            minimumStockQuantity
-                        }
                     }
                     discountType
                     name
@@ -194,9 +188,6 @@ describe('Mutation: deleteProduct', () => {
                                     name
                                     shortDescription
                                     languageCode
-                                }
-                                inventoryInformation {
-                                    minimumStockQuantity
                                 }
                             }
                             discountType

@@ -298,12 +298,10 @@ describe('Mutation: deleteCategory', () => {
         const productInfoName = "productInfo";
         const categories = [{id: id, categoryInfo: [{name: currentItemName, languageCode: "Standard"}]}];
         const info = [{name: `Cypress ${mutationName} product test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
-        const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
         const mutation = `mutation {
             ${extraMutationName}(
                 input: { 
                     ${productInfoName}: ${toFormattedString(info)}
-                    inventoryInformation: ${toFormattedString(inventoryInfo)}
                     categoryIds: ["${id}"]
                 }
             ) {
@@ -312,9 +310,6 @@ describe('Mutation: deleteCategory', () => {
                 error
                 ${extraDataPath} {
                     id
-                    inventoryInformation {
-                        minimumStockQuantity
-                    }
                     ${productInfoName} {
                         name
                         shortDescription
@@ -327,8 +322,8 @@ describe('Mutation: deleteCategory', () => {
         cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
             const productId = res.body.data[extraMutationName][extraDataPath].id;
             extraIds.push({itemId: productId, deleteName: "deleteProduct"});
-            const propNames = [productInfoName, "inventoryInformation"];
-            const propValues = [info, inventoryInfo];
+            const propNames = [productInfoName];
+            const propValues = [info];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
                 const queryBody = `id
                     categoryInfo {

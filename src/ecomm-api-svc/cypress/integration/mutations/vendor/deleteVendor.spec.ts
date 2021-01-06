@@ -110,12 +110,10 @@ describe('Mutation: deleteVendor', () => {
         const productInfoName = "productInfo";
         const vendor = {id: id, vendorInfo: [{name: currentItemName, languageCode: "Standard"}]};
         const info = [{name: `Cypress ${mutationName} product test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
-        const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
         const mutation = `mutation {
             ${extraMutationName}(
                 input: { 
                     ${productInfoName}: ${toFormattedString(info)}
-                    inventoryInformation: ${toFormattedString(inventoryInfo)}
                     vendorId: "${id}"
                 }
             ) {
@@ -124,9 +122,6 @@ describe('Mutation: deleteVendor', () => {
                 error
                 ${extraDataPath} {
                     id
-                    inventoryInformation {
-                        minimumStockQuantity
-                    }
                     vendor {
                         id
                         vendorInfo {
@@ -146,16 +141,13 @@ describe('Mutation: deleteVendor', () => {
         cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
             const productId = res.body.data[extraMutationName][extraDataPath].id;
             extraIds.push({itemId: productId, deleteName: "deleteProduct"});
-            const propNames = ["vendor", productInfoName, "inventoryInformation"];
-            const propValues = [vendor, info, inventoryInfo];
+            const propNames = ["vendor", productInfoName];
+            const propValues = [vendor, info];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
-                            inventoryInformation {
-                                minimumStockQuantity
-                            }
                             vendor {
                                 id
                                 vendorInfo {
@@ -183,7 +175,7 @@ describe('Mutation: deleteVendor', () => {
                         cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
                             id = '';
                             currentItemName = '';
-                            const newPropValues = [null, info, inventoryInfo];
+                            const newPropValues = [null, info];
                             cy.confirmUsingQuery(query, extraQueryName, productId, propNames, newPropValues);
                         });
                     });
