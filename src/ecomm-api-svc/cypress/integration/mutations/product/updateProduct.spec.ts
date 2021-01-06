@@ -2,7 +2,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 24
+// TEST COUNT: 18
 describe('Mutation: updateProduct', () => {
     let id = '';
     let updateCount = 0;
@@ -27,7 +27,7 @@ describe('Mutation: updateProduct', () => {
 
     before(() => {
         const name = `Cypress ${mutationName} Test`;
-        const input = `{${infoName}: [{name: "${name}", fullDescription: "Lots of cypress testing for ${mutationName}", languageCode: "Standard"}]}`;
+        const input = `{${infoName}: [{name: "${name}", languageCode: "Standard"}]}`;
         cy.createAndGetId(createName, dataPath, input).then((returnedId: string) => {
             assert.exists(returnedId);
             id = returnedId;
@@ -135,23 +135,6 @@ describe('Mutation: updateProduct', () => {
         cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will fail with invalid 'fullDescription' input", () => {
-        const mutation = `mutation {
-            ${mutationName}(
-                input: { 
-                    ${infoName}: [{
-                        name: "Cypress invalid fullDescription",
-                        fullDescription: 5,
-                        languageCode: "Standard"
-                    }]
-                }
-            ) {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmError(mutation);
-    });
-
     it("Mutation will succeed with valid 'name' and 'languageCode' input", () => {
         updateCount++;
         const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard"}];
@@ -174,39 +157,6 @@ describe('Mutation: updateProduct', () => {
                             id
                             ${infoName} {
                                 name
-                                languageCode
-                            }
-                        }
-                    }
-                }`;
-                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
-            });
-        });
-    });
-
-    it("Mutation will succeed with valid 'id', 'name', 'fullDescription' input", () => {
-        updateCount++;
-        const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, fullDescription: `This is test #${updateCount} for ${mutationName}`, languageCode: "Standard"}];
-        const mutation = `mutation {
-            ${mutationName}(
-                input: { 
-                    id: "${id}", 
-                    ${infoName}: ${toFormattedString(info)}
-                }) {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            const propNames = [infoName];
-            const propValues = [info];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
-                        nodes {
-                            id
-                            ${infoName} {
-                                name
-                                fullDescription
                                 languageCode
                             }
                         }
