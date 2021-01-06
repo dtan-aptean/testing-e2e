@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 36
+// TEST COUNT: 35
 describe('Query: orders', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "orders";
@@ -136,23 +136,6 @@ describe('Query: orders', () => {
         });
     });
 
-    it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
-        const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
-                ${standardQueryBody}
-            }
-        }`;
-        cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
-            const descQuery = `{
-                ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: DESC, field: NAME}) {
-                    ${standardQueryBody}
-                }
-            }`;
-            cy.postAndValidate(descQuery, queryName).then((descRes) => {
-                cy.verifyReverseOrder(queryName, ascRes, descRes);
-            });
-        });
-    });
 
     it("Query with valid 'first' input argument will return only that amount of items", () => {
         cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
@@ -230,10 +213,10 @@ describe('Query: orders', () => {
         cy.postAndConfirmError(gqlQuery, true);
     });
 
-    it("Query with a valid 'searchString' input argument will return the specific item", () => {
+    it("Query with a valid 'id' input argument will return the specific item", () => {
         cy.returnRandomId(standardQuery, queryName).then((id: string) => {
             const searchQuery = `{
-                ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(id: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -243,13 +226,13 @@ describe('Query: orders', () => {
         });
     });
 
-    it("Query with a valid partial 'searchString' input argument will return all items containing the string", () => {
+    it("Query with a valid partial 'id' input argument will return all items containing the string", () => {
         cy.returnRandomId(standardQuery, queryName).then((id: string) => {
             // Get a random segment of the id
             const halfway = Math.ceil(id.length / 2);
             const searchId = id.slice(Cypress._.random(0, halfway - 1), Cypress._.random(halfway, id.length));
             const searchQuery = `{
-                ${queryName}(searchString: "${searchId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(id: "${searchId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -259,14 +242,14 @@ describe('Query: orders', () => {
         });
     });
 
-    it("Query with an invalid 'searchString' input argument will fail", () => {
+    it("Query with an invalid 'id' input argument will fail", () => {
         const gqlQuery = `{
-            ${queryName}(searchString: 7, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(id: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
                 ${standardQueryBody}
             }
         }`;
         cy.postAndConfirmError(gqlQuery).then((res) => {
-            expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 7');
+            expect(res.body.errors[0].message).to.have.string('ID cannot represent a non-string and non-integer value: true');
             expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
         });
     });

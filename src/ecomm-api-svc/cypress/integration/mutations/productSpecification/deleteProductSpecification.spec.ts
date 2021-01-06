@@ -120,7 +120,7 @@ describe('Mutation: deleteProductSpecification', () => {
 
     it("Deleting an item connected to a product will disassociate the item from the product", () => {
         const optionsQuery = `{
-            ${queryName}(searchString: "${currentItemName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(searchString: "${currentItemName}", orderBy: {direction: ASC, field: NAME}) {
                 nodes {
                     id
                     name
@@ -144,7 +144,7 @@ describe('Mutation: deleteProductSpecification', () => {
                 return item.id === id;
             });
             const optionsId = target[0].options[0].id;
-            const options = target[0].options
+            const options = [{options: target[0].options}];
             const extraMutationName = "createProduct";
             const extraDataPath = "product";
             const productInfoName = "productInfo";
@@ -185,7 +185,7 @@ describe('Mutation: deleteProductSpecification', () => {
                         id
                         name
                     }`;
-                    cy.queryByProductId("productSpecificationOptionsByProductId", optionsField, "options", productId, options).then(() => {
+                    cy.queryByProductId("productSpecifications", optionsField, productId, options).then(() => {
                         const mutation = `mutation {
                             ${mutationName}(input: { id: "${id}" }) {
                                 ${standardMutationBody}
@@ -196,7 +196,7 @@ describe('Mutation: deleteProductSpecification', () => {
                             cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
                                 id = '';
                                 currentItemName = '';
-                                cy.queryByProductId("productSpecificationOptionsByProductId", optionsField, "options", productId, []);
+                                cy.queryByProductId("productSpecifications", optionsField, productId, []);
                             });
                         });
                     });

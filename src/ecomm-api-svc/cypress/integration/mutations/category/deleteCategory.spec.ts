@@ -253,7 +253,7 @@ describe('Mutation: deleteCategory', () => {
             const propValues = [categories, name, discountType];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${extraQueryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${extraQueryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             discountAmount {
@@ -330,14 +330,12 @@ describe('Mutation: deleteCategory', () => {
             const propNames = [productInfoName, "inventoryInformation"];
             const propValues = [info, inventoryInfo];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
-                const queryBody = `categories {
-                    id
+                const queryBody = `id
                     categoryInfo {
                         name
                         languageCode
-                    }
-                }`
-                cy.queryByProductId("categoriesByProductId", queryBody, "categories", productId, categories).then(() => {
+                    }`;
+                cy.queryByProductId("categories", queryBody, productId, categories).then(() => {
                     const mutation = `mutation {
                         ${mutationName}(input: { id: "${id}" }) {
                             ${standardMutationBody}
@@ -348,7 +346,7 @@ describe('Mutation: deleteCategory', () => {
                         cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
                             id = '';
                             currentItemName = '';
-                            cy.queryByProductId("categoriesByProductId", queryBody, "categories", productId, []);
+                            cy.queryByProductId("categories", queryBody, productId, []);
                         });
                     });
                 });

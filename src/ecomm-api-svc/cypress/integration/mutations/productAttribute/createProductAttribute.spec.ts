@@ -112,7 +112,7 @@ describe('Mutation: createProductAttribute', () => {
             const propValues = [name, values];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name
@@ -159,7 +159,7 @@ describe('Mutation: createProductAttribute', () => {
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const queryName = "productAttributes";
                 const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -177,7 +177,7 @@ describe('Mutation: createProductAttribute', () => {
         const values = [
             {
                 displayOrder: Cypress._.random(1, 20),
-                isPreselected: Cypress._.random(0, 1) === 1, 
+                isPreSelected: Cypress._.random(0, 1) === 1, 
                 name: 'Cypress PA 1', 
                 priceAdjustment: {
                     amount: Cypress._.random(1, 5),
@@ -190,7 +190,7 @@ describe('Mutation: createProductAttribute', () => {
                 }
             }, {
                 displayOrder: Cypress._.random(1, 20),
-                isPreselected: Cypress._.random(0, 1) === 1, 
+                isPreSelected: Cypress._.random(0, 1) === 1, 
                 name: 'Cypress PA 2', 
                 priceAdjustment: {
                     amount: Cypress._.random(1, 5),
@@ -220,7 +220,7 @@ describe('Mutation: createProductAttribute', () => {
                     name
                     values {
                         displayOrder
-                        isPreselected
+                        isPreSelected
                         name
                         priceAdjustment {
                           amount
@@ -241,7 +241,7 @@ describe('Mutation: createProductAttribute', () => {
             const propValues = [name, description, values];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name

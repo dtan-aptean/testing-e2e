@@ -164,7 +164,7 @@ describe('Mutation: updateProductSpecification', () => {
             const propValues = [newName, optionsCopy];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name
@@ -209,7 +209,7 @@ describe('Mutation: updateProductSpecification', () => {
             const propValues = [customData, newName, optionsCopy];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -259,7 +259,7 @@ describe('Mutation: updateProductSpecification', () => {
                 const propValues = [newCustomData, newName, newOptions];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 customData
@@ -306,7 +306,7 @@ describe('Mutation: updateProductSpecification', () => {
             const propValues = [newName, displayOrder, optionsCopy];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name

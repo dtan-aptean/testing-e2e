@@ -123,7 +123,7 @@ describe('Mutation: createCategory', () => {
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 ${infoName} {
@@ -169,7 +169,7 @@ describe('Mutation: createCategory', () => {
             const propValues = [customData, info];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -220,7 +220,7 @@ describe('Mutation: createCategory', () => {
                 const propValues = [parentCategory, info];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 ${infoName} {
@@ -293,7 +293,7 @@ describe('Mutation: createCategory', () => {
                     const propValues = [info, discounts];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
                                     id
                                     discounts {
@@ -369,7 +369,7 @@ describe('Mutation: createCategory', () => {
                     const propValues = [info, roleAccess];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
                                     id
                                     roleBasedAccess {
@@ -398,14 +398,22 @@ describe('Mutation: createCategory', () => {
         const displayOrder = Cypress._.random(1, 20);
         const name = "Cypress Category Input";
         const description = "Cypress testing 'create' mutation input";
-        const info = [{name: name, description: description, languageCode: "Standard"}, {name: "Same name but in german", description: "Translate desc to German", languageCode: "de-DE"}];
-        const seoData = [{
-            searchEngineFriendlyPageName: "Cypress Input",
-            metaKeywords:  "Cypress",
-            metaDescription: "Cypress Input metaTag",
-            metaTitle: "Cypress Input test",
-            languageCode: "Standard"
-        }];
+        const info = [{name: "Same name but in german", description: "Translate desc to German", languageCode: "de-DE"}, {name: name, description: description, languageCode: "Standard"}];
+        const seoData = [
+            {
+                searchEngineFriendlyPageName: "",
+                metaKeywords:  "",
+                metaDescription: "",
+                metaTitle: "",
+                languageCode: "de-DE"
+            }, {
+                searchEngineFriendlyPageName: "Cypress Input",
+                metaKeywords:  "Cypress",
+                metaDescription: "Cypress Input metaTag",
+                metaTitle: "Cypress Input test",
+                languageCode: "Standard"
+            }
+        ];
         const published = Cypress._.random(0, 1) === 1;
         const showOnHomePage = Cypress._.random(0, 1) === 1;
         const priceRanges = "4-5";
@@ -450,7 +458,7 @@ describe('Mutation: createCategory', () => {
             const propValues = [displayOrder, info, seoData, priceRanges, published, showOnHomePage];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             displayOrder
