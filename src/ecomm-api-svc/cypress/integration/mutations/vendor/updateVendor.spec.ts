@@ -149,7 +149,7 @@ describe('Mutation: updateVendor', () => {
             const propValues = [info];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             ${infoName} {
@@ -196,7 +196,7 @@ describe('Mutation: updateVendor', () => {
             const propValues = [customData, info];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             customData
@@ -245,7 +245,7 @@ describe('Mutation: updateVendor', () => {
                 const propValues = [newCustomData, newInfo];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${newInfo[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(searchString: "${newInfo[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 customData
@@ -261,8 +261,8 @@ describe('Mutation: updateVendor', () => {
     it("Mutation will correctly use all input", () => {
         updateCount++;
         const info = [
-            {name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"},
-            {name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE"}
+            {name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE"},
+            {name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}
         ];
         const active = Cypress._.random(0, 1) === 1;
         const address = {
@@ -275,6 +275,12 @@ describe('Mutation: updateVendor', () => {
         };
         const displayOrder = Cypress._.random(1, 20);
         const seoData = [{
+            searchEngineFriendlyPageName: "",
+            metaKeywords:  "",
+            metaDescription: "",
+            metaTitle: "",
+            languageCode: "de-DE"
+        }, {
             searchEngineFriendlyPageName: "Cypress Input",
             metaKeywords:  "Cypress",
             metaDescription: "Cypress Input metaTag",
@@ -330,7 +336,7 @@ describe('Mutation: updateVendor', () => {
             const propValues = [info, active, address, displayOrder, email, seoData];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             active

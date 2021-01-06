@@ -150,7 +150,7 @@ describe('Mutation: deleteVendor', () => {
             const propValues = [vendor, info, inventoryInfo];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             inventoryInformation {
@@ -179,7 +179,7 @@ describe('Mutation: deleteVendor', () => {
                         }
                     }`;
                     cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                        expect(res.body.data[mutationName].message).to.be.eql(`${queryName} deleted`);
+                        expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
                         cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
                             id = '';
                             currentItemName = '';

@@ -1,5 +1,8 @@
 /// <reference types="cypress" />
-// TEST COUNT: 36
+
+import { toFormattedString } from "../../support/commands";
+
+// TEST COUNT: 39
 describe('Query: manufacturers', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "manufacturers";
@@ -28,7 +31,7 @@ describe('Query: manufacturers', () => {
             totalCount`;
     // Standard query to use when we don't need any specialized data or input arguments        
     const standardQuery = `{
-        ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
+        ${queryName}(orderBy: {direction: ASC, field: NAME}) {
             ${standardQueryBody}
         }
     }`;
@@ -36,6 +39,12 @@ describe('Query: manufacturers', () => {
     const infoPath = "manufacturerInfo";
 
     var trueTotal = null;
+    // Items created for the productId test
+    const createdItems = [] as {name: string, id: string}[];
+    const createdProducts =  [] as {name: string, id: string}[];
+    const deleteName = "deleteManufacturer";
+    const createMutName = "createManufacturer";
+    const createPath = "manufacturer";
 
     before(() => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
@@ -45,6 +54,44 @@ describe('Query: manufacturers', () => {
                 trueTotal = totalCount;
             }
         });
+    });
+
+    // Ensure deletion of the items we created for the productId test
+    after(() => {
+        if (createdProducts.length > 0) {
+            createdItems.forEach((item) => {
+                cy.wait(2000);
+                cy.queryForDeleted(false, item.name, item.id, "products", "productInfo").then((itemPresent: boolean) => {
+                    if (itemPresent) {
+                        const mutation = `mutation {
+                            deleteProduct(input: {id: "${item.id}"}){
+                                code
+                                message
+                                error
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(mutation, "deleteProduct");
+                    }
+                });
+            });
+        }
+        if (createdItems.length > 0) {
+            createdItems.forEach((item) => {
+                cy.wait(2000);
+                cy.queryForDeleted(false, item.name, item.id, queryName, infoPath).then((itemPresent: boolean) => {
+                    if (itemPresent) {
+                        var mutation = `mutation {
+                            ${deleteName}(input: {id: "${item.id}"}){
+                                code
+                                message
+                                error
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(mutation, deleteName);
+                    }
+                });
+            });
+        }
     });
 
     it("Query with valid 'orderBy' input argument returns valid data types", () => {
@@ -64,7 +111,7 @@ describe('Query: manufacturers', () => {
 
     it('Query will fail if no return type is provided', () => {
         const gqlQuery = `{
-            ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(orderBy: {direction: ASC, field: NAME}) {
                 
             }
         }`;
@@ -82,7 +129,7 @@ describe('Query: manufacturers', () => {
 
     it("Query fails if 'orderBy' input argument only has field", () => {
         const fieldQuery = `{
-            ${queryName}(orderBy: {field: TIMESTAMP}) {
+            ${queryName}(orderBy: {field: NAME}) {
                 totalCount
             }
         }`;
@@ -100,7 +147,7 @@ describe('Query: manufacturers', () => {
 
     it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
         const gqlQuery = `{
-            ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(orderBy: {direction: ASC, field: NAME}) {
                 totalCount
             }
         }`;
@@ -126,24 +173,6 @@ describe('Query: manufacturers', () => {
         });
     });
 
-    it("Query with orderBy direction: DESC, field: TIMESTAMP will return items in a reverse order from direction: ASC", () => {
-        const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
-                ${standardQueryBody}
-            }
-        }`;
-        cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
-            const descQuery = `{
-                ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: DESC, field: TIMESTAMP}) {
-                    ${standardQueryBody}
-                }
-            }`;
-            cy.postAndValidate(descQuery, queryName).then((descRes) => {
-                cy.verifyReverseOrder(queryName, ascRes, descRes);
-            });
-        });
-    });
-
     it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
         const trueTotalQuery = `{
             ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
@@ -162,6 +191,181 @@ describe('Query: manufacturers', () => {
         });
     });
 
+    it("Query with valid 'productId' input will return only the items connected with that productId", () => {
+        const itemOneName = `Cypress productId ${queryName}1 test`;
+        const itemOneInput = {manufacturerInfo: [{name: itemOneName, languageCode: "Standard"}]};
+        cy.createAndGetId(createMutName, createPath, toFormattedString(itemOneInput)).then((idOne) => {
+            createdItems.push({name: itemOneName, id: idOne});
+            const itemOne = {id: idOne};
+            itemOne[infoPath] = [{name: itemOneName}];
+            const itemTwoName = `Cypress productId ${queryName}2 test`;
+            const itemTwoInput = {manufacturerInfo: [{name: itemTwoName, languageCode: "Standard"}]};
+            cy.createAndGetId(createMutName, createPath, toFormattedString(itemTwoInput)).then((idTwo) => {
+                createdItems.push({name: itemTwoName, id: idTwo});
+                const itemTwo = {id: idTwo};
+                itemTwo[infoPath] = [{name: itemTwoName}];
+                const productName = `Cypress ${queryName} ProductID`; 
+                const productInput = {
+                    productInfo: [{
+                        name: productName,
+                        languageCode: "Standard",
+                    }],
+                    manufacturerIds: [idOne, idTwo]
+                };
+                cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((productId: string) => {
+                    createdProducts.push({name: productName, id: productId});
+                    const query = `{
+                        ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
+                            ${standardQueryBody}
+                        }
+                    }`;
+                    cy.postAndValidate(query, queryName).then((respo) => {
+                        const { nodes, totalCount } = respo.body.data[queryName];
+                        expect(totalCount).to.be.eql(2);
+                        expect(nodes).to.deep.include(itemOne);
+                        expect(nodes).to.deep.include(itemTwo);
+                        // Now delete the product
+                        const mutation = `mutation {
+                            deleteProduct(input: {id: "${productId}"}){
+                                code
+                                message
+                                error
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(mutation, "deleteProduct").then(() => {
+                            const deleteOne = `mutation {
+                                ${deleteName}(input: {id: "${idOne}"}){
+                                    code
+                                    message
+                                    error
+                                }
+                            }`;
+                            cy.postAndConfirmDelete(deleteOne, deleteName).then(() => {
+                                const deleteTwo = `mutation {
+                                    ${deleteName}(input: {id: "${idTwo}"}){
+                                        code
+                                        message
+                                        error
+                                    }
+                                }`;
+                                cy.postAndConfirmDelete(deleteTwo, deleteName);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    it("Query with invalid 'productId' input will return an error", () => {
+        const query = `{
+            ${queryName}(productId: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.postAndConfirmError(query).then((res) => {
+            expect(res.body.errors[0].message).to.have.string('ID cannot represent a non-string and non-integer value: true');
+            expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+        });
+    });
+
+    it("Query with 'productId' input that has no associated items will return an empty array", () => {
+        const productName = `Cypress ${queryName} productId`;
+        const productInput = {
+            productInfo: [{
+                name: productName,
+                languageCode: "Standard",
+            }],
+            inventoryInformation: {
+                minimumStockQuantity: Cypress._.random(1, 10),
+            }
+        };
+        cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((returnedId: string) => {
+            createdProducts.push({name: productName, id: returnedId});
+            const query = `{
+                ${queryName}(productId: "${returnedId}", orderBy: {direction: ASC, field: NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(query, queryName).then((res) => {
+                const { nodes, totalCount } = res.body.data[queryName];
+                expect(totalCount).to.be.eql(0);
+                expect(nodes.length).to.eql(0);
+                // Now delete the product
+                const mutation = `mutation {
+                    deleteProduct(input: {id: "${returnedId}"}){
+                        code
+                        message
+                        error
+                    }
+                }`;
+                cy.postAndConfirmDelete(mutation, "deleteProduct");
+            });
+        });
+    });
+
+    it("Query using the 'productId' of a deleted product will return an error", () => {
+        const itemOneName = `Cypress productId ${queryName}1 delete`;
+        const itemOneInput = {manufacturerInfo: [{name: itemOneName, languageCode: "Standard"}]};
+        cy.createAndGetId(createMutName, createPath, toFormattedString(itemOneInput)).then((idOne) => {
+            createdItems.push({name: itemOneName, id: idOne});
+            const itemOne = {id: idOne};
+            itemOne[infoPath] = [{name: itemOneName}];
+            const itemTwoName = `Cypress productId ${queryName}2 delete`;
+            const itemTwoInput = {manufacturerInfo: [{name: itemTwoName, languageCode: "Standard"}]};
+            cy.createAndGetId(createMutName, createPath, toFormattedString(itemTwoInput)).then((idTwo) => {
+                createdItems.push({name: itemTwoName, id: idTwo});
+                const itemTwo = {id: idTwo};
+                itemTwo[infoPath] = [{name: itemTwoName}];
+                const productName = `Cypress ${queryName} ProductID delete`; 
+                const productInput = {
+                    productInfo: [{
+                        name: productName,
+                        languageCode: "Standard",
+                    }],
+                    manufacturerIds: [idOne, idTwo]
+                };
+                cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((productId: string) => {
+                    createdProducts.push({name: productName, id: productId});
+                    // Now delete the product
+                    const mutation = `mutation {
+                        deleteProduct(input: {id: "${productId}"}){
+                            code
+                            message
+                            error
+                        }
+                    }`;
+                    cy.postAndConfirmDelete(mutation, "deleteProduct").then(() => {
+                        const query = `{
+                            ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
+                                ${standardQueryBody}
+                            }
+                        }`;
+                        cy.postAndConfirmError(query).then(() => {
+                            const deleteOne = `mutation {
+                                ${deleteName}(input: {id: "${idOne}"}){
+                                    code
+                                    message
+                                    error
+                                }
+                            }`;
+                            cy.postAndConfirmDelete(deleteOne, deleteName).then(() => {
+                                const deleteTwo = `mutation {
+                                    ${deleteName}(input: {id: "${idTwo}"}){
+                                        code
+                                        message
+                                        error
+                                    }
+                                }`;
+                                cy.postAndConfirmDelete(deleteTwo, deleteName);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
     it("Query with valid 'first' input argument will return only that amount of items", () => {
         cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
             // If there's only one item, we can't do any pagination
@@ -169,7 +373,7 @@ describe('Query: manufacturers', () => {
             // Get half the items, rounding down
             const first = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                ${queryName}(first: ${first}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(first: ${first}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -183,7 +387,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with valid 'last' input argument will return only that amount of items", () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -193,7 +397,7 @@ describe('Query: manufacturers', () => {
             // Get half the items, rounding down
             const last = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                ${queryName}(last: ${last}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(last: ${last}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -207,7 +411,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with invalid 'first' input argument will fail", () => {
         const gqlQuery = `{
-            ${queryName}(first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(first: "4", orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -219,7 +423,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with invalid 'last' input argument will fail", () => {
         const gqlQuery = `{
-            ${queryName}(last: "5", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(last: "5", orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -231,7 +435,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with both 'first' and 'last' input arguments will fail", () => {
         const gqlQuery = `{
-            ${queryName}(first: 7, last: 3, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(first: 7, last: 3, orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -241,7 +445,7 @@ describe('Query: manufacturers', () => {
     it("Query with a valid 'searchString' input argument will return the specific item", () => {
         cy.returnRandomInfoName(standardQuery, queryName, infoPath).then((name: string) => {
             const searchQuery = `{
-                ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -263,7 +467,7 @@ describe('Query: manufacturers', () => {
                 searchText = name.substring(0, segmentIndex);
             }
             const searchQuery = `{
-                ${queryName}(searchString: "${searchText}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(searchString: "${searchText}", orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -275,7 +479,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with an invalid 'searchString' input argument will fail", () => {
         const gqlQuery = `{
-            ${queryName}(searchString: 7, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(searchString: 7, orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -288,7 +492,7 @@ describe('Query: manufacturers', () => {
     it("Query with a valid 'before' input argument will return all items before that value", () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             const beforeQuery = `{
-                ${queryName}(before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -302,13 +506,13 @@ describe('Query: manufacturers', () => {
     
     it("Query with a valid 'after' input argument will return all items after that value", () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
         cy.returnRandomCursor(trueTotalQuery, queryName, false).then((cursor: string) => {
             const afterQuery = `{
-                ${queryName}(after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -323,7 +527,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with invalid 'before' input argument will fail", () => {
         const gqlQuery = `{
-            ${queryName}(before: 123, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(before: 123, orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -335,7 +539,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with invalid 'after' input argument will fail", () => {
         const gqlQuery = `{
-            ${queryName}(after: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(after: true, orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -347,7 +551,7 @@ describe('Query: manufacturers', () => {
     
     it("Query with both 'before' and 'after' input arguments will fail", () => {
         const gqlQuery = `{
-            ${queryName}(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -368,7 +572,7 @@ describe('Query: manufacturers', () => {
                 const first = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `first: ${first}`});
                 const beforeQuery = `{
-                    ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -383,7 +587,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with both 'after' and 'first' input will arguments return a specific amount of items after that value", () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -394,7 +598,7 @@ describe('Query: manufacturers', () => {
                     const first = diff >= 2 ? Math.floor(diff / 2): diff;
                     Cypress.log({message: `first: ${first}`});
                     const afterQuery = `{
-                        ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
                         }
                     }`;
@@ -410,7 +614,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with both 'before' and 'last' input arguments will return a specific amount of items before that value", () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -419,7 +623,7 @@ describe('Query: manufacturers', () => {
                 const last = index > 1 ? Math.floor(index / 2) : 1;
                 Cypress.log({message: `last: ${last}`});
                 const beforeQuery = `{
-                    ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -434,7 +638,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with both 'after' and 'last' input will return a specific amount of items after that value", () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -445,7 +649,7 @@ describe('Query: manufacturers', () => {
                     const last = diff >= 2 ? Math.floor(diff / 2): diff;
                     Cypress.log({message: `last: ${last}`});
                     const afterQuery = `{
-                        ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
                         }
                     }`;
@@ -466,7 +670,7 @@ describe('Query: manufacturers', () => {
             // Get half the items, rounding down
             const first = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                ${queryName}(before: 123, first: ${first}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(before: 123, first: ${first}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -480,7 +684,7 @@ describe('Query: manufacturers', () => {
     it('Query with valid "Before" input and invalid "first" input will fail', () => {
         cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
             const gqlQuery = `{
-                ${queryName}(before: "${cursor}", first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(before: "${cursor}", first: "4", orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -498,7 +702,7 @@ describe('Query: manufacturers', () => {
             // Get half the items, rounding down
             const first = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                ${queryName}(after: 123, first: ${first}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(after: 123, first: ${first}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -511,13 +715,13 @@ describe('Query: manufacturers', () => {
 
     it('Query with valid "After" input and invalid "first" input will fail', () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
         cy.returnRandomCursor(trueTotalQuery, queryName, false).then((cursor: string) => {
             const gqlQuery = `{
-                ${queryName}(after: "${cursor}", first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(after: "${cursor}", first: "4", orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -530,7 +734,7 @@ describe('Query: manufacturers', () => {
 
     it('Query with invalid "Before" input and valid "last" input will fail', () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -540,7 +744,7 @@ describe('Query: manufacturers', () => {
             // Get half the items, rounding down
             const last = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                ${queryName}(before: 123, last: ${last}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(before: 123, last: ${last}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -553,13 +757,13 @@ describe('Query: manufacturers', () => {
 
     it('Query with valid "Before" input and invalid "last" input will fail', () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
         cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
             const gqlQuery = `{
-                ${queryName}(before: "${cursor}", last: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(before: "${cursor}", last: "4", orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -572,7 +776,7 @@ describe('Query: manufacturers', () => {
 
     it('Query with invalid "After" input and valid "last" input will fail', () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
@@ -582,7 +786,7 @@ describe('Query: manufacturers', () => {
             // Get half the items, rounding down
             const last = Math.floor(totalCount / 2);
             const gqlQuery = `{
-                ${queryName}(after: 123, last: ${last}, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(after: 123, last: ${last}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -595,13 +799,13 @@ describe('Query: manufacturers', () => {
 
     it('Query with valid "After" input and invalid "last" input will fail', () => {
         const trueTotalQuery = `{
-            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
                 ${standardQueryBody}
             }
         }`;
         cy.returnRandomCursor(trueTotalQuery, queryName, false).then((cursor: string) => {
             const gqlQuery = `{
-                ${queryName}(after: "${cursor}", last: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(after: "${cursor}", last: "4", orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -614,7 +818,7 @@ describe('Query: manufacturers', () => {
 
     it("Query with customData field will return valid value", () => {
         const gqlQuery = `{
-            ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
+            ${queryName}(orderBy: {direction: ASC, field: NAME}) {
                 edges {
                     cursor
                     node {

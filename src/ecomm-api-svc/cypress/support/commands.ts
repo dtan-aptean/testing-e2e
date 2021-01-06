@@ -66,7 +66,7 @@ Cypress.Commands.add('postGQL', (query, altUrl?: string) => {
       },
       body: { query },
       failOnStatusCode: false,
-      timeout: 5000,
+      timeout: Cypress.env('gqlTimeout'),
       retryOnNetworkFailure: true,
     });
 });
@@ -1098,6 +1098,20 @@ Cypress.Commands.add("validateCursor", (res, dataPath: string, beforeAfter: stri
     });
 });
 
+const verifySeoData = (seo, expectedSeo) => {
+    expectedSeo.forEach((seoItem, index) => {
+        var currSeo = seo[index];
+        const props = Object.getOwnPropertyNames(seoItem);
+        for (var i = 0; i < props.length; i++) {
+            if (props[i] === "searchEngineFriendlyPageName" && seoItem[props[i]].length > 0) {
+                expect(currSeo[props[i]]).to.include(seoItem[props[i]].toLowerCase().replace(' ', '-'), `Verify seoData[${index}].${props[i]}`);
+            }  else {
+                expect(currSeo[props[i]]).to.be.eql(seoItem[props[i]], `Verify seoData[${index}].${props[i]}`);
+            }
+        }
+    });
+};
+
 // Confirms the mutation data that you instruct it to. Checks descendents with the eql() which is a deep equal
 Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataPath: string, propNames: string[], values: []) => {
     Cypress.log({
@@ -1171,15 +1185,19 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataP
         }
     };
     for (var i = 0; i < propNames.length; i++) {
-        if (values[i] && result[propNames[i]] === null) {
-            assert.exists(result[propNames[i]], `${propNames[i]} should not be null`);
-        }
-        if (Array.isArray(values[i])) {
-            matchArray(result[propNames[i]], values[i], propNames[i]);
-        } else if (!!values[i] && typeof values[i] === 'object') {
-            matchObject(result[propNames[i]], values[i], propNames[i]);
+        if (propNames[i] === "seoData"){
+            verifySeoData(result[propNames[i]], values[i]);
         } else {
-            expect(result[propNames[i]]).to.be.eql(values[i], `Verifying ${propNames[i]}`);
+            if (values[i] && result[propNames[i]] === null) {
+                assert.exists(result[propNames[i]], `${propNames[i]} should not be null`);
+            }
+            if (Array.isArray(values[i])) {
+                matchArray(result[propNames[i]], values[i], propNames[i]);
+            } else if (!!values[i] && typeof values[i] === 'object') {
+                matchObject(result[propNames[i]], values[i], propNames[i]);
+            } else {
+                expect(result[propNames[i]]).to.be.eql(values[i], `Verifying ${propNames[i]}`);
+            }
         }
     }
 });
@@ -1207,7 +1225,7 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
         }`;
     }
     const searchQuery = `{
-        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
             nodes {
                 id
                 ${nameField}
@@ -1358,7 +1376,7 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
         }`;
     }
     const searchQuery = `{
-        ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+        ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: NAME}) {
             nodes {
                 id
                 ${nameField}
@@ -1400,11 +1418,11 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
             if (matchingItems.length > 0) {
                 message = "Query returned item, deletion failed";
             }
-            if (!asTest) {
+            if (!asTest && matchingItems.length > 0) {
                 return true;
             }
             assert.isEmpty(matchingItems, message);
-            return res;
+            return false;
         }
     });
 });
@@ -1543,15 +1561,19 @@ const matchArrayItems = (resArray: [], matchArray: [], originalProperty: string,
 // Function that iterates through array and calls above functions
 const compareExpectedToResults = (subject, propertyNames: string[], expectedValues: []) => {
     for (var i = 0; i < propertyNames.length; i++) {
-        if (expectedValues[i] && subject[propertyNames[i]] === null) {
-            assert.exists(subject[propertyNames[i]], `${propertyNames[i]} should not be null`);
-        }
-        if (Array.isArray(expectedValues[i])) {
-            matchArrayItems(subject[propertyNames[i]], expectedValues[i], propertyNames[i]);
-        } else if (!!expectedValues[i] && typeof expectedValues[i] === 'object') {
-            matchObject(subject[propertyNames[i]], expectedValues[i], true, propertyNames[i]);
+        if (propertyNames[i] === "seoData"){
+            verifySeoData(subject[propertyNames[i]], expectedValues[i]);
         } else {
-            expect(subject[propertyNames[i]]).to.be.eql(expectedValues[i], `Verify ${propertyNames[i]}`);
+            if (expectedValues[i] && subject[propertyNames[i]] === null) {
+                assert.exists(subject[propertyNames[i]], `${propertyNames[i]} should not be null`);
+            }
+            if (Array.isArray(expectedValues[i])) {
+                matchArrayItems(subject[propertyNames[i]], expectedValues[i], propertyNames[i]);
+            } else if (!!expectedValues[i] && typeof expectedValues[i] === 'object') {
+                matchObject(subject[propertyNames[i]], expectedValues[i], true, propertyNames[i]);
+            } else {
+                expect(subject[propertyNames[i]]).to.be.eql(expectedValues[i], `Verify ${propertyNames[i]}`);
+            }
         }
     }
 }
@@ -1594,10 +1616,12 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
 });
 
 // Command for verifying the ByProductId queries
-Cypress.Commands.add('queryByProductId', (queryName: string, queryBody: string, path: string, productId: string, expectedItems: []) => {
+Cypress.Commands.add('queryByProductId', (queryName: string, queryBody: string, productId: string, expectedItems: []) => {
     const query = `query {
-        ${queryName}(productId: "${productId}") {
-            ${queryBody}
+        ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
+            nodes {
+                ${queryBody}                
+            }
         }
     }`;
     Cypress.log({
@@ -1617,8 +1641,8 @@ Cypress.Commands.add('queryByProductId', (queryName: string, queryBody: string, 
         // has data
         assert.exists(res.body.data);
         assert.exists(res.body.data[queryName]);
-        assert.exists(res.body.data[queryName][path]);
-        var returnedItems = res.body.data[queryName][path];
+        assert.exists(res.body.data[queryName].nodes);
+        var returnedItems = res.body.data[queryName].nodes;
         assert.isArray(returnedItems);
         // Begin comparisons
         expect(returnedItems.length).to.be.eql(expectedItems.length, `Expect ${expectedItems.length} returned item`);
