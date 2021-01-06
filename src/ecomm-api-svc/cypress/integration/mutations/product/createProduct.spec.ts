@@ -721,7 +721,7 @@ describe('Mutation: createProduct', () => {
             },
             isTaxExempt: Cypress._.random(0, 1) === 1,
             availableForPreOrder: preOrder,
-            preOrderAvailabilityStartDateTimeUtc: preOrder ? today.toUTCString(): null
+            preOrderAvailabilityStartDateTime: preOrder ? today.toUTCString(): null
         }; 
         const published = Cypress._.random(0, 1) === 1;
         const seoData = [
@@ -747,7 +747,7 @@ describe('Mutation: createProduct', () => {
             availableEndDate: twoWeeks.toUTCString(),
             markAsNew: Cypress._.random(0, 1) === 1,
             availableForPreOrder: priceInformation.availableForPreOrder,
-            preOrderAvailabilityStartDateTimeUtc: priceInformation.preOrderAvailabilityStartDateTimeUtc,
+            preOrderAvailabilityStartDateTime: priceInformation.preOrderAvailabilityStartDateTime,
             minimumStockQuantity: Cypress._.random(5, 20),
             allowBackInStockNotification: Cypress._.random(0, 1) === 1,
         };
@@ -764,7 +764,7 @@ describe('Mutation: createProduct', () => {
                     isTaxExempt: ${priceInformation.isTaxExempt}
                     availableForPreOrder: ${priceInformation.availableForPreOrder}
                     published: ${published}
-                    preOrderAvailabilityStartDateTimeUtc: ${priceInformation.preOrderAvailabilityStartDateTimeUtc ? `"${priceInformation.preOrderAvailabilityStartDateTimeUtc}"`: null}
+                    preOrderAvailabilityStartDateTime: ${priceInformation.preOrderAvailabilityStartDateTime ? `"${priceInformation.preOrderAvailabilityStartDateTime}"`: null}
                     seoData: ${toFormattedString(seoData)}
                 }
             ) {
