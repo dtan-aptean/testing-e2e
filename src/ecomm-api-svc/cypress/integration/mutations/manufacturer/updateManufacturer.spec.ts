@@ -471,7 +471,7 @@ describe('Mutation: updateManufacturer', () => {
             const propValues = [info, displayOrder, seoData, priceRanges, published];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                    ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             displayOrder

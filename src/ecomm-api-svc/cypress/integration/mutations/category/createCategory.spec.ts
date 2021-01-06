@@ -458,7 +458,7 @@ describe('Mutation: createCategory', () => {
             const propValues = [displayOrder, info, seoData, priceRanges, published, showOnHomePage];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                    ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             displayOrder

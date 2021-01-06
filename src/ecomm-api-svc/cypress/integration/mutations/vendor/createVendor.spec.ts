@@ -240,7 +240,7 @@ describe('Mutation: createVendor', () => {
             const propValues = [info, active, address, displayOrder, email, seoData];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                    ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             active
