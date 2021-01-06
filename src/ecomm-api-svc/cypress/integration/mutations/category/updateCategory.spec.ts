@@ -458,15 +458,21 @@ describe('Mutation: updateCategory', () => {
             });
         });
     });
-    
+   
     it("Mutation will correctly use all input", () => {
         updateCount++;
         const info = [
-            {name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"},
-            {name: "Zypresse aktualisierenKategorie Aktualisieren2", description: "Translate desc to German", languageCode: "de-DE"}
+            {name: "Zypresse aktualisierenKategorie Aktualisieren2", description: "Translate desc to German", languageCode: "de-DE"},
+            {name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}
         ];
         const displayOrder = Cypress._.random(0, 10);
         const seoData = [{
+            searchEngineFriendlyPageName: "",
+            metaKeywords:  "",
+            metaDescription: "",
+            metaTitle: "",
+            languageCode: "de-DE"
+        }, {
             searchEngineFriendlyPageName: "Cypress Update",
             metaKeywords:  "Cypress",
             metaDescription: "Cypress Update metaTag",

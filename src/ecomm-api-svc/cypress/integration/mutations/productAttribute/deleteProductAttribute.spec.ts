@@ -156,14 +156,12 @@ describe('Mutation: deleteProductAttribute', () => {
             const propNames = [productInfoName, "inventoryInformation"];
             const propValues = [info, inventoryInfo];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
-                const queryBody = `attributes {
-                    id
+                const queryBody = `id
                     name
                     values {
                         name
-                    }
-                }`;
-                cy.queryByProductId("productAttributesByProductId", queryBody, "attributes", productId, productAttributes).then(() => {
+                    }`;
+                cy.queryByProductId("productAttributes", queryBody, productId, productAttributes).then(() => {
                     const mutation = `mutation {
                         ${mutationName}(input: { id: "${id}" }) {
                             ${standardMutationBody}
@@ -174,7 +172,7 @@ describe('Mutation: deleteProductAttribute', () => {
                         cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
                             id = '';
                             currentItemName = '';
-                            cy.queryByProductId("productAttributesByProductId", queryBody, "attributes", productId, []);
+                            cy.queryByProductId("productAttributes", queryBody, productId, []);
                         });
                     });
                 });

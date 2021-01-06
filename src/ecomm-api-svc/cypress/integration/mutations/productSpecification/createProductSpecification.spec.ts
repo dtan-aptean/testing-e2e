@@ -82,7 +82,7 @@ describe('Mutation: createProductSpecification', () => {
     it("Mutation will fail without 'options' input", () => {
         const name = `Cypress ${mutationName} no options`;
         const mutation = `mutation {
-            ${mutationName}(input: { id: "${id}", name: "${name}" }) {
+            ${mutationName}(input: { name: "${name}" }) {
                 ${standardMutationBody}
             }
         }`;

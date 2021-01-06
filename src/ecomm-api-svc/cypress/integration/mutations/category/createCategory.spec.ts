@@ -398,14 +398,22 @@ describe('Mutation: createCategory', () => {
         const displayOrder = Cypress._.random(1, 20);
         const name = "Cypress Category Input";
         const description = "Cypress testing 'create' mutation input";
-        const info = [{name: name, description: description, languageCode: "Standard"}, {name: "Same name but in german", description: "Translate desc to German", languageCode: "de-DE"}];
-        const seoData = [{
-            searchEngineFriendlyPageName: "Cypress Input",
-            metaKeywords:  "Cypress",
-            metaDescription: "Cypress Input metaTag",
-            metaTitle: "Cypress Input test",
-            languageCode: "Standard"
-        }];
+        const info = [{name: "Same name but in german", description: "Translate desc to German", languageCode: "de-DE"}, {name: name, description: description, languageCode: "Standard"}];
+        const seoData = [
+            {
+                searchEngineFriendlyPageName: "",
+                metaKeywords:  "",
+                metaDescription: "",
+                metaTitle: "",
+                languageCode: "de-DE"
+            }, {
+                searchEngineFriendlyPageName: "Cypress Input",
+                metaKeywords:  "Cypress",
+                metaDescription: "Cypress Input metaTag",
+                metaTitle: "Cypress Input test",
+                languageCode: "Standard"
+            }
+        ];
         const published = Cypress._.random(0, 1) === 1;
         const showOnHomePage = Cypress._.random(0, 1) === 1;
         const priceRanges = "4-5";

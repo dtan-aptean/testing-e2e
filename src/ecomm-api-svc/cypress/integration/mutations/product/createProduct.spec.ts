@@ -509,14 +509,12 @@ describe('Mutation: createProduct', () => {
                     const propNames = [infoName, "inventoryInformation"];
                     const propValues = [info, inventoryInfo];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                        const queryBody = `categories {
-                            id
+                        const queryBody = `id
                             categoryInfo {
                                 name
                                 languageCode
-                            }
-                        }`;
-                        cy.queryByProductId("categoriesByProductId", queryBody, "categories", id, categories);
+                            }`;
+                        cy.queryByProductId("categories", queryBody, id, categories);
                     });
                 });
             });
@@ -568,14 +566,12 @@ describe('Mutation: createProduct', () => {
                     const propNames = [infoName, "inventoryInformation"];
                     const propValues = [info, inventoryInfo];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                        const queryBody = `manufacturers {
-                            id
+                        const queryBody = `id
                             manufacturerInfo {
                                 name
                                 languageCode
-                            }
-                        }`;
-                        cy.queryByProductId("manufacturersByProductId", queryBody, "manufacturers", id, manufacturers);
+                            }`;
+                        cy.queryByProductId("manufacturers", queryBody, id, manufacturers);
                     });
                 });
             });
@@ -627,14 +623,12 @@ describe('Mutation: createProduct', () => {
                     const propNames = [infoName, "inventoryInformation"];
                     const propValues = [info, inventoryInfo];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                        const queryBody = `attributes {
-                            id
+                        const queryBody = `id
                             name
                             values {
                                 name
-                            }
-                        }`;
-                        cy.queryByProductId("productAttributesByProductId", queryBody, "attributes", id, attributes);
+                            }`;
+                        cy.queryByProductId("productAttributes", queryBody, id, attributes);
                     });
                 });
             });
@@ -685,7 +679,7 @@ describe('Mutation: createProduct', () => {
                 const propNames = [infoName, "inventoryInformation"];
                 const propValues = [info, inventoryInfo];
                 cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                    cy.queryByProductId("productSpecificationOptionsByProductId", optionsField, "options", id, options);
+                    cy.queryByProductId("productSpecifications", optionsField, id, options);
                 });
             });
        });
@@ -693,8 +687,8 @@ describe('Mutation: createProduct', () => {
 
     it("Mutation creates item that has all included input", () => {
         const info = [
-            {name: "Cypress Product Input", shortDescription: "Cypress testing 'create' mutation input", fullDescription: "Cypress testing createProduct mutation input, to see if the input is added properly", languageCode: "Standard"},
-            {name: "Translate name to German", shortDescription: "Translate short desc to German", fullDescription: "Translate full desc to German", languageCode: "de-DE"}
+            {name: "Translate name to German", shortDescription: "Translate short desc to German", fullDescription: "Translate full desc to German", languageCode: "de-DE"},
+            {name: "Cypress Product Input", shortDescription: "Cypress testing 'create' mutation input", fullDescription: "Cypress testing createProduct mutation input, to see if the input is added properly", languageCode: "Standard"}
         ];
         const today = new Date();
         const nextWeek = new Date(today.valueOf() + 604800000);
@@ -717,7 +711,7 @@ describe('Mutation: createProduct', () => {
         const cartInfo = {
             minimumCartQuantity: Cypress._.random(1, 100),
             maximumCartQuantity: Cypress._.random(100, 500),
-            allowedQuantities: Cypress._.random(1, 500)
+            allowedQuantities: [Cypress._.random(1, 500), Cypress._.random(1, 500)]
         };
         const preOrder = Cypress._.random(0, 1) === 1
         const priceInformation = {
@@ -730,13 +724,21 @@ describe('Mutation: createProduct', () => {
             preOrderAvailabilityStartDateTimeUtc: preOrder ? today.toUTCString(): null
         }; 
         const published = Cypress._.random(0, 1) === 1;
-        const seoData = [{
-            searchEngineFriendlyPageName: "Cypress Update",
-            metaKeywords:  "Cypress",
-            metaDescription: "Cypress Update metaTag",
-            metaTitle: "Cypress Update test",
-            languageCode: "Standard"
-        }];
+        const seoData = [
+            {
+                searchEngineFriendlyPageName: "",
+                metaKeywords:  "",
+                metaDescription: "",
+                metaTitle: "",
+                languageCode: "de-DE"
+            }, {
+                searchEngineFriendlyPageName: "Cypress Update",
+                metaKeywords:  "Cypress",
+                metaDescription: "Cypress Update metaTag",
+                metaTitle: "Cypress Update test",
+                languageCode: "Standard"
+            }
+        ];
         const inventoryInfo = {
             displayStockAvailability: Cypress._.random(0, 1) === 1,
             notifyAdminForQuantityBelow: Cypress._.random(1, 5),

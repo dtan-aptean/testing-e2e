@@ -413,11 +413,17 @@ describe('Mutation: updateManufacturer', () => {
     it("Mutation will correctly use all input", () => {
         updateCount++;
         const info = [
-            {name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"},
-            {name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE"}
+            {name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE"},
+            {name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}
         ];
         const displayOrder = Cypress._.random(1, 20);
         const seoData = [{
+            searchEngineFriendlyPageName: "",
+            metaKeywords:  "",
+            metaDescription: "",
+            metaTitle: "",
+            languageCode: "de-DE"
+        }, {
             searchEngineFriendlyPageName: "Cypress Input",
             metaKeywords:  "Cypress",
             metaDescription: "Cypress Input metaTag",

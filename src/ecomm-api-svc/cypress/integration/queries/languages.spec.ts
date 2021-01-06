@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 36
+// TEST COUNT: 35
 describe('Query: languages', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "languages";
@@ -119,7 +119,6 @@ describe('Query: languages', () => {
             });
         });
     });
-
 
     it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
         const trueTotalQuery = `{

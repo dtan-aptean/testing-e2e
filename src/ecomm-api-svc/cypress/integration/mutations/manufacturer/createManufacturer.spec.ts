@@ -332,14 +332,22 @@ describe('Mutation: createManufacturer', () => {
 
     it("Mutation creates item that has all included input", () => {
         const displayOrder = Cypress._.random(1, 20);
-        const info = [{name: "Cypress Manufacturer Input", description: "Cypress testing 'create' mutation input", languageCode: "Standard"}, {name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE"}];
-        const seoData = [{
-            searchEngineFriendlyPageName: "Cypress Input",
-            metaKeywords:  "Cypress",
-            metaDescription: "Cypress Input metaTag",
-            metaTitle: "Cypress Input test",
-            languageCode: "Standard"
-        }];
+        const info = [{name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE"}, {name: "Cypress Manufacturer Input", description: "Cypress testing 'create' mutation input", languageCode: "Standard"}];
+        const seoData = [
+            {
+                searchEngineFriendlyPageName: "",
+                metaKeywords:  "",
+                metaDescription: "",
+                metaTitle: "",
+                languageCode: "de-DE"
+            }, {
+                searchEngineFriendlyPageName: "Cypress Input",
+                metaKeywords:  "Cypress",
+                metaDescription: "Cypress Input metaTag",
+                metaTitle: "Cypress Input test",
+                languageCode: "Standard"
+            }
+        ];
         const priceRanges = "4-5";
         const published = Cypress._.random(0, 1) === 1;
         const mutation = `mutation {

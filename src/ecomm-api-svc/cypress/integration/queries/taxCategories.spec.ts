@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-// TEST COUNT: 36
+// TEST COUNT: 35
 describe('Query: taxCategories', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "taxCategories";

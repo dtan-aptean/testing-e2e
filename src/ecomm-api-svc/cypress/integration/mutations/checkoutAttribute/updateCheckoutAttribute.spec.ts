@@ -129,7 +129,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 ${standardMutationBody}
             }
         }`;
-        cy.postAndConfirmError(mutation);
+        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
     });
 
     it("Mutation will fail with invalid 'Name' input", () => {

@@ -1,5 +1,8 @@
 /// <reference types="cypress" />
-// TEST COUNT: 36
+
+import { toFormattedString } from "../../support/commands";
+
+// TEST COUNT: 47
 describe('Query: categories', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "categories";
@@ -35,6 +38,12 @@ describe('Query: categories', () => {
     // Name of the info field
     const infoPath = "categoryInfo";
     var trueTotal = null;
+    // Items created for the productId test
+    const createdItems = [] as {name: string, id: string}[];
+    const createdProducts =  [] as {name: string, id: string}[];
+    const deleteName = "deleteCategory";
+    const createMutName = "createCategory";
+    const createPath = "category";
 
     before(() => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
@@ -44,6 +53,44 @@ describe('Query: categories', () => {
                 trueTotal = totalCount;
             }
         });
+    });
+
+    // Ensure deletion of the items we created for the productId test
+    after(() => {
+        if (createdProducts.length > 0) {
+            createdItems.forEach((item) => {
+                cy.wait(2000);
+                cy.queryForDeleted(false, item.name, item.id, "products", "productInfo").then((itemPresent: boolean) => {
+                    if (itemPresent) {
+                        const mutation = `mutation {
+                            deleteProduct(input: {id: "${item.id}"}){
+                                code
+                                message
+                                error
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(mutation, "deleteProduct");
+                    }
+                });
+            });
+        }
+        if (createdItems.length > 0) {
+            createdItems.forEach((item) => {
+                cy.wait(2000);
+                cy.queryForDeleted(false, item.name, item.id, queryName, infoPath).then((itemPresent: boolean) => {
+                    if (itemPresent) {
+                        var mutation = `mutation {
+                            ${deleteName}(input: {id: "${item.id}"}){
+                                code
+                                message
+                                error
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(mutation, deleteName);
+                    }
+                });
+            });
+        }
     });
 
     it("Query with valid 'orderBy' input argument returns valid data types", () => {
@@ -142,7 +189,182 @@ describe('Query: categories', () => {
             });
         });
     });
-    
+
+    it("Query with valid 'productId' input will return only the items connected with that productId", () => {
+        const itemOneName = `Cypress productId ${queryName}1 test`;
+        const itemOneInput = {categoryInfo: [{name: itemOneName, languageCode: "Standard"}]};
+        cy.createAndGetId(createMutName, createPath, toFormattedString(itemOneInput)).then((idOne) => {
+            createdItems.push({name: itemOneName, id: idOne});
+            const itemOne = {id: idOne};
+            itemOne[infoPath] = [{name: itemOneName}];
+            const itemTwoName = `Cypress productId ${queryName}2 test`;
+            const itemTwoInput = {categoryInfo: [{name: itemTwoName, languageCode: "Standard"}]};
+            cy.createAndGetId(createMutName, createPath, toFormattedString(itemTwoInput)).then((idTwo) => {
+                createdItems.push({name: itemTwoName, id: idTwo});
+                const itemTwo = {id: idTwo};
+                itemTwo[infoPath] = [{name: itemTwoName}];
+                const productName = `Cypress ${queryName} ProductID`; 
+                const productInput = {
+                    productInfo: [{
+                        name: productName,
+                        languageCode: "Standard",
+                    }],
+                    categoryIds: [idOne, idTwo]
+                };
+                cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((productId: string) => {
+                    createdProducts.push({name: productName, id: productId});
+                    const query = `{
+                        ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
+                            ${standardQueryBody}
+                        }
+                    }`;
+                    cy.postAndValidate(query, queryName).then((respo) => {
+                        const { nodes, totalCount } = respo.body.data[queryName];
+                        expect(totalCount).to.be.eql(2);
+                        expect(nodes).to.deep.include(itemOne);
+                        expect(nodes).to.deep.include(itemTwo);
+                        // Now delete the product
+                        const mutation = `mutation {
+                            deleteProduct(input: {id: "${productId}"}){
+                                code
+                                message
+                                error
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(mutation, "deleteProduct").then(() => {
+                            const deleteOne = `mutation {
+                                ${deleteName}(input: {id: "${idOne}"}){
+                                    code
+                                    message
+                                    error
+                                }
+                            }`;
+                            cy.postAndConfirmDelete(deleteOne, deleteName).then(() => {
+                                const deleteTwo = `mutation {
+                                    ${deleteName}(input: {id: "${idTwo}"}){
+                                        code
+                                        message
+                                        error
+                                    }
+                                }`;
+                                cy.postAndConfirmDelete(deleteTwo, deleteName);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    it("Query with invalid 'productId' input will return an error", () => {
+        const query = `{
+            ${queryName}(productId: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.postAndConfirmError(query).then((res) => {
+            expect(res.body.errors[0].message).to.have.string('ID cannot represent a non-string and non-integer value: true');
+            expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+        });
+    });
+
+    it("Query with 'productId' input that has no associated items will return an empty array", () => {
+        const productName = `Cypress ${queryName} productId`;
+        const productInput = {
+            productInfo: [{
+                name: productName,
+                languageCode: "Standard",
+            }],
+            inventoryInformation: {
+                minimumStockQuantity: Cypress._.random(1, 10),
+            }
+        };
+        cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((returnedId: string) => {
+            createdProducts.push({name: productName, id: returnedId});
+            const query = `{
+                ${queryName}(productId: "${returnedId}", orderBy: {direction: ASC, field: NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(query, queryName).then((res) => {
+                const { nodes, totalCount } = res.body.data[queryName];
+                expect(totalCount).to.be.eql(0);
+                expect(nodes.length).to.eql(0);
+                // Now delete the product
+                const mutation = `mutation {
+                    deleteProduct(input: {id: "${returnedId}"}){
+                        code
+                        message
+                        error
+                    }
+                }`;
+                cy.postAndConfirmDelete(mutation, "deleteProduct");
+            });
+        });
+    });
+
+    it("Query using the 'productId' of a deleted product will return an error", () => {
+        const itemOneName = `Cypress productId ${queryName}1 delete`;
+        const itemOneInput = {categoryInfo: [{name: itemOneName, languageCode: "Standard"}]};
+        cy.createAndGetId(createMutName, createPath, toFormattedString(itemOneInput)).then((idOne) => {
+            createdItems.push({name: itemOneName, id: idOne});
+            const itemOne = {id: idOne};
+            itemOne[infoPath] = [{name: itemOneName}];
+            const itemTwoName = `Cypress productId ${queryName}2 delete`;
+            const itemTwoInput = {categoryInfo: [{name: itemTwoName, languageCode: "Standard"}]};
+            cy.createAndGetId(createMutName, createPath, toFormattedString(itemTwoInput)).then((idTwo) => {
+                createdItems.push({name: itemTwoName, id: idTwo});
+                const itemTwo = {id: idTwo};
+                itemTwo[infoPath] = [{name: itemTwoName}];
+                const productName = `Cypress ${queryName} ProductID delete`; 
+                const productInput = {
+                    productInfo: [{
+                        name: productName,
+                        languageCode: "Standard",
+                    }],
+                    categoryIds: [idOne, idTwo]
+                };
+                cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((productId: string) => {
+                    createdProducts.push({name: productName, id: productId});
+                    // Now delete the product
+                    const mutation = `mutation {
+                        deleteProduct(input: {id: "${productId}"}){
+                            code
+                            message
+                            error
+                        }
+                    }`;
+                    cy.postAndConfirmDelete(mutation, "deleteProduct").then(() => {
+                        const query = `{
+                            ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
+                                ${standardQueryBody}
+                            }
+                        }`;
+                        cy.postAndConfirmError(query).then(() => {
+                            const deleteOne = `mutation {
+                                ${deleteName}(input: {id: "${idOne}"}){
+                                    code
+                                    message
+                                    error
+                                }
+                            }`;
+                            cy.postAndConfirmDelete(deleteOne, deleteName).then(() => {
+                                const deleteTwo = `mutation {
+                                    ${deleteName}(input: {id: "${idTwo}"}){
+                                        code
+                                        message
+                                        error
+                                    }
+                                }`;
+                                cy.postAndConfirmDelete(deleteTwo, deleteName);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
     const createdDateQueryBody = `edges {
         cursor
         node {

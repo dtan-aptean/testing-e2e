@@ -177,7 +177,7 @@ describe('Mutation: createProductAttribute', () => {
         const values = [
             {
                 displayOrder: Cypress._.random(1, 20),
-                isPreselected: Cypress._.random(0, 1) === 1, 
+                isPreSelected: Cypress._.random(0, 1) === 1, 
                 name: 'Cypress PA 1', 
                 priceAdjustment: {
                     amount: Cypress._.random(1, 5),
@@ -190,7 +190,7 @@ describe('Mutation: createProductAttribute', () => {
                 }
             }, {
                 displayOrder: Cypress._.random(1, 20),
-                isPreselected: Cypress._.random(0, 1) === 1, 
+                isPreSelected: Cypress._.random(0, 1) === 1, 
                 name: 'Cypress PA 2', 
                 priceAdjustment: {
                     amount: Cypress._.random(1, 5),
@@ -220,7 +220,7 @@ describe('Mutation: createProductAttribute', () => {
                     name
                     values {
                         displayOrder
-                        isPreselected
+                        isPreSelected
                         name
                         priceAdjustment {
                           amount
