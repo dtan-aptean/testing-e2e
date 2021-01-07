@@ -797,7 +797,6 @@ Cypress.Commands.add('returnRandomId', (gqlQuery: string, dataPath: string, idNa
     });
 });
 
-
 // Validates that a query with searchString returned the node with the correct name or nodes that contain the string
 Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: string) => {
     Cypress.log({
@@ -1931,5 +1930,22 @@ Cypress.Commands.add("createOrderRetrieveId", (gqlUrl: string, doNotPayOrder?: b
                 });
             });
         });
+    });
+});
+
+Cypress.Commands.add("findCategoryInMenu", (categoryName: string) => {
+    Cypress.log({
+        name: "findCategoryInMenu",
+        message: categoryName,
+        consoleProps: () => {
+            return {
+                "Name of Category": categoryName
+            };
+        },
+    });
+    cy.visit("/");
+    cy.wait(2000);
+    cy.storefrontLogin().then(() => {
+        getVisibleMenu().get('li').should('include.text', categoryName);
     });
 });
