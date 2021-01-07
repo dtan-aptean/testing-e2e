@@ -1784,6 +1784,14 @@ Cypress.Commands.add("completeCheckout", () => {
     });
     cy.get("#termsofservice").check({force: true});
     cy.get("#checkout").click({force: true});
+
+    cy.server();
+    cy.route("POST", "/checkout/OpcSaveBilling/").as('billingSaved');
+    cy.route("POST", "/checkout/OpcSaveShippingMethod/").as('shippingSaved');
+    cy.route("POST", "/checkout/OpcSavePaymentMethod/").as('paymentMethodSaved');
+    cy.route("POST", "/checkout/OpcSavePaymentInfo/").as('paymentSaved');
+    cy.route("POST", "/checkout/OpcConfirmOrder/").as('orderSubmitted');
+
     cy.get("#co-billing-form").then(($el) => {
         const select = $el.find(".select-billing-address");
         if (select.length === 0) {
@@ -1797,47 +1805,55 @@ Cypress.Commands.add("completeCheckout", () => {
             cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
             cy.get(".field-validation-error").should("have.length", 0);
         }
-      });
-    cy.get(".new-address-next-step-button").eq(0).click();
-    cy.wait(200);
-
-    // Pick shipping method
-    cy.get("#shippingoption_1").check();
-    cy.get(".shipping-method-next-step-button").click();
-    cy.wait(2000);
-
-    if (Cypress.$("#payment-method-block").length !== 0) {
-        // Payment Method
-        cy.get("#payment-method-block").find("#paymentmethod_0").check();
-        cy.get(".payment-method-next-step-button").click();
-        cy.wait(1000);
-    }
-    // Payment Information
-    if (Cypress.$("#credit-card-iframe_iframe").length !== 0) {
-        //IFrame version
-        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cc-number").type("6011111111111117");
-        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-month").type("03");
-        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-year").type("24");
-        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cvv-number").type("123");
-        cy.get("#submit-credit-card-button").click();
-        cy.wait(2000);
-    } else {
-        // Non iframe version
-        cy.get("#CreditCardType").select("Discover");
-        cy.get("#CardholderName").type("Cypress McTester")
-        cy.get("#CardNumber").type("6011111111111117");
-        cy.get("#ExpireMonth").select("03");
-        cy.get("#ExpireYear").select("2024");
-        cy.get("#CardCode").type("123");
-    }
-    cy.get(".payment-info-next-step-button").click();
-    cy.wait(2000);
-    // Confirm order
-    cy.get(".confirm-order-next-step-button")
-        .should("exist")
-        .and("be.visible");
-    cy.get(".confirm-order-next-step-button").click();
-    cy.wait(5000);
+        cy.get(".new-address-next-step-button").eq(0).click();
+        cy.wait('@billingSaved');
+        // Shipping method
+        cy.get("#co-shipping-method-form").find("input[name=shippingoption]").then(($inputs) => {
+            cy.get(`#shippingoption_${Cypress._.random(0, $inputs.length - 1)}`).check();
+            cy.get(".shipping-method-next-step-button").click();
+            cy.wait('@shippingSaved');
+            // Payment Method
+            cy.wait(2000);
+            cy.url().then((url) => {
+                if (url.includes("#opc-payment_method")) {
+                    
+                    cy.get("#payment-method-block").find("#paymentmethod_0").check();
+                    cy.get(".payment-method-next-step-button").click();
+                    cy.wait('@paymentMethodSaved');
+                }
+                // Payment Information
+                cy.get("#co-payment-info-form").then(($element) => {    
+                    cy.wait(2000); // Allow iFrame to load
+                    const iframe = $element.find("#credit-card-iframe");
+                    if (iframe.length === 0) {
+                        // Non iframe version
+                        cy.get("#CreditCardType").select("Discover");
+                        cy.get("#CardholderName").type("Cypress McTester")
+                        cy.get("#CardNumber").type("6011111111111117");
+                        cy.get("#ExpireMonth").select("03");
+                        cy.get("#ExpireYear").select("2024");
+                        cy.get("#CardCode").type("123"); 
+                    } else {
+                        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cc-number").type("6011111111111117");
+                        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-month").type("03");
+                        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-year").type("24");
+                        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cvv-number").type("123");
+                        cy.get("#submit-credit-card-button").click();
+                        cy.wait(2000); // Allow iFrame to finish sumbitting
+                    }
+                    
+                    cy.get(".payment-info-next-step-button").click();
+                    cy.wait('@paymentSaved');
+                    // Confirm order
+                    cy.get(".confirm-order-next-step-button")
+                        .should("exist")
+                        .and("be.visible");
+                    cy.get(".confirm-order-next-step-button").click();
+                    cy.wait('@orderSubmitted');
+                });
+            });
+        });
+    });
 });
 
 Cypress.Commands.add("getToOrders", () => {
@@ -1862,11 +1878,7 @@ Cypress.Commands.add("getToOrders", () => {
     cy.wait(500);
 });
 
-// Places an order and returns the order guid
-Cypress.Commands.add("createOrder", (doNotPayOrder?: boolean) => {
-    Cypress.log({
-        name: "createOrder"
-    });
+Cypress.Commands.add("placeOrder", () => {
     if (Cypress.config("baseUrl").includes("tst")) {
         cy.addCypressProductToCart();
     } else if (Cypress.config("baseUrl").includes("dev")) {
@@ -1877,8 +1889,18 @@ Cypress.Commands.add("createOrder", (doNotPayOrder?: boolean) => {
     cy.location("pathname").should("include", "checkout/completed/");
     return cy.get(".order-number").find('strong').invoke("text").then(($el) => {
         var orderNumber = $el.slice(0).replace("Order number: ", "");
-        Cypress.log({message: `Order number: ${orderNumber}`})
         cy.get(".order-completed-continue-button").click({force: true});
+        return cy.wrap(orderNumber);
+    });
+});
+
+// Places an order and returns the order amount
+Cypress.Commands.add("createOrderGetAmount", (doNotPayOrder?: boolean) => {
+    Cypress.log({
+        name: "createOrderGetAmount"
+    });
+    
+    return cy.placeOrder().then((orderNumber: string)=> {
         cy.getToOrders();
         cy.location("pathname").should("include", "/Order/List");
         cy.get("#orders-grid")
@@ -1889,30 +1911,22 @@ Cypress.Commands.add("createOrder", (doNotPayOrder?: boolean) => {
             .click({force: true});
         cy.wait(500);
         cy.location("pathname").should("include", `/Order/Edit/${orderNumber}`);
-        return cy.contains("Order GUID")
+        return cy.contains("Order total")
             .parents(".form-group")
             .find('.form-text-row')
             .invoke("text")
-            .then(($rowText) => {
-                var guidText = $rowText.slice(0);
-                Cypress.log({message: `orderId: "${guidText}"`});
-                return cy.contains("Order total")
-                    .parents(".form-group")
-                    .find('.form-text-row')
-                    .invoke("text")
-                    .then(($totalText) => {
-                        var orderTotal = Number($totalText.slice(0).replace("$", ""));
-                        orderTotal = orderTotal * 100;
-                        if (!doNotPayOrder) {
-                            cy.get("#markorderaspaid").click({force: true});
-                            cy.wait(100);
-                            cy.get("#markorderaspaid-action-confirmation-submit-button").click({force: true});
-                            cy.wait(500);
-                        }
-                        return cy.wrap({orderId: guidText, orderAmount: orderTotal});
-                    });
+            .then(($totalText) => {
+                var orderTotal = Number($totalText.slice(0).replace("$", ""));
+                orderTotal = orderTotal * 100;
+                if (!doNotPayOrder) {
+                    cy.get("#markorderaspaid").click({force: true});
+                    cy.wait(100);
+                    cy.get("#markorderaspaid-action-confirmation-submit-button").click({force: true});
+                    cy.wait(500);
+                }
+                return cy.wrap({orderAmount: orderTotal});
             });
-    });
+    }); 
 });
 
 Cypress.Commands.add("createOrderRetrieveId", (gqlUrl: string, doNotPayOrder?: boolean) => {
@@ -1932,7 +1946,7 @@ Cypress.Commands.add("createOrderRetrieveId", (gqlUrl: string, doNotPayOrder?: b
         }`;
         return cy.postGQL(orderQuery, gqlUrl).then((res) => {
             const orgOrders =  res.body.data.orders.nodes;
-            return cy.createOrder(doNotPayOrder).then((orderInfo) => {
+            return cy.createOrderGetAmount(doNotPayOrder).then((orderInfo) => {
                 const {orderAmount} = orderInfo;
                 cy.wait(1000);
                 return cy.postGQL(orderQuery, gqlUrl).then((resp) => {
@@ -1956,7 +1970,7 @@ Cypress.Commands.add("createOrderRetrieveId", (gqlUrl: string, doNotPayOrder?: b
     });
 });
 
-Cypress.Commands.add("altCreateOrderRetrieveId", (gqlUrl: string, doNotPayOrder?: boolean) => {
+Cypress.Commands.add("createShippingOrderId", (gqlUrl: string) => {
     const today = new Date();
     const todayInput = today.toISOString();
     const query = `{
@@ -1968,8 +1982,7 @@ Cypress.Commands.add("altCreateOrderRetrieveId", (gqlUrl: string, doNotPayOrder?
     }`;
     return cy.postGQL(query, gqlUrl).then((res) => {
         const orgOrders =  res.body.data.orders.nodes;
-        return cy.createOrder(doNotPayOrder).then((orderInfo) => {
-            const {orderAmount} = orderInfo;
+        return cy.placeOrder().then((orderNumber: string) => {
             cy.wait(1000);
             return cy.postGQL(query, gqlUrl).then((resp) => {
                 const newOrders = resp.body.data.orders.nodes;
@@ -1985,7 +1998,7 @@ Cypress.Commands.add("altCreateOrderRetrieveId", (gqlUrl: string, doNotPayOrder?
                     return notPresent;
                 });
                 const trueId = relevantOrder[0].id;
-                return cy.wrap({orderId: trueId, orderAmount: orderAmount});
+                return cy.wrap(trueId);
             });
         });
     });
