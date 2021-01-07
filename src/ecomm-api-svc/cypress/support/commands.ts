@@ -1812,23 +1812,24 @@ Cypress.Commands.add("completeCheckout", () => {
         cy.get(".payment-method-next-step-button").click();
         cy.wait(1000);
     }
-    cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cc-number").type("6011111111111117");
-    cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-month").type("03");
-    cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-year").type("24");
-    cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cvv-number").type("123");
-    cy.get("#submit-credit-card-button").click();
-    cy.wait(2000);
     // Payment Information
-    /* cy.get("#CreditCardType").select("Discover");
-    cy.get("#CardholderName").type("Cypress McTester")
-    cy.get("#CardNumber")
-        .type("6011111111111117");
-    cy.get("#ExpireMonth")
-        .select("03");
-    cy.get("#ExpireYear")
-        .select("2024");
-    cy.get("#CardCode")
-        .type("123"); */
+    if (Cypress.$("#credit-card-iframe_iframe").length !== 0) {
+        //IFrame version
+        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cc-number").type("6011111111111117");
+        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-month").type("03");
+        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-year").type("24");
+        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cvv-number").type("123");
+        cy.get("#submit-credit-card-button").click();
+        cy.wait(2000);
+    } else {
+        // Non iframe version
+        cy.get("#CreditCardType").select("Discover");
+        cy.get("#CardholderName").type("Cypress McTester")
+        cy.get("#CardNumber").type("6011111111111117");
+        cy.get("#ExpireMonth").select("03");
+        cy.get("#ExpireYear").select("2024");
+        cy.get("#CardCode").type("123");
+    }
     cy.get(".payment-info-next-step-button").click();
     cy.wait(2000);
     // Confirm order
