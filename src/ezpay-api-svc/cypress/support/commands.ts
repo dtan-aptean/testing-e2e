@@ -75,14 +75,17 @@ Cypress.Commands.add("getInvoiceRef", () => {
 });
 
 // -- This will generate a payment request url --
-Cypress.Commands.add("generatePaymentRequest", () => {
+Cypress.Commands.add("generatePaymentRequest", (requestAmount: Number = 0) => {
   cy.getInvoiceRef()
     .then((uploadResponse) => {
       return uploadResponse.data.upload.uniqueId;
     })
     .then((uniqueId) => {
       cy.wait(5000).then(() => {
-        const amount = Cypress._.random(100, 1e3);
+        let amount = requestAmount;
+        if (amount === 0) {
+          amount = Cypress._.random(100, 1e3);
+        }
         const referenceNumber = Cypress._.random(0, 1e20);
         const gqlQuery = `mutation {
         upsertPaymentRequest(
@@ -351,8 +354,8 @@ Cypress.Commands.add("deletePerson", (personId) => {
 
 Cypress.Commands.add(
   "generatePaymentRequestAndPay",
-  (immediateCapture: Boolean = true) => {
-    cy.generatePaymentRequest().then((paymentRequest) => {
+  (requestAmount: Number = 0, immediateCapture: Boolean = true) => {
+    cy.generatePaymentRequest(requestAmount).then((paymentRequest) => {
       cy.generateWepayTokenCreditCard()
         .then((payfacToken) => {
           cy.wait(1000).then(() => {

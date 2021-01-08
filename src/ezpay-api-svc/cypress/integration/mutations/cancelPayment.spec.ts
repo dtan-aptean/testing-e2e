@@ -2,7 +2,7 @@
 
 describe("Mutation: cancelPayment", () => {
   it("should pass if the mutation cancels a payment with all arguments", () => {
-    cy.generatePaymentRequestAndPay(false).then((res) => {
+    cy.generatePaymentRequestAndPay(0, false).then((res) => {
       const paymentId = res.id;
       cy.wait(120000); // Wait for the payment to be completed...
 
@@ -47,7 +47,7 @@ describe("Mutation: cancelPayment", () => {
   });
 
   it("should fail if the mutation cancels a not pending payment with all arguments", () => {
-    cy.generatePaymentRequestAndPay(false).then((res) => {
+    cy.generatePaymentRequestAndPay(0, false).then((res) => {
       const paymentId = res.id;
       const gqlQuery = `mutation {
         cancelPayment(
@@ -80,7 +80,7 @@ describe("Mutation: cancelPayment", () => {
   });
 
   it("should fail if no return type is provided", () => {
-    cy.generatePaymentRequestAndPay(false).then((res) => {
+    cy.generatePaymentRequestAndPay(0, false).then((res) => {
       const paymentId = res.id;
       const gqlQuery = `mutation {
             cancelPayment(
