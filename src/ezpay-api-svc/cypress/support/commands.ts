@@ -436,3 +436,18 @@ Cypress.Commands.add(
     });
   }
 );
+
+Cypress.Commands.add("getWePayAccount", (accountId) => {
+  const settings = {
+    url: `https://stage-api.wepay.com/accounts/${accountId}`,
+    method: "GET",
+    timeout: 0,
+    headers: {
+      "Content-Type": "application/json",
+      "app-id": `${Cypress.env("wepay-app-id")}`,
+      "app-token": `${Cypress.env("wepay-app-secret")}`,
+      "api-version": `${Cypress.env("wepay-api-version")}`,
+    },
+  };
+  return Cypress.$.ajax(settings);
+});
