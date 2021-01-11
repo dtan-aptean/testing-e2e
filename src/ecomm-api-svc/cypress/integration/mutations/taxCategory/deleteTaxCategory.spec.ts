@@ -155,7 +155,7 @@ describe('Mutation: deleteTaxCategory', () => {
             const propValues = [name, taxCategory, values];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${extraQueryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                    ${extraQueryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         nodes {
                             id
                             name
@@ -196,13 +196,11 @@ describe('Mutation: deleteTaxCategory', () => {
         const productInfoName = "productInfo";
         const taxCategory = {id: id, name: currentItemName};
         const priceInformation = {taxCategory: taxCategory};
-        const info = [{name: `Cypress ${mutationName} product test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
-        const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
+        const info = [{name: `Cypress ${mutationName} product test`, languageCode: "Standard"}];
         const mutation = `mutation {
             ${extraMutationName}(
                 input: { 
                     ${productInfoName}: ${toFormattedString(info)}
-                    inventoryInformation: ${toFormattedString(inventoryInfo)}
                     taxCategoryId: "${id}"
                 }
             ) {
@@ -211,9 +209,6 @@ describe('Mutation: deleteTaxCategory', () => {
                 error
                 ${extraDataPath} {
                     id
-                    inventoryInformation {
-                        minimumStockQuantity
-                    }
                     priceInformation {
                         taxCategory {
                             id
@@ -222,8 +217,6 @@ describe('Mutation: deleteTaxCategory', () => {
                     }
                     ${productInfoName} {
                         name
-                        shortDescription
-                        fullDescription
                         languageCode
                     }
                 }
@@ -232,16 +225,13 @@ describe('Mutation: deleteTaxCategory', () => {
         cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
             const productId = res.body.data[extraMutationName][extraDataPath].id;
             extraIds.push({itemId: productId, deleteName: "deleteProduct"});
-            const propNames = ["priceInformation", productInfoName, "inventoryInformation"];
-            const propValues = [priceInformation, info, inventoryInfo];
+            const propNames = ["priceInformation", productInfoName];
+            const propValues = [priceInformation, info];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                    ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         nodes {
                             id
-                            inventoryInformation {
-                                minimumStockQuantity
-                            }
                             priceInformation {
                                 taxCategory {
                                     id
@@ -250,8 +240,6 @@ describe('Mutation: deleteTaxCategory', () => {
                             }
                             ${productInfoName} {
                                 name
-                                shortDescription
-                                fullDescription
                                 languageCode
                             }
                         }
@@ -269,7 +257,7 @@ describe('Mutation: deleteTaxCategory', () => {
                             id = '';
                             currentItemName = '';
                             const newPriceInformation = {taxCategory: null};
-                            const newPropValues = [newPriceInformation, info, inventoryInfo];
+                            const newPropValues = [newPriceInformation, info];
                             cy.confirmUsingQuery(query, extraQueryName, productId, propNames, newPropValues);
                         });
                     });

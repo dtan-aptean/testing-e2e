@@ -20,7 +20,7 @@ describe('Mutation: deleteProduct', () => {
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
-        const input = `${infoName}: [{name: "${name}", shortDescription: "Cypress testing ${mutationName}", languageCode: "Standard"}], inventoryInformation: {minimumStockQuantity: 5}`;
+        const input = `${infoName}: [{name: "${name}", languageCode: "Standard"}]`;
         cy.searchOrCreate(name, queryName, creationName, input, infoName).then((returnedId: string) => {
             id = returnedId;
             currentItemName = name;
@@ -127,12 +127,8 @@ describe('Mutation: deleteProduct', () => {
             id: id, 
             productInfo: [{
                 name: currentItemName, 
-                shortDescription: `Cypress testing ${mutationName}`, 
                 languageCode: "Standard"
-            }],
-            inventoryInformation: {
-                minimumStockQuantity: 5
-            }
+            }]
         }];
         const name = `Cypress ${mutationName} discount test`;
         const discountAmount = {
@@ -162,11 +158,7 @@ describe('Mutation: deleteProduct', () => {
                         id
                         productInfo {
                             name
-                            shortDescription
                             languageCode
-                        }
-                        inventoryInformation {
-                            minimumStockQuantity
                         }
                     }
                     discountType
@@ -192,11 +184,7 @@ describe('Mutation: deleteProduct', () => {
                                 id
                                 productInfo {
                                     name
-                                    shortDescription
                                     languageCode
-                                }
-                                inventoryInformation {
-                                    minimumStockQuantity
                                 }
                             }
                             discountType
