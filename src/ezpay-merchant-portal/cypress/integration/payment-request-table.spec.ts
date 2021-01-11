@@ -36,6 +36,7 @@ describe("Payment Request Table", function () {
           cy.getInput("invoice").attachFile(invoicePath);
           cy.get("[data-cy=send-payment]").click();
           cy.wait(500);
+          cy.get("[data-cy=payment-requests-tab]").click();
           cy.get("[data-cy=refresh]").click();
           cy.wait(500);
           cy.get("[data-cy=payment-request-table-body]")
@@ -47,13 +48,10 @@ describe("Payment Request Table", function () {
     });
 
     it("should pass if the details button shows when a row is selected", () => {
-      cy.get("[data-cy=view-details]")
-        .should("not.be.visible");
+      cy.get("[data-cy=view-details]").should("not.exist");
       cy.wait(4000);
       cy.get("@rows").eq(0).as("firstRow").click();
-      cy.get("[data-cy=view-details]")
-        .scrollIntoView()
-        .should("be.visible");
+      cy.get("[data-cy=view-details]").scrollIntoView().should("be.visible");
     });
 
     it("should be able to open and close the info modal", () => {
@@ -124,7 +122,9 @@ describe("Payment Request Table", function () {
         let status = undefined;
         cy.get("@statusCell").then(($cell) => {
           status = $cell.text();
-          cy.get("[data-cy=view-details]").scrollIntoView().should("be.visible");
+          cy.get("[data-cy=view-details]")
+            .scrollIntoView()
+            .should("be.visible");
           cy.get("[data-cy=view-details]").click({ force: true });
           cy.get("[data-cy=pr-details-refund]").should("exist");
           if (
@@ -141,65 +141,195 @@ describe("Payment Request Table", function () {
       });
     });
 
-    it.skip("should pass if the refund button shows when a completed, partially refunded, or failed refunded row is selected, and not show otherwise", () => {
-      //issue with querying the "next" row after we lazyload more rows (when the scroll position nears the bottom).
-      //at the moment, when the scroll-bar position nears the bottom, the DOM refreshes and scroll-bar positiion is reset to the top of the page.
-      //not sure if this is a bug within the application or expected behavior, but it is causing this test to fail. -a.c. 10/30/2020
+    it("should pass if the refund button shows when a completed, partially refunded, or failed refunded row is selected, and not show otherwise", () => {
       cy.wait(4000);
-      cy.get("@rows").each(($el, index, $list) => {
-        cy.wrap($el).find("td").eq(1).as("statusCell");
-        cy.get("@statusCell").click();
-        let status = undefined;
-        cy.get("@statusCell").then(($cell) => {
-          status = $cell.text();
+      const amount = 10;
+      const invoicePath = "sample.pdf";
+      const referenceNumber = Cypress._.random(0, 1e9);
+      const email = "user1@aptean.cypress.com";
+      cy.getInput("recipient-email").type(email);
+      cy.getInput("amount").type(amount);
+      cy.getInput("reference-number").type(referenceNumber);
+      cy.getInput("invoice").attachFile(invoicePath);
+      cy.get("[data-cy=send-payment]").should("not.be.disabled").click();
+      cy.wait(2000);
+      cy.get("[data-cy=payment-requests-tab]").click();
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(2000);
+      cy.get("[data-cy=payment-request-table-body]")
+        .find("tr")
+        .eq(0)
+        .find("td")
+        .as("newCells");
 
-          if (
-            status === "Completed" ||
-            status === "Partially Refunded" ||
-            status === "Refund Failed"
-          ) {
-            cy.get("[data-cy=refund]").should("exist");
-            cy.get("[data-cy=refund]")
-              .scrollIntoView()
-              .should("be.visible");
-          } else {
-            cy.get("[data-cy=refund]").should("not.be.visible");
-          }
-        });
-      });
+      //Checking in case of Unpaid
+      cy.get("@newCells")
+        .eq(1)
+        .should(($cell) => {
+          expect($cell.eq(0)).to.contain("Unpaid");
+        })
+        .click();
+      cy.get("[data-cy=refund]").should("not.exist");
+
+      //Checking in case of Completed
+      cy.makePayment(1);
+      cy.visit("/");
+      cy.wait(20000);
+      cy.get("[data-cy=payment-requests-tab]").click();
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(4000);
+      cy.get("@newCells")
+        .eq(1)
+        .should(($cell) => {
+          expect($cell.eq(0)).to.contain("Completed");
+        })
+        .click();
+      cy.get("[data-cy=refund]").should("exist");
+      cy.get("[data-cy=refund]").scrollIntoView().should("be.visible");
+
+      //checking in case of patially refunded
+      cy.get("[data-cy=refund").click({ force: true });
+      cy.get("[data-cy=partial-refund]").find("input").check();
+      cy.get("[data-cy=refund-amount]").find("input").clear();
+      cy.get("[data-cy=refund-amount]").find("input").type("5");
+      cy.get("[data-cy=refund-reason]").find("input").type("test");
+      cy.get("[data-cy=process-refund]").click();
+      cy.wait(15000);
+      cy.get("[data-cy=payment-requests-tab]").click();
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(4000);
+      cy.get("@newCells")
+        .eq(1)
+        .should(($cell) => {
+          expect($cell.eq(0)).to.contain("Partially Refunded");
+        })
+        .click();
+      cy.get("[data-cy=refund]").should("exist");
+      cy.get("[data-cy=refund]").scrollIntoView().should("be.visible");
+
+      //checking in case of refund failed
+      // Is using intercept to stimulate the response for payment request with refund failed response
+      const response = {
+        data: {
+          paymentRequests: {
+            totalCount: 1,
+            pageInfo: {
+              endCursor: "cursor-0",
+              hasNextPage: false,
+              hasPreviousPage: false,
+              startCursor: "cursor-0",
+              __typename: "PageInfo",
+            },
+            nodes: [
+              {
+                amount: 1000,
+                communications: [
+                  {
+                    communicationType: "EMAIL",
+                    email: "user1@aptean.cypress.com",
+                    phoneNumber: null,
+                    requestTimestamp: "2021-01-06T13:48:43.121Z",
+                    sentTimestamp: "2021-01-06T13:48:44.958Z",
+                    __typename: "PaymentRequestCommunication",
+                  },
+                ],
+                createdAt: "2021-01-06T13:48:43.121Z",
+                createdBy: "user1@aptean.cypress.com",
+                id: "payment-request-id",
+                invoiceLink: "https://tst.merchant.apteanpay.com",
+                invoiceId: "invoice-id",
+                referenceNumber: "invoice",
+                status: "REFUND_FAILED",
+                statusReason: null,
+                payments: [],
+                owner: {
+                  paymentId: null,
+                  tenantId: "tenant-id",
+                  disputeId: null,
+                  __typename: "Owner",
+                },
+                __typename: "PaymentRequest",
+              },
+            ],
+            edges: [
+              {
+                cursor: "cursor-0",
+                node: {
+                  id: "sample-payment-id",
+                  __typename: "Payment",
+                },
+                __typename: "PaymentEdge",
+              },
+            ],
+          },
+        },
+      };
+
+      cy.intercept(
+        { method: "POST", url: "https://tst.api.apteanpay.com/" },
+        response
+      ).as("refundFailed");
+
+      cy.get("[data-cy=payment-requests-tab]").click();
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(2000);
+      cy.get("@newCells")
+        .eq(1)
+        .should(($cell) => {
+          expect($cell.eq(0)).to.contain("Refund Failed");
+        })
+        .click();
+      cy.get("[data-cy=refund]").should("exist");
+      cy.get("[data-cy=refund]").scrollIntoView().should("be.visible");
     });
 
-    it.skip("should pass if the refund button opens the refund modal", () => {
-      //issue with querying the "next" row after we lazyload more rows (when the scroll position nears the bottom).
-      //at the moment, when the scroll-bar position nears the bottom, the DOM refreshes and scroll-bar positiion is reset to the top of the page.
-      //not sure if this is a bug within the application or expected behavior, but it is causing this test to fail. -a.c. 10/30/2020
+    it("should pass if the refund button opens the refund modal", () => {
       cy.wait(4000);
-      cy.get("@rows").each(($el, index, $list) => {
-        cy.wrap($el).find("td").eq(1).as("statusCell");
-        cy.get("@statusCell").click();
-        let status = undefined;
-        cy.get("@statusCell").then(($cell) => {
-          status = $cell.text();
-          if (
-            status === "Completed" ||
-            status === "Partially Refunded" ||
-            status === "Refund Failed"
-          ) {
-            cy.get("[data-cy=refund]").should("exist");
-            cy.get("[data-cy=refund]")
-              .scrollIntoView()
-              .should("be.visible");
-            cy.get("[data-cy=refund").click({ force: true });
-            cy.get("[data-cy=cancel-refund]").should("exist").and("be.visible");
-            cy.get("[data-cy=cancel-refund]").click();
-            cy.get("[data-cy=cancel-refund]")
-              .should("not.exist")
-              .and("not.be.visible");
-          } else {
-            cy.get("[data-cy=refund]").should("not.be.visible");
-          }
-        });
-      });
+      // creating the completed payment request record to check the refund modal
+      cy.createAndPay(1, "1.00", "refund");
+      cy.wait(20000);
+      cy.get("[data-cy=payment-requests-tab]").click();
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(2000);
+      cy.get("[data-cy=payment-request-table-body]")
+        .find("tr")
+        .eq(0)
+        .find("td")
+        .as("newCells");
+
+      //Checking via refund button
+      cy.get("@newCells")
+        .eq(1)
+        .should(($cell) => {
+          expect($cell.eq(0)).to.contain("Completed");
+        })
+        .click();
+      cy.get("[data-cy=refund]").should("exist");
+      cy.get("[data-cy=refund]").scrollIntoView().should("be.visible");
+      cy.get("[data-cy=refund").click({ force: true });
+      cy.get("[data-cy=cancel-refund]").should("exist").and("be.visible");
+      cy.get("[data-cy=cancel-refund]").click();
+      cy.get("[data-cy=cancel-refund]")
+        .should("not.exist");
+
+      //checking via info modal
+      cy.wait(2000);
+      cy.get("@newCells")
+        .eq(1)
+        .should(($cell) => {
+          expect($cell.eq(0)).to.contain("Completed");
+        })
+        .click();
+      cy.get("[data-cy=view-details]").scrollIntoView().should("be.visible");
+      cy.get("[data-cy=view-details]").click({ force: true });
+      cy.get("[data-cy=pr-details-refund]")
+        .should("exist")
+        .should("not.be.disabled")
+        .click();
+      cy.get("[data-cy=cancel-refund]").should("exist").and("be.visible");
+      cy.get("[data-cy=cancel-refund]").click();
+      cy.get("[data-cy=cancel-refund]")
+        .should("not.exist");
     });
 
     it("should pass if a new request shows in the table", () => {
@@ -213,6 +343,7 @@ describe("Payment Request Table", function () {
       cy.getInput("invoice").attachFile(invoicePath);
       cy.get("[data-cy=send-payment]").should("not.be.disabled").click();
       cy.wait(2000);
+      cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(2000);
       cy.get("[data-cy=payment-request-table-body]")
