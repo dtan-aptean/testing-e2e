@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../../support/commands";
+import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 12
 
@@ -33,19 +33,12 @@ describe('Mutation: createRefund', () => {
             ${responseBody}
         }
     `;
-    var originalBaseUrl = "";   // The original baseUrl config. We will need it for making api calls
+    var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
     
     before(() => {
-        // We need to place an order in the storefront to get an orderId
-        // In order to do so, we need to change the baseUrl to the storefront url
-        // This only lasts for the single file
-        var config = `${Cypress.config("baseUrl")}`;
-        originalBaseUrl = config.slice(0);  // Save the original baseUrl so we can use it for api calls
-        var storefrontUrl = "https://tst.apteanecommerce.com/";
-        if (originalBaseUrl.includes('dev')) {
-            storefrontUrl = "https://dev.apteanecommerce.com/";
-        }
-        Cypress.config("baseUrl", storefrontUrl);
+        confirmStorefrontEnvValues();
+        Cypress.config("baseUrl", Cypress.env("storefrontUrl"));
+        cy.wait(1000);
         cy.visit("/");  // Go to the storefront and login
         cy.storefrontLogin();
         cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {

@@ -40,6 +40,74 @@ export const toFormattedString = (item): string => {
     return itemAsString;
 };
 
+export const verifyStorefrontEnv = (env: string): boolean => {
+    if (env.length === 0 || Cypress.env(env).length === 0) {
+        return false;
+    } else if (Cypress.env(env).startsWith("#") && Cypress.env(env).endsWith("#")) {
+        return false;
+    } else {
+        // Check if base url and storefront url are mismatched
+        if (env === "storefrontUrl") {
+            if (Cypress.config("baseUrl").includes('dev') && Cypress.env(env).includes('tst')) {
+                return false;
+            } else if (Cypress.config("baseUrl").includes('tst') && Cypress.env(env).includes('dev')) {
+                return false;
+            }
+        }
+        return true;
+    }
+};
+
+// Re assigns the given storefront env 
+export const setAltStorefrontEnv = (envName: string) => {
+    if (envName === "storefrontUrl") {
+        if (Cypress.config("baseUrl").includes('dev')) {
+            Cypress.log({message: "Setting Storefront Url to dev url"});
+            Cypress.env(envName, "https://dev.apteanecommerce.com/");
+        } else if (Cypress.config("baseUrl").includes('tst')) {
+            Cypress.log({message: "Setting Storefront Url to tst url"});
+            Cypress.env(envName, "https://tst.apteanecommerce.com/");
+        } else {
+            Cypress.log({message: "Storefront Url can't be fixed: forcing failure"});
+            expect(Cypress.env(envName)).to.not.eql(Cypress.env(envName), `Please fill in env value ${envName} with valid value`);
+        }
+    } else if (envName === "storefrontLogin") {
+        if (Cypress.config("baseUrl").includes('dev')) {
+            Cypress.log({message: "Setting Storefront username to dev user"});
+            Cypress.env(envName, "bhargava.deshpande@aptean.com");
+        } else if (Cypress.config("baseUrl").includes('tst')) {
+            Cypress.log({message: "Setting Storefront username to tst user"});
+            Cypress.env(envName, "cypress.tester@testenvironment.com");
+        } else {
+            Cypress.log({message: "Storefront username can't be fixed: forcing failure"});
+            expect(Cypress.env(envName)).to.not.eql(Cypress.env(envName), `Please fill in env value ${envName} with valid value`);
+        }
+    } else if (envName === "storefrontPassword") {
+        if (Cypress.config("baseUrl").includes('dev')) {
+            Cypress.log({message: "Setting Storefront password to dev pass"});
+            Cypress.env(envName, "admin");
+        } else if (Cypress.config("baseUrl").includes('tst')) {
+            Cypress.log({message: "Setting Storefront password to tst pass"});
+            Cypress.env(envName, "CypressTester1");
+        } else {
+            Cypress.log({message: "Storefront password can't be fixed: forcing failure"});
+            expect(Cypress.env(envName)).to.not.eql(Cypress.env(envName), `Please fill in env value ${envName} with valid value`);
+        }
+    } else {
+        Cypress.log({message: "Invalid env name given: forcing failure"});
+        expect(["storefrontUrl", "storefrontLogin", "storefrontPassword"]).to.include(envName, "Please use one of the valid storefront env names");
+    }
+};
+// Runs through storefront env values and calls above functions to either set them (if possible) or fail the test
+export const confirmStorefrontEnvValues = () => {
+    const storefrontNames = ["storefrontUrl", "storefrontLogin", "storefrontPassword"];
+    storefrontNames.forEach((sfName) => {
+        if (!verifyStorefrontEnv(sfName)){
+            setAltStorefrontEnv(sfName);
+        }
+    });
+};
+
 // -- This will post GQL query --
 Cypress.Commands.add('postGQL', (query, altUrl?: string) => {
     Cypress.log({
@@ -1715,16 +1783,10 @@ Cypress.Commands.add("storefrontLogin", () => {
     });
     cy.get(".header-links").then(($el) => {
         if (!$el[0].innerText.includes('LOG OUT')) {
-            var email = "cypress.tester@testenvironment.com"
-            var password = "CypressTester1";
-            if (Cypress.config("baseUrl").includes("dev")) {
-                email = "bhargava.deshpande@aptean.com";
-                password = "admin";
-            }
             cy.wrap($el).find(".ico-login").click();
             cy.wait(200);
-            cy.get(".email").type(email);
-            cy.get(".password").type(password);
+            cy.get(".email").type(Cypress.env("storefrontLogin"));
+            cy.get(".password").type(Cypress.env("storefrontPassword"));
             cy.get(".login-button").click({force: true});
             cy.wait(200);
         }
