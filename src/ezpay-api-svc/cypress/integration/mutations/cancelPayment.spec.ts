@@ -47,21 +47,21 @@ describe("Mutation: cancelPayment", () => {
   });
 
   it("should fail if the mutation cancels a not pending payment with all arguments", () => {
-    cy.generatePaymentRequestAndPay(0, false).then((res) => {
+    cy.generatePaymentRequestAndPay(0, true).then((res) => {
       const paymentId = res.id;
       const gqlQuery = `mutation {
-        cancelPayment(
-          input: {
-            paymentId: "${paymentId}"
-            reason: "Wrong"
+          cancelPayment(
+            input: {
+              paymentId: "${paymentId}"
+              reason: "Wrong"
+            }
+          ) {
+            code
+            message
+            error
           }
-        ) {
-          code
-          message
-          error
         }
-      }
-      `;
+        `;
 
       cy.postGQL(gqlQuery).then((res) => {
         // should be 200 ok

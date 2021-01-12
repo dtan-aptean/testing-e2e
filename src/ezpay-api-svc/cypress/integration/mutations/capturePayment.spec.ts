@@ -5,7 +5,6 @@ describe("Mutation: capturePayment", () => {
     cy.generatePaymentRequestAndPay(0, false).then((res) => {
       const paymentId = res.id;
       const amount = res.amount;
-      cy.wait(120000); // Wait for the payment to be completed...
 
       const gqlQuery = `mutation {
         capturePayment(input: {
