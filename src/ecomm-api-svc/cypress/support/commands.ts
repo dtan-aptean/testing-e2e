@@ -1777,7 +1777,7 @@ Cypress.Commands.add("getIframeBody", (iFrameName) => {
     );
 });
   
-Cypress.Commands.add("completeCheckout", () => {
+Cypress.Commands.add("completeCheckout", (checkoutOptions?) => {
     Cypress.log({
         displayName: " ",
         message: "completeCheckout"
@@ -1809,7 +1809,8 @@ Cypress.Commands.add("completeCheckout", () => {
         cy.wait('@billingSaved');
         // Shipping method
         cy.get("#co-shipping-method-form").find("input[name=shippingoption]").then(($inputs) => {
-            cy.get(`#shippingoption_${Cypress._.random(0, $inputs.length - 1)}`).check();
+            var shippingOption = checkoutOptions && checkoutOptions.shippingMethod ? checkoutOptions.shippingMethod : Cypress._.random(0, $inputs.length - 1);
+            cy.get(`#shippingoption_${shippingOption}`).check();
             cy.get(".shipping-method-next-step-button").click();
             cy.wait('@shippingSaved');
             // Payment Method
@@ -1878,14 +1879,14 @@ Cypress.Commands.add("getToOrders", () => {
     cy.wait(500);
 });
 
-Cypress.Commands.add("placeOrder", () => {
+Cypress.Commands.add("placeOrder", (checkoutOptions?) => {
     if (Cypress.config("baseUrl").includes("tst")) {
         cy.addCypressProductToCart();
     } else if (Cypress.config("baseUrl").includes("dev")) {
         cy.addDevProductToCart();
     }
     cy.location("pathname").should("include", "cart");
-    cy.completeCheckout();
+    cy.completeCheckout(checkoutOptions);
     cy.location("pathname").should("include", "checkout/completed/");
     return cy.get(".order-number").find('strong').invoke("text").then(($el) => {
         var orderNumber = $el.slice(0).replace("Order number: ", "");
@@ -1970,7 +1971,7 @@ Cypress.Commands.add("createOrderRetrieveId", (gqlUrl: string, doNotPayOrder?: b
     });
 });
 
-Cypress.Commands.add("createShippingOrderId", (gqlUrl: string) => {
+Cypress.Commands.add("createShippingOrderId", (gqlUrl: string, checkoutOptions?) => {
     const today = new Date();
     const todayInput = today.toISOString();
     const query = `{
@@ -1982,7 +1983,7 @@ Cypress.Commands.add("createShippingOrderId", (gqlUrl: string) => {
     }`;
     return cy.postGQL(query, gqlUrl).then((res) => {
         const orgOrders =  res.body.data.orders.nodes;
-        return cy.placeOrder().then((orderNumber: string) => {
+        return cy.placeOrder(checkoutOptions).then((orderNumber: string) => {
             cy.wait(1000);
             return cy.postGQL(query, gqlUrl).then((resp) => {
                 const newOrders = resp.body.data.orders.nodes;
