@@ -6,7 +6,7 @@ import { toFormattedString } from "../../../support/commands";
 describe('Mutation: deleteTaxCategory', () => {
     let id = '';
     let currentItemName = '';
-    const extraIds = [];    // Should push objects formatted as {itemId: "example", deleteName: "example"}
+    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];    // Should push objects formatted as {itemId: "example", deleteName: "example"}
     const mutationName = 'deleteTaxCategory';
     const creationName = 'createTaxCategory';
     const queryName = "taxCategories";
@@ -30,14 +30,19 @@ describe('Mutation: deleteTaxCategory', () => {
         if (extraIds.length > 0) {
             for (var i = 0; i < extraIds.length; i++) {
                 cy.wait(2000);
-                var extraRemoval = `mutation {
-                    ${extraIds[i].deleteName}(input: { id: "${extraIds[i].itemId}" }) {
-                        code
-                        message
-                        error
+                const infoName = extraIds[i].queryName === "products" ? "productInfo" : null;
+                cy.queryForDeleted(false, extraIds[i].itemName, extraIds[i].itemId, extraIds[i].queryName, infoName).then((itemPresent: boolean) => {
+                    if (itemPresent) {
+                        var extraRemoval = `mutation {
+                            ${extraIds[i].deleteName}(input: { id: "${extraIds[i].itemId}" }) {
+                                code
+                                message
+                                error
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(extraRemoval, extraIds[i].deleteName);
                     }
-                }`;
-                cy.postAndConfirmDelete(extraRemoval, extraIds[i].deleteName);
+                });
             }
             extraIds = [];
         }
@@ -117,7 +122,8 @@ describe('Mutation: deleteTaxCategory', () => {
         });
     });
 
-    it("Deleting an item connected to a checkoutAttribute will disassociate the item from the checkoutAttribute", () => {
+    it("A taxCategory connected to a checkoutAttribute cannot be deleted until the connected checkoutAttribute is deleted", () => {
+        const extraDeleteName = "deleteCheckoutAttribute";
         const extraMutationName = "createCheckoutAttribute";
         const extraDataPath = "checkoutAttribute";
         const extraQueryName = "checkoutAttributes";
@@ -150,12 +156,12 @@ describe('Mutation: deleteTaxCategory', () => {
         }`;
         cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
             const attributeId = res.body.data[extraMutationName][extraDataPath].id;
-            extraIds.push({itemId: attributeId, deleteName: "deleteCheckoutAttribute"});
+            extraIds.push({itemId: attributeId, deleteName: extraDeleteName, itemName: name, queryName: extraQueryName});
             const propNames = ["name", "taxCategory", "values"];
             const propValues = [name, taxCategory, values];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${extraQueryName}(searchString: "${name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${extraQueryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             name
@@ -175,13 +181,23 @@ describe('Mutation: deleteTaxCategory', () => {
                             ${standardMutationBody}
                         }
                     }`;
-                    cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                        expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                        cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                            id = '';
-                            currentItemName = '';
-                            const newPropValues = [name, null, values];
-                            cy.confirmUsingQuery(query, extraQueryName, attributeId, propNames, newPropValues);
+                    cy.postAndConfirmMutationError(mutation, mutationName).then((erRes) => {
+                        const errorMessage = erRes.body.errors[0].message;
+                        expect(errorMessage).to.contain("TaxCategory is Associated with Checkout Attributes");
+                        const deleteExtra = `mutation {
+                            ${extraDeleteName}(input: { id: "${attributeId}" }) {
+                                ${standardMutationBody}
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(deleteExtra, extraDeleteName).then((exRes) => {
+                            // connected item has been deleted, delete the taxCategory
+                            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
+                                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
+                                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
+                                    id = '';
+                                    currentItemName = '';
+                                });
+                            });
                         });
                     });
                 });
@@ -189,7 +205,8 @@ describe('Mutation: deleteTaxCategory', () => {
         });
     });
 
-    it("Deleting an item connected to a product will disassociate the item from the product", () => {
+    it("A taxCategory connected to a product cannot be deleted until the connected product is deleted", () => {
+        const extraDeleteName = "deleteProduct";
         const extraMutationName = "createProduct";
         const extraDataPath = "product";
         const extraQueryName = "products";
@@ -224,12 +241,12 @@ describe('Mutation: deleteTaxCategory', () => {
         }`;
         cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
             const productId = res.body.data[extraMutationName][extraDataPath].id;
-            extraIds.push({itemId: productId, deleteName: "deleteProduct"});
+            extraIds.push({itemId: productId, deleteName: extraDeleteName, itemName: info[0].name, queryName: extraQueryName});
             const propNames = ["priceInformation", productInfoName];
             const propValues = [priceInformation, info];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
                 const query = `{
-                    ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
                             priceInformation {
@@ -251,14 +268,23 @@ describe('Mutation: deleteTaxCategory', () => {
                             ${standardMutationBody}
                         }
                     }`;
-                    cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                        expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                        cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                            id = '';
-                            currentItemName = '';
-                            const newPriceInformation = {taxCategory: null};
-                            const newPropValues = [newPriceInformation, info];
-                            cy.confirmUsingQuery(query, extraQueryName, productId, propNames, newPropValues);
+                    cy.postAndConfirmMutationError(mutation, mutationName).then((erRes) => {
+                        const errorMessage = erRes.body.errors[0].message;
+                        expect(errorMessage).to.contain("TaxCategory is Associated with Products");
+                        const deleteExtra = `mutation {
+                            ${extraDeleteName}(input: { id: "${productId}" }) {
+                                ${standardMutationBody}
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(deleteExtra, extraDeleteName).then((exRes) => {
+                            // connected item has been deleted, delete the taxCategory
+                            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
+                                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
+                                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
+                                    id = '';
+                                    currentItemName = '';
+                                });
+                            });
                         });
                     });
                 });
