@@ -878,7 +878,6 @@ Cypress.Commands.add('returnRandomDate', (gqlQuery: string, dataPath: string, ge
     });
 });
 
-
 // Validates that a query with searchString returned the node with the correct name or nodes that contain the string
 Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: string) => {
     Cypress.log({
@@ -1845,6 +1844,21 @@ Cypress.Commands.add("addDevProductToCart", () => {
     goToCart();
 });
 
+Cypress.Commands.add("getIframeBody", (iFrameName) => {
+    // get the iframe > document > body
+    // and retry until the body element is not empty
+    return (
+      cy
+        .get(iFrameName)
+        .its("0.contentDocument.body")
+        .should("not.be.empty")
+        // wraps "body" DOM element to allow
+        // chaining more Cypress commands, like ".find(...)"
+        // https://on.cypress.io/wrap
+        .then(cy.wrap)
+    );
+});
+
 Cypress.Commands.add("completeCheckout", () => {
     Cypress.log({
         displayName: " ",
@@ -1852,6 +1866,14 @@ Cypress.Commands.add("completeCheckout", () => {
     });
     cy.get("#termsofservice").check({force: true});
     cy.get("#checkout").click({force: true});
+
+    cy.server();
+    cy.route("POST", "/checkout/OpcSaveBilling/").as('billingSaved');
+    cy.route("POST", "/checkout/OpcSaveShippingMethod/").as('shippingSaved');
+    cy.route("POST", "/checkout/OpcSavePaymentMethod/").as('paymentMethodSaved');
+    cy.route("POST", "/checkout/OpcSavePaymentInfo/").as('paymentSaved');
+    cy.route("POST", "/checkout/OpcConfirmOrder/").as('orderSubmitted');
+
     cy.get("#co-billing-form").then(($el) => {
         const select = $el.find(".select-billing-address");
         if (select.length === 0) {
@@ -1865,38 +1887,55 @@ Cypress.Commands.add("completeCheckout", () => {
             cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
             cy.get(".field-validation-error").should("have.length", 0);
         }
-      });
-    cy.get(".new-address-next-step-button").eq(0).click();
-    cy.wait(200);
-
-    // Pick shipping method
-    cy.get("#shippingoption_1").check();
-    cy.get(".shipping-method-next-step-button").click();
-    cy.wait(2000);
-
-    // Payment Method
-    cy.get("#payment-method-block").find("#paymentmethod_0").check();
-    cy.get(".payment-method-next-step-button").click();
-    cy.wait(1000);
-    // Payment Information
-    cy.get("#CreditCardType").select("Discover");
-    cy.get("#CardholderName").type("Cypress McTester")
-    cy.get("#CardNumber")
-        .type("6011111111111117");
-    cy.get("#ExpireMonth")
-        .select("03");
-    cy.get("#ExpireYear")
-        .select("2024");
-    cy.get("#CardCode")
-        .type("123");
-    cy.get(".payment-info-next-step-button").click();
-    cy.wait(2000);
-    // Confirm order
-    cy.get(".confirm-order-next-step-button")
-        .should("exist")
-        .and("be.visible");
-    cy.get(".confirm-order-next-step-button").click();
-    cy.wait(5000);
+        cy.get(".new-address-next-step-button").eq(0).click();
+        cy.wait('@billingSaved');
+        // Shipping method
+        cy.get("#co-shipping-method-form").find("input[name=shippingoption]").then(($inputs) => {
+            cy.get(`#shippingoption_${Cypress._.random(0, $inputs.length - 1)}`).check();
+            cy.get(".shipping-method-next-step-button").click();
+            cy.wait('@shippingSaved');
+            // Payment Method
+            cy.wait(2000);
+            cy.url().then((url) => {
+                if (url.includes("#opc-payment_method")) {
+                    
+                    cy.get("#payment-method-block").find("#paymentmethod_0").check();
+                    cy.get(".payment-method-next-step-button").click();
+                    cy.wait('@paymentMethodSaved');
+                }
+                // Payment Information
+                cy.get("#co-payment-info-form").then(($element) => {    
+                    cy.wait(2000); // Allow iFrame to load
+                    const iframe = $element.find("#credit-card-iframe");
+                    if (iframe.length === 0) {
+                        // Non iframe version
+                        cy.get("#CreditCardType").select("Discover");
+                        cy.get("#CardholderName").type("Cypress McTester")
+                        cy.get("#CardNumber").type("6011111111111117");
+                        cy.get("#ExpireMonth").select("03");
+                        cy.get("#ExpireYear").select("2024");
+                        cy.get("#CardCode").type("123"); 
+                    } else {
+                        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cc-number").type("6011111111111117");
+                        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-month").type("03");
+                        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-year").type("24");
+                        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cvv-number").type("123");
+                        cy.get("#submit-credit-card-button").click();
+                        cy.wait(2000); // Allow iFrame to finish sumbitting
+                    }
+                    
+                    cy.get(".payment-info-next-step-button").click();
+                    cy.wait('@paymentSaved');
+                    // Confirm order
+                    cy.get(".confirm-order-next-step-button")
+                        .should("exist")
+                        .and("be.visible");
+                    cy.get(".confirm-order-next-step-button").click();
+                    cy.wait('@orderSubmitted');
+                });
+            });
+        });
+    });
 });
 
 Cypress.Commands.add("getToOrders", () => {
@@ -2012,5 +2051,22 @@ Cypress.Commands.add("createOrderRetrieveId", (gqlUrl: string, doNotPayOrder?: b
                 });
             });
         });
+    });
+});
+
+Cypress.Commands.add("findCategoryInMenu", (categoryName: string) => {
+    Cypress.log({
+        name: "findCategoryInMenu",
+        message: categoryName,
+        consoleProps: () => {
+            return {
+                "Name of Category": categoryName
+            };
+        },
+    });
+    cy.visit("/");
+    cy.wait(2000);
+    cy.storefrontLogin().then(() => {
+        getVisibleMenu().get('li').should('include.text', categoryName);
     });
 });

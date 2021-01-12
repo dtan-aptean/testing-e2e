@@ -89,12 +89,27 @@ describe("Merchant portal", function () {
                 cy.get("[data-cy=payment-disputes-tab]", {
                   timeout: 20000,
                 }).click();
+                cy.wait(7000);
                 cy.get("[data-cy=refresh]").click();
-                cy.wait(2000);
-                cy.get("[data-cy=dispute-table-body]")
-                  .invoke("children")
-                  .then(($children) => {
-                    expect($children.length).to.be.greaterThan(originalLength);
+                cy.wait(3000);
+                cy.get("@rows").should("have.length.gte", 1);
+                let hasActiveDispute = false;
+                // Get the rows with active disputes
+                cy.get("@rows")
+                  .each(($el, index, $list) => {
+                    let status = undefined;
+                    cy.wrap($el)
+                      .find("td")
+                      .eq(0)
+                      .then(($cell) => {
+                        status = $cell.text();
+                        if (status === "Action Needed") {
+                          hasActiveDispute = true;
+                        }
+                      });
+                  })
+                  .then(($list) => {
+                    assert.equal(hasActiveDispute, true, "Dispute Created");
                   });
               }
             });
@@ -295,14 +310,14 @@ describe("Merchant portal", function () {
         });
     });
 
-    it("The refund button and search bar are disabled while on the disputes tab", () => {
-      cy.get("[data-cy=refund]").should("be.disabled");
-      cy.get("[data-cy=search]").find("input").should("be.disabled");
+    it("The search bar is hidden while on the disputes tab", () => {
+      cy.get("[data-cy=search]").should("be.not.visible");
     });
 
     it("The review button is showing for a row that needs action", () => {
       cy.get("@rows").should("have.length.gte", 1);
       const activeArray = [];
+      cy.wait(2000);
       // Get the rows with active disputes
       cy.get("@rows")
         .each(($el, index, $list) => {
@@ -467,6 +482,7 @@ describe("Merchant portal", function () {
     it("Clicking the gray area around the concede modal should not close the modal", () => {
       cy.get("@rows").should("have.length.gte", 1);
       const activeArray = [];
+      cy.wait(2000);
       // Get the rows with active disputes
       cy.get("@rows")
         .each(($el, index, $list) => {

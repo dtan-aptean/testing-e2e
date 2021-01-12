@@ -2,7 +2,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 12
+// TEST COUNT: 13
 describe('Mutation: createCategory', () => {
     let id = '';
     let extraIds = []; // Should push objects formatted as {itemId: "example", deleteName: "example"}
@@ -22,8 +22,15 @@ describe('Mutation: createCategory', () => {
             }
         }
     `;
+    var originalBaseUrl = Cypress.config("baseUrl");
+    var storefrontUrl = Cypress.config("baseUrl").includes('dev') ? "https://dev.apteanecommerce.com/" : "https://tst.apteanecommerce.com/";
 
     afterEach(() => {
+        if (originalBaseUrl !== "" && Cypress.config("baseUrl") !== originalBaseUrl) {
+            Cypress.log({message: "Switching the baseUrl back to the original"});
+            Cypress.config("baseUrl", originalBaseUrl);
+            cy.wait(1000);
+        }
         if (id !== "") {
             // Delete any supplemental items we created
             if (extraIds.length > 0) {
@@ -121,21 +128,19 @@ describe('Mutation: createCategory', () => {
             const propNames = [infoName];
             const propValues = [info];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                    const query = `{
-                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
-                            nodes {
-                                id
-                                ${infoName} {
-                                    name
-                                    languageCode
-                                }
+                const query = `{
+                    ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                        nodes {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
                             }
                         }
-                    }`;
-                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
-                });
-            })
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
         });
     });
 
@@ -481,6 +486,63 @@ describe('Mutation: createCategory', () => {
                     }
                 }`;
                 cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+            });
+        });
+    });
+
+    // This cannot be run on its own without another test run before it.
+    // The baseUrl changes too fast for us to save it as originalBaseUrl if it's run on its own. This prevents us from making API calls
+    // This is only a problem if it's run on its own. If run after other tests (which is the normal use case), originalBaseUrl is saved with no issue.
+    // If you want to run just this test, I recommend changing this test and the first test to use it.only() instead of it().
+    it("Mutation using showInTopMenu creates an item that shows in the storefront top menu", { baseUrl: `${storefrontUrl}` }, () => {
+        const name = `Cypress TopMenu Category ${Cypress._.random(0, 999)}`;
+        const info = [{name: name, languageCode: "Standard"}];
+        const showInTopMenu = true;
+        const mutation = `mutation {
+            ${mutationName}(
+                input: { 
+                    ${infoName}: ${toFormattedString(info)}
+                    published: true
+                    displayOrder: 10
+                    pageSize: 10
+                    showInTopMenu: ${showInTopMenu}
+                }
+            ) {
+                code
+                error
+                message
+                ${dataPath} {
+                    id
+                    ${infoName} {
+                        name
+                        languageCode
+                    }
+                    published
+                    showInTopMenu
+                }
+            }
+        }`;
+        cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+            id = res.body.data[mutationName][dataPath].id;
+            const propNames = ["showInTopMenu", "published", infoName];
+            const propValues = [showInTopMenu, true, info];
+            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                const query = `{
+                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                        nodes {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            published
+                            showInTopMenu
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl).then(() => {
+                    cy.findCategoryInMenu(name);
+                });
             });
         });
     });
