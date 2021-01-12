@@ -1783,16 +1783,10 @@ Cypress.Commands.add("storefrontLogin", () => {
     });
     cy.get(".header-links").then(($el) => {
         if (!$el[0].innerText.includes('LOG OUT')) {
-            var email = "cypress.tester@testenvironment.com"
-            var password = "CypressTester1";
-            if (Cypress.config("baseUrl").includes("dev")) {
-                email = "bhargava.deshpande@aptean.com";
-                password = "admin";
-            }
             cy.wrap($el).find(".ico-login").click();
             cy.wait(200);
-            cy.get(".email").type(email);
-            cy.get(".password").type(password);
+            cy.get(".email").type(Cypress.env("storefrontLogin"));
+            cy.get(".password").type(Cypress.env("storefrontPassword"));
             cy.get(".login-button").click({force: true});
             cy.wait(200);
         }
