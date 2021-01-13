@@ -110,6 +110,14 @@ describe('Query: taxCategories', () => {
         });
     });
 
+    it("Query without 'first' or 'last' input arguments will return up to 25 items", () => {
+        cy.postAndValidate(standardQuery, queryName).then((res) => {
+            cy.confirmCount(res, queryName).then((hitUpperLimit: boolean) => {
+                cy.verifyPageInfo(res, queryName, hitUpperLimit, false);
+            });
+        });
+    });
+
     it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
         const trueTotalQuery = `{
             ${queryName}(${trueTotal ? "first: " + trueTotal + ", ": ""}orderBy: {direction: ASC, field: NAME}) {
