@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../../support/commands";
+import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 16
 describe('Mutation: updateCategory', () => {
@@ -26,7 +26,7 @@ describe('Mutation: updateCategory', () => {
     `;
     const createName = 'createCategory';
     var originalBaseUrl = Cypress.config("baseUrl");
-    var storefrontUrl = Cypress.config("baseUrl").includes('dev') ? "https://dev.apteanecommerce.com/" : "https://tst.apteanecommerce.com/";
+    confirmStorefrontEnvValues();
 
     before(() => {
         // Create an item for the tests to update
@@ -561,7 +561,7 @@ describe('Mutation: updateCategory', () => {
     // The baseUrl changes too fast for us to save it as originalBaseUrl if it's run on its own. This prevents us from making API calls
     // This is only a problem if it's run on its own. If run after other tests (which is the normal use case), originalBaseUrl is saved with no issue.
     // If you want to run just this test, I recommend changing this test and the first test to use it.only() instead of it().
-    it("Mutation using showInTopMenu creates an item that shows in the storefront top menu", { baseUrl: `${storefrontUrl}` }, () => {
+    it("Mutation using showInTopMenu creates an item that shows in the storefront top menu", { baseUrl: `${Cypress.env("storefrontUrl")}` }, () => {
         var name = "Cypress TopMenu Cat";
         const published = true;
         const displayOrder = 10;
