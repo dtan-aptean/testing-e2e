@@ -57,148 +57,149 @@ Cypress.Commands.add("getIframeBody", () => {
 
 Cypress.Commands.add("onboard", (options) => {
   // Determine if onboard needs to occur.
-  // let hasFrame = Cypress.$('iframe[id="kyc-iframe_iframe"]').length > 0;
-  // if (hasFrame) {
-  // Country select
-  // Entity type selection and their options
-  if (options.entityType === "sole") {
-    cy.getIframeBody().find('label[for="radio-input-entity_type-S"]').click();
-  } else if (options.entityType === "business") {
-    // Business type selection.
-    cy.getIframeBody().find('label[for="radio-input-entity_type-B"]').click();
-    if (options.structure === "corporation") {
-      cy.getIframeBody()
-        .find('label[for="radio-input-legal_structure-corporation"]')
-        .click();
-      if (options.industryCategory === 0) {
+  let hasFrame = Cypress.$('iframe[id="kyc-iframe_iframe"]').length > 0;
+  if (hasFrame) {
+    // Country select
+    // Entity type selection and their options
+    if (options.entityType === "sole") {
+      cy.getIframeBody().find('label[for="radio-input-entity_type-S"]').click();
+    } else if (options.entityType === "business") {
+      // Business type selection.
+      cy.getIframeBody().find('label[for="radio-input-entity_type-B"]').click();
+      if (options.structure === "corporation") {
         cy.getIframeBody()
-          .find('select[id="select-input-industry_category"]')
-          .select("amusement_and_entertainment");
-        if (options.industryType === 0) {
+          .find('label[for="radio-input-legal_structure-corporation"]')
+          .click();
+        if (options.industryCategory === 0) {
           cy.getIframeBody()
-            .find('select[id="select-input-industry_type"]')
-            .select("bands_orchestras_misc_entertainment");
+            .find('select[id="select-input-industry_category"]')
+            .select("amusement_and_entertainment");
+          if (options.industryType === 0) {
+            cy.getIframeBody()
+              .find('select[id="select-input-industry_type"]')
+              .select("bands_orchestras_misc_entertainment");
+          }
         }
+      } else if (options.structure === "llc") {
+        cy.getIframeBody()
+          .find(
+            'label[for="radio-input-legal_structure-limited_liability_company"]'
+          )
+          .click();
+      } else if (options.structure === "paternership") {
+        cy.getIframeBody()
+          .find('label[for="radio-input-legal_structure-partnership"]')
+          .click();
       }
-    } else if (options.structure === "llc") {
+      cy.wait(1000);
+      // Business info fields
       cy.getIframeBody()
-        .find(
-          'label[for="radio-input-legal_structure-limited_liability_company"]'
-        )
-        .click();
-    } else if (options.structure === "paternership") {
+        .find('input[id="text-input-business_name"]')
+        .type(options.businessName);
       cy.getIframeBody()
-        .find('label[for="radio-input-legal_structure-partnership"]')
-        .click();
+        .find('input[id="text-input-business_ein"]')
+        .type(options.businessEIN);
+      cy.getIframeBody()
+        .find('input[id="text-input-business_website"]')
+        .type(options.businessWebsite);
+      cy.getIframeBody()
+        .find('textarea[id="textarea-input-business_description"]')
+        .type(options.businessDescription);
+      cy.getIframeBody()
+        .find('input[id="text-input-business1_street_address"]')
+        .type(options.businessAddress);
+      cy.getIframeBody()
+        .find('input[id="text-input-business_city"]')
+        .type(options.businessCity);
+      cy.getIframeBody()
+        .find('select[id="select-input-business_region"]')
+        .select(options.businessRegion);
+      cy.getIframeBody()
+        .find('input[id="text-input-business_postal_code"]')
+        .type(options.businessPostal);
+      cy.getIframeBody()
+        .find('input[id="text-input-business_phone_number"]')
+        .type(options.businessPhone);
     }
-    cy.wait(1000);
-    // Business info fields
+    // Controller info fields
     cy.getIframeBody()
-      .find('input[id="text-input-business_name"]')
-      .type(options.businessName);
+      .find('input[id="text-input-personal_first_name"]')
+      .type(options.controllerFirstName);
     cy.getIframeBody()
-      .find('input[id="text-input-business_ein"]')
-      .type(options.businessEIN);
+      .find('input[id="text-input-personal_last_name"]')
+      .type(options.controllerLastName);
     cy.getIframeBody()
-      .find('input[id="text-input-business_website"]')
-      .type(options.businessWebsite);
+      .find('select[id="select-input-personal_job_title"]')
+      .select(options.controllerTitle);
     cy.getIframeBody()
-      .find('textarea[id="textarea-input-business_description"]')
-      .type(options.businessDescription);
+      .find('input[id="text-input-personal_street_address"]')
+      .type(options.controllerAddress);
     cy.getIframeBody()
-      .find('input[id="text-input-business1_street_address"]')
-      .type(options.businessAddress);
+      .find('input[id="text-input-personal_city"]')
+      .type(options.controllerCity);
     cy.getIframeBody()
-      .find('input[id="text-input-business_city"]')
-      .type(options.businessCity);
+      .find('select[id="select-input-personal_region"]')
+      .select(options.controllerRegion);
     cy.getIframeBody()
-      .find('select[id="select-input-business_region"]')
-      .select(options.businessRegion);
-    cy.getIframeBody()
-      .find('input[id="text-input-business_postal_code"]')
-      .type(options.businessPostal);
-    cy.getIframeBody()
-      .find('input[id="text-input-business_phone_number"]')
-      .type(options.businessPhone);
-  }
-  // Controller info fields
-  cy.getIframeBody()
-    .find('input[id="text-input-personal_first_name"]')
-    .type(options.controllerFirstName);
-  cy.getIframeBody()
-    .find('input[id="text-input-personal_last_name"]')
-    .type(options.controllerLastName);
-  cy.getIframeBody()
-    .find('select[id="select-input-personal_job_title"]')
-    .select(options.controllerTitle);
-  cy.getIframeBody()
-    .find('input[id="text-input-personal_street_address"]')
-    .type(options.controllerAddress);
-  cy.getIframeBody()
-    .find('input[id="text-input-personal_city"]')
-    .type(options.controllerCity);
-  cy.getIframeBody()
-    .find('select[id="select-input-personal_region"]')
-    .select(options.controllerRegion);
-  cy.getIframeBody()
-    .find('input[id="text-input-personal_postal_code"]')
-    .type(options.controllerPostal);
-  if (options.controllerCountryCode !== "1") {
-    cy.getIframeBody()
-      .find('input[id="text-input-personal_phone_country_code"]')
-      .clear();
-    cy.getIframeBody()
-      .find('input[id="text-input-personal_phone_country_code"]')
-      .type(options.controllerCountryCode);
-  }
-  cy.getIframeBody()
-    .find('input[id="text-input-personal_phone_number"]')
-    .type(options.controllerPhone);
-  cy.getIframeBody()
-    .find('select[id="select-input-personal_dob_month"]')
-    .select(options.controllerDOBMonth);
-  cy.getIframeBody()
-    .find('select[id="select-input-personal_dob_day"]')
-    .select(options.controllerDOBDay);
-  cy.getIframeBody()
-    .find('select[id="select-input-personal_dob_year"]')
-    .select(options.controllerDOBYear);
-  // SSN input
-  if (options.entityType === "sole") {
-    // sole ssn
-  } else if (options.entityType === "business") {
-    cy.getIframeBody()
-      .find('input[id="text-input-personal_ssn4_input"]')
-      .type(options.controllerSSNLastFour);
-    if (options.controllerOwn25orMore) {
+      .find('input[id="text-input-personal_postal_code"]')
+      .type(options.controllerPostal);
+    if (options.controllerCountryCode !== "1") {
       cy.getIframeBody()
-        .find('label[for="radio-input-personal_is_bene_owner-true"]')
-        .click();
-    } else {
+        .find('input[id="text-input-personal_phone_country_code"]')
+        .clear();
       cy.getIframeBody()
-        .find('label[for="radio-input-personal_is_bene_owner-false"]')
-        .click();
+        .find('input[id="text-input-personal_phone_country_code"]')
+        .type(options.controllerCountryCode);
     }
+    cy.getIframeBody()
+      .find('input[id="text-input-personal_phone_number"]')
+      .type(options.controllerPhone);
+    cy.getIframeBody()
+      .find('select[id="select-input-personal_dob_month"]')
+      .select(options.controllerDOBMonth);
+    cy.getIframeBody()
+      .find('select[id="select-input-personal_dob_day"]')
+      .select(options.controllerDOBDay);
+    cy.getIframeBody()
+      .find('select[id="select-input-personal_dob_year"]')
+      .select(options.controllerDOBYear);
+    // SSN input
+    if (options.entityType === "sole") {
+      // sole ssn
+    } else if (options.entityType === "business") {
+      cy.getIframeBody()
+        .find('input[id="text-input-personal_ssn4_input"]')
+        .type(options.controllerSSNLastFour);
+      if (options.controllerOwn25orMore) {
+        cy.getIframeBody()
+          .find('label[for="radio-input-personal_is_bene_owner-true"]')
+          .click();
+      } else {
+        cy.getIframeBody()
+          .find('label[for="radio-input-personal_is_bene_owner-false"]')
+          .click();
+      }
+    }
+    // Click next.
+    cy.get('button[data-cy="onboard-next"]').click();
+
+    // Account creation
+    cy.getInput("account-name").type(options.accountName);
+    cy.getInput("account-description").type(options.accountDescription);
+    cy.getInput("account-statement-description").type(
+      options.accountStatementDescription
+    );
+    cy.getTextArea("refund-policy").type(options.refundPolicy);
+
+    // Click next.
+    cy.get('button[data-cy="onboard-next"]').click();
+
+    // Terms of service name agreement
+    cy.getInput("tos-name").type(options.tosName);
+
+    // Click finish.
+    cy.get('button[data-cy="onboard-next"]').click();
   }
-  // Click next.
-  cy.get('button[data-cy="onboard-next"]').click();
-
-  // Account creation
-  cy.getInput("account-name").type(options.accountName);
-  cy.getInput("account-description").type(options.accountDescription);
-  cy.getInput("account-statement-description").type(
-    options.accountStatementDescription
-  );
-  cy.getTextArea("refund-policy").type(options.refundPolicy);
-
-  // Click next.
-  cy.get('button[data-cy="onboard-next"]').click();
-
-  // Terms of service name agreement
-  cy.getInput("tos-name").type(options.tosName);
-
-  // Click finish.
-  cy.get('button[data-cy="onboard-next"]').click();
 });
 
 // -- Gets an input element based on selector (data-cy value) --
@@ -347,7 +348,10 @@ Cypress.Commands.add("makePayment", (count) => {
     return new Promise((resolve) => {
       setTimeout((x) => {
         // Log in - taken from payer portal login command
-        if (appWindow?.document.querySelector("[data-cy=sign-in]") !== null) {
+        cy
+        .get("[data-cy=sign-in]")
+        .should("not.be.disabled")
+        .then(() => {
           cy.get("[data-cy=sign-in]").click();
           cy.wait(4000);
 
@@ -361,7 +365,7 @@ Cypress.Commands.add("makePayment", (count) => {
               cy.get("button[id=next]").click();
             }
           });
-        }
+        });
         // Wait to finish logging in, or to finish loading
         cy.wait(5000);
         cy.get("div").then(($boday) => {
@@ -416,19 +420,8 @@ Cypress.Commands.add("makePayment", (count) => {
               .click();
             // Wait for page to load
             cy.wait(5000);
-            // Click the "Pay with Credit Card" button.
-            cy.get("[data-cy=pay-with-cc-button]")
-              .click();
-            cy.wait(2000);
-            // Fill in the credit card info
-            // TODO: Set up command to deal with saved cards, etc
-            getIframeBody()
-              .find("#text-input-cc-number")
-              .type("6011111111111117");
-            getIframeBody().find("#text-input-expiration-month").type("03");
-            getIframeBody().find("#text-input-expiration-year").type("24");
-            getIframeBody().find("#text-input-cvv-number").type("123");
-            cy.get("[data-cy=make-payment]").click();
+            // TODO: Set up command to deal when payer has no payment method or doesn't have default payment method, etc
+            cy.get("[data-cy=submit-payment-button]").click();
             cy.wait(500);
             cy.get("[data-cy=pay-now]").click();
             cy.wait(5000).then(() => {
@@ -511,28 +504,28 @@ Cypress.Commands.add(
  * invokeChildren - Whether or not to invoke children and return them vs the table body.
  */
 Cypress.Commands.add(
-  "getTableBodyAfterLoad",
-  (selector, invokeChildren) => {
-    function getTable (tableSelector) {
-      cy.get(tableSelector)
-      .invoke("children")
-      .then(($el) => {
-        if ($el && $el[0]) {
-          // Still loading.
-          const elements = $el[0].getElementsByClassName("MuiSkeleton-root");
-          if (elements && elements.length > 0) {
-            cy.wait(100);
-            getTable(tableSelector);
-          } else {
-            if (invokeChildren) {
-              return $el;
-            } else {
-              return $el.parent();
-            }            
-          }
-        }
-      });
-    };
-    return getTable(selector);
-  }
+    "getTableBodyAfterLoad",
+    (selector, invokeChildren) => {
+      function getTable (tableSelector) {
+        cy.get(tableSelector)
+          .invoke("children")
+          .then(($el) => {
+            if ($el && $el[0]) {
+              // Still loading.
+              const elements = $el[0].getElementsByClassName("MuiSkeleton-root");
+              if (elements && elements.length > 0) {
+                cy.wait(100);
+                getTable(tableSelector);
+              } else {
+                if (invokeChildren) {
+                  return $el;
+                } else {
+                  return $el.parent();
+                }
+              }
+            }
+          });
+      };
+      return getTable(selector);
+    }
 );

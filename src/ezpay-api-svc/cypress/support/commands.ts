@@ -75,16 +75,18 @@ Cypress.Commands.add("getInvoiceRef", () => {
 });
 
 // -- This will generate a payment request url --
-Cypress.Commands.add("generatePaymentRequest", () => {
+Cypress.Commands.add("generatePaymentRequest", (requestAmount: Number = 0) => {
   cy.getInvoiceRef()
     .then((uploadResponse) => {
       return uploadResponse.data.upload.uniqueId;
     })
     .then((uniqueId) => {
-      cy.wait(5000).then(() => {
-        const amount = Cypress._.random(100, 1e3);
-        const referenceNumber = Cypress._.random(0, 1e20);
-        const gqlQuery = `mutation {
+      let amount = requestAmount;
+      if (amount === 0) {
+        amount = Cypress._.random(100, 1e3);
+      }
+      const referenceNumber = Cypress._.random(0, 1e20);
+      const gqlQuery = `mutation {
         upsertPaymentRequest(
           input: {
             referenceNumber: "${referenceNumber}"
@@ -97,21 +99,19 @@ Cypress.Commands.add("generatePaymentRequest", () => {
           paymentRequestId
         }
       }`;
-        cy.postGQL(gqlQuery).then((paymentRequest) => {
-          // should be 200 ok
-          cy.expect(paymentRequest.isOkStatusCode).to.be.equal(true);
+      cy.postGQL(gqlQuery).then((paymentRequest) => {
+        // should be 200 ok
+        cy.expect(paymentRequest.isOkStatusCode).to.be.equal(true);
 
-          const response = {
-            amount,
-            invoiceRef: uniqueId,
-            paymentUrl:
-              paymentRequest.body.data.upsertPaymentRequest.paymentUrl,
-            referenceNumber,
-            paymentRequestId:
-              paymentRequest.body.data.upsertPaymentRequest.paymentRequestId,
-          };
-          return response;
-        });
+        const response = {
+          amount,
+          invoiceRef: uniqueId,
+          paymentUrl: paymentRequest.body.data.upsertPaymentRequest.paymentUrl,
+          referenceNumber,
+          paymentRequestId:
+            paymentRequest.body.data.upsertPaymentRequest.paymentRequestId,
+        };
+        return response;
       });
     });
 });
@@ -351,8 +351,8 @@ Cypress.Commands.add("deletePerson", (personId) => {
 
 Cypress.Commands.add(
   "generatePaymentRequestAndPay",
-  (immediateCapture: Boolean = true) => {
-    cy.generatePaymentRequest().then((paymentRequest) => {
+  (requestAmount: Number = 0, immediateCapture: Boolean = true) => {
+    cy.generatePaymentRequest(requestAmount).then((paymentRequest) => {
       cy.generateWepayTokenCreditCard()
         .then((payfacToken) => {
           cy.wait(1000).then(() => {
@@ -396,40 +396,53 @@ Cypress.Commands.add(
         }
         `;
 
-          cy.wait(15000).then(() => {
-            cy.postGQLWithIdempotencyKey(
-              gqlQuery,
-              paymentRequest.paymentRequestId
-            ).then((res) => {
-              // should be 200 ok
-              cy.expect(res.isOkStatusCode).to.be.equal(true);
+          cy.postGQLWithIdempotencyKey(
+            gqlQuery,
+            paymentRequest.paymentRequestId
+          ).then((res) => {
+            // should be 200 ok
+            cy.expect(res.isOkStatusCode).to.be.equal(true);
 
-              // should have errors
-              assert.notExists(
-                res.body.errors,
-                `One or more errors ocuured while executing query: ${gqlQuery}`
-              );
+            // should have errors
+            assert.notExists(
+              res.body.errors,
+              `One or more errors ocuured while executing query: ${gqlQuery}`
+            );
 
-              // has data
-              assert.exists(res.body.data);
+            // has data
+            assert.exists(res.body.data);
 
-              // assertions
-              assert.isNotNull(res.body.data.createPayment);
-              assert.isNotNull(res.body.data.createPayment.code);
-              assert.isNotNull(res.body.data.createPayment.payment.id);
-              assert.isNull(res.body.data.createPayment.error);
-              assert.equal(
-                res.body.data.createPayment.code,
-                "SUCCESS",
-                "Code is not SUCCESS"
-              );
+            // assertions
+            assert.isNotNull(res.body.data.createPayment);
+            assert.isNotNull(res.body.data.createPayment.code);
+            assert.isNotNull(res.body.data.createPayment.payment.id);
+            assert.isNull(res.body.data.createPayment.error);
+            assert.equal(
+              res.body.data.createPayment.code,
+              "SUCCESS",
+              "Code is not SUCCESS"
+            );
 
-              const id = res.body.data.createPayment.payment.id;
-              const amount = paymentRequest.amount;
-              return { id: id, amount: amount };
-            });
+            const id = res.body.data.createPayment.payment.id;
+            const amount = paymentRequest.amount;
+            return { id: id, amount: amount };
           });
         });
     });
   }
 );
+
+Cypress.Commands.add("getWePayAccount", (accountId) => {
+  const settings = {
+    url: `https://stage-api.wepay.com/accounts/${accountId}`,
+    method: "GET",
+    timeout: 0,
+    headers: {
+      "Content-Type": "application/json",
+      "app-id": `${Cypress.env("wepay-app-id")}`,
+      "app-token": `${Cypress.env("wepay-app-secret")}`,
+      "api-version": `${Cypress.env("wepay-api-version")}`,
+    },
+  };
+  return Cypress.$.ajax(settings);
+});

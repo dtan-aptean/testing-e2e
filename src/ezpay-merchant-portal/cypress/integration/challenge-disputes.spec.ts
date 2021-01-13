@@ -15,8 +15,8 @@ describe("Merchant Portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
       // Make sure that we have enough active disputes
-      cy.getTableBodyAfterLoad("[data-cy=dispute-table-body]", true)
-        .then(($el) => {
+        cy.getTableBodyAfterLoad("[data-cy=dispute-table-body]", true)
+            .then(($el) => {
           const originalLength = $el.length;
           if (originalLength === 0) {
             cy.createAndPay(2, "1.09", "challenge");
@@ -25,8 +25,8 @@ describe("Merchant Portal", function () {
             }).click();
             cy.get("[data-cy=refresh]").click();
             cy.wait(2000);
-            cy.getTableBodyAfterLoad("[data-cy=dispute-table-body]", true)
-              .then(($children) => {
+              cy.getTableBodyAfterLoad("[data-cy=dispute-table-body]", true)
+                  .then(($children) => {
                 expect($children.length).to.be.greaterThan(originalLength);
               });
           } else {
@@ -52,18 +52,33 @@ describe("Merchant Portal", function () {
                   cy.get("[data-cy=payment-disputes-tab]", {
                     timeout: 20000,
                   }).click();
+                  cy.wait(7000);
                   cy.get("[data-cy=refresh]").click();
                   cy.wait(3000);
-                  cy.getTableBodyAfterLoad("[data-cy=dispute-table-body]", true)
-                    .then(($children) => {
-                      expect($children.length).to.be.greaterThan(
-                        originalLength
-                      );
+                  cy.get("@currentRows").should("have.length.gte", 1);
+                  let hasActiveDispute = false;
+                  // Get the rows with active disputes
+                  cy.get("@currentRows")
+                    .each(($el, index, $list) => {
+                      let status = undefined;
+                      cy.wrap($el)
+                        .find("td")
+                        .eq(0)
+                        .then(($cell) => {
+                          status = $cell.text();
+                          if (status === "Action Needed") {
+                            hasActiveDispute = true;
+                          }
+                        });
+                    })
+                    .then(($list) => {
+                      assert.equal(hasActiveDispute, true, "Dispute Created");
                     });
                 }
               });
           }
-        });
+        }
+      );
 
       // Get the first active dispute
       cy.getTableBodyAfterLoad("[data-cy=dispute-table-body]")
@@ -480,7 +495,7 @@ describe("Merchant Portal", function () {
         .attachFile(fileNames[0])
         .attachFile(fileNames[1])
         .attachFile(fileNames[2]);
-      cy.wait(1000);
+      cy.wait(5000);
 
       // Upload the next set of files
       cy.get("[data-cy=hidden-file-input]")
@@ -494,7 +509,7 @@ describe("Merchant Portal", function () {
             .select(`${docTypes[1]}`);
           cy.get("[data-cy=documentation-upload]").click();
           cy.wrap($el).attachFile(fileNames[3]).attachFile(fileNames[4]);
-          cy.wait(1000);
+          cy.wait(3000);
 
           // Try and upload the 6th file
           cy.get("[data-cy=hidden-file-input]")
@@ -508,7 +523,7 @@ describe("Merchant Portal", function () {
                 .select(`${docTypes[1]}`);
               cy.get("[data-cy=documentation-upload]").click();
               cy.wrap($el2).attachFile(fileNames[5]);
-              cy.wait(2000);
+              cy.wait(5000);
 
               // Check for the error
               cy.get("[data-cy=challenge-dispute-error]")
@@ -588,8 +603,8 @@ describe("Merchant Portal", function () {
     });
 
     /* TODO: Review the beforeEach step - seems there is a timing issue where expect($children.length).to.be.greaterThan(originalLength) fails.
-    *  This may be a timing issue but is always an issue with this test. The row with "Action Needed" is not in the list, once you refresh is shows up and the check passes.
-    */ 
+     *  This may be a timing issue but is always an issue with this test. The row with "Action Needed" is not in the list, once you refresh is shows up and the check passes.
+     */
     it.skip("After submitting a challenge, the row in the disputes table updates to the appropriate status", () => {
       cy.get("@activeDispute").then(($el) => {
         const index = $el.prop("rowIndex") - 1;

@@ -12,7 +12,8 @@
     "wepay-base-url": "#{WEPAY_API_URL}#",
     "wepay-app-id": "#{WEPAY_APP_ID}#",
     "wepay-app-secret": "#{WEPAY_APP_SECRET}#",
-    "wepay-api-version": "#{WEPAY_API_VERSION}#"
+    "wepay-api-version": "#{WEPAY_API_VERSION}#",
+    "wepay-account-id": "#{WEPAY_ACCOUNT_ID}#"
   },
   "supportFile": "cypress/support/index.ts"
 }

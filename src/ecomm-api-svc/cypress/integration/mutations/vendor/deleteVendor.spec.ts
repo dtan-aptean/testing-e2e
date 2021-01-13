@@ -6,7 +6,7 @@ import { toFormattedString } from "../../../support/commands";
 describe('Mutation: deleteVendor', () => {
     let id = '';
     let currentItemName = '';
-    const extraIds = [];    // Should push objects formatted as {itemId: "example", deleteName: "example"}
+    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[]; 
     const mutationName = 'deleteVendor';
     const creationName = 'createVendor';
     const queryName = "vendors";
@@ -27,6 +27,26 @@ describe('Mutation: deleteVendor', () => {
     });
 
     afterEach(() => {
+        // Delete any supplemental items we created
+        if (extraIds.length > 0) {
+            for (var i = 0; i < extraIds.length; i++) {
+                cy.wait(2000);
+                const infoName = extraIds[i].queryName === "products" ? "productInfo" : null;
+                cy.queryForDeleted(false, extraIds[i].itemName, extraIds[i].itemId, extraIds[i].queryName, infoName).then((itemPresent: boolean) => {
+                    if (itemPresent) {
+                        var extraRemoval = `mutation {
+                            ${extraIds[i].deleteName}(input: { id: "${extraIds[i].itemId}" }) {
+                                code
+                                message
+                                error
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(extraRemoval, extraIds[i].deleteName);
+                    }
+                });
+            }
+            extraIds = [];
+        }
         if (id !== '') {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
             cy.queryForDeleted(false, currentItemName, id, queryName, infoName).then((itemPresent: boolean) => {
@@ -104,18 +124,17 @@ describe('Mutation: deleteVendor', () => {
     });
 
     it("Deleting an item connected to a product will disassociate the item from the product", () => {
+        const extraDeleteName = "deleteProduct";
         const extraMutationName = "createProduct";
         const extraDataPath = "product";
         const extraQueryName = "products";
         const productInfoName = "productInfo";
         const vendor = {id: id, vendorInfo: [{name: currentItemName, languageCode: "Standard"}]};
-        const info = [{name: `Cypress ${mutationName} product test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
-        const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
+        const info = [{name: `Cypress ${mutationName} product test`, languageCode: "Standard"}];
         const mutation = `mutation {
             ${extraMutationName}(
                 input: { 
                     ${productInfoName}: ${toFormattedString(info)}
-                    inventoryInformation: ${toFormattedString(inventoryInfo)}
                     vendorId: "${id}"
                 }
             ) {
@@ -124,9 +143,6 @@ describe('Mutation: deleteVendor', () => {
                 error
                 ${extraDataPath} {
                     id
-                    inventoryInformation {
-                        minimumStockQuantity
-                    }
                     vendor {
                         id
                         vendorInfo {
@@ -136,8 +152,6 @@ describe('Mutation: deleteVendor', () => {
                     }
                     ${productInfoName} {
                         name
-                        shortDescription
-                        fullDescription
                         languageCode
                     }
                 }
@@ -145,17 +159,14 @@ describe('Mutation: deleteVendor', () => {
         }`;
         cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
             const productId = res.body.data[extraMutationName][extraDataPath].id;
-            extraIds.push({itemId: productId, deleteName: "deleteProduct"});
-            const propNames = ["vendor", productInfoName, "inventoryInformation"];
-            const propValues = [vendor, info, inventoryInfo];
+            extraIds.push({itemId: productId, deleteName: extraDeleteName, itemName: info[0].name, queryName: extraQueryName});
+            const propNames = ["vendor", productInfoName];
+            const propValues = [vendor, info];
             cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                         nodes {
                             id
-                            inventoryInformation {
-                                minimumStockQuantity
-                            }
                             vendor {
                                 id
                                 vendorInfo {
@@ -165,8 +176,6 @@ describe('Mutation: deleteVendor', () => {
                             }
                             ${productInfoName} {
                                 name
-                                shortDescription
-                                fullDescription
                                 languageCode
                             }
                         }
@@ -178,13 +187,23 @@ describe('Mutation: deleteVendor', () => {
                             ${standardMutationBody}
                         }
                     }`;
-                    cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                        expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                        cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
-                            id = '';
-                            currentItemName = '';
-                            const newPropValues = [null, info, inventoryInfo];
-                            cy.confirmUsingQuery(query, extraQueryName, productId, propNames, newPropValues);
+                    cy.postAndConfirmMutationError(mutation, mutationName).then((erRes) => {
+                        const errorMessage = erRes.body.errors[0].message;
+                        expect(errorMessage).to.contain("Vendor is Associated with Products");
+                        const deleteExtra = `mutation {
+                            ${extraDeleteName}(input: { id: "${productId}" }) {
+                                ${standardMutationBody}
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(deleteExtra, extraDeleteName).then((exRes) => {
+                            // connected item has been deleted, delete the taxCategory
+                            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
+                                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
+                                cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
+                                    id = '';
+                                    currentItemName = '';
+                                });
+                            });
                         });
                     });
                 });

@@ -148,13 +148,11 @@ describe('Mutation: deleteProductSpecification', () => {
             const extraMutationName = "createProduct";
             const extraDataPath = "product";
             const productInfoName = "productInfo";
-            const info = [{name: `Cypress ${mutationName} product test`, shortDescription: `Test for ${mutationName}`, languageCode: "Standard"}];
-            const inventoryInfo = {minimumStockQuantity: Cypress._.random(1, 10)};
+            const info = [{name: `Cypress ${mutationName} product test`, languageCode: "Standard"}];
             const mutation = `mutation {
                 ${extraMutationName}(
                     input: { 
                         ${productInfoName}: ${toFormattedString(info)}
-                        inventoryInformation: ${toFormattedString(inventoryInfo)}
                         specificationOptionIds: ["${optionsId}"]
                     }
                 ) {
@@ -163,13 +161,8 @@ describe('Mutation: deleteProductSpecification', () => {
                     error
                     ${extraDataPath} {
                         id
-                        inventoryInformation {
-                            minimumStockQuantity
-                        }
                         ${productInfoName} {
                             name
-                            shortDescription
-                            fullDescription
                             languageCode
                         }
                     }
@@ -178,8 +171,8 @@ describe('Mutation: deleteProductSpecification', () => {
             cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
                 const productId = res.body.data[extraMutationName][extraDataPath].id;
                 extraIds.push({itemId: productId, deleteName: "deleteProduct"});
-                const propNames = [productInfoName, "inventoryInformation"];
-                const propValues = [info, inventoryInfo];
+                const propNames = [productInfoName];
+                const propValues = [info];
                 cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
                     const optionsField = `options {
                         id

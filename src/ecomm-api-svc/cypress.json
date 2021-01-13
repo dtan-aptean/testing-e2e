@@ -1,15 +1,15 @@
 {
-  "baseUrl": "#{ECOMM_API_URL}#", 
-  "chromeWebSecurity": false,
-  "defaultCommandTimeout": 10000,
-  "env": {
-    "x-aptean-apim": "#{X_APTEAN_APIM}#", 
-    "x-aptean-tenant": "#{X_ECOMM_TENANT}#",
-    "x-aptean-tenant-secret": "#{X_ECOMM_TENANT_SECRET}#",
-    "gqlTimeout": 5000,
-    "storefrontUrl": "#{ECOMM_PORTAL_BASE_URL}#",
-    "storefrontLogin": "#{ECOMM_USERNAME}#",
-    "storefrontPassword": "#{ECOMM_PASSWORD}#"
-  }, 
-  "supportFile": "cypress/support/index.ts"
+    "baseUrl": "#{ECOMM_API_URL}#", 
+    "chromeWebSecurity": false,
+    "defaultCommandTimeout": 10000,
+    "env": {
+      "x-aptean-apim": "#{X_APTEAN_APIM}#", 
+      "x-aptean-tenant": "#{X_ECOMM_TENANT}#",
+      "x-aptean-tenant-secret": "#{X_ECOMM_TENANT_SECRET}#",
+      "gqlTimeout": 5000,
+      "storefrontUrl": "#{ECOMM_PORTAL_BASE_URL}#",
+      "storefrontLogin": "#{ECOMM_USERNAME}#",
+      "storefrontPassword": "#{ECOMM_PASSWORD}#"
+    }, 
+    "supportFile": "cypress/support/index.ts"
 }

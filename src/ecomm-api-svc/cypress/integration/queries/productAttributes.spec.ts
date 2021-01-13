@@ -267,10 +267,7 @@ describe('Query: productAttributes', () => {
             productInfo: [{
                 name: productName,
                 languageCode: "Standard",
-            }],
-            inventoryInformation: {
-                minimumStockQuantity: Cypress._.random(1, 10),
-            }
+            }]
         };
         cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((returnedId: string) => {
             createdProducts.push({name: productName, id: returnedId});
