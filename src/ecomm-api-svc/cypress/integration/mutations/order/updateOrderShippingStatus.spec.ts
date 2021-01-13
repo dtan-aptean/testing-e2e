@@ -1,8 +1,12 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../../support/commands";
+import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/commands";
 
-var originalBaseUrl = "";   // The original baseUrl config. We will need it for making api calls
+var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
+const orderStatuses = ["PENDING", "PROCESSING", "COMPLETE", "CANCELLED"];
+const shippingStatuses = ["NOT_YET_SHIPPED", "SHIPPING_NOT_REQUIRED", "PARTIALLY_SHIPPED", "SHIPPED", "DELIVERED"];
+const shippingMethods = ["Ground", "Next Day Air", "2nd Day Air"];
+
 
 const validateQuery = (query: string, res, dataPath?: string, expectMultiple?: boolean) => {
     const path = dataPath ? dataPath : "orders";
@@ -95,15 +99,22 @@ const productQtyWgtId = (orderId: string) => {
     });
 };
 
-const createShipmentRecord = (orderedProducts: {quantity: number, weight: number, id: string}[], shipAll?: boolean, customData?) => {
+const createShipmentRecord = (orderedProducts: {quantity: number, weight: number, id: string}[], shipAll?: boolean, shipQty?: number | number[], customData?) => {
     const trackingNo  = `cypress${Cypress._.random(1000, 9999)}-${Cypress._.random(1e5, 1e6)}`;
     const today = new Date();
     const nextWeek = new Date(today.valueOf() + 604800000);
     const nextWeek10Am = new Date(`${nextWeek.getMonth() + 1}/${nextWeek.getDate()}/${nextWeek.getFullYear()} 10:00`);
     var weight = 0;
     const shipmentItems = [];
-    orderedProducts.forEach((product) => {
-        var qty = shipAll ? product.quantity : Cypress._.random(1, product.quantity);
+    orderedProducts.forEach((product, index) => {
+        var qty;
+        if (shipAll) {
+            qty = product.quantity;
+        } else if (shipQty) {
+            qty = Array.isArray(shipQty) ? shipQty[index] : shipQty;
+        } else {
+            qty = Cypress._.random(1, product.quantity);
+        }
         weight = weight + (qty * product.weight);
         shipmentItems.push({productId: product.id, quantityShipped: qty});
     });
@@ -118,6 +129,35 @@ const createShipmentRecord = (orderedProducts: {quantity: number, weight: number
         shipmentRecord.customData = customData;
     }
     return shipmentRecord;
+};
+
+// To account for totalWeight not being on the orderShippingStatus response
+const dummyResponseRecords = (shipmentRecords) => {
+    const responseRecords = [];
+    shipmentRecords.forEach((rec) => {
+        const dummyRec = {};
+        const recProps = Object.getOwnPropertyNames(rec);
+        for (var i = 0; i < recProps.length; i++) {
+            if (recProps[i] !== "totalWeight") {
+                dummyRec[recProps[i]] = rec[recProps[i]]; 
+            }
+        }
+        responseRecords.push(dummyRec);
+    });
+    return responseRecords;
+};
+
+const confirmRecordCustomData = (response, expectedData) => {
+    const records = response.body.data.updateOrderShippingStatus.orderShippingStatus.shipmentRecords;
+    records.forEach((rec, i) => {
+        expect(rec.customData).to.be.eql(expectedData[i]);
+    });
+};
+
+const getDiffShippingMethod = (i: number): string => {
+    const exclusiveShippingMethods = shippingMethods.slice(0);
+    exclusiveShippingMethods.splice(i, 1);
+    return exclusiveShippingMethods[Cypress._.random(0, exclusiveShippingMethods.length - 1)];
 };
 
 // TEST COUNT: 3
@@ -137,6 +177,7 @@ describe('Mutation: updateOrderShippingStatus', () => {
             shippingStatus
             customData
             shipmentRecords {
+                customData
                 trackingNumber
                 shippedDate
                 deliveryDate
@@ -157,22 +198,14 @@ describe('Mutation: updateOrderShippingStatus', () => {
         }
     `;
 
-    const orderStatuses = ["PENDING", "PROCESSING", "COMPLETE", "CANCELLED"];
-    const shippingStatuses = ["NOT_YET_SHIPPED", "SHIPPING_NOT_REQUIRED", "PARTIALLY_SHIPPED", "SHIPPED", "DELIVERED"];
-    const shippingMethods = ["Ground", "Next Day Air", "2nd Day Air"];
-
     before(() => {
-        // We need to place an order in the storefront to get an orderId
-        // In order to do so, we need to change the baseUrl to the storefront url
-        // This only lasts for the single file
-        var config = `${Cypress.config("baseUrl")}`;
-        originalBaseUrl = config.slice(0);  // Save the original baseUrl so we can use it for api calls
-        var storefrontUrl = "https://tst.apteanecommerce.com/";
-        if (originalBaseUrl.includes('dev')) {
-            storefrontUrl = "https://dev.apteanecommerce.com/";
-        }
-        Cypress.config("baseUrl", storefrontUrl);
+        confirmStorefrontEnvValues();
+        Cypress.config("baseUrl", Cypress.env("storefrontUrl"));
         cy.wait(1000);
+        Cypress.log({ message: originalBaseUrl });
+        console.log(originalBaseUrl);
+        Cypress.log({ message: Cypress.config("baseUrl") });
+        console.log(Cypress.config("baseUrl"));
         cy.visit("/");
     });
 
@@ -259,9 +292,7 @@ describe('Mutation: updateOrderShippingStatus', () => {
     it("Mutation using shippingMethodName will properly update the shippingMethodName", () => {
         const checkoutOptions = { shippingMethod: Cypress._.random(0, shippingMethods.length - 1) };
         goHomeAndOrder(checkoutOptions).then((orderId: string) => {
-            const exclusiveShippingMethods = shippingMethods.slice(0);
-            exclusiveShippingMethods.splice(checkoutOptions.shippingMethod, 1);
-            const shippingMethodName = exclusiveShippingMethods[Cypress._.random(0, exclusiveShippingMethods.length - 1)];
+            const shippingMethodName = getDiffShippingMethod(checkoutOptions.shippingMethod);
             const mutation = `mutation {
                 ${mutationName}(input: {
                     orderId: "${orderId}"
@@ -285,16 +316,19 @@ describe('Mutation: updateOrderShippingStatus', () => {
         });
     });
 
-    it.only("Mutation using shipmentRecords will properly update the shipmentRecords", () => {
-        //goHomeAndOrder().then((orderId: string) => {
+    it("Mutation using shipmentRecords will properly update the shipmentRecords", () => {
+        const checkoutOptions = { shippingMethod: Cypress._.random(0, shippingMethods.length - 1) };
+        //goHomeAndOrder(checkoutOptions).then((orderId: string) => {
             const orderId = "d153a3ef-14be-4b09-8e6a-b4de440e9f15";
             productQtyWgtId(orderId).then((orderedProducts) => {
-                const shipmentRecords = createShipmentRecord(orderedProducts, true);
+                const shipmentRecords = [createShipmentRecord(orderedProducts, true)];
                 const orderStatus = "PENDING";
+                //shippingMethods[checkoutOptions.shippingMethod]
                 const mutation = `mutation {
                     ${mutationName}(input: {
                         orderId: "${orderId}"
                         orderStatus: ${orderStatus}
+                        shippingMethodName: "Next Day Air"
                         shippingStatus: SHIPPED
                         shipmentRecords: ${toFormattedString(shipmentRecords)}
                     }) {
@@ -303,19 +337,156 @@ describe('Mutation: updateOrderShippingStatus', () => {
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
                     const propNames = ["shipmentRecords"];
-                    const responseRecords = [];
-                    shipmentRecords.forEach((rec) => {
-                        const dummyRec = {};
-                        const recProps = Object.getOwnPropertyNames(rec);
-                        for (var i = 0; i < recProps.length; i++) {
-                            if (recProps[i] !== "totalWeight") {
-                                dummyRec[recProps[i]] = rec[recProps[i]]; 
-                            }
-                        }
-                        responseRecords.push(dummyRec);
-                    });
-                    const propValues = [responseRecords];
+                    const propValues = [dummyResponseRecords(shipmentRecords)];
                     cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues);
+                });
+            });
+        //});
+    });
+
+    it("Mutation using 'customData' input updates order with customData", () => {
+        const checkoutOptions = { shippingMethod: Cypress._.random(0, shippingMethods.length - 1) };
+        goHomeAndOrder(checkoutOptions).then((orderId: string) => {
+            const shippingMethodName = getDiffShippingMethod(checkoutOptions.shippingMethod);
+            const orderStatus = "PENDING";
+            const customData = {data: `${dataPath} customData`, canDelete: true};
+            const mutation = `mutation {
+                ${mutationName}(input: {
+                    orderId: "${orderId}"
+                    orderStatus: ${orderStatus}
+                    shippingMethodName: "${shippingMethodName}"
+                    customData: ${toFormattedString(customData)}
+                }) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+                const propNames = ["customData"];
+                const propValues = [customData];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(id: "${orderId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                            ${standardQueryBody}
+                        }
+                    }`;
+                    cy.postAndCheckCustom(query, queryName, orderId, customData, originalBaseUrl);
+                });
+            });
+        });
+    });
+    
+    it.only("Mutation using 'customData' input will overwrite the existing customData on an order", () => {
+        const checkoutOptions = { shippingMethod: Cypress._.random(0, shippingMethods.length - 1) };
+        //goHomeAndOrder(checkoutOptions).then((orderId: string) => {
+            const orderId = "9b841a92-da58-44d0-ae90-64137971d673"
+            const shippingMethodName = "2nd Day Air"; //getDiffShippingMethod(checkoutOptions.shippingMethod);
+            const orderStatus = "PENDING";
+            const customData = {data: `${dataPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+            const mutation = `mutation {
+                ${mutationName}(input: {
+                    orderId: "${orderId}"
+                    orderStatus: ${orderStatus}
+                    shippingMethodName: "${shippingMethodName}"
+                    customData: ${toFormattedString(customData)}
+                }) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((resp) => {
+                const newShippingMethodName = getDiffShippingMethod(shippingMethods.indexOf("2nd Day Air"));
+                const newCustomData = {data: `${dataPath} customData`, newDataField: { canDelete: true }};
+                const secondMutation = `mutation {
+                    ${mutationName}(input: {
+                        orderId: "${orderId}"
+                        orderStatus: ${orderStatus}
+                        shippingMethodName: "${newShippingMethodName}"
+                        customData: ${toFormattedString(newCustomData)}
+                    }) {
+                        ${standardMutationBody}
+                    }
+                }`;
+                cy.postMutAndValidate(secondMutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+                    const propNames = ["customData"];
+                    const propValues = [newCustomData];
+                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(id: "${orderId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                ${standardQueryBody}
+                            }
+                        }`;
+                        cy.postAndCheckCustom(query, queryName, orderId, newCustomData, originalBaseUrl);
+                    });
+                });
+            });
+        //});
+    });
+
+    it("Mutation using shipmentRecord 'customData' input updates shipmentRecord with customData", () => {
+        const checkoutOptions = { shippingMethod: Cypress._.random(0, shippingMethods.length - 1) };
+        goHomeAndOrder(checkoutOptions).then((orderId: string) => {
+            productQtyWgtId(orderId).then((orderedProducts) => {
+                const shippingMethodName = shippingMethods[checkoutOptions.shippingMethod];
+                const orderStatus = "PENDING";
+                const customData = { specialInstructions: 'Mailbox is in the back of complex', customerComplaints: []};
+                const shipmentRecords = [createShipmentRecord(orderedProducts, true, undefined, customData)];
+                const mutation = `mutation {
+                    ${mutationName}(input: {
+                        orderId: "${orderId}"
+                        orderStatus: ${orderStatus}
+                        shippingMethodName: "${shippingMethodName}"
+                        shippingStatus: SHIPPED
+                        shipmentRecords: ${toFormattedString(shipmentRecords)}
+                    }) {
+                        ${standardMutationBody}
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+                    confirmRecordCustomData(res, [customData]);
+                });
+            });
+        });
+    });
+
+    it("Mutation using shipmentRecord 'customData' input will overwrite the existing customData on a shipmentRecord", () => {
+        const checkoutOptions = { shippingMethod: Cypress._.random(0, shippingMethods.length - 1) };
+        //goHomeAndOrder(checkoutOptions).then((orderId: string) => {
+            const orderId = "9b841a92-da58-44d0-ae90-64137971d673"
+            productQtyWgtId(orderId).then((orderedProducts) => {
+                const shippingMethodName = "2nd Day Air"; //shippingMethods[checkoutOptions.shippingMethod];
+                const orderStatus = "PROCESSING";
+                const customData = { specialInstructions: {task: 'Mailbox is in the back of complex', completed: false}, customerComplaints: []};
+                const shipmentRecords = [createShipmentRecord(orderedProducts, false, undefined, customData)];
+                const mutation = `mutation {
+                    ${mutationName}(input: {
+                        orderId: "${orderId}"
+                        orderStatus: ${orderStatus}
+                        shippingMethodName: "${shippingMethodName}"
+                        shippingStatus: PARTIALLY_SHIPPED
+                        shipmentRecords: ${toFormattedString(shipmentRecords)}
+                    }) {
+                        ${standardMutationBody}
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+                    confirmRecordCustomData(res, [customData]);
+                    const qtyShipped = shipmentRecords[0].shippingLineItems[0].quantityShipped;
+                    const remainingQty = orderedProducts[0].quantity - qtyShipped;
+                    const newCustomData = { specialInstructions: {task: 'Mailbox is in the back of complex', completed: true}, customerComplaints: ["Left beside mailbox"]};
+                    const newRecords = [createShipmentRecord(orderedProducts, false, qtyShipped, newCustomData), createShipmentRecord(orderedProducts, false, remainingQty, customData)]
+                    const secondMutation = `mutation {
+                        ${mutationName}(input: {
+                            orderId: "${orderId}"
+                            orderStatus: ${orderStatus}
+                            shippingMethodName: "${shippingMethodName}"
+                            shippingStatus: SHIPPED
+                            shipmentRecords: ${toFormattedString(newRecords)}
+                        }) {
+                            ${standardMutationBody}
+                        }
+                    }`;
+                    cy.postMutAndValidate(secondMutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+                        confirmRecordCustomData(res, [newCustomData, customData]);
+                    });
                 });
             });
         //});

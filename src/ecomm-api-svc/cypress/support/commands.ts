@@ -459,7 +459,7 @@ Cypress.Commands.add("checkCustomData", (res, dataPath: string, expectData?: boo
 });
 
 // Posts query and checks custom Data. Query body should have searchString for a specific item, and ask for id and customData
-Cypress.Commands.add("postAndCheckCustom", (query: string, queryPath: string, id: string, customData) => {
+Cypress.Commands.add("postAndCheckCustom", (query: string, queryPath: string, id: string, customData, altUrl?: string) => {
     Cypress.log({
         name: "postAndCheckCustom",
         message: `Item's id: ${id}, query: ${queryPath}`,
@@ -472,7 +472,7 @@ Cypress.Commands.add("postAndCheckCustom", (query: string, queryPath: string, id
             };
         },
     });
-    cy.postGQL(query).then((res) => {
+    cy.postGQL(query, altUrl).then((res) => {
         // should be 200 ok
         expect(res.isOkStatusCode).to.be.equal(true);
         
