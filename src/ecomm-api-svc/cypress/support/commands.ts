@@ -1874,6 +1874,17 @@ Cypress.Commands.add("storefrontLogin", () => {
     });
 });
 
+Cypress.Commands.add("ensurePurchaseMultiple", () => {
+    cy.get(".add-to-cart-panel").find('.qty-input').invoke('val').then((val) => {
+        const qty = typeof val !== "number" ? parseInt(val) : val;
+        if (qty < 10) {
+            cy.get(".add-to-cart-panel").find('.qty-input').clear();
+            const newQty = 10 * Cypress._.random(1, 5)
+            cy.get(".add-to-cart-panel").find('.qty-input').type(newQty.toString());
+        }
+    });
+});
+
 Cypress.Commands.add("addCypressProductToCart", () => {
     Cypress.log({
         displayName: " ",
@@ -1883,10 +1894,13 @@ Cypress.Commands.add("addCypressProductToCart", () => {
         .find("li")
         .contains("Cypress Trees")
         .click({force: true});
+    cy.wait(500);
+    cy.contains("Bald Cypress")
+        .click({force: true});
     cy.wait(500); 
-    cy.get(".item-box")
-        .eq(0)
-        .find(".product-box-add-to-cart-button")
+    cy.ensurePurchaseMultiple();
+    cy.wait(500);
+    cy.get(".add-to-cart-button")
         .click({force: true});
     cy.wait(200);
     goToCart();
@@ -1899,6 +1913,8 @@ Cypress.Commands.add("addDevProductToCart", () => {
     });
     cy.contains("Chocolate Muffin BD 2")
         .click({force: true});
+    cy.wait(500);
+    cy.ensurePurchaseMultiple();
     cy.wait(500);
     cy.get(".add-to-cart-button")
         .click({force: true});
@@ -2024,9 +2040,9 @@ Cypress.Commands.add("getToOrders", () => {
 });
 
 Cypress.Commands.add("placeOrder", (checkoutOptions?) => {
-    if (Cypress.config("baseUrl").includes("tst")) {
+    if (Cypress.env("storefrontUrl").includes("tst")) {
         cy.addCypressProductToCart();
-    } else if (Cypress.config("baseUrl").includes("dev")) {
+    } else if (Cypress.env("storefrontUrl").includes("dev") || Cypress.env("storefrontUrl").includes("localhost")) {
         cy.addDevProductToCart();
     }
     cy.location("pathname").should("include", "cart");
