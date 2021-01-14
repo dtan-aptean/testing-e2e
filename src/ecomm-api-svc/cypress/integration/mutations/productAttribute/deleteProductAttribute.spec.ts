@@ -4,9 +4,9 @@ import { toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 6
 describe('Mutation: deleteProductAttribute', () => {
-    let id = '';
-    let currentItemName = '';
-    const extraIds = [];    // Should push objects formatted as {itemId: "example", deleteName: "example"}
+    var id = '';
+    var currentItemName = '';
+    const extraIds = [] as {itemId: string, deleteName: string}[];
     const mutationName = 'deleteProductAttribute';
     const creationName = 'createProductAttribute';
     const queryName = "productAttributes";
@@ -60,112 +60,116 @@ describe('Mutation: deleteProductAttribute', () => {
         }
     });
 
-    it("Mutation will fail without input", () => {
-        const mutation = `mutation {
-            ${mutationName} {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail when input is an empty object", () => {
-        const mutation = `mutation {
-            ${mutationName}(input: {}) {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail with invalid 'id' input", () => {
-        const mutation = `mutation {
-            ${mutationName}(input: { id: true }) {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will succeed with valid 'id' input from an existing item", () => {
-        const mutation = `mutation {
-            ${mutationName}(input: { id: "${id}" }) {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-            expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-            cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                id = '';
-                currentItemName = '';
-            });
-        });
-    });
-
-    it("Mutation will fail when given 'id' input from an deleted item", () => {
-        const mutation = `mutation {
-            ${mutationName}(input: { id: "${id}" }) {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-            expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-            cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                id = '';
-                currentItemName = '';
-                cy.postAndConfirmMutationError(mutation, mutationName);
-            });
-        });
-    });
-
-    it("Deleting an item connected to a product will disassociate the item from the product", () => {
-        const extraMutationName = "createProduct";
-        const extraDataPath = "product";
-        const productInfoName = "productInfo";
-        const productAttributes = [{id: id, name: currentItemName, values: [{name: "PA deletee value"}]}];
-        const info = [{name: `Cypress ${mutationName} product test`, languageCode: "Standard"}];
-        const mutation = `mutation {
-            ${extraMutationName}(
-                input: { 
-                    ${productInfoName}: ${toFormattedString(info)}
-                    attributeIds: ["${id}"]
+    context("Testing basic required inputs", () => {
+        it("Mutation will fail without input", () => {
+            const mutation = `mutation {
+                ${mutationName} {
+                    ${standardMutationBody}
                 }
-            ) {
-                code
-                message
-                error
-                ${extraDataPath} {
-                    id
-                    ${productInfoName} {
-                        name
-                        languageCode
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will fail when input is an empty object", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: {}) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will fail with invalid 'id' input", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: { id: true }) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will succeed with valid 'id' input from an existing item", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: { id: "${id}" }) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
+                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
+                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
+                    id = '';
+                    currentItemName = '';
+                });
+            });
+        });
+
+        it("Mutation will fail when given 'id' input from an deleted item", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: { id: "${id}" }) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
+                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
+                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
+                    id = '';
+                    currentItemName = '';
+                    cy.postAndConfirmMutationError(mutation, mutationName);
+                });
+            });
+        });
+    });
+
+    context("Testing deletion when connected to other items or features", () => {
+        it("Deleting an item connected to a product will disassociate the item from the product", () => {
+            const extraMutationName = "createProduct";
+            const extraDataPath = "product";
+            const productInfoName = "productInfo";
+            const productAttributes = [{id: id, name: currentItemName, values: [{name: "PA deletee value"}]}];
+            const info = [{name: `Cypress ${mutationName} product test`, languageCode: "Standard"}];
+            const mutation = `mutation {
+                ${extraMutationName}(
+                    input: { 
+                        ${productInfoName}: ${toFormattedString(info)}
+                        attributeIds: ["${id}"]
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${extraDataPath} {
+                        id
+                        ${productInfoName} {
+                            name
+                            languageCode
+                        }
                     }
                 }
-            }
-        }`;
-        cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-            const productId = res.body.data[extraMutationName][extraDataPath].id;
-            extraIds.push({itemId: productId, deleteName: "deleteProduct"});
-            const propNames = [productInfoName];
-            const propValues = [info];
-            cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
-                const queryBody = `id
-                    name
-                    values {
+            }`;
+            cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
+                const productId = res.body.data[extraMutationName][extraDataPath].id;
+                extraIds.push({itemId: productId, deleteName: "deleteProduct"});
+                const propNames = [productInfoName];
+                const propValues = [info];
+                cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                    const queryBody = `id
                         name
-                    }`;
-                cy.queryByProductId("productAttributes", queryBody, productId, productAttributes).then(() => {
-                    const mutation = `mutation {
-                        ${mutationName}(input: { id: "${id}" }) {
-                            ${standardMutationBody}
-                        }
-                    }`;
-                    cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                        expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                        cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                            id = '';
-                            currentItemName = '';
-                            cy.queryByProductId("productAttributes", queryBody, productId, []);
+                        values {
+                            name
+                        }`;
+                    cy.queryByProductId("productAttributes", queryBody, productId, productAttributes).then(() => {
+                        const mutation = `mutation {
+                            ${mutationName}(input: { id: "${id}" }) {
+                                ${standardMutationBody}
+                            }
+                        }`;
+                        cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
+                            expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
+                            cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
+                                id = '';
+                                currentItemName = '';
+                                cy.queryByProductId("productAttributes", queryBody, productId, []);
+                            });
                         });
                     });
                 });

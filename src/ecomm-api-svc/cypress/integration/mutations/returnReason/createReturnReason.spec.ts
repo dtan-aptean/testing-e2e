@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 // TEST COUNT: 6
 describe('Mutation: createReturnReason', () => {
-    let id = '';
+    var id = '';
     const mutationName = 'createReturnReason';
     const queryName = "returnReasons";
     const dataPath = 'returnReason';
@@ -31,132 +31,136 @@ describe('Mutation: createReturnReason', () => {
         }
     });
     
-    it("Mutation will fail without input", () => {
-        const mutation = `mutation {
-            ${mutationName} {
-                ${standardMutationBody}
-            }
-        }`
-        cy.postAndConfirmError(mutation);
-    });
+    context("Testing basic required inputs", () => {
+        it("Mutation will fail without input", () => {
+            const mutation = `mutation {
+                ${mutationName} {
+                    ${standardMutationBody}
+                }
+            }`
+            cy.postAndConfirmError(mutation);
+        });
 
-    it("Mutation will fail when input is an empty object", () => {
-        const mutation = `mutation {
-            ${mutationName}(input: {}) {
-                ${standardMutationBody}
-            }
-        }`
-        cy.postAndConfirmError(mutation);
-    });
+        it("Mutation will fail when input is an empty object", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: {}) {
+                    ${standardMutationBody}
+                }
+            }`
+            cy.postAndConfirmError(mutation);
+        });
 
-    it("Mutation will fail with invalid 'Name' input", () => {
-        const mutation = `mutation {
-            ${mutationName}(input: { name: 7 }) {
-                ${standardMutationBody}
-            }
-        }`
-        cy.postAndConfirmError(mutation);
-    });
+        it("Mutation will fail with invalid 'Name' input", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: { name: 7 }) {
+                    ${standardMutationBody}
+                }
+            }`
+            cy.postAndConfirmError(mutation);
+        });
 
-    it("Mutation with valid 'Name' input will create a new item", () => {
-        const name = "Cypress API Return Reason";
-        const mutation = `mutation {
-            ${mutationName}(input: { name: "${name}" }) {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            id = res.body.data[mutationName][dataPath].id;
-            const propNames = ["name"];
-            const propValues = [name];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
-                        nodes {
-                            id
-                            name
+        it("Mutation with valid 'Name' input will create a new item", () => {
+            const name = "Cypress API Return Reason";
+            const mutation = `mutation {
+                ${mutationName}(input: { name: "${name}" }) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                id = res.body.data[mutationName][dataPath].id;
+                const propNames = ["name"];
+                const propValues = [name];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                            }
                         }
-                    }
-                }`;
-                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
             });
         });
     });
 
-    it("Mutation with all required input and 'customData' input creates item with customData", () => {
-        const name = "Cypress ReturnReason customData";
-        const customData = {data: `${dataPath} customData`, canDelete: true};
-        const mutation = `mutation {
-            ${mutationName}(
-                input: {
-                    name: "${name}"
-                    customData: {data: "${customData.data}", canDelete: ${customData.canDelete}}
-                }
-            ) {
-                code
-                message
-                error
-                ${dataPath} {
-                    id
-                    name
-                    customData
-                }
-            }
-        }`;
-        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            id = res.body.data[mutationName][dataPath].id;
-            const names = ["customData", "name"];
-            const testValues = [customData, name];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
-                const queryName = "returnReasons";
-                const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
-                        nodes {
-                            id
-                            customData
-                        }
+    context("Testing customData input and optional input", () => {
+        it("Mutation with all required input and 'customData' input creates item with customData", () => {
+            const name = "Cypress ReturnReason customData";
+            const customData = {data: `${dataPath} customData`, canDelete: true};
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        name: "${name}"
+                        customData: {data: "${customData.data}", canDelete: ${customData.canDelete}}
                     }
-                }`;
-                cy.postAndCheckCustom(query, queryName, id, customData);
+                ) {
+                    code
+                    message
+                    error
+                    ${dataPath} {
+                        id
+                        name
+                        customData
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                id = res.body.data[mutationName][dataPath].id;
+                const names = ["customData", "name"];
+                const testValues = [customData, name];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
+                    const queryName = "returnReasons";
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                customData
+                            }
+                        }
+                    }`;
+                    cy.postAndCheckCustom(query, queryName, id, customData);
+                });
             });
         });
-    });
 
-    it("Mutation creates item that has all included input", () => {
-        const displayOrder = Cypress._.random(1, 20);
-        const name = "Cypress ReturnReason Input";
-        const mutation = `mutation {
-            ${mutationName}(
-                input: {
-                    displayOrder: ${displayOrder}
-                    name: "${name}"
-                }
-            ) {
-                code
-                message
-                error
-                ${dataPath} {
-                    id
-                    displayOrder
-                    name
-                }
-            }
-        }`;
-        cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            id = res.body.data[mutationName][dataPath].id;
-            const propNames = ["name", "displayOrder"];
-            const propValues = [name, displayOrder];
-            cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
-                const query = `{
-                    ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
-                        nodes {
-                            id
-                            name
-                            displayOrder
-                        }
+        it("Mutation creates item that has all included input", () => {
+            const displayOrder = Cypress._.random(1, 20);
+            const name = "Cypress ReturnReason Input";
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        displayOrder: ${displayOrder}
+                        name: "${name}"
                     }
-                }`;
-                cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                ) {
+                    code
+                    message
+                    error
+                    ${dataPath} {
+                        id
+                        displayOrder
+                        name
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                id = res.body.data[mutationName][dataPath].id;
+                const propNames = ["name", "displayOrder"];
+                const propValues = [name, displayOrder];
+                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                displayOrder
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
             });
         });
     });

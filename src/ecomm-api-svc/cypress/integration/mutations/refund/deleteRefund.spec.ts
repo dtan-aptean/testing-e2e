@@ -4,9 +4,9 @@ import { confirmStorefrontEnvValues } from "../../../support/commands";
 
 // TEST COUNT: 6
 describe('Mutation: deleteRefund', () => {
-    let id = '';
-    let orderInUse = '';
-    let refund = 0;
+    var id = '';
+    var orderInUse = '';
+    var refund = 0;
     const mutationName = 'deleteRefund';
     const creationName = 'createRefund';
     const queryName = "refunds";
@@ -68,83 +68,47 @@ describe('Mutation: deleteRefund', () => {
         }
     });
 
-    it("Mutation will fail without input", () => {
-        const mutation = `mutation {
-            ${mutationName} {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
-    });
-
-    it("Mutation will fail when input is an empty object", () => {
-        const mutation = `mutation {
-            ${mutationName}(input: {}) {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
-    });
-
-    it("Mutation will fail with invalid 'id' input", () => {
-        const mutation = `mutation {
-            ${mutationName}(input: { orderId: true }) {
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
-    });
-
-    it("Mutation will fail when given an 'orderId' that doesn't have a refund", () => {
-        const mutation = `mutation {
-            ${mutationName}(input: { orderId: "${orderInUse}"}){
-                ${standardMutationBody}
-            }
-        }`;
-        cy.postAndConfirmMutationError(mutation, mutationName, undefined, originalBaseUrl).then((res) => {
-            expect(res.body.errors[0].message).to.include("Refund Not Exist For this Order");
-        });
-    });
-
-    it("Mutation will succeed with given the 'orderId' of an existing item", () => {
-        refundOrder().then(() => {
+    context("Testing basic required inputs", () => {
+        it("Mutation will fail without input", () => {
             const mutation = `mutation {
-                ${mutationName}(input: { orderId: "${id}"}){
+                ${mutationName} {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmDelete(mutation, mutationName, originalBaseUrl).then((res) => {
-                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                cy.queryForDeletedById(true, id, "searchString", queryName, originalBaseUrl).then(() => {
-                    id = '';
-                });
-            });
+            cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
         });
-    });
 
-    it("Mutation that successfully deletes a refund also updates various fields on the order", () => {
-        refundOrder().then(() => {
-            const dummyOrder = {
-                id: orderInUse,
-                paymentStatus: "REFUNDED",
-                refundedAmount: {
-                    amount: refund,
-                    currency: "USD"
-                }
-            };
-            const orderQuery = `{
-                orders(id: "${orderInUse}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                    nodes {
-                        id
-                        paymentStatus
-                        refundedAmount {
-                            amount
-                            currency
-                        }
-                    }
+        it("Mutation will fail when input is an empty object", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: {}) {
+                    ${standardMutationBody}
                 }
             }`;
-            cy.confirmUsingQuery(orderQuery, "orders", orderInUse, Object.getOwnPropertyNames(dummyOrder), Object.values(dummyOrder), originalBaseUrl).then(() => {
+            cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
+        });
+
+        it("Mutation will fail with invalid 'id' input", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: { orderId: true }) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
+        });
+
+        it("Mutation will fail when given an 'orderId' that doesn't have a refund", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: { orderId: "${orderInUse}"}){
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, undefined, originalBaseUrl).then((res) => {
+                expect(res.body.errors[0].message).to.include("Refund Not Exist For this Order");
+            });
+        });
+
+        it("Mutation will succeed with given the 'orderId' of an existing item", () => {
+            refundOrder().then(() => {
                 const mutation = `mutation {
                     ${mutationName}(input: { orderId: "${id}"}){
                         ${standardMutationBody}
@@ -154,15 +118,53 @@ describe('Mutation: deleteRefund', () => {
                     expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
                     cy.queryForDeletedById(true, id, "searchString", queryName, originalBaseUrl).then(() => {
                         id = '';
-                        const postDeleteOrder = {
-                            id: orderInUse,
-                            paymentStatus: "PAID",
-                            refundedAmount: {
-                                amount: 0,
-                                currency: "USD"
+                    });
+                });
+            });
+        });
+
+        it("Mutation that successfully deletes a refund also updates various fields on the order", () => {
+            refundOrder().then(() => {
+                const dummyOrder = {
+                    id: orderInUse,
+                    paymentStatus: "REFUNDED",
+                    refundedAmount: {
+                        amount: refund,
+                        currency: "USD"
+                    }
+                };
+                const orderQuery = `{
+                    orders(id: "${orderInUse}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        nodes {
+                            id
+                            paymentStatus
+                            refundedAmount {
+                                amount
+                                currency
                             }
-                        };
-                        cy.confirmUsingQuery(orderQuery, "orders", orderInUse, Object.getOwnPropertyNames(postDeleteOrder), Object.values(postDeleteOrder), originalBaseUrl);
+                        }
+                    }
+                }`;
+                cy.confirmUsingQuery(orderQuery, "orders", orderInUse, Object.getOwnPropertyNames(dummyOrder), Object.values(dummyOrder), originalBaseUrl).then(() => {
+                    const mutation = `mutation {
+                        ${mutationName}(input: { orderId: "${id}"}){
+                            ${standardMutationBody}
+                        }
+                    }`;
+                    cy.postAndConfirmDelete(mutation, mutationName, originalBaseUrl).then((res) => {
+                        expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
+                        cy.queryForDeletedById(true, id, "searchString", queryName, originalBaseUrl).then(() => {
+                            id = '';
+                            const postDeleteOrder = {
+                                id: orderInUse,
+                                paymentStatus: "PAID",
+                                refundedAmount: {
+                                    amount: 0,
+                                    currency: "USD"
+                                }
+                            };
+                            cy.confirmUsingQuery(orderQuery, "orders", orderInUse, Object.getOwnPropertyNames(postDeleteOrder), Object.values(postDeleteOrder), originalBaseUrl);
+                        });
                     });
                 });
             });
