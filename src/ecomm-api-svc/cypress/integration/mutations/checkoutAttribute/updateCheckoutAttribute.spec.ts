@@ -8,7 +8,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
     let updateCount = 0;
     let taxCategoryId = '';
     let values = '';
-    const extraIds = []; // Should push objects formatted as {itemId: "example", deleteName: "example"}
+    const extraIds = [] as {itemId: "example", deleteName: "example"}[];
     const mutationName = 'updateCheckoutAttribute';
     const queryName = "checkoutAttributes";
     const dataPath = 'checkoutAttribute';
@@ -41,18 +41,6 @@ describe('Mutation: updateCheckoutAttribute', () => {
     });
 
     after(() => {
-        if (taxCategoryId !== "") {
-            const taxDeletionName = "deleteTaxCategory";
-            const taxRemovalMutation = `mutation {
-                ${taxDeletionName}(input: { id: "${taxCategoryId}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(taxRemovalMutation, taxDeletionName);
-            cy.wait(1000);
-        }
         if (id !== "") {
             // Delete any supplemental items we created
             if (extraIds.length > 0) {
@@ -79,7 +67,23 @@ describe('Mutation: updateCheckoutAttribute', () => {
             }`;
             cy.postAndConfirmDelete(removalMutation, deletionName);
         }
+        if (taxCategoryId !== "") {
+            const taxDeletionName = "deleteTaxCategory";
+            const taxRemovalMutation = `mutation {
+                ${taxDeletionName}(input: { id: "${taxCategoryId}" }) {
+                    code
+                    message
+                    error
+                }
+            }`;
+            cy.postAndConfirmDelete(taxRemovalMutation, taxDeletionName);
+            cy.wait(1000);
+        }
     });
+
+    /**
+     * 
+     */
 
     it("Mutation will fail without input", () => {
         const mutation = `mutation {
@@ -114,7 +118,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 ${standardMutationBody}
             }
         }`;
-        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+        cy.postAndConfirmError(mutation);
     });
 
     it("Mutation will fail with no 'Name' input", () => {
@@ -129,7 +133,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 ${standardMutationBody}
             }
         }`;
-        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+        cy.postAndConfirmError(mutation);
     });
 
     it("Mutation will fail with invalid 'Name' input", () => {
@@ -148,7 +152,9 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 ${standardMutationBody}
             }
         }`;
-        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+        cy.postAndConfirmError(mutation).then((res) => {
+            expect(res.body.errors[0].message).to.eql('Field "UpdateCheckoutAttributeInput.values" of required type "[UpdateCheckoutAttributeValueInput!]!" was not provided.');
+        });
     });
 
     it("Mutation will fail with invalid 'Values' input", () => {
@@ -192,7 +198,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
     it("Mutation connects item with correct taxCategory when valid 'taxCategoryId' input is used", () => {
         const taxCategoryName = "Cypress updateAttribute TC";
         cy.searchOrCreate(taxCategoryName, "taxCategories", "createTaxCategory").then((returnedId: string) => {
-            const taxCategoryId = returnedId;
+            taxCategoryId = returnedId;
             const dummyTaxCategory = {id: taxCategoryId, name: taxCategoryName};
             updateCount++;
             const valuesCopy = JSON.parse(JSON.stringify(values));

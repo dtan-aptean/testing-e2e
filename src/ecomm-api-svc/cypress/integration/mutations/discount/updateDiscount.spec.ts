@@ -782,13 +782,12 @@ describe('Mutation: updateDiscount', () => {
         const couponCode = requiresCouponCode ? `A${Cypress._.random(0, 1e5)}` : '';
         const usePercentageForDiscount = Cypress._.random(0, 1) === 1;
         const discountPercentage = usePercentageForDiscount ? Cypress._.random(1, 20) : 0;
-        const applyDiscountToSubCategories = Cypress._.random(0, 1) === 1;
         const newDiscountAmount = {
             amount: discountAmount.amount + Cypress._.random(1, 5),
             currency: "USD"
         };
         const maximumDiscountAmount = {
-            amount: Cypress._.random(100, 2000),
+            amount: usePercentageForDiscount ? Cypress._.random(100, 2000): 0,
             currency: "USD"
         };
         const mutation = `mutation {
@@ -799,10 +798,8 @@ describe('Mutation: updateDiscount', () => {
                     requiresCouponCode: ${requiresCouponCode}
                     usePercentageForDiscount: ${usePercentageForDiscount}
                     discountPercentage: ${discountPercentage}
-                    applyDiscountToSubCategories: ${applyDiscountToSubCategories}
                     name: "${newName}"
-                    discountAmount: ${toFormattedString(newDiscountAmount)}
-                    maximumDiscountAmount: ${toFormattedString(maximumDiscountAmount)}
+                    discountAmount: ${toFormattedString(newDiscountAmount)}${usePercentageForDiscount ? `\n\t\t\t\t\tmaximumDiscountAmount: ${toFormattedString(maximumDiscountAmount)}`: ""}
                 }
             ) {
                 code
@@ -829,8 +826,8 @@ describe('Mutation: updateDiscount', () => {
             }
         }`;
         cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-            const propNames = ["isCumulative", "requiresCouponCode", "couponCode", "usePercentageForDiscount", "discountPercentage", "applyDiscountToSubCategories", "name", "discountAmount", "maximumDiscountAmount"];
-            const propValues = [isCumulative, requiresCouponCode, couponCode, usePercentageForDiscount, discountPercentage, applyDiscountToSubCategories, newName, newDiscountAmount, maximumDiscountAmount];
+            const propNames = ["isCumulative", "requiresCouponCode", "couponCode", "usePercentageForDiscount", "discountPercentage", "name", "discountAmount", "maximumDiscountAmount"];
+            const propValues = [isCumulative, requiresCouponCode, couponCode, usePercentageForDiscount, discountPercentage, newName, newDiscountAmount, maximumDiscountAmount];
             cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
                 const query = `{
                     ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
@@ -842,7 +839,6 @@ describe('Mutation: updateDiscount', () => {
                             couponCode
                             usePercentageForDiscount
                             discountPercentage
-                            applyDiscountToSubCategories
                             discountAmount {
                                 amount
                                 currency

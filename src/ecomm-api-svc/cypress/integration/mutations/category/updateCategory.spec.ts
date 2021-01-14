@@ -105,7 +105,7 @@ describe('Mutation: updateCategory', () => {
                 ${standardMutationBody}
             }
         }`;
-        cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+        cy.postAndConfirmError(mutation);
     });
 
     it("Mutation will fail with no 'languageCode' input", () => {

@@ -23,6 +23,19 @@ describe('Mutation: createCheckoutAttribute', () => {
     let taxCategoryId = '';
 
     afterEach(() => {
+        if (id !== "") {
+            const deletionName = "deleteCheckoutAttribute";
+            const removalMutation = `mutation {
+                ${deletionName}(input: { id: "${id}" }) {
+                    code
+                    message
+                    error
+                }
+            }`;
+            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
+                id = "";
+            });
+        }
         if (taxCategoryId !== "") {
             const taxDeletionName = "deleteTaxCategory";
             const taxRemovalMutation = `mutation {
@@ -36,19 +49,6 @@ describe('Mutation: createCheckoutAttribute', () => {
                 taxCategoryId = "";
             });
             cy.wait(1000);
-        }
-        if (id !== "") {
-            const deletionName = "deleteCheckoutAttribute";
-            const removalMutation = `mutation {
-                ${deletionName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
-                id = "";
-            });
         }
     });
     
@@ -100,16 +100,8 @@ describe('Mutation: createCheckoutAttribute', () => {
                 ${standardMutationBody}
             }
         }`;
-        cy.postGQL(mutation).then((res) => {
-            // should have errors
-            assert.exists(res.body.errors);
-            expect(res.body.errors[0].message).to.include("INVALID_ARGUMENT");
-            expect(res.body.errors[0].message).to.include("checkout value is required");
-
-            // Body should also have errors
-            assert.notExists(res.body.data[mutationName][dataPath]);
-            expect(res.body.data[mutationName].code).to.be.eql("ERROR");
-            expect(res.body.data[mutationName].message).to.be.eql("Error creating checkout attribute");
+        cy.postAndConfirmError(mutation).then((res) => {
+            expect(res.body.errors[0].message).to.eql('Field "CreateCheckoutAttributeInput.values" of required type "[CreateCheckoutAttributeValueInput!]!" was not provided.');
         });
     });
 
@@ -201,7 +193,7 @@ describe('Mutation: createCheckoutAttribute', () => {
         });
     });
 
-    it("Mutation returns item connected with correct taxCategory when valid 'taxCategoryId' input is used", () => {
+    it.only("Mutation returns item connected with correct taxCategory when valid 'taxCategoryId' input is used", () => {
         const taxCategoryName = "Cypress Attribute Test TC";
         cy.searchOrCreate(taxCategoryName, "taxCategories", "createTaxCategory").then((returnedId: string) => {
             taxCategoryId = returnedId;
