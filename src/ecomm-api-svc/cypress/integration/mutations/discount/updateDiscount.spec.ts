@@ -617,7 +617,7 @@ describe('Mutation: updateDiscount', () => {
         });
     });
 
-    context(("Testing 'applyDiscountsToSubCategories'"), () => {
+    context(("Testing 'applyDiscountToSubCategories'"), () => {
         var parentId = "";
         var childId = "";
 
@@ -649,11 +649,11 @@ describe('Mutation: updateDiscount', () => {
             }
         });
 
-        it("Mutation will not accept 'applyDiscountsToSubCategories' if the discountType isn't set to categories", () => {
+        it("Mutation will not accept 'applyDiscountToSubCategories' if the discountType isn't set to categories", () => {
             // TODO
         });
 
-        it("Mutation will accept 'applyDiscountsToSubCategories' if the discountType is ASSIGNED_TO_CATEGORIES", () => {
+        it("Mutation will accept 'applyDiscountToSubCategories' if the discountType is ASSIGNED_TO_CATEGORIES", () => {
             // TODO
         });
 

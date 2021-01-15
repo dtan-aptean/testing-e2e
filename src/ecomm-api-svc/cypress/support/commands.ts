@@ -1316,7 +1316,7 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataP
                 } else {
                     matchArray(item[props[p]], itemToMatch[props[p]], descendingPropName);
                 }
-            } else if (typeof itemToMatch[props[p]] === 'object') {
+            } else if (itemToMatch[props[p]] !== null && typeof itemToMatch[props[p]] === 'object') {
                 matchObject(item[props[p]], itemToMatch[props[p]], descendingPropName);
             } else {
                 expect(item[props[p]]).to.be.eql(itemToMatch[props[p]], `Verify ${descendingPropName}`);
@@ -1632,6 +1632,27 @@ Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, se
             return res;
         }
     });
+});
+
+Cypress.Commands.add("deleteItem", (mutationName: string, id: string) => {
+    Cypress.log({
+        name: "deleteItem",
+        message: `delete ${mutationName.replace("delete", "")} with id "${id}"`,
+        consoleProps: () => {
+            return {
+                "Delete Mutation": mutationName,
+                "Item's Id": id
+            };
+        },
+    });
+    var mutation = `mutation {
+        ${mutationName}(input: { id: "${id}" }) {
+            code
+            message
+            error
+        }
+    }`;
+    return cy.postAndConfirmDelete(mutation, mutationName);
 });
 
 /**
