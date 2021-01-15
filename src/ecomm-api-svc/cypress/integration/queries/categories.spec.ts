@@ -154,14 +154,7 @@ describe('Query: categories', () => {
                     cy.wait(2000);
                     cy.queryForDeleted(false, item.name, item.id, "products", "productInfo").then((itemPresent: boolean) => {
                         if (itemPresent) {
-                            const mutation = `mutation {
-                                deleteProduct(input: {id: true}){
-                                    code
-                                    message
-                                    error
-                                }
-                            }`;
-                            cy.postAndConfirmDelete(mutation, "deleteProduct");
+                            cy.deleteItem("deleteProduct", item.id);
                         }
                     });
                 });
@@ -171,14 +164,7 @@ describe('Query: categories', () => {
                     cy.wait(2000);
                     cy.queryForDeleted(false, item.name, item.id, queryName, infoPath).then((itemPresent: boolean) => {
                         if (itemPresent) {
-                            var mutation = `mutation {
-                                ${deleteName}(input: {id: "${item.id}"}){
-                                    code
-                                    message
-                                    error
-                                }
-                            }`;
-                            cy.postAndConfirmDelete(mutation, deleteName);
+                            cy.deleteItem(deleteName, item.id);
                         }
                     });
                 });
@@ -219,30 +205,9 @@ describe('Query: categories', () => {
                             expect(nodes).to.deep.include(itemOne);
                             expect(nodes).to.deep.include(itemTwo);
                             // Now delete the product
-                            const mutation = `mutation {
-                                deleteProduct(input: {id: "${productId}"}){
-                                    code
-                                    message
-                                    error
-                                }
-                            }`;
-                            cy.postAndConfirmDelete(mutation, "deleteProduct").then(() => {
-                                const deleteOne = `mutation {
-                                    ${deleteName}(input: {id: "${idOne}"}){
-                                        code
-                                        message
-                                        error
-                                    }
-                                }`;
-                                cy.postAndConfirmDelete(deleteOne, deleteName).then(() => {
-                                    const deleteTwo = `mutation {
-                                        ${deleteName}(input: {id: "${idTwo}"}){
-                                            code
-                                            message
-                                            error
-                                        }
-                                    }`;
-                                    cy.postAndConfirmDelete(deleteTwo, deleteName);
+                            cy.deleteItem("deleteProduct", productId).then(() => {
+                                cy.deleteItem(deleteName, idOne).then(() => {
+                                    cy.deleteItem(deleteName, idTwo);
                                 });
                             });
                         });
@@ -283,14 +248,7 @@ describe('Query: categories', () => {
                     expect(totalCount).to.be.eql(0);
                     expect(nodes.length).to.eql(0);
                     // Now delete the product
-                    const mutation = `mutation {
-                        deleteProduct(input: {id: "${returnedId}"}){
-                            code
-                            message
-                            error
-                        }
-                    }`;
-                    cy.postAndConfirmDelete(mutation, "deleteProduct");
+                    cy.deleteItem("deleteProduct", returnedId);
                 });
             });
         });
@@ -319,36 +277,15 @@ describe('Query: categories', () => {
                     cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((productId: string) => {
                         createdProducts.push({name: productName, id: productId});
                         // Now delete the product
-                        const mutation = `mutation {
-                            deleteProduct(input: {id: "${productId}"}){
-                                code
-                                message
-                                error
-                            }
-                        }`;
-                        cy.postAndConfirmDelete(mutation, "deleteProduct").then(() => {
+                        cy.deleteItem("deleteProduct", productId).then(() => {
                             const query = `{
                                 ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
                                     ${standardQueryBody}
                                 }
                             }`;
                             cy.postAndConfirmError(query).then(() => {
-                                const deleteOne = `mutation {
-                                    ${deleteName}(input: {id: "${idOne}"}){
-                                        code
-                                        message
-                                        error
-                                    }
-                                }`;
-                                cy.postAndConfirmDelete(deleteOne, deleteName).then(() => {
-                                    const deleteTwo = `mutation {
-                                        ${deleteName}(input: {id: "${idTwo}"}){
-                                            code
-                                            message
-                                            error
-                                        }
-                                    }`;
-                                    cy.postAndConfirmDelete(deleteTwo, deleteName);
+                                cy.deleteItem(deleteName, idOne).then(() => {
+                                    cy.deleteItem(deleteName, idTwo);
                                 });
                             });
                         });
