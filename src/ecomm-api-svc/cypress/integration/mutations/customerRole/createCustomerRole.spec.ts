@@ -17,15 +17,7 @@ describe('Mutation: createCustomerRole', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteCustomerRole";
-            const removalMutation = `mutation {
-                ${deletionName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
+            cy.deleteItem("deleteCustomerRole", id).then(() => {
                 id = "";
             });
         }

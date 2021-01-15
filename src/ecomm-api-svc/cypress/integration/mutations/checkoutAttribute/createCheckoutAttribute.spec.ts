@@ -24,31 +24,15 @@ describe('Mutation: createCheckoutAttribute', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteCheckoutAttribute";
-            const removalMutation = `mutation {
-                ${deletionName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
+            cy.deleteItem("deleteCheckoutAttribute", id).then(() => {
                 id = "";
             });
+            cy.wait(1000);
         }
         if (taxCategoryId !== "") {
-            const taxDeletionName = "deleteTaxCategory";
-            const taxRemovalMutation = `mutation {
-                ${taxDeletionName}(input: { id: "${taxCategoryId}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(taxRemovalMutation, taxDeletionName, "taxCategory").then(() => {
+            cy.deleteItem("deleteTaxCategory", taxCategoryId).then(() => {
                 taxCategoryId = "";
-            });
-            cy.wait(1000);
+            });   
         }
     });
     

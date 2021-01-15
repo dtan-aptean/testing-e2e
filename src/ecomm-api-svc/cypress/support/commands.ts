@@ -1,12 +1,19 @@
 // Turns an array or object into a string to use as gql input or with a custom command's consoleProps logging functionality
-export const toFormattedString = (item): string => {
+export const toFormattedString = (item, isMessage?: boolean, indentation?: number): string => {
     // Names of fields that are enum types and should not be wrapped in quotations.
     const enumTypes = ["discountType", "discountLimitationType", "manageInventoryMethod", "erpBackOrderMode"];
-    function iterateThrough (propNames?: string[]) {
-        var returnValue = '';
+    function addTabs (depthLevel: number) {
+        var indent = '  ';
+        for (var i = 1; i < depthLevel; i++) {
+            indent = indent + '  ';
+        }
+        return indent;
+    };
+    function iterateThrough (propNames?: string[], descentLevel?: number) {
+        var returnValue = descentLevel && isMessage ? addTabs(descentLevel) : '';
         for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
             if (i !== 0) {
-                returnValue = returnValue + ', ';
+                returnValue = returnValue + ', ' + (descentLevel && isMessage ? '\n' + addTabs(descentLevel) : '');
             }
             var value = propNames ? item[propNames[i]]: item[i];
             if (typeof value === 'string') {
@@ -19,24 +26,36 @@ export const toFormattedString = (item): string => {
                 }
             } else if (typeof value === 'object') {
                 // Arrays return as an object, so this will get both
-                value = toFormattedString(value);
+                value = toFormattedString(value, isMessage, descentLevel);
             }
             returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
         }
         return returnValue;
     };
-    var itemAsString = '{ ';
+    var itemAsString = isMessage ? '{\n' : '{ ';
     var props = undefined;
+    var descentLevel = undefined;
     if (item === null) {
         return "null";
     } else if (item === undefined) {
         return "undefined";
     } else if (Array.isArray(item)) {
-        itemAsString = '[';
+        itemAsString = isMessage ? '[\n' : '[';
     } else if (typeof item === 'object') {
         props = Object.getOwnPropertyNames(item);
     }
-    itemAsString = itemAsString + iterateThrough(props) + (props ? ' }' : ']');
+    var closer = props ? '}' : ']';
+    if (isMessage && !indentation) {
+        descentLevel = 1;
+        itemAsString = '\n' + itemAsString;
+        closer = '\n' + closer;
+    } else if (isMessage && indentation) {
+        descentLevel = indentation + 1;
+        closer = '\n' + addTabs(indentation) + closer;
+    } else {
+        closer = props ? ' ' + closer : closer; 
+    }
+    itemAsString = itemAsString + iterateThrough(props, descentLevel) + closer;
     return itemAsString;
 };
 
@@ -1271,8 +1290,8 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, dataP
                 "Mutation response": res,
                 "Mutation name": mutationName,
                 "Data path": dataPath,
-                "Properties to check": toFormattedString(propNames),
-                "Expected Values": toFormattedString(values)
+                "Properties to check": toFormattedString(propNames, true),
+                "Expected Values": toFormattedString(values, true)
             };
         },
     });
@@ -1762,8 +1781,8 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, dataPath: string, item
                 "Query Body": query,
                 "Query name": dataPath,
                 "Id of item to verify": itemId,
-                "Properties to check": toFormattedString(propNames),
-                "Expected Values": toFormattedString(values)
+                "Properties to check": toFormattedString(propNames, true),
+                "Expected Values": toFormattedString(values, true)
             };
         },
     });
@@ -1802,7 +1821,7 @@ Cypress.Commands.add('queryByProductId', (queryName: string, queryBody: string, 
                 "Query used": queryName,
                 "Query Body": queryBody,
                 "Id of Product": productId,
-                "Expected Items": toFormattedString(expectedItems),
+                "Expected Items": toFormattedString(expectedItems, true),
                 "Full query": query
             };
         },

@@ -37,26 +37,11 @@ describe('Mutation: updateCustomerRole', () => {
             if (extraIds.length > 0) {
                 for (var i = 0; i < extraIds.length; i++) {
                     cy.wait(2000);
-                    var extraRemoval = `mutation {
-                        ${extraIds[i].deleteName}(input: { id: "${extraIds[i].itemId}" }) {
-                            code
-                            message
-                            error
-                        }
-                    }`;
-                    cy.postAndConfirmDelete(extraRemoval, extraIds[i].deleteName);
+                    cy.deleteItem(extraIds[i].deleteName, extraIds[i].itemId);
                 }
             }
             // Delete the item we've been updating
-            const deletionName = "deleteCustomerRole";
-            const removalMutation = `mutation {
-                ${deletionName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName);
+            cy.deleteItem("deleteCustomerRole", id);
         }
     });
 

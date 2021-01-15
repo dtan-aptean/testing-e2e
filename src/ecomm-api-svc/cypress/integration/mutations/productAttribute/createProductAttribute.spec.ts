@@ -23,15 +23,7 @@ describe('Mutation: createProductAttribute', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteProductAttribute";
-            const removalMutation = `mutation {
-                ${deletionName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
+            cy.deleteItem("deleteProductAttribute", id).then(() => {
                 id = "";
             });
         }

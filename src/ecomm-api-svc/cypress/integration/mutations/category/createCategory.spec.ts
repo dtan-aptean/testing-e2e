@@ -36,27 +36,12 @@ describe('Mutation: createCategory', () => {
             if (extraIds.length > 0) {
                 for (var i = 0; i < extraIds.length; i++) {
                     cy.wait(2000);
-                    var extraRemoval = `mutation {
-                        ${extraIds[i].deleteName}(input: { id: "${extraIds[i].itemId}" }) {
-                            code
-                            message
-                            error
-                        }
-                    }`;
-                    cy.postAndConfirmDelete(extraRemoval, extraIds[i].deleteName);
+                    cy.deleteItem(extraIds[i].deleteName, extraIds[i].itemId);
                 }
                 extraIds = [];
             }
 
-            const deletionName = "deleteCategory";
-            const removalMutation = `mutation {
-                ${deletionName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
+            cy.deleteItem("deleteCategory", id).then(() => {
                 id = "";
             });
         }

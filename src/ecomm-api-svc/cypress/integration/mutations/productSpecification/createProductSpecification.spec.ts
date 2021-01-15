@@ -24,15 +24,7 @@ describe('Mutation: createProductSpecification', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteProductSpecification";
-            const removalMutation = `mutation {
-                ${deletionName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
+            cy.deleteItem("deleteProductSpecification", id).then(() => {
                 id = "";
             });
         }

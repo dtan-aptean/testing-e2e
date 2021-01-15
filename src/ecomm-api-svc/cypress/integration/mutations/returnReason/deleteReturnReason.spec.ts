@@ -26,12 +26,7 @@ describe('Mutation: deleteReturnReason', () => {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
             cy.queryForDeleted(false, currentItemName, id, queryName).then((itemPresent: boolean) => {
                 if (itemPresent) {
-                    const mutation = `mutation {
-                        ${mutationName}(input: {id: "${id}"}){
-                            ${standardMutationBody}
-                        }
-                    }`;
-                    cy.postAndConfirmDelete(mutation, mutationName).then(() => {
+                    cy.deleteItem(mutationName, id).then(() => {
                         id = '';
                         currentItemName = '';
                     });

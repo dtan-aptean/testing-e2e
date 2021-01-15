@@ -17,15 +17,7 @@ describe('Mutation: createReturnReason', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteReturnReason";
-            const removalMutation = `mutation {
-                ${deletionName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
+            cy.deleteItem("deleteReturnReason", id).then(() => {
                 id = "";
             });
         }

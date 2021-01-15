@@ -24,15 +24,7 @@ describe('Mutation: createVendor', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteVendor";
-            const removalMutation = `mutation {
-                ${deletionName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
+            cy.deleteItem("deleteVendor", id).then(() => {
                 id = "";
             });
         }

@@ -17,15 +17,7 @@ describe('Mutation: createTaxCategory', () => {
 
     afterEach(() => {
         if (id !== "") {
-            const deletionName = "deleteTaxCategory";
-            const removalMutation = `mutation {
-                ${deletionName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    error
-                }
-            }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName).then(() => {
+            cy.deleteItem("deleteTaxCategory", id).then(() => {
                 id = "";
             });
         }

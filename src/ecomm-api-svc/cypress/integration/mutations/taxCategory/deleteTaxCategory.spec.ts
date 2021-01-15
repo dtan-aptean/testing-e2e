@@ -33,14 +33,7 @@ describe('Mutation: deleteTaxCategory', () => {
                 const infoName = extraIds[i].queryName === "products" ? "productInfo" : null;
                 cy.queryForDeleted(false, extraIds[i].itemName, extraIds[i].itemId, extraIds[i].queryName, infoName).then((itemPresent: boolean) => {
                     if (itemPresent) {
-                        var extraRemoval = `mutation {
-                            ${extraIds[i].deleteName}(input: { id: "${extraIds[i].itemId}" }) {
-                                code
-                                message
-                                error
-                            }
-                        }`;
-                        cy.postAndConfirmDelete(extraRemoval, extraIds[i].deleteName);
+                        cy.deleteItem(extraIds[i].deleteName, extraIds[i].itemId);
                     }
                 });
             }
@@ -50,12 +43,7 @@ describe('Mutation: deleteTaxCategory', () => {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
             cy.queryForDeleted(false, currentItemName, id, queryName).then((itemPresent: boolean) => {
                 if (itemPresent) {
-                    const mutation = `mutation {
-                        ${mutationName}(input: {id: "${id}"}){
-                            ${standardMutationBody}
-                        }
-                    }`;
-                    cy.postAndConfirmDelete(mutation, mutationName).then(() => {
+                    cy.deleteItem(mutationName, id).then(() => {
                         id = '';
                         currentItemName = '';
                     });
