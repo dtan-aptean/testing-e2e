@@ -191,18 +191,16 @@ Cypress.Commands.add('validateQueryRes', (gqlQuery: string, res, queryName: stri
         message: `Validate response for ${queryName}`,
         consoleProps: () => {
             return {
-                "GQL Query": gqlQuery,
-                "Response": res,
-                "Query name": queryName
+                "Query name": queryName,
+                "Query Body": gqlQuery,
+                "Response": res
             };
         },
     });
     // should be 200 ok
     expect(res.isOkStatusCode).to.be.equal(true, "Expect statusCode to be 200 ok");
-    
     // no errors
     assert.notExists(res.body.errors, createErrorMessage(res, gqlQuery, "query"));
-
     // has data
     assert.exists(res.body.data, "Expect response to have data");
     // validate data types
@@ -237,7 +235,7 @@ Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: 
             return {
                 "GQL Mutation": gqlMut,
                 "Mutation name": mutationName,
-                "Item name": itemPath,
+                "Response item path": itemPath,
                 "Expected success message": successMessage,
                 "Response": res
             };
@@ -306,7 +304,7 @@ Cypress.Commands.add("confirmMutationError", (res, mutationName: string, failure
             return {
                 "Mutation Name": mutationName,
                 "Expected failure message": failureMessage,
-                "Item Name": itemPath ? itemPath : "Response item not expected",
+                "Response item path": itemPath ? itemPath : "Response item not expected",
                 "Response": res,
             };
         },
@@ -364,7 +362,7 @@ Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string
             return {
                 "Mutation Body": gqlMut,
                 "Mutation Name": mutationName,
-                "Item name": itemPath,
+                "Response item path": itemPath,
                 "Expected Success message": successMessage,
                 "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
             };
@@ -406,7 +404,7 @@ Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutati
                 "Mutation Body": gqlMutation,
                 "Mutation Name": mutationName,
                 "Expected failure message": failureMessage,
-                "Item name": itemPath ? itemPath : "Not provided",
+                "Response item path": itemPath ? itemPath : "Not provided",
                 "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
             };
         },
@@ -472,7 +470,7 @@ Cypress.Commands.add("checkCustomData", (res, queryName: string, expectData?: bo
         consoleProps: () => {
             return {
                 "Response": res,
-                "Query name / queryName": queryName
+                "Query name": queryName
             };
         },
     });
@@ -539,7 +537,7 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
                 "searchString": name,
                 "Query name": queryName,
                 "Mutation name": mutationName,
-                "Item name": itemPath,
+                "Response item path": itemPath,
                 "Extra input for Mutation": mutationInput,
                 "Info Name": infoName ? infoName : "Not provided"
             };
@@ -635,7 +633,7 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, itemPath: string, 
         consoleProps: () => {
             return {
                 "Mutation": mutationName,
-                "Item name": itemPath,
+                "Response item path": itemPath,
                 "Input string": input,
                 "Expected success message": successMessage,
                 "Additional fields string": additionalFields ? additionalFields : "Not provided",
@@ -976,7 +974,7 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, itemP
             return {
                 "Mutation response": res,
                 "Mutation name": mutationName,
-                "Item path": itemPath,
+                "Response item path": itemPath,
                 "Properties to check": toFormattedString(propNames, true),
                 "Expected Values": toFormattedString(values, true)
             };

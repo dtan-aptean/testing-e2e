@@ -34,24 +34,24 @@ Cypress.Commands.add("confirmOrderByError", (res) => {
 });
 
 // Verifies that changing orderBy direction changes the order of the nodes and edges
-Cypress.Commands.add("verifyReverseOrder", (dataPath: string, ascRes, descRes) => {
+Cypress.Commands.add("verifyReverseOrder", (queryName: string, ascRes, descRes) => {
     Cypress.log({
         name: "verifyReverseOrder",
-        message: dataPath,
+        message: queryName,
         consoleProps: () => {
             return {
-                "Query name": dataPath,
+                "Query name": queryName,
                 "ASC query response": ascRes.body.data,
                 "DESC query response": descRes.body.data
             };
         },
     });
-    expect(descRes.body.data[dataPath].totalCount).to.be.eql(ascRes.body.data[dataPath].totalCount, "TotalCount should be the same");
-    expect(descRes.body.data[dataPath].nodes.length).to.be.eql(ascRes.body.data[dataPath].nodes.length, "nodes length should be the same");
-    expect(descRes.body.data[dataPath].edges.length).to.be.eql(ascRes.body.data[dataPath].edges.length, "edges length should be the same");
-    const ascNodes = ascRes.body.data[dataPath].nodes;
+    expect(descRes.body.data[queryName].totalCount).to.be.eql(ascRes.body.data[queryName].totalCount, "TotalCount should be the same");
+    expect(descRes.body.data[queryName].nodes.length).to.be.eql(ascRes.body.data[queryName].nodes.length, "nodes length should be the same");
+    expect(descRes.body.data[queryName].edges.length).to.be.eql(ascRes.body.data[queryName].edges.length, "edges length should be the same");
+    const ascNodes = ascRes.body.data[queryName].nodes;
     const aNoReversed = ascNodes.slice(0).reverse();
-    const descNodes = descRes.body.data[dataPath].nodes;
+    const descNodes = descRes.body.data[queryName].nodes;
     const dNoReversed = descNodes.slice(0).reverse();
     expect(descNodes).not.to.be.eql(ascNodes, "DESC nodes !== ASC nodes");
     for (var i = 0; i < descNodes.length; i++) {
@@ -61,9 +61,9 @@ Cypress.Commands.add("verifyReverseOrder", (dataPath: string, ascRes, descRes) =
         expect(descNodes[i]).to.be.eql(aNoReversed[i], `DESC nodes === ASC nodes. index ${i}, id ${descNodes[i].id}`);
         expect(ascNodes[i]).to.be.eql(dNoReversed[i], `ASC nodes === DESC nodes. index ${i}, id ${ascNodes[i].id}`);
     }
-    const ascEdges = ascRes.body.data[dataPath].edges;
+    const ascEdges = ascRes.body.data[queryName].edges;
     const aEdReversed = ascEdges.slice(0).reverse();
-    const descEdges = descRes.body.data[dataPath].edges;
+    const descEdges = descRes.body.data[queryName].edges;
     const dEdReversed = descEdges.slice(0).reverse();
     expect(descEdges).not.to.be.eql(ascEdges, "DESC edges !== ASC edges");
     for (var i = 0; i < descEdges.length; i++) {
@@ -73,13 +73,13 @@ Cypress.Commands.add("verifyReverseOrder", (dataPath: string, ascRes, descRes) =
         expect(descEdges[i].node).to.be.eql(aEdReversed[i].node, `DESC edges === ASC edges. index ${i}, id ${descEdges[i].node.id}`);
         expect(ascEdges[i].node).to.be.eql(dEdReversed[i].node, `ASC edges === DESC edges. index ${i}, id ${descEdges[i].node.id}`);
     }
-    const ascStartCursor = ascRes.body.data[dataPath].pageInfo.startCursor;
+    const ascStartCursor = ascRes.body.data[queryName].pageInfo.startCursor;
     const ascStCurNode = ascEdges[0].node;
-    const ascEndCursor = ascRes.body.data[dataPath].pageInfo.endCursor;
+    const ascEndCursor = ascRes.body.data[queryName].pageInfo.endCursor;
     const ascEndCurNode = ascEdges[ascEdges.length - 1].node;
-    const descStartCursor = descRes.body.data[dataPath].pageInfo.startCursor;
+    const descStartCursor = descRes.body.data[queryName].pageInfo.startCursor;
     const descStCurNode = descEdges[0].node;
-    const descEndCursor = descRes.body.data[dataPath].pageInfo.endCursor;
+    const descEndCursor = descRes.body.data[queryName].pageInfo.endCursor;
     const descEndCurNode = descEdges[descEdges.length - 1].node;
     expect(descStartCursor).not.to.be.eql(ascStartCursor, "DESC pageInfo shouldn't have the same startCursor as ASC");
     expect(descStCurNode).not.to.be.eql(ascStCurNode, "Verifing the above with the matching nodes");
@@ -94,20 +94,20 @@ Cypress.Commands.add("verifyReverseOrder", (dataPath: string, ascRes, descRes) =
  */
 
 // Confirms that the number of nodes/edges matches the total count
-Cypress.Commands.add("confirmCount", (res, dataPath: string) => {
+Cypress.Commands.add("confirmCount", (res, queryName: string) => {
     Cypress.log({
         name: "confirmCount",
-        message: dataPath,
+        message: queryName,
         consoleProps: () => {
             return {
                 "Response": res,
-                "Query name / dataPath": dataPath
+                "Query name": queryName
             };
         },
     });
-    const totalCount = res.body.data[dataPath].totalCount;
-    const nodeCount = res.body.data[dataPath].nodes.length;
-    const edgeCount = res.body.data[dataPath].edges.length;
+    const totalCount = res.body.data[queryName].totalCount;
+    const nodeCount = res.body.data[queryName].nodes.length;
+    const edgeCount = res.body.data[queryName].edges.length;
     if (totalCount > 25) {
         expect(nodeCount).to.be.eql(25);
         expect(edgeCount).to.be.eql(25);
@@ -119,34 +119,34 @@ Cypress.Commands.add("confirmCount", (res, dataPath: string) => {
 });
 
 // Gets the total count of the query and returns it, while wrapping the nodes 
-Cypress.Commands.add("returnCount", (gqlQuery: string, dataPath: string) => {
+Cypress.Commands.add("returnCount", (gqlQuery: string, queryName: string) => {
     Cypress.log({
         name: "returnCount",
-        message: `Get totalCount of ${dataPath}`,
+        message: `Get totalCount of ${queryName}`,
         consoleProps: () => {
             return {
                 "Query body": gqlQuery,
-                "Query name / dataPath": dataPath
+                "Query name": queryName
             };
         },
     });
-    return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
-        cy.wrap(res.body.data[dataPath]).as('orgData');
-        const count = res.body.data[dataPath].nodes.length;
+    return cy.postAndValidate(gqlQuery, queryName).then((res) => {
+        cy.wrap(res.body.data[queryName]).as('orgData');
+        const count = res.body.data[queryName].nodes.length;
         return cy.wrap(count);
     });
 });
 
 // Validates the nodes, edges, and pageInfo of a basic query using first OR last, and orderBy
 // Compares it to a vanilla query using orderBy, so must call returnCount first
-Cypress.Commands.add("verifyFirstOrLast", (res, dataPath: string, value: number, firstOrLast: string) => {
+Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number, firstOrLast: string) => {
     Cypress.log({
         name: "verifyFirstOrLast",
-        message: `${dataPath}, ${firstOrLast}: ${value}`,
+        message: `${queryName}, ${firstOrLast}: ${value}`,
         consoleProps: () => {
             return {
                 "Response": res,
-                "Query name / dataPath": dataPath,
+                "Query name": queryName,
                 "First or Last input": firstOrLast,
                 "First/Last value": value
             };
@@ -161,9 +161,9 @@ Cypress.Commands.add("verifyFirstOrLast", (res, dataPath: string, value: number,
             expect(fOL.toLowerCase()).to.be.eql("last");
         }
     });
-    const nodes = res.body.data[dataPath].nodes;
-    const edges = res.body.data[dataPath].edges;
-    const pageInfo = res.body.data[dataPath].pageInfo;
+    const nodes = res.body.data[queryName].nodes;
+    const edges = res.body.data[queryName].edges;
+    const pageInfo = res.body.data[queryName].pageInfo;
     expect(nodes.length).to.be.eql(value);
     expect(edges.length).to.be.eql(value);
     cy.get('@orgData').then((orgRes) => {
@@ -172,7 +172,7 @@ Cypress.Commands.add("verifyFirstOrLast", (res, dataPath: string, value: number,
         expect(orgEdges.length).to.be.greaterThan(value);
         expect(orgNodes.length).to.be.greaterThan(value);
         var orgPageInfo = orgRes.pageInfo;
-        var idFormat = dataPath === "refunds" ? "id" : "order.id";
+        var idFormat = queryName === "refunds" ? "id" : "order.id";
         if (firstOrLast.toLowerCase() === "first") {
             expect(pageInfo.startCursor).to.be.eql(orgPageInfo.startCursor, 'Verify startCursor');
             expect(pageInfo.endCursor).not.to.be.eql(orgPageInfo.endCursor, 'Verify endCursor');
@@ -208,22 +208,22 @@ Cypress.Commands.add("verifyFirstOrLast", (res, dataPath: string, value: number,
  */
 
 // Runs the query and grabs the createdDate from a random node, as long as the created date starts with 20 (aka was created in the 2000s)
-Cypress.Commands.add('returnRandomDate', (gqlQuery: string, dataPath: string, getLowerStart?: boolean, after?: string) => {
+Cypress.Commands.add('returnRandomDate', (gqlQuery: string, queryName: string, getLowerStart?: boolean, after?: string) => {
     Cypress.log({
         name: "returnRandomName",
-        message: `${dataPath}${after ? ". Return date after: " + after : ""}`,
+        message: `${queryName}${after ? ". Return date after: " + after : ""}`,
         consoleProps: () => {
             return {
                 "Query Body": gqlQuery,
-                "Query name / dataPath": dataPath,
+                "Query name": queryName,
                 "Date chosen from lower half": !!getLowerStart,
                 "Date to use as lower limit": after ? after : "not provided"
             };
         },
     });
 
-    return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
-        const { nodes } = res.body.data[dataPath];
+    return cy.postAndValidate(gqlQuery, queryName).then((res) => {
+        const { nodes } = res.body.data[queryName];
         assert.isNotEmpty(nodes, "Query returned nodes");
         const validValues = nodes.filter((node) => {
             return node.createdDate.startsWith("20");
@@ -261,20 +261,20 @@ Cypress.Commands.add('returnRandomDate', (gqlQuery: string, dataPath: string, ge
 });
 
 // Verifies that the createdDate of all nodes is before the provided startDate and/or after the provided endDate
-Cypress.Commands.add("verifyDateInput", (res, dataPath: string, startDate?: string, endDate?: string) => {
+Cypress.Commands.add("verifyDateInput", (res, queryName: string, startDate?: string, endDate?: string) => {
     Cypress.log({
         name: "verifyDateInput",
-        message: `${dataPath}: ${startDate ? "startDate: " + startDate : ""}${startDate && endDate ? ", " : ""}${endDate ? "endDate: " + endDate : ""}`,
+        message: `${queryName}: ${startDate ? "startDate: " + startDate : ""}${startDate && endDate ? ", " : ""}${endDate ? "endDate: " + endDate : ""}`,
         consoleProps: () => {
             return {
-                "Query name": dataPath,
+                "Query name": queryName,
                 "startDate": startDate ? startDate : "not used",
                 "endDate": endDate ? endDate : "not used",
                 "Query response": res.body.data
             };
         },
     });
-    const { nodes } = res.body.data[dataPath];
+    const { nodes } = res.body.data[queryName];
     const start = startDate ? new Date(startDate): null;
     const end = endDate ? new Date(endDate): null;
     nodes.forEach((node, index) => {
@@ -293,29 +293,29 @@ Cypress.Commands.add("verifyDateInput", (res, dataPath: string, startDate?: stri
  */
 
 // Runs the query and grabs a random node to take the name from. Query body should look for name
-Cypress.Commands.add('returnRandomName', (gqlQuery: string, dataPath: string) => {
+Cypress.Commands.add('returnRandomName', (gqlQuery: string, queryName: string) => {
     Cypress.log({
         name: "returnRandomName",
-        message: dataPath,
+        message: queryName,
         consoleProps: () => {
             return {
                 "Query Body": gqlQuery,
-                "Query name / dataPath": dataPath
+                "Query name": queryName
             };
         },
     });
-    return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
+    return cy.postAndValidate(gqlQuery, queryName).then((res) => {
         var randomIndex = 0;
-        var totalCount = res.body.data[dataPath].totalCount > 25 ? 25 : res.body.data[dataPath].totalCount;
+        var totalCount = res.body.data[queryName].totalCount > 25 ? 25 : res.body.data[queryName].totalCount;
         if (totalCount > 1) {
             randomIndex = Cypress._.random(0, totalCount - 1);
         }
-        var randomNode = res.body.data[dataPath].nodes[randomIndex];
-        const duplicateArray = res.body.data[dataPath].nodes.filter((val) => {
+        var randomNode = res.body.data[queryName].nodes[randomIndex];
+        const duplicateArray = res.body.data[queryName].nodes.filter((val) => {
             return val.name === randomNode.name;
         });
         if (duplicateArray.length > 1) {
-            const uniqueArray = res.body.data[dataPath].nodes.filter((val) => {
+            const uniqueArray = res.body.data[queryName].nodes.filter((val) => {
                 return val.name !== randomNode.name;
             });
             randomIndex = 0;
@@ -329,21 +329,21 @@ Cypress.Commands.add('returnRandomName', (gqlQuery: string, dataPath: string) =>
 });
 
 // Validates that a query with searchString returned the node with the correct name or nodes that contain the string
-Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: string) => {
+Cypress.Commands.add("validateNameSearch", (res, queryName: string, searchValue: string) => {
     Cypress.log({
         name: "validateNameSearch",
-        message: `${dataPath}, searchString: ${searchValue}`,
+        message: `${queryName}, searchString: ${searchValue}`,
         consoleProps: () => {
             return {
                 "Response": res,
-                "Query name / dataPath": dataPath,
+                "Query name": queryName,
                 "searchString": searchValue
             };
         },
     });
-    const totalCount = res.body.data[dataPath].totalCount;
-    const nodes = res.body.data[dataPath].nodes;
-    const edges = res.body.data[dataPath].edges;
+    const totalCount = res.body.data[queryName].totalCount;
+    const nodes = res.body.data[queryName].nodes;
+    const edges = res.body.data[queryName].edges;
     expect(totalCount).to.be.eql(nodes.length);
     expect(totalCount).to.be.eql(edges.length);
     for (var i = 0; i < nodes.length; i++) {
@@ -354,14 +354,14 @@ Cypress.Commands.add("validateNameSearch", (res, dataPath: string, searchValue: 
 
 // For queries that have a info field instead of a name field.
 // Runs the query and grabs a random node to take the name from. Query body should look for name
-Cypress.Commands.add("returnRandomInfoName", (gqlQuery: string, dataPath: string, infoName: string) => {
+Cypress.Commands.add("returnRandomInfoName", (gqlQuery: string, queryName: string, infoName: string) => {
     Cypress.log({
         name: "returnRandomInfoName",
-        message: `${dataPath}, ${infoName}`,
+        message: `${queryName}, ${infoName}`,
         consoleProps: () => {
             return {
                 "Query Body": gqlQuery,
-                "Query name / dataPath": dataPath,
+                "Query name": queryName,
                 "Info path": infoName
             };
         },
@@ -381,22 +381,22 @@ Cypress.Commands.add("returnRandomInfoName", (gqlQuery: string, dataPath: string
         return info;
     };
 
-    return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
+    return cy.postAndValidate(gqlQuery, queryName).then((res) => {
         var randomIndex = 0;
-        const totalCount = res.body.data[dataPath].totalCount > 25 ? 25 : res.body.data[dataPath].totalCount;
+        const totalCount = res.body.data[queryName].totalCount > 25 ? 25 : res.body.data[queryName].totalCount;
         if (totalCount > 1) {
             randomIndex = Cypress._.random(0, totalCount - 1);
         }
-        var randomNode = res.body.data[dataPath].nodes[randomIndex];
+        var randomNode = res.body.data[queryName].nodes[randomIndex];
         var infoNode = runNameFilter(randomNode);
-        const duplicateArray = res.body.data[dataPath].nodes.filter((val) => {
+        const duplicateArray = res.body.data[queryName].nodes.filter((val) => {
             const infoArray = val[infoName].filter((item) => {
                 return item.name === infoNode.name;
             });
             return infoArray.length > 0;
         });
         if (duplicateArray.length > 1) {
-            const uniqueArray = res.body.data[dataPath].nodes.filter((val) => {
+            const uniqueArray = res.body.data[queryName].nodes.filter((val) => {
                 const infoArray = val[infoName].filter((item) => {
                     return item.name != infoNode.name && item.name != "";
                 });
@@ -415,22 +415,22 @@ Cypress.Commands.add("returnRandomInfoName", (gqlQuery: string, dataPath: string
 
 // For queries that have a info field instead of a name field.
 // Validates that a query with searchString returned the node with the correct name or nodes that contain the string
-Cypress.Commands.add("validateInfoNameSearch", (res, dataPath: string, infoName: string, searchValue: string) => {
+Cypress.Commands.add("validateInfoNameSearch", (res, queryName: string, infoName: string, searchValue: string) => {
     Cypress.log({
         name: "validateInfoNameSearch",
-        message: `${dataPath}, ${infoName}, searchString: ${searchValue}`,
+        message: `${queryName}, ${infoName}, searchString: ${searchValue}`,
         consoleProps: () => {
             return {
                 "Response": res,
-                "Query name / dataPath": dataPath,
+                "Query name": queryName,
                 "Info name": infoName,
                 "searchString": searchValue
             };
         },
     });
-    const totalCount = res.body.data[dataPath].totalCount;
-    const nodes = res.body.data[dataPath].nodes;
-    const edges = res.body.data[dataPath].edges;
+    const totalCount = res.body.data[queryName].totalCount;
+    const nodes = res.body.data[queryName].nodes;
+    const edges = res.body.data[queryName].edges;
     expect(totalCount).to.be.eql(nodes.length);
     expect(totalCount).to.be.eql(edges.length);
     for (var i = 0; i < nodes.length; i++) {
@@ -447,25 +447,25 @@ Cypress.Commands.add("validateInfoNameSearch", (res, dataPath: string, infoName:
 });
 
 // Runs the query and grabs a random node to take the id from. Pass in the id name for queries whose id field names aren't standard
-Cypress.Commands.add('returnRandomId', (gqlQuery: string, dataPath: string, idName?: string) => {
+Cypress.Commands.add('returnRandomId', (gqlQuery: string, queryName: string, idName?: string) => {
     Cypress.log({
         name: "returnRandomId",
-        message: dataPath + `${idName ? ", " + idName : ""}`,
+        message: queryName + `${idName ? ", " + idName : ""}`,
         consoleProps: () => {
             return {
                 "Query Body": gqlQuery,
-                "Query name / dataPath": dataPath,
+                "Query name": queryName,
                 "Name of id field": idName ? idName : "id"
             };
         },
     });
-    return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
+    return cy.postAndValidate(gqlQuery, queryName).then((res) => {
         var randomIndex = 0;
-        var totalCount = res.body.data[dataPath].totalCount > 25 ? 25 : res.body.data[dataPath].totalCount;
+        var totalCount = res.body.data[queryName].totalCount > 25 ? 25 : res.body.data[queryName].totalCount;
         if (totalCount > 1) {
             randomIndex = Cypress._.random(0, totalCount - 1);
         }
-        var randomNode = res.body.data[dataPath].nodes[randomIndex];
+        var randomNode = res.body.data[queryName].nodes[randomIndex];
         var id;
         if (!idName) {
             id = randomNode.id;
@@ -483,22 +483,22 @@ Cypress.Commands.add('returnRandomId', (gqlQuery: string, dataPath: string, idNa
 
 // For queries that search by id instead of name. Pass in the id name for queries whose id field names aren't standard
 // Validates that a query with searchString returned the node with the correct id or nodes with ids that contain the string
-Cypress.Commands.add("validateIdSearch", (res, dataPath: string, searchValue: string, idName?: string) => {
+Cypress.Commands.add("validateIdSearch", (res, queryName: string, searchValue: string, idName?: string) => {
     Cypress.log({
         name: "validateIdSearch",
-        message: `${dataPath}, searchString: ${searchValue}${idName ? ", " + idName : ""}`,
+        message: `${queryName}, searchString: ${searchValue}${idName ? ", " + idName : ""}`,
         consoleProps: () => {
             return {
                 "Response": res,
-                "Query name / dataPath": dataPath,
+                "Query name": queryName,
                 "searchString": searchValue,
                 "Name of id field": idName ? idName : "id"
             };
         },
     });
-    const totalCount = res.body.data[dataPath].totalCount;
-    const nodes = res.body.data[dataPath].nodes;
-    const edges = res.body.data[dataPath].edges;
+    const totalCount = res.body.data[queryName].totalCount;
+    const nodes = res.body.data[queryName].nodes;
+    const edges = res.body.data[queryName].edges;
     expect(totalCount).to.be.eql(nodes.length);
     expect(totalCount).to.be.eql(edges.length);
     for (var i = 0; i < nodes.length; i++) {
@@ -528,20 +528,20 @@ Cypress.Commands.add("validateIdSearch", (res, dataPath: string, searchValue: st
 
 // Grabs a random cursor and returns it while wrapping the data.
 // laterHalf controls which half of the edges array the cursor is taken from
-Cypress.Commands.add("returnRandomCursor", (gqlQuery: string, dataPath: string, laterHalf: boolean) => {
+Cypress.Commands.add("returnRandomCursor", (gqlQuery: string, queryName: string, laterHalf: boolean) => {
     Cypress.log({
         name: "returnRandomCursor",
-        message: dataPath,
+        message: queryName,
         consoleProps: () => {
             return {
                 "Query Body": gqlQuery,
-                "Query name / dataPath": dataPath
+                "Query name": queryName
             };
         },
     });
-    return cy.postAndValidate(gqlQuery, dataPath).then((res) => {
+    return cy.postAndValidate(gqlQuery, queryName).then((res) => {
         var randomIndex = 0;
-        var totalCount = res.body.data[dataPath].totalCount > 25 ? 25 : res.body.data[dataPath].totalCount;
+        var totalCount = res.body.data[queryName].totalCount > 25 ? 25 : res.body.data[queryName].totalCount;
         expect(totalCount).to.be.gte(2, "Need >=2 items to test with"); // If there's only one item, we can't do any pagination
         if (totalCount > 2) {
             const lowerBound = laterHalf ? Math.ceil((totalCount - 1) / 2) : 0;
@@ -552,9 +552,9 @@ Cypress.Commands.add("returnRandomCursor", (gqlQuery: string, dataPath: string, 
             randomIndex = laterHalf ? 1 : 0;
         }
         Cypress.log({message: `Random Index ${randomIndex}`});
-        const randomEdge = res.body.data[dataPath].edges[randomIndex];
-        cy.wrap(res.body.data[dataPath]).as('orgData');
-        cy.wrap(res.body.data[dataPath].totalCount).as('orgCount');
+        const randomEdge = res.body.data[queryName].edges[randomIndex];
+        cy.wrap(res.body.data[queryName]).as('orgData');
+        cy.wrap(res.body.data[queryName].totalCount).as('orgCount');
         cy.wrap(randomIndex).as('cursorIndex');
         return cy.wrap(randomEdge.cursor);
     });
@@ -697,14 +697,14 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
 
 // Should be called after returnRandomCursor
 // Confirms that the cursor worked by calling confirmCursorEffects, then does specilized validation for before/after cursor
-Cypress.Commands.add("validateCursor", (res, dataPath: string, beforeAfter: string, firstLast?: string, value?: number) => {
+Cypress.Commands.add("validateCursor", (res, queryName: string, beforeAfter: string, firstLast?: string, value?: number) => {
     Cypress.log({
         name: "validateCursor",
-        message: `${dataPath}, ${beforeAfter} ${firstLast ? ", " + firstLast + ", " : ""}${value ? value : ""}`,
+        message: `${queryName}, ${beforeAfter} ${firstLast ? ", " + firstLast + ", " : ""}${value ? value : ""}`,
         consoleProps: () => {
             return {
                 "New query data": res,
-                "Query name / dataPath": dataPath,
+                "Query name": queryName,
                 "Cursor type": beforeAfter,
                 "First or Last input": firstLast,
                 "First or Last value": value
@@ -712,10 +712,10 @@ Cypress.Commands.add("validateCursor", (res, dataPath: string, beforeAfter: stri
         },
     });
 
-    const edges = res.body.data[dataPath].edges;
-    const nodes = res.body.data[dataPath].nodes;
-    const totalCount = res.body.data[dataPath].totalCount;
-    const pageInfo = res.body.data[dataPath].pageInfo;
+    const edges = res.body.data[queryName].edges;
+    const nodes = res.body.data[queryName].nodes;
+    const totalCount = res.body.data[queryName].totalCount;
+    const pageInfo = res.body.data[queryName].pageInfo;
     cy.get('@cursorIndex').then((index: number) => {
         cy.get('@orgData').then((data) => {
             cy.confirmCursorEffects({edges, nodes, totalCount}, data, index).then(() => {
@@ -734,19 +734,19 @@ Cypress.Commands.add("validateCursor", (res, dataPath: string, beforeAfter: stri
  */
 
 // Validates the values field for checkoutAttributes and productAttributes
-Cypress.Commands.add("validateValues", (res, dataPath: string) => {
+Cypress.Commands.add("validateValues", (res, queryName: string) => {
     Cypress.log({
         name: "validateValues",
-        message: `validate values field for ${dataPath}`,
+        message: `validate values field for ${queryName}`,
         consoleProps: () => {
             return {
                 "Response": res,
-                "Query name / dataPath": dataPath
+                "Query name": queryName
             };
         },
     });
-    if (res.body.data[dataPath].nodes.length > 0) {
-        const nodesPath = res.body.data[dataPath].nodes;
+    if (res.body.data[queryName].nodes.length > 0) {
+        const nodesPath = res.body.data[queryName].nodes;
         nodesPath.forEach((item) => {
             // has values field
             expect(item).to.have.property('values');
@@ -778,7 +778,7 @@ Cypress.Commands.add("validateValues", (res, dataPath: string) => {
                 if (val.weightAdjustment !== null) {
                     expect(val.weightAdjustment).to.be.a('number');
                 }
-                if (dataPath === "productAttributes") {
+                if (queryName === "productAttributes") {
                     expect(val).to.have.property('cost');
                     if (val.cost !== null) {
                         expect(val.cost).to.have.property('amount');
@@ -793,21 +793,21 @@ Cypress.Commands.add("validateValues", (res, dataPath: string) => {
 });
 
 // Verifies that the pageInfo matches the cursors
-Cypress.Commands.add("verifyPageInfo", (res, dataPath: string, expectNext?: boolean, expectPrevious?: boolean) => {
+Cypress.Commands.add("verifyPageInfo", (res, queryName: string, expectNext?: boolean, expectPrevious?: boolean) => {
     Cypress.log({
         name: "verifyPageInfo",
-        message: `${dataPath}, expectNext: ${expectNext}, expectPrevious: ${expectPrevious}`,
+        message: `${queryName}, expectNext: ${expectNext}, expectPrevious: ${expectPrevious}`,
         consoleProps: () => {
             return {
                 "Response": res,
-                "Query name / dataPath": dataPath,
+                "Query name": queryName,
                 "hasNextPage expected to be": expectNext,
                 "hasPreviousPage expected to be": expectPrevious
             };
         },
     });
-    const pageInfo = res.body.data[dataPath].pageInfo;
-    const edges = res.body.data[dataPath].edges;
+    const pageInfo = res.body.data[queryName].pageInfo;
+    const edges = res.body.data[queryName].edges;
     if (expectNext === false) {
         expect(pageInfo.hasNextPage).to.be.false;
     } else if (expectNext === true) {
