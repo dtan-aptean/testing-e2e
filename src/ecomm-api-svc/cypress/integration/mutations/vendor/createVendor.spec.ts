@@ -7,13 +7,13 @@ describe('Mutation: createVendor', () => {
     var id = '';
     const mutationName = 'createVendor';
     const queryName = "vendors";
-    const dataPath = 'vendor';
+    const itemPath = 'vendor';
     const infoName = "vendorInfo";
     const standardMutationBody = `
         code
         message
         error
-        ${dataPath} {
+        ${itemPath} {
             id
             ${infoName} {
                 name
@@ -55,7 +55,7 @@ describe('Mutation: createVendor', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail with no 'Name' input", () => {
@@ -64,7 +64,7 @@ describe('Mutation: createVendor', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail with invalid 'languageCode' input", () => {
@@ -92,11 +92,11 @@ describe('Mutation: createVendor', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const propNames = [infoName];
                 const propValues = [info];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -117,7 +117,7 @@ describe('Mutation: createVendor', () => {
     context("Testing customData input and optional input", () => {
         it("Mutation with all required input and 'customData' input creates item with customData", () => {
             const info = [{name: "Cypress Vendor customData", description: `${mutationName} cypress customData`, languageCode: "Standard"}];
-            const customData = {data: `${dataPath} customData`, canDelete: true};
+            const customData = {data: `${itemPath} customData`, canDelete: true};
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -128,7 +128,7 @@ describe('Mutation: createVendor', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         ${infoName} {
                             name
@@ -139,11 +139,11 @@ describe('Mutation: createVendor', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const propNames = ["customData", infoName];
                 const propValues = [customData, info];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const queryName = "vendors";
                     const query = `{
                         ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
@@ -201,7 +201,7 @@ describe('Mutation: createVendor', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         active
                         address {
@@ -229,11 +229,11 @@ describe('Mutation: createVendor', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const propNames = [infoName, "active", "address", "displayOrder", "email", "seoData"];
                 const propValues = [info, active, address, displayOrder, email, seoData];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {

@@ -122,22 +122,14 @@ describe('Mutation: deleteProductSpecification', () => {
                     }
                 }
             }`;
-            cy.postGQL(optionsQuery).then((response) => {
-                // should be 200 ok
-                expect(response.isOkStatusCode).to.be.equal(true);
-                // no errors
-                assert.notExists(response.body.errors, `One or more errors ocuured while executing query: ${optionsQuery}`);
-                // has data
-                assert.exists(response.body.data);
-                // validate data types
-                assert.isArray(response.body.data[queryName].nodes);
+            cy.postAndValidate(optionsQuery, queryName).then((response) => {
                 const target = response.body.data[queryName].nodes.filter((item) => {
                     return item.id === id;
                 });
                 const optionsId = target[0].options[0].id;
                 const options = [{options: target[0].options}];
                 const extraMutationName = "createProduct";
-                const extraDataPath = "product";
+                const extraItemPath = "product";
                 const productInfoName = "productInfo";
                 const info = [{name: `Cypress ${mutationName} product test`, languageCode: "Standard"}];
                 const mutation = `mutation {
@@ -150,7 +142,7 @@ describe('Mutation: deleteProductSpecification', () => {
                         code
                         message
                         error
-                        ${extraDataPath} {
+                        ${extraItemPath} {
                             id
                             ${productInfoName} {
                                 name
@@ -159,12 +151,12 @@ describe('Mutation: deleteProductSpecification', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-                    const productId = res.body.data[extraMutationName][extraDataPath].id;
+                cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
+                    const productId = res.body.data[extraMutationName][extraItemPath].id;
                     extraIds.push({itemId: productId, deleteName: "deleteProduct"});
                     const propNames = [productInfoName];
                     const propValues = [info];
-                    cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                    cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
                         const optionsField = `options {
                             id
                             name

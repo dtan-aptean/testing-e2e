@@ -110,7 +110,7 @@ describe('Mutation: deleteCustomerRole', () => {
     context("Testing deletion when connected to other items or features", () => {
         it("Deleting an item connected to a category will will disassociate the item from the category" , () => {
             const extraMutationName = "createCategory";
-            const extraDataPath = "category";
+            const extraItemPath = "category";
             const extraQueryName = "categories";
             const infoName = "categoryInfo";
             const role = {id: id, name: currentItemName};
@@ -127,7 +127,7 @@ describe('Mutation: deleteCustomerRole', () => {
                     code
                     message
                     error
-                    ${extraDataPath} {
+                    ${extraItemPath} {
                         id
                         roleBasedAccess {
                             enabled
@@ -144,12 +144,12 @@ describe('Mutation: deleteCustomerRole', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-                const categoryId = res.body.data[extraMutationName][extraDataPath].id;
+            cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
+                const categoryId = res.body.data[extraMutationName][extraItemPath].id;
                 extraIds.push({itemId: categoryId, deleteName: "deleteCategory"});
                 const propNames = [infoName, "roleBasedAccess"];
                 const propValues = [info, roleBasedAccess];
-                cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -192,7 +192,7 @@ describe('Mutation: deleteCustomerRole', () => {
 
         it("Deleting an item connected to a manufacturer will will disassociate the item from the manufacturer" , () => {
             const extraMutationName = "createManufacturer";
-            const extraDataPath = "manufacturer";
+            const extraItemPath = "manufacturer";
             const extraQueryName = "manufacturers";
             const infoName = "manufacturerInfo";
             const role = {id: id, name: currentItemName};
@@ -209,7 +209,7 @@ describe('Mutation: deleteCustomerRole', () => {
                     code
                     message
                     error
-                    ${extraDataPath} {
+                    ${extraItemPath} {
                         id
                         roleBasedAccess {
                             enabled
@@ -226,12 +226,12 @@ describe('Mutation: deleteCustomerRole', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-                const manufacturerId = res.body.data[extraMutationName][extraDataPath].id;
+            cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
+                const manufacturerId = res.body.data[extraMutationName][extraItemPath].id;
                 extraIds.push({itemId: manufacturerId, deleteName: "deleteManufacturer"});
                 const propNames = [infoName, "roleBasedAccess"];
                 const propValues = [info, roleBasedAccess];
-                cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {

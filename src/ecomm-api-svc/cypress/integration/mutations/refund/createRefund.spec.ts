@@ -10,7 +10,7 @@ describe('Mutation: createRefund', () => {
     var orderTotal = 0;
     const mutationName = 'createRefund';
     const queryName = "refunds";
-    const dataPath = 'refund';
+    const itemPath = 'refund';
     const responseBody = `
                 order {
                     id
@@ -29,7 +29,7 @@ describe('Mutation: createRefund', () => {
         code
         message
         error
-        ${dataPath} {
+        ${itemPath} {
             ${responseBody}
         }
     `;
@@ -116,7 +116,7 @@ describe('Mutation: createRefund', () => {
                                 ${standardMutationBody}
                             }
                         }`;
-                        cy.postAndConfirmMutationError(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+                        cy.postAndConfirmMutationError(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
                             expect(res.body.errors[0].message).to.include("Cannot Refund Unpaid Orders");
                         });
                     });
@@ -134,7 +134,7 @@ describe('Mutation: createRefund', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
                 refundCreated = true;
                 expect(res.body.data[mutationName].code).to.eq("SUCCESS");
                 const refundAmount = {
@@ -175,11 +175,11 @@ describe('Mutation: createRefund', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
                 refundCreated = true;
                 const propNames = ["isPartialRefund", "refundAmount", "order"];
                 const propValues = [false, refundAmount, dummyOrder];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
@@ -212,11 +212,11 @@ describe('Mutation: createRefund', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
                 refundCreated = true;
                 const propNames = ["isPartialRefund", "refundAmount", "order"];
                 const propValues = [true, refundAmount, dummyOrder];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
@@ -252,11 +252,11 @@ describe('Mutation: createRefund', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
                 refundCreated = true;
                 const propNames = ["isPartialRefund", "refundAmount", "order"];
                 const propValues = [true, refundAmount, dummyOrder];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
@@ -289,11 +289,11 @@ describe('Mutation: createRefund', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
                 refundCreated = true;
                 const propNames = ["isPartialRefund", "refundAmount", "order"];
                 const propValues = [false, refundAmount, dummyOrder];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
@@ -330,11 +330,11 @@ describe('Mutation: createRefund', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
                 refundCreated = true;
                 const propNames = ["isPartialRefund", "refundAmount", "order"];
                 const propValues = [false, refundAmount, dummyOrder];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
@@ -367,11 +367,11 @@ describe('Mutation: createRefund', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
                 refundCreated = true;
                 const propNames = ["isPartialRefund", "refundAmount", "order"];
                 const propValues = [false, refundAmount, dummyOrder];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
@@ -408,11 +408,11 @@ describe('Mutation: createRefund', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
                 refundCreated = true;
                 const propNames = ["isPartialRefund", "refundAmount", "order"];
                 const propValues = [isPartialRefund, refundAmount, dummyOrder];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {

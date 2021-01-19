@@ -11,7 +11,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
     const extraIds = [] as {itemId: "example", deleteName: "example"}[];
     const mutationName = 'updateCheckoutAttribute';
     const queryName = "checkoutAttributes";
-    const dataPath = 'checkoutAttribute';
+    const itemPath = 'checkoutAttribute';
     const additionalFields = `values {
         id
         name
@@ -20,7 +20,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
         code
         message
         error
-        ${dataPath} {
+        ${itemPath} {
             id
             name
             ${additionalFields}
@@ -32,7 +32,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
         // Create an item for the tests to update
         const name = `Cypress ${mutationName} Test`;
         const input = `{name: "${name}", values: [{name: "Cypress CA update test"}]}`;
-        cy.createAndGetId(createName, dataPath, input, additionalFields).then((createdItem) => {
+        cy.createAndGetId(createName, itemPath, input, additionalFields).then((createdItem) => {
             assert.exists(createdItem.id);
             assert.exists(createdItem.values);
             id = createdItem.id;
@@ -151,10 +151,10 @@ describe('Mutation: updateCheckoutAttribute', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 const propNames = ["name", "values"];
                 const propValues = [newName, valuesCopy];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -176,7 +176,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
             const valuesCopy = JSON.parse(JSON.stringify(values));
             valuesCopy[0].name = `Cypress CA update test #${updateCount}`;
             const newName = `Cypress ${mutationName} Update ${updateCount}`;
-            const customData = {data: `${dataPath} customData`, canDelete: true};
+            const customData = {data: `${itemPath} customData`, canDelete: true};
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -189,7 +189,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         name
                         ${additionalFields}
@@ -197,10 +197,10 @@ describe('Mutation: updateCheckoutAttribute', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 const propNames = ["customData", "name", "values"];
                 const propValues = [customData, newName, valuesCopy];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -216,17 +216,17 @@ describe('Mutation: updateCheckoutAttribute', () => {
 
         it("Mutation with all required input and 'customData' input will overwrite the customData on an existing object", () => {
             const name = `Cypress ${mutationName} customData extra`;
-            const customData = {data: `${dataPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+            const customData = {data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
             const input = `{name: "${name}", values: [{name: "Cypress CA customData test"}], customData: ${toFormattedString(customData)}}`;
             const extraInput = `customData
             ${additionalFields}`;
-            cy.createAndGetId(createName, dataPath, input, extraInput).then((createdItem) => {
+            cy.createAndGetId(createName, itemPath, input, extraInput).then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
                 extraIds.push({itemId: createdItem.id, deleteName: "deleteCheckoutAttribute"});
                 const newName = `Cypress ${mutationName} CD extra updated`;
                 const newValues = createdItem.values;
-                const newCustomData = {data: `${dataPath} customData`, newDataField: { canDelete: true }};
+                const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
                 const mutation = `mutation {
                     ${mutationName}(
                         input: {
@@ -239,7 +239,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                         code
                         message
                         error
-                        ${dataPath} {
+                        ${itemPath} {
                             id
                             name
                             ${additionalFields}
@@ -247,10 +247,10 @@ describe('Mutation: updateCheckoutAttribute', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                     const propNames = ["customData", "name", "values"];
                     const propValues = [newCustomData, newName, newValues];
-                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
                             ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
@@ -307,7 +307,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         displayOrder
                         name
@@ -330,11 +330,11 @@ describe('Mutation: updateCheckoutAttribute', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                valuesCopy[1].id = res.body.data[mutationName][dataPath].values[1].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                valuesCopy[1].id = res.body.data[mutationName][itemPath].values[1].id;
                 const propNames = ["name", "displayOrder", "defaultValue", "displayName", "isRequired", "isTaxExempt", "shippableProductRequired", "values"];
                 const propValues = [newName, displayOrder, defaultValue, displayName, isRequired, isTaxExempt, shippableProductRequired, valuesCopy];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -388,7 +388,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                         code
                         message
                         error
-                        ${dataPath} {
+                        ${itemPath} {
                             id
                             name
                             ${additionalFields}
@@ -399,10 +399,10 @@ describe('Mutation: updateCheckoutAttribute', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                     const propNames = ["name", "taxCategory", "values"];
                     const propValues = [newName, dummyTaxCategory, valuesCopy];
-                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
                             ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {

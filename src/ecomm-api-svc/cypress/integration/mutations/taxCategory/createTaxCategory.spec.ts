@@ -4,12 +4,12 @@ describe('Mutation: createTaxCategory', () => {
     var id = '';
     const mutationName = 'createTaxCategory';
     const queryName = "taxCategories";
-    const dataPath = 'taxCategory';
+    const itemPath = 'taxCategory';
     const standardMutationBody = `
         code
         message
         error
-        ${dataPath} {
+        ${itemPath} {
             id
             name
         }
@@ -58,11 +58,11 @@ describe('Mutation: createTaxCategory', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const propNames = ["name"];
                 const propValues = [name];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -80,7 +80,7 @@ describe('Mutation: createTaxCategory', () => {
     context("Testing customData input and optional input", () => {
         it("Mutation with all required input and 'customData' input creates item with customData", () => {
             const name = "Cypress TaxCategory customData";
-            const customData = {data: `${dataPath} customData`, canDelete: true};
+            const customData = {data: `${itemPath} customData`, canDelete: true};
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -91,18 +91,18 @@ describe('Mutation: createTaxCategory', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         name
                         customData
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const names = ["customData", "name"];
                 const testValues = [customData, name];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, names, testValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, names, testValues).then(() => {
                     const queryName = "taxCategories";
                     const query = `{
                         ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
@@ -130,18 +130,18 @@ describe('Mutation: createTaxCategory', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         displayOrder
                         name
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const propNames = ["name", "displayOrder"];
                 const propValues = [name, displayOrder];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {

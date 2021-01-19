@@ -116,7 +116,7 @@ describe('Mutation: deleteTaxCategory', () => {
         it("A taxCategory connected to a checkoutAttribute cannot be deleted until the connected checkoutAttribute is deleted", () => {
             const extraDeleteName = "deleteCheckoutAttribute";
             const extraMutationName = "createCheckoutAttribute";
-            const extraDataPath = "checkoutAttribute";
+            const extraItemPath = "checkoutAttribute";
             const extraQueryName = "checkoutAttributes";
             const taxCategory = {id: id, name: currentItemName};
             const name = `Cypress ${mutationName} checkoutAttribute test`;
@@ -132,7 +132,7 @@ describe('Mutation: deleteTaxCategory', () => {
                     code
                     message
                     error
-                    ${extraDataPath} {
+                    ${extraItemPath} {
                         id
                         name
                         values {
@@ -145,12 +145,12 @@ describe('Mutation: deleteTaxCategory', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-                const attributeId = res.body.data[extraMutationName][extraDataPath].id;
+            cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
+                const attributeId = res.body.data[extraMutationName][extraItemPath].id;
                 extraIds.push({itemId: attributeId, deleteName: extraDeleteName, itemName: name, queryName: extraQueryName});
                 const propNames = ["name", "taxCategory", "values"];
                 const propValues = [name, taxCategory, values];
-                cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${extraQueryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -199,7 +199,7 @@ describe('Mutation: deleteTaxCategory', () => {
         it("A taxCategory connected to a product cannot be deleted until the connected product is deleted", () => {
             const extraDeleteName = "deleteProduct";
             const extraMutationName = "createProduct";
-            const extraDataPath = "product";
+            const extraItemPath = "product";
             const extraQueryName = "products";
             const productInfoName = "productInfo";
             const taxCategory = {id: id, name: currentItemName};
@@ -215,7 +215,7 @@ describe('Mutation: deleteTaxCategory', () => {
                     code
                     message
                     error
-                    ${extraDataPath} {
+                    ${extraItemPath} {
                         id
                         priceInformation {
                             taxCategory {
@@ -230,12 +230,12 @@ describe('Mutation: deleteTaxCategory', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-                const productId = res.body.data[extraMutationName][extraDataPath].id;
+            cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
+                const productId = res.body.data[extraMutationName][extraItemPath].id;
                 extraIds.push({itemId: productId, deleteName: extraDeleteName, itemName: info[0].name, queryName: extraQueryName});
                 const propNames = ["priceInformation", productInfoName];
                 const propValues = [priceInformation, info];
-                cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {

@@ -10,7 +10,7 @@ describe('Mutation: updateDiscount', () => {
     var discountAmount = {} as {amount: number, currency: string};
     const mutationName = 'updateDiscount';
     const queryName = "discounts";
-    const dataPath = 'discount';
+    const itemPath = 'discount';
     const additionalFields = `discountAmount {
         amount
         currency
@@ -19,7 +19,7 @@ describe('Mutation: updateDiscount', () => {
         code
         message
         error
-        ${dataPath} {
+        ${itemPath} {
             id
             name
             ${additionalFields}
@@ -30,7 +30,7 @@ describe('Mutation: updateDiscount', () => {
     before(() => {
         const name = `Cypress ${mutationName} Test`;
         const input = `{name: "${name}", discountAmount: {amount: 15, currency: "USD"}}`;
-        cy.createAndGetId(createName, dataPath, input, additionalFields).then((createdItem) => {
+        cy.createAndGetId(createName, itemPath, input, additionalFields).then((createdItem) => {
             assert.exists(createdItem.id);
             assert.exists(createdItem.discountAmount);
             id = createdItem.id;
@@ -86,7 +86,7 @@ describe('Mutation: updateDiscount', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail with no 'Name' input", () => {
@@ -104,7 +104,7 @@ describe('Mutation: updateDiscount', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail with invalid 'Name' input", () => {
@@ -127,7 +127,7 @@ describe('Mutation: updateDiscount', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will succeed with valid 'id', 'name', 'discountAmount' input", () => {
@@ -142,10 +142,10 @@ describe('Mutation: updateDiscount', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 const propNames = ["name", "discountAmount"];
                 const propValues = [newName, newDiscountAmount];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -172,7 +172,7 @@ describe('Mutation: updateDiscount', () => {
                 amount: discountAmount.amount + Cypress._.random(1, 5),
                 currency: "USD"
             };
-            const customData = {data: `${dataPath} customData`, canDelete: true};
+            const customData = {data: `${itemPath} customData`, canDelete: true};
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -185,7 +185,7 @@ describe('Mutation: updateDiscount', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         name
                         discountAmount {
@@ -196,10 +196,10 @@ describe('Mutation: updateDiscount', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 const propNames = ["customData", "name", "discountAmount"];
                 const propValues = [customData, newName, newDiscountAmount];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -215,18 +215,18 @@ describe('Mutation: updateDiscount', () => {
 
         it("Mutation with all required input and 'customData' input will overwrite the customData on an existing object", () => {
             const name = `Cypress ${mutationName} customData extra`;
-            const customData = {data: `${dataPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+            const customData = {data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
             const extraDiscountAmount = {
                 amount: Cypress._.random(1, 5),
                 currency: "USD"
             };
             const input = `{name: "${name}", discountAmount: ${toFormattedString(extraDiscountAmount)}, customData: ${toFormattedString(customData)}}`;
-            cy.createAndGetId(createName, dataPath, input, "customData").then((createdItem) => {
+            cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
                 extraIds.push({itemId: createdItem.id, deleteName: "deleteDiscount"});
                 const newName = `Cypress ${mutationName} CD extra updated`;
-                const newCustomData = {data: `${dataPath} customData`, newDataField: { canDelete: true }};
+                const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
                 const newDiscountAmount = {
                     amount: extraDiscountAmount.amount + Cypress._.random(1, 5),
                     currency: "USD"
@@ -243,7 +243,7 @@ describe('Mutation: updateDiscount', () => {
                         code
                         message
                         error
-                        ${dataPath} {
+                        ${itemPath} {
                             id
                             name
                             discountAmount {
@@ -254,10 +254,10 @@ describe('Mutation: updateDiscount', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                     const propNames = ["customData", "name", "discountAmount"];
                     const propValues = [newCustomData, newName, newDiscountAmount];
-                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
                             ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
@@ -303,7 +303,7 @@ describe('Mutation: updateDiscount', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         isCumulative
                         requiresCouponCode
@@ -323,10 +323,10 @@ describe('Mutation: updateDiscount', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 const propNames = ["isCumulative", "requiresCouponCode", "couponCode", "usePercentageForDiscount", "discountPercentage", "name", "discountAmount", "maximumDiscountAmount"];
                 const propValues = [isCumulative, requiresCouponCode, couponCode, usePercentageForDiscount, discountPercentage, newName, newDiscountAmount, maximumDiscountAmount];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -372,7 +372,7 @@ describe('Mutation: updateDiscount', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         usePercentageForDiscount
                         discountPercentage
@@ -388,7 +388,7 @@ describe('Mutation: updateDiscount', () => {
                     }
                 }
             }`;
-            cy.postAndConfirmError(mutation, mutationName, dataPath);
+            cy.postAndConfirmError(mutation, mutationName, itemPath);
         });
 
         it("Mutation with input 'usePercentageForDiscount'=true but no 'discountPercentage' input will fail", () => {
@@ -411,7 +411,7 @@ describe('Mutation: updateDiscount', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         usePercentageForDiscount
                         discountPercentage
@@ -427,7 +427,7 @@ describe('Mutation: updateDiscount', () => {
                     }
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
     });
 
@@ -452,7 +452,7 @@ describe('Mutation: updateDiscount', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         discountLimitationCount
                         discountLimitationType
@@ -464,10 +464,10 @@ describe('Mutation: updateDiscount', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 const propNames = ["discountLimitationCount", "discountLimitationType", "name", "discountAmount"];
                 const propValues = [0, "UNLIMITED", name, discountAmount];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -509,7 +509,7 @@ describe('Mutation: updateDiscount', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         discountLimitationCount
                         discountLimitationType
@@ -521,10 +521,10 @@ describe('Mutation: updateDiscount', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 const propNames = ["discountLimitationCount", "discountLimitationType", "name", "discountAmount"];
                 const propValues = [discountLimitationCount, discountLimitationType, name, discountAmount];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -566,7 +566,7 @@ describe('Mutation: updateDiscount', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         discountLimitationCount
                         discountLimitationType
@@ -578,10 +578,10 @@ describe('Mutation: updateDiscount', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 const propNames = ["discountLimitationCount", "discountLimitationType", "name", "discountAmount"];
                 const propValues = [discountLimitationCount, discountLimitationType, name, discountAmount];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -681,7 +681,7 @@ describe('Mutation: updateDiscount', () => {
                             code
                             message
                             error
-                            ${dataPath} {
+                            ${itemPath} {
                                 id
                                 discountAmount {
                                     amount
@@ -699,10 +699,10 @@ describe('Mutation: updateDiscount', () => {
                             }
                         }
                     }`;
-                    cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                    cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                         const propNames = ["name", "discountType", "discountAmount", "products"];
                         const propValues = [newName, discountType, newDiscountAmount, products];
-                        cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                             const query = `{
                                 ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                                     nodes {
@@ -763,7 +763,7 @@ describe('Mutation: updateDiscount', () => {
                             code
                             message
                             error
-                            ${dataPath} {
+                            ${itemPath} {
                                 id
                                 discountAmount {
                                     amount
@@ -781,10 +781,10 @@ describe('Mutation: updateDiscount', () => {
                             }
                         }
                     }`;
-                    cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                    cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                         const propNames = ["categories", "name", "discountType", "discountAmount"];
                         const propValues = [categories, newName, discountType, newDiscountAmount];
-                        cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                             const query = `{
                                 ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                                     nodes {
@@ -845,7 +845,7 @@ describe('Mutation: updateDiscount', () => {
                             code
                             message
                             error
-                            ${dataPath} {
+                            ${itemPath} {
                                 id
                                 discountAmount {
                                     amount
@@ -863,10 +863,10 @@ describe('Mutation: updateDiscount', () => {
                             }
                         }
                     }`;
-                    cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
+                    cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                         const propNames = ["manufacturers", "name", "discountType", "discountAmount"];
                         const propValues = [manufacturers, newName, discountType, newDiscountAmount];
-                        cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                             const query = `{
                                 ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                                     nodes {

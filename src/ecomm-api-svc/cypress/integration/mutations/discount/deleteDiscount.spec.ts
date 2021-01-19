@@ -134,7 +134,7 @@ describe('Mutation: deleteDiscount', () => {
             cy.postMutAndValidate(updateMutation, "updateDiscount", "discount").then((response) => {
                 cy.confirmMutationSuccess(response, "updateDiscount", "discount", ["discountType"], [discountType]).then(() => {
                     const extraMutationName = "createCategory";
-                    const extraDataPath = "category";
+                    const extraItemPath = "category";
                     const extraQueryName = "categories";
                     const infoName = "categoryInfo";
                     const discounts = [discount];
@@ -149,7 +149,7 @@ describe('Mutation: deleteDiscount', () => {
                             code
                             message
                             error
-                            ${extraDataPath} {
+                            ${extraItemPath} {
                                 id
                                 discounts {
                                     id
@@ -168,12 +168,12 @@ describe('Mutation: deleteDiscount', () => {
                             }
                         }
                     }`;
-                    cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-                        const categoryId = res.body.data[extraMutationName][extraDataPath].id;
+                    cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
+                        const categoryId = res.body.data[extraMutationName][extraItemPath].id;
                         extraIds.push({itemId: categoryId, deleteName: "deleteCategory"});
                         const propNames = [infoName, "discounts"];
                         const propValues = [info, discounts];
-                        cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                        cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
                             const query = `{
                                 ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                     nodes {
@@ -242,7 +242,7 @@ describe('Mutation: deleteDiscount', () => {
             cy.postMutAndValidate(updateMutation, "updateDiscount", "discount").then((response) => {
                 cy.confirmMutationSuccess(response, "updateDiscount", "discount", ["discountType"], [discountType]).then(() => {
                     const extraMutationName = "createManufacturer";
-                    const extraDataPath = "manufacturer";
+                    const extraItemPath = "manufacturer";
                     const extraQueryName = "manufacturers";
                     const infoName = "manufacturerInfo";
                     const discounts = [discount];
@@ -257,7 +257,7 @@ describe('Mutation: deleteDiscount', () => {
                             code
                             message
                             error
-                            ${extraDataPath} {
+                            ${extraItemPath} {
                                 id
                                 discounts {
                                     id
@@ -276,12 +276,12 @@ describe('Mutation: deleteDiscount', () => {
                             }
                         }
                     }`;
-                    cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-                        const manufacturerId = res.body.data[extraMutationName][extraDataPath].id;
+                    cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
+                        const manufacturerId = res.body.data[extraMutationName][extraItemPath].id;
                         extraIds.push({itemId: manufacturerId, deleteName: "deleteManufacturer"});
                         const propNames = [infoName, "discounts"];
                         const propValues = [info, discounts];
-                        cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                        cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
                             const query = `{
                                 ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                     nodes {

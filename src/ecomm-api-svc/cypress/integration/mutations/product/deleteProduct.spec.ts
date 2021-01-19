@@ -112,7 +112,7 @@ describe('Mutation: deleteProduct', () => {
     context("Testing deletion when connected to other items or features", () => {
         it("Deleting an item connected to a discount will disassociate the item from the discount", () => {
             const extraMutationName = "createDiscount";
-            const extraDataPath = "discount";
+            const extraItemPath = "discount";
             const extraQueryName = "discounts";
             const products = [{
                 id: id, 
@@ -139,7 +139,7 @@ describe('Mutation: deleteProduct', () => {
                     code
                     message
                     error
-                    ${extraDataPath} {
+                    ${extraItemPath} {
                         id
                         discountAmount {
                             amount
@@ -157,12 +157,12 @@ describe('Mutation: deleteProduct', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-                const discountId = res.body.data[extraMutationName][extraDataPath].id;
+            cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
+                const discountId = res.body.data[extraMutationName][extraItemPath].id;
                 extraIds.push({itemId: discountId, deleteName: "deleteDiscount"});
                 const propNames = ["products", "name", "discountType"];
                 const propValues = [products, name, discountType];
-                cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${extraQueryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {

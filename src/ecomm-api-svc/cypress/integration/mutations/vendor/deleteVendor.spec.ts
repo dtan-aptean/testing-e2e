@@ -117,7 +117,7 @@ describe('Mutation: deleteVendor', () => {
         it("A vendor connected to a product cannot be deleted until the connected product is deleted", () => {
             const extraDeleteName = "deleteProduct";
             const extraMutationName = "createProduct";
-            const extraDataPath = "product";
+            const extraItemPath = "product";
             const extraQueryName = "products";
             const productInfoName = "productInfo";
             const vendor = {id: id, vendorInfo: [{name: currentItemName, languageCode: "Standard"}]};
@@ -132,7 +132,7 @@ describe('Mutation: deleteVendor', () => {
                     code
                     message
                     error
-                    ${extraDataPath} {
+                    ${extraItemPath} {
                         id
                         vendor {
                             id
@@ -148,12 +148,12 @@ describe('Mutation: deleteVendor', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-                const productId = res.body.data[extraMutationName][extraDataPath].id;
+            cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
+                const productId = res.body.data[extraMutationName][extraItemPath].id;
                 extraIds.push({itemId: productId, deleteName: extraDeleteName, itemName: info[0].name, queryName: extraQueryName});
                 const propNames = ["vendor", productInfoName];
                 const propValues = [vendor, info];
-                cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${extraQueryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {

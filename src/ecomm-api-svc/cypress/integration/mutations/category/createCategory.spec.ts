@@ -8,13 +8,13 @@ describe('Mutation: createCategory', () => {
     const extraIds = [] as {itemId: string, deleteName: string}[];
     const mutationName = 'createCategory';
     const queryName = "categories";
-    const dataPath = 'category';
+    const itemPath = 'category';
     const infoName = "categoryInfo";
     const standardMutationBody = `
         code
         message
         error
-        ${dataPath} {
+        ${itemPath} {
             id
             ${infoName} {
                 name
@@ -72,7 +72,7 @@ describe('Mutation: createCategory', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail with no 'Name' input", () => {
@@ -81,7 +81,7 @@ describe('Mutation: createCategory', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail with invalid 'languageCode' input", () => {
@@ -109,11 +109,11 @@ describe('Mutation: createCategory', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const propNames = [infoName];
                 const propValues = [info];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -134,7 +134,7 @@ describe('Mutation: createCategory', () => {
     context("Testing customData input and optional input", () => {
         it("Mutation with all required input and 'customData' input creates item with customData", () => {
             const info = [{name: "Cypress Category customData", description: `Cypress ${mutationName} test`, languageCode: "Standard"}];
-            const customData = {data: `${dataPath} customData`, canDelete: true};
+            const customData = {data: `${itemPath} customData`, canDelete: true};
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -145,7 +145,7 @@ describe('Mutation: createCategory', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         ${infoName} {
                             name
@@ -156,11 +156,11 @@ describe('Mutation: createCategory', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const propNames = ["customData", infoName];
                 const propValues = [customData, info];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -211,7 +211,7 @@ describe('Mutation: createCategory', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         displayOrder
                         ${infoName} {
@@ -232,11 +232,11 @@ describe('Mutation: createCategory', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const propNames = ["displayOrder", infoName, "seoData", "priceRanges", "published", "showOnHomePage"];
                 const propValues = [displayOrder, info, seoData, priceRanges, published, showOnHomePage];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -269,7 +269,7 @@ describe('Mutation: createCategory', () => {
     context("Testing connecting to other items and features", () => {
         it("Mutation with 'parentCategoryId' will succesfully create a subcategory", () => {
             const parentCategory = {categoryInfo: [{name: `Cypress ParentCategory`, languageCode: "Standard"}] };
-            cy.createAndGetId(mutationName, dataPath, toFormattedString(parentCategory)).then((returnedId: string) => {
+            cy.createAndGetId(mutationName, itemPath, toFormattedString(parentCategory)).then((returnedId: string) => {
                 id = returnedId;
                 parentCategory.id = returnedId;
                 const info = [{name: "Cypress subCategory", languageCode: "Standard"}];
@@ -283,7 +283,7 @@ describe('Mutation: createCategory', () => {
                         code
                         message
                         error
-                        ${dataPath} {
+                        ${itemPath} {
                             id
                             ${infoName} {
                                 name
@@ -299,12 +299,12 @@ describe('Mutation: createCategory', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                    const subCategoryId = res.body.data[mutationName][dataPath].id;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const subCategoryId = res.body.data[mutationName][itemPath].id;
                     extraIds.push({itemId: subCategoryId, deleteName: "deleteCategory"});
                     const propNames = ["parent", infoName];
                     const propValues = [parentCategory, info];
-                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
                             ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
@@ -354,7 +354,7 @@ describe('Mutation: createCategory', () => {
                             code
                             message
                             error
-                            ${dataPath} {
+                            ${itemPath} {
                                 id
                                 discounts {
                                     id
@@ -373,11 +373,11 @@ describe('Mutation: createCategory', () => {
                             }
                         }
                     }`;
-                    cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                        id = res.body.data[mutationName][dataPath].id;
+                    cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                        id = res.body.data[mutationName][itemPath].id;
                         const propNames = [infoName, "discounts"];
                         const propValues = [info, discounts];
-                        cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                             const query = `{
                                 ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                     nodes {
@@ -431,7 +431,7 @@ describe('Mutation: createCategory', () => {
                             code
                             message
                             error
-                            ${dataPath} {
+                            ${itemPath} {
                                 id
                                 roleBasedAccess {
                                     enabled
@@ -448,12 +448,12 @@ describe('Mutation: createCategory', () => {
                             }
                         }
                     }`;
-                    cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                        id = res.body.data[mutationName][dataPath].id;
+                    cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                        id = res.body.data[mutationName][itemPath].id;
                         const roleAccess = {enabled: roleBasedAccess.enabled, roles: roles};
                         const propNames = [infoName, "roleBasedAccess"];
                         const propValues = [info, roleAccess];
-                        cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                             const query = `{
                                 ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                     nodes {
@@ -503,7 +503,7 @@ describe('Mutation: createCategory', () => {
                     code
                     error
                     message
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         ${infoName} {
                             name
@@ -514,11 +514,11 @@ describe('Mutation: createCategory', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath, originalBaseUrl).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const propNames = ["showInTopMenu", "published", infoName];
                 const propValues = [showInTopMenu, true, info];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {

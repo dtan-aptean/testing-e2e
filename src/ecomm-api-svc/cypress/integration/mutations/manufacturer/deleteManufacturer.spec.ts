@@ -110,7 +110,7 @@ describe('Mutation: deleteManufacturer', () => {
     context("Testing deletion when connected to other items or features", () => {
         it("Deleting an item connected to a discount will disassociate the item from the discount", () => {
             const extraMutationName = "createDiscount";
-            const extraDataPath = "discount";
+            const extraItemPath = "discount";
             const extraQueryName = "discounts";
             const manufacturers = [{id: id, manufacturerInfo: [{name: currentItemName, languageCode: "Standard"}]}];
             const name = `Cypress ${mutationName} discount test`;
@@ -131,7 +131,7 @@ describe('Mutation: deleteManufacturer', () => {
                     code
                     message
                     error
-                    ${extraDataPath} {
+                    ${extraItemPath} {
                         id
                         discountAmount {
                             amount
@@ -149,12 +149,12 @@ describe('Mutation: deleteManufacturer', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-                const discountId = res.body.data[extraMutationName][extraDataPath].id;
+            cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
+                const discountId = res.body.data[extraMutationName][extraItemPath].id;
                 extraIds.push({itemId: discountId, deleteName: "deleteDiscount"});
                 const propNames = ["manufacturers", "name", "discountType"];
                 const propValues = [manufacturers, name, discountType];
-                cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${extraQueryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -197,7 +197,7 @@ describe('Mutation: deleteManufacturer', () => {
 
         it("Deleting an item connected to a product will disassociate the item from the product", () => {
             const extraMutationName = "createProduct";
-            const extraDataPath = "product";
+            const extraItemPath = "product";
             const productInfoName = "productInfo";
             const manufacturers = [{id: id, manufacturerInfo: [{name: currentItemName, languageCode: "Standard"}]}];
             const info = [{name: `Cypress ${mutationName} product test`, languageCode: "Standard"}];
@@ -211,7 +211,7 @@ describe('Mutation: deleteManufacturer', () => {
                     code
                     message
                     error
-                    ${extraDataPath} {
+                    ${extraItemPath} {
                         id
                         ${productInfoName} {
                             name
@@ -220,12 +220,12 @@ describe('Mutation: deleteManufacturer', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, extraMutationName, extraDataPath).then((res) => {
-                const productId = res.body.data[extraMutationName][extraDataPath].id;
+            cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
+                const productId = res.body.data[extraMutationName][extraItemPath].id;
                 extraIds.push({itemId: productId, deleteName: "deleteProduct"});
                 const propNames = [productInfoName];
                 const propValues = [info];
-                cy.confirmMutationSuccess(res, extraMutationName, extraDataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
                     const queryBody = `id
                         manufacturerInfo {
                             name

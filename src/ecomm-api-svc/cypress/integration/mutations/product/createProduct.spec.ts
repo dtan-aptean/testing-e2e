@@ -8,13 +8,13 @@ describe('Mutation: createProduct', () => {
     const extraIds = [] as {itemId: string, deleteName: string}[];
     const mutationName = 'createProduct';
     const queryName = "products";
-    const dataPath = 'product';
+    const itemPath = 'product';
     const infoName = "productInfo";
     const standardMutationBody = `
         code
         message
         error
-        ${dataPath} {
+        ${itemPath} {
             id
             ${infoName} {
                 name
@@ -64,7 +64,7 @@ describe('Mutation: createProduct', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail with no 'Name' input", () => {
@@ -73,7 +73,7 @@ describe('Mutation: createProduct', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, dataPath);
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail with invalid 'languageCode' input", () => {
@@ -108,11 +108,11 @@ describe('Mutation: createProduct', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const propNames = [infoName];
                 const propValues = [info];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -133,7 +133,7 @@ describe('Mutation: createProduct', () => {
     context("Testing customData input and optional input", () => {
         it("Mutation with all required input and 'customData' input creates item with customData", () => {
             const info = [{name: "Cypress Product customData", languageCode: "Standard"}];
-            const customData = {data: `${dataPath} customData`, canDelete: true};
+            const customData = {data: `${itemPath} customData`, canDelete: true};
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -144,7 +144,7 @@ describe('Mutation: createProduct', () => {
                     code
                     message
                     error
-                    ${dataPath} {
+                    ${itemPath} {
                         id
                         ${infoName} {
                             name
@@ -154,11 +154,11 @@ describe('Mutation: createProduct', () => {
                     }
                 }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                id = res.body.data[mutationName][dataPath].id;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
                 const propNames = ["customData", infoName];
                 const propValues = [customData, info];
-                cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
@@ -258,7 +258,7 @@ describe('Mutation: createProduct', () => {
                         code
                         message
                         error
-                        ${dataPath} {
+                        ${itemPath} {
                             id
                             sku
                             manufacturerInformation {
@@ -318,11 +318,11 @@ describe('Mutation: createProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                    id = res.body.data[mutationName][dataPath].id;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    id = res.body.data[mutationName][itemPath].id;
                     const propNames = ["sku", infoName, "inventoryInformation", "manufacturerInformation.manufacturerPartNumber", "shippingInformation", "cartInformation", "priceInformation", "seoData", "published"];
                     const propValues = [sku, info, inventoryInfo, manufacturerPartNumber, shippingInformation, cartInfo, priceInformation, seoData, published];
-                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
                             ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
@@ -408,7 +408,7 @@ describe('Mutation: createProduct', () => {
                         code
                         message
                         error
-                        ${dataPath} {
+                        ${itemPath} {
                             id
                             vendor {
                                 id
@@ -424,11 +424,11 @@ describe('Mutation: createProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                    id = res.body.data[mutationName][dataPath].id;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    id = res.body.data[mutationName][itemPath].id;
                     const propNames = ["vendor", infoName];
                     const propValues = [vendor, info];
-                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
                             ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
@@ -470,7 +470,7 @@ describe('Mutation: createProduct', () => {
                         code
                         message
                         error
-                        ${dataPath} {
+                        ${itemPath} {
                             id
                             priceInformation {
                                 taxCategory {
@@ -485,11 +485,11 @@ describe('Mutation: createProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                    id = res.body.data[mutationName][dataPath].id;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    id = res.body.data[mutationName][itemPath].id;
                     const propNames = [infoName, "priceInformation"];
                     const propValues = [info, dummyPriceInfo];
-                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
                             ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
                                 nodes {
@@ -537,7 +537,7 @@ describe('Mutation: createProduct', () => {
                             code
                             message
                             error
-                            ${dataPath} {
+                            ${itemPath} {
                                 id
                                 ${infoName} {
                                     name
@@ -546,11 +546,11 @@ describe('Mutation: createProduct', () => {
                             }
                         }
                     }`;
-                    cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                        id = res.body.data[mutationName][dataPath].id;
+                    cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                        id = res.body.data[mutationName][itemPath].id;
                         const propNames = [infoName];
                         const propValues = [info];
-                        cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                             const queryBody = `id
                                 categoryInfo {
                                     name
@@ -587,7 +587,7 @@ describe('Mutation: createProduct', () => {
                             code
                             message
                             error
-                            ${dataPath} {
+                            ${itemPath} {
                                 id
                                 ${infoName} {
                                     name
@@ -596,11 +596,11 @@ describe('Mutation: createProduct', () => {
                             }
                         }
                     }`;
-                    cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                        id = res.body.data[mutationName][dataPath].id;
+                    cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                        id = res.body.data[mutationName][itemPath].id;
                         const propNames = [infoName];
                         const propValues = [info];
-                        cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                             const queryBody = `id
                                 manufacturerInfo {
                                     name
@@ -637,7 +637,7 @@ describe('Mutation: createProduct', () => {
                             code
                             message
                             error
-                            ${dataPath} {
+                            ${itemPath} {
                                 id
                                 ${infoName} {
                                     name
@@ -646,11 +646,11 @@ describe('Mutation: createProduct', () => {
                             }
                         }
                     }`;
-                    cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                        id = res.body.data[mutationName][dataPath].id;
+                    cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                        id = res.body.data[mutationName][itemPath].id;
                         const propNames = [infoName];
                         const propValues = [info];
-                        cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                        cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                             const queryBody = `id
                                 name
                                 values {
@@ -686,7 +686,7 @@ describe('Mutation: createProduct', () => {
                         code
                         message
                         error
-                        ${dataPath} {
+                        ${itemPath} {
                             id
                             ${infoName} {
                                 name
@@ -695,11 +695,11 @@ describe('Mutation: createProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, dataPath).then((res) => {
-                    id = res.body.data[mutationName][dataPath].id;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    id = res.body.data[mutationName][itemPath].id;
                     const propNames = [infoName];
                     const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, dataPath, propNames, propValues).then(() => {
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         cy.queryByProductId("productSpecifications", optionsField, id, options);
                     });
                 });

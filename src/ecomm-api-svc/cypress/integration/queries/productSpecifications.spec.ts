@@ -101,18 +101,7 @@ describe('Query: productSpecifications', () => {
                     totalCount
                 }
             }`;
-            cy.postGQL(gqlQuery).then(res => {
-                // should be 200 ok
-                cy.expect(res.isOkStatusCode).to.be.equal(true);
-        
-                // no errors
-                assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
-
-                // has data
-                assert.exists(res.body.data);
-                // validate data types
-                assert.isNotNaN(res.body.data[queryName].totalCount);
-            });
+            cy.postAndValidate(gqlQuery, queryName);
         });
     });
 
@@ -502,13 +491,7 @@ describe('Query: productSpecifications', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postGQL(gqlQuery).then((res) => {
-                // should have errors
-                assert.exists(res.body.errors);
-    
-                // no data
-                assert.notExists(res.body.data);
-
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
                 expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
             });
         });

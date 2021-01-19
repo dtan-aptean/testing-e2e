@@ -33,7 +33,7 @@ describe('Query: products', () => {
         }
     }`;
     // Name of the info field
-    const infoPath = "productInfo";
+    const infoName = "productInfo";
 
     var trueTotalInput = "";
 
@@ -105,18 +105,7 @@ describe('Query: products', () => {
                     totalCount
                 }
             }`;
-            cy.postGQL(gqlQuery).then(res => {
-                // should be 200 ok
-                cy.expect(res.isOkStatusCode).to.be.equal(true);
-        
-                // no errors
-                assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
-
-                // has data
-                assert.exists(res.body.data);
-                // validate data types
-                assert.isNotNaN(res.body.data[queryName].totalCount);
-            });
+            cy.postAndValidate(gqlQuery, queryName);
         });
 
         it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
@@ -147,7 +136,7 @@ describe('Query: products', () => {
         }
         nodes {
             id
-            ${infoPath} {
+            ${infoName} {
                 name
             }
             createdDate
@@ -364,20 +353,20 @@ describe('Query: products', () => {
 
     context("Testing 'searchString' input", () => {
         it("Query with a valid 'searchString' input argument will return the specific item", () => {
-            cy.returnRandomInfoName(standardQuery, queryName, infoPath).then((name: string) => {
+            cy.returnRandomInfoName(standardQuery, queryName, infoName).then((name: string) => {
                 const searchQuery = `{
                     ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         ${standardQueryBody}
                     }
                 }`;
                 cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                    cy.validateInfoNameSearch(resp, queryName, infoPath, name);
+                    cy.validateInfoNameSearch(resp, queryName, infoName, name);
                 });
             });
         });
 
         it("Query with a valid partial 'searchString' input argument will return all items containing the string", () => {
-            cy.returnRandomInfoName(standardQuery, queryName, infoPath).then((name: string) => {
+            cy.returnRandomInfoName(standardQuery, queryName, infoName).then((name: string) => {
                 // Get the first word if the name has multiple words. Otherwise, get a random segment of the name
                 var newWordIndex = name.search(" ");
                 var searchText = "";
@@ -393,7 +382,7 @@ describe('Query: products', () => {
                     }
                 }`;
                 cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                    cy.validateInfoNameSearch(resp, queryName, infoPath, searchText);
+                    cy.validateInfoNameSearch(resp, queryName, infoName, searchText);
                 });
             });
         });
@@ -478,13 +467,7 @@ describe('Query: products', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postGQL(gqlQuery).then((res) => {
-                // should have errors
-                assert.exists(res.body.errors);
-    
-                // no data
-                assert.notExists(res.body.data);
-
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
                 expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
             });
         });
