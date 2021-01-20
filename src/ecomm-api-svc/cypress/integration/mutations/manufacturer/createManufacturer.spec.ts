@@ -367,30 +367,29 @@ describe('Mutation: createManufacturer', () => {
                 cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                     id = res.body.data[mutationName][itemPath].id;
                     const roleAccess = {enabled: roleBasedAccess.enabled, roles: items};
-                        const propNames = [infoName, "roleBasedAccess"];
-                        const propValues = [info, roleAccess];
-                        cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                            const query = `{
-                                ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
-                                    nodes {
-                                        id
-                                        roleBasedAccess {
-                                            enabled
-                                            roles {
-                                                id
-                                                name
-                                            }
-                                        }
-                                        ${infoName} {
+                    const propNames = [infoName, "roleBasedAccess"];
+                    const propValues = [info, roleAccess];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                                nodes {
+                                    id
+                                    roleBasedAccess {
+                                        enabled
+                                        roles {
+                                            id
                                             name
-                                            description
-                                            languageCode
                                         }
                                     }
+                                    ${infoName} {
+                                        name
+                                        description
+                                        languageCode
+                                    }
                                 }
-                            }`;
-                            cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
-                        });
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
                     });
                 });
             });

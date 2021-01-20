@@ -20,7 +20,7 @@ describe('Mutation: createCheckoutAttribute', () => {
             }
         }
     `;
-    var taxCategoryId = '';
+    var taxCategoryId = "";
 
     afterEach(() => {
         if (id !== "") {
@@ -284,10 +284,14 @@ describe('Mutation: createCheckoutAttribute', () => {
 
     context("Testing connecting to other items and features", () => {
         it("Mutation returns item connected with correct taxCategory when valid 'taxCategoryId' input is used", () => {
-            const taxCategoryName = "Cypress Attribute Test TC";
-            cy.searchOrCreate(taxCategoryName, "taxCategories", "createTaxCategory").then((returnedId: string) => {
-                taxCategoryId = returnedId;
-                const dummyTaxCategory = {id: taxCategoryId, name: taxCategoryName};
+            const extraCreate = "createTaxCategory";
+            const extraPath = "taxCategory";
+            const extraQuery = "taxCategories";
+            const extraItemInput = { name: "Cypress Attribute Test TC" };
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
+                const { items, itemIds } = results;
+                taxCategoryId = itemIds[0];
+                const dummyTaxCategory = items[0];
                 const name = "Cypress CheckoutAttribute TC creation";
                 const values = [{name: 'Cypress Obligatory CA'}];
                 const mutation = `mutation {
@@ -295,7 +299,7 @@ describe('Mutation: createCheckoutAttribute', () => {
                         input: {
                             name: "${name}"
                             values: ${toFormattedString(values)}
-                            taxCategoryId: "${returnedId}"
+                            taxCategoryId: "${itemIds[0]}"
                         }
                     ) {
                         code

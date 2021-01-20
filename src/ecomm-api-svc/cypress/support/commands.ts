@@ -168,6 +168,13 @@ const createMutResMessage = (isSuccess: boolean, mutationName: string): string =
     return isSuccess ? `${message} ${mutation}` : `${mutation} ${message}`;
 };
 
+export interface SupplementalItemRecord {
+    itemId: string;
+    itemName: string;
+    deleteName: string;
+    queryName: string;
+};
+
 // Check if the provided item has an infoName field, and if so, return it.
 // Can check object for infoField, will compare a string to a query/mutation name
 const getInfoName = (item): string | null => {
@@ -575,106 +582,7 @@ Cypress.Commands.add("postAndCheckCustom", (query: string, queryName: string, id
 
 /**
  * COMMANDS FOR MAKING BASIC NEW ITEMS
- * TODO: Phase out searchOrCreate. It causes more problems than it solves
  */
-// Queries for an item and if it doesn't find it, creates the item. Returns id of item
-Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutationName: string, mutationInput?: string, infoName?: string) => {
-    var itemPath = mutationName.replace("create", "");
-    itemPath = itemPath.replace(itemPath.charAt(0), itemPath.charAt(0).toLowerCase());
-    Cypress.log({
-        name: "searchOrCreate",
-        message: `"${name}", ${queryName}, ${mutationName}${mutationInput ? ", " + mutationInput : ""}${infoName ? ", " + infoName : ""}`,
-        consoleProps: () => {
-            return {
-                "searchString": name,
-                "Query name": queryName,
-                "Mutation name": mutationName,
-                "Response item path": itemPath,
-                "Extra input for Mutation": mutationInput,
-                "Info Name": infoName ? infoName : "Not provided"
-            };
-        },
-    });
-    var nameField = "name";
-    if (infoName) {
-        nameField = `${infoName} {
-            name
-            languageCode
-        }`;
-    }
-    const searchQuery = `{
-        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
-            nodes {
-                id
-                ${nameField}
-            }
-        }
-    }`;
-    return cy.postAndValidate(searchQuery, queryName).then((res) => {
-        const nodes = res.body.data[queryName].nodes;
-        if (nodes.length === 1) {
-            var nameSource = nodes[0].name;
-            if (infoName) {
-                nameSource = nodes[0][infoName].filter((item) => {
-                    return item.languageCode === "Standard";
-                })[0].name;
-            }
-            if (nameSource === name) {
-                return nodes[0].id;
-            }
-        } else if (nodes.length > 1) {
-            const extraFiltered = nodes.filter((item) => {
-                if (infoName) {
-                    var target = item[infoName].filter((subItem) => {
-                        return subItem.languageCode === "Standard";
-                    });
-                    return target[0].name === name;
-                } else {
-                    return item.name === name;
-                }
-            });
-            if (extraFiltered.length !== 0) {
-                return extraFiltered[0].id;
-            }
-        }
-        var nameInput = `name: "${name}"`;
-        var inputHasNameAsInfo = false;
-        var comboInput = '';
-        if (mutationInput && infoName) {
-            if (mutationInput.includes(infoName) && mutationInput.includes(name)) {
-                inputHasNameAsInfo = true;
-            } else {
-                nameInput = `${infoName}: [{name: "${name}", languageCode: "Standard"}]`;
-            }
-        } else if (infoName) {
-            nameInput = `${infoName}: [{name: "${name}", languageCode: "Standard"}]`;
-        }
-        comboInput = inputHasNameAsInfo ? `{${mutationInput}}` : `{${nameInput}, ${mutationInput}}`;
-        const input = mutationInput ? comboInput : `{${nameInput}}`;
-        const creationMutation = `mutation {
-            ${mutationName}(input: ${input}) {
-                code
-                message
-                error
-                ${itemPath} {
-                    id
-                    ${nameField}
-                }
-            }
-        }`;
-        cy.postMutAndValidate(creationMutation, mutationName, itemPath).then((resp) => {
-            if (infoName) {
-                const infoItem = resp.body.data[mutationName][itemPath][infoName].filter((subItem) => {
-                    return subItem.languageCode === "Standard";
-                });
-                expect(infoItem[0].name).to.be.eql(name);
-            } else {
-                expect(resp.body.data[mutationName][itemPath].name).to.be.eql(name);
-            }
-            return resp.body.data[mutationName][itemPath].id;
-        });
-    });
-});
 
 // Create a new item, validate it, and return the id. Pass in the full input value as a string
 // If you need more information than just the id, pass in the additional fields as a string and the entire new item will be returned

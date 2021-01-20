@@ -334,7 +334,7 @@ describe('Mutation: updateManufacturer', () => {
         });
     });
 
-    context("Testing deletion when connected to other items or features", () => {
+    context("Testing connecting to other items and features", () => {
         it("Mutation with 'discountIds' input will successfully attach the discounts", () => {
             const extraCreate = "createDiscount";
             const extraPath = "discount";
