@@ -721,7 +721,8 @@ Cypress.Commands.add("createAssociatedItems", (
     createName: string,
     itemPath: string,
     queryName: string,
-    inputBase
+    inputBase,
+    additionalResFields?
 ) => {
     const createInput = (input, newName: string, infoName: string | null) => {
         const retInput = JSON.parse(JSON.stringify(input));
@@ -736,19 +737,28 @@ Cypress.Commands.add("createAssociatedItems", (
     const deletionIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const createdItems = [];
     const createdIds = [] as string[];
+    const fullResBodies = [];
     var infoName = getInfoName(inputBase);
     var nameBase = infoName ? inputBase[infoName][0].name : inputBase.name;
     for (var i = 1; i <= numberToMake; i++) {
         var name = i !== 1 ? `${nameBase} ${i}` : nameBase;
         var item = createInput(inputBase, name, infoName);
-        cy.createAndGetId(createName, itemPath, toFormattedString(item)).then((returnedId: string) => {
+        cy.createAndGetId(createName, itemPath, toFormattedString(item), additionalResFields).then((returnedBody) => {
+            const returnedId = additionalResFields ? returnedBody.id : returnedBody;
             createdIds.push(returnedId);
             item.id = returnedId;
             createdItems.push(item);
             deletionIds.push({itemId: returnedId, deleteName: deleteName, itemName: name, queryName: queryName});
+            if (additionalResFields) {
+                fullResBodies.push(returnedBody);
+            }
         });
     };
-    return cy.wrap({deletionIds: deletionIds, items: createdItems, itemIds: createdIds});
+    const resObject = {deletionIds: deletionIds, items: createdItems, itemIds: createdIds} as {deletionIds: {itemId: string, deleteName: string, itemName: string, queryName: string}[], items: any[], itemIds: string[], fullItems?: any[]};
+    if (additionalResFields) {
+        resObject.fullItems = fullResBodies;
+    }
+    return cy.wrap(resObject);
 });
 
 /**

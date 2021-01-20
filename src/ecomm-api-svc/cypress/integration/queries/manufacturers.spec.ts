@@ -1,7 +1,5 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../support/commands";
-
 // TEST COUNT: 47
 describe('Query: manufacturers', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
@@ -13,6 +11,7 @@ describe('Query: manufacturers', () => {
                     id
                     manufacturerInfo {
                         name
+                        languageCode
                     }
                 }
             }
@@ -20,6 +19,7 @@ describe('Query: manufacturers', () => {
                 id
                 manufacturerInfo {
                     name
+                    languageCode
                 }
             }
             pageInfo {
@@ -132,66 +132,64 @@ describe('Query: manufacturers', () => {
 
     context("Testing 'productId' input", () => {
         // Items created for the productId test
-        const createdItems = [] as {name: string, id: string}[];
-        const createdProducts =  [] as {name: string, id: string}[];
+        const createdItems = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+        const createdProducts =  [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
         const deleteName = "deleteManufacturer";
         const createMutName = "createManufacturer";
         const createPath = "manufacturer";
+        const productMutName = "createProduct";
+        const productPath = "product";
+        const productQuery = "products";
+        const productDelete = "deleteProduct";
+
+        const addCreated = (isProduct: boolean, extIds: {itemId: string, deleteName: string, itemName: string, queryName: string}[]) => {
+            extIds.forEach((id) => {
+                if (isProduct) {
+                    createdProducts.push(id);
+                } else {
+                    createdItems.push(id);
+                }
+            });
+        };
 
         // Ensure deletion of the items we created for the productId test
         after(() => {
-            if (createdProducts.length > 0) {
-                createdProducts.forEach((item) => {
-                    cy.wait(2000);
-                    cy.safeDelete("products", "deleteProduct", item.id, item.name, "productInfo");
-                });
-            }
-            if (createdItems.length > 0) {
-                createdItems.forEach((item) => {
-                    cy.wait(2000);
-                    cy.safeDelete(queryName, deleteName, item.id, item.name, infoName);
-                });
-            }
+            cy.deleteSupplementalItems(createdProducts);
+            cy.deleteSupplementalItems(createdItems);
         });
 
         it("Query with valid 'productId' input will return only the items connected with that productId", () => {
-            const itemOneName = `Cypress productId ${queryName}1 test`;
-            const itemOneInput = {manufacturerInfo: [{name: itemOneName, languageCode: "Standard"}]};
-            cy.createAndGetId(createMutName, createPath, toFormattedString(itemOneInput)).then((idOne: string) => {
-                createdItems.push({name: itemOneName, id: idOne});
-                const itemOne = {id: idOne};
-                itemOne[infoName] = [{name: itemOneName}];
-                const itemTwoName = `Cypress productId ${queryName}2 test`;
-                const itemTwoInput = {manufacturerInfo: [{name: itemTwoName, languageCode: "Standard"}]};
-                cy.createAndGetId(createMutName, createPath, toFormattedString(itemTwoInput)).then((idTwo: string) => {
-                    createdItems.push({name: itemTwoName, id: idTwo});
-                    const itemTwo = {id: idTwo};
-                    itemTwo[infoName] = [{name: itemTwoName}];
-                    const productName = `Cypress ${queryName} ProductID`; 
-                    const productInput = {
-                        productInfo: [{
-                            name: productName,
-                            languageCode: "Standard",
-                        }],
-                        manufacturerIds: [idOne, idTwo]
-                    };
-                    cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((productId: string) => {
-                        createdProducts.push({name: productName, id: productId});
-                        const query = `{
-                            ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
-                                ${standardQueryBody}
-                            }
-                        }`;
-                        cy.postAndValidate(query, queryName).then((respo) => {
-                            const { nodes, totalCount } = respo.body.data[queryName];
-                            expect(totalCount).to.be.eql(2);
-                            expect(nodes).to.deep.include(itemOne);
-                            expect(nodes).to.deep.include(itemTwo);
-                            // Now delete the product
-                            cy.deleteItem("deleteProduct", productId).then(() => {
-                                cy.deleteItem(deleteName, idOne).then(() => {
-                                    cy.deleteItem(deleteName, idTwo);
-                                });
+            const extraItemInput = { manufacturerInfo: [{name: `Cypress productId ${queryName} test`, languageCode: "Standard"}] };
+            cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput).then((results) => {
+                const { deletionIds, items, itemIds } = results;
+                addCreated(false, deletionIds);
+                const productInput = {
+                    productInfo: [{
+                        name: `Cypress ${queryName} ProductID`,
+                        languageCode: "Standard",
+                    }],
+                    manufacturerIds: itemIds
+                };
+                cy.createAssociatedItems(1, productMutName, productPath, productQuery, productInput).then((results) => {
+                    const { deletionIds } = results;
+                    addCreated(true, deletionIds);
+                    const productId = results.itemIds[0];
+                    const query = `{
+                        ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
+                            ${standardQueryBody}
+                        }
+                    }`;
+                    cy.postAndValidate(query, queryName).then((respo) => {
+                        const { nodes, totalCount } = respo.body.data[queryName];
+                        expect(totalCount).to.be.eql(2);
+                        items.forEach((item) => {
+                            expect(nodes).to.deep.include(item);
+                        });
+                        // Now delete the product
+                        cy.deleteItem(productDelete, productId).then(() => {
+                            itemIds.forEach((id) => {
+                                cy.deleteItem(deleteName, id);
+                                cy.wait(1000);
                             });
                         });
                     });
@@ -212,17 +210,18 @@ describe('Query: manufacturers', () => {
         });
 
         it("Query with 'productId' input that has no associated items will return an empty array", () => {
-            const productName = `Cypress ${queryName} productId`;
             const productInput = {
                 productInfo: [{
-                    name: productName,
+                    name: `Cypress ${queryName} productId`,
                     languageCode: "Standard",
                 }],
             };
-            cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((returnedId: string) => {
-                createdProducts.push({name: productName, id: returnedId});
+            cy.createAssociatedItems(1, productMutName, productPath, productQuery, productInput).then((results) => {
+                const { deletionIds, itemIds } = results;
+                addCreated(true, deletionIds);
+                const productId = itemIds[0];
                 const query = `{
-                    ${queryName}(productId: "${returnedId}", orderBy: {direction: ASC, field: NAME}) {
+                    ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -231,45 +230,38 @@ describe('Query: manufacturers', () => {
                     expect(totalCount).to.be.eql(0);
                     expect(nodes.length).to.eql(0);
                     // Now delete the product
-                    cy.deleteItem("deleteProduct", returnedId);
+                    cy.deleteItem(productDelete, productId);
                 });
             });
         });
 
         it("Query using the 'productId' of a deleted product will return an error", () => {
-            const itemOneName = `Cypress productId ${queryName}1 delete`;
-            const itemOneInput = {manufacturerInfo: [{name: itemOneName, languageCode: "Standard"}]};
-            cy.createAndGetId(createMutName, createPath, toFormattedString(itemOneInput)).then((idOne: string) => {
-                createdItems.push({name: itemOneName, id: idOne});
-                const itemOne = {id: idOne};
-                itemOne[infoName] = [{name: itemOneName}];
-                const itemTwoName = `Cypress productId ${queryName}2 delete`;
-                const itemTwoInput = {manufacturerInfo: [{name: itemTwoName, languageCode: "Standard"}]};
-                cy.createAndGetId(createMutName, createPath, toFormattedString(itemTwoInput)).then((idTwo: string) => {
-                    createdItems.push({name: itemTwoName, id: idTwo});
-                    const itemTwo = {id: idTwo};
-                    itemTwo[infoName] = [{name: itemTwoName}];
-                    const productName = `Cypress ${queryName} ProductID delete`; 
-                    const productInput = {
-                        productInfo: [{
-                            name: productName,
-                            languageCode: "Standard",
-                        }],
-                        manufacturerIds: [idOne, idTwo]
-                    };
-                    cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((productId: string) => {
-                        createdProducts.push({name: productName, id: productId});
-                        // Now delete the product
-                        cy.deleteItem("deleteProduct", productId).then(() => {
-                            const query = `{
-                                ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
-                                    ${standardQueryBody}
-                                }
-                            }`;
-                            cy.postAndConfirmError(query).then(() => {
-                                cy.deleteItem(deleteName, idOne).then(() => {
-                                    cy.deleteItem(deleteName, idTwo);
-                                });
+            const extraItemInput = {manufacturerInfo: [{name: `Cypress productId ${queryName} delete`, languageCode: "Standard"}]};
+            cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput).then((results) => {
+                const { deletionIds, itemIds } = results;
+                addCreated(false, deletionIds);
+                const productInput = {
+                    productInfo: [{
+                        name: `Cypress ${queryName} ProductID delete`,
+                        languageCode: "Standard",
+                    }],
+                    manufacturerIds: itemIds
+                };
+                cy.createAssociatedItems(1, productMutName, productPath, productQuery, productInput).then((results) => {
+                    const { deletionIds } = results;
+                    addCreated(true, deletionIds);
+                    const productId = results.itemIds[0];
+                    // Now delete the product
+                    cy.deleteItem(productDelete, productId).then(() => {
+                        const query = `{
+                            ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
+                                ${standardQueryBody}
+                            }
+                        }`;
+                        cy.postAndConfirmError(query).then(() => {
+                            itemIds.forEach((id) => {
+                                cy.deleteItem(deleteName, id);
+                                cy.wait(1000);
                             });
                         });
                     });

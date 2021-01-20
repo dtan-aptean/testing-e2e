@@ -1,7 +1,5 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../support/commands";
-
 // TEST COUNT: 40
 describe('Query: productSpecifications', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
@@ -125,72 +123,79 @@ describe('Query: productSpecifications', () => {
 
     context("Testing 'productId' input", () => {
         // Items created for the productId test
-        const createdItems = [] as {name: string, id: string}[];
-        const createdProducts =  [] as {name: string, id: string}[];
+        const createdItems = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+        const createdProducts =  [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
         const deleteName = "deleteProductSpecification";
         const createMutName = "createProductSpecification";
         const createPath = "productSpecification";
+        const extraInput = `options {
+            id
+            name
+        }`;
+        const productMutName = "createProduct";
+        const productPath = "product";
+        const productQuery = "products";
+        const productDelete = "deleteProduct";
+        
+        const addCreated = (isProduct: boolean, extIds: {itemId: string, deleteName: string, itemName: string, queryName: string}[]) => {
+            extIds.forEach((id) => {
+                if (isProduct) {
+                    createdProducts.push(id);
+                } else {
+                    createdItems.push(id);
+                }
+            });
+        };
+
+        const retrieveOptionsIds = (responseBodies: []) => {
+            const ids = [] as string[];
+            responseBodies.forEach((response) => {
+                response.options.forEach((opt) => {
+                    ids.push(opt.id);
+                });
+            });
+            return ids;
+        };
 
         // Ensure deletion of the items we created for the productId test
         after(() => {
-            if (createdProducts.length > 0) {
-                createdItems.forEach((item) => {
-                    cy.wait(2000);
-                    cy.safeDelete("products", "deleteProduct", item.id, item.name, "productInfo");
-                });
-            }
-            if (createdItems.length > 0) {
-                createdItems.forEach((item) => {
-                    cy.wait(2000);
-                    cy.safeDelete(queryName, deleteName, item.id, item.name);
-                });
-            }
+            cy.deleteSupplementalItems(createdProducts);
+            cy.deleteSupplementalItems(createdItems);
         });
 
         it("Query with valid 'productId' input will return only the items connected with that productId", () => {
-            const itemOneName = `Cypress productId ${queryName}1 test`;
-            const itemOneInput = {name: itemOneName, options: [{name: "Cypress pId option"}]};
-            const extraInput = `options {
-                id
-                name
-            }`;
-            cy.createAndGetId(createMutName, createPath, toFormattedString(itemOneInput), extraInput).then((returnedItemOne) => {
-                const optionIds = [returnedItemOne.options[0].id];
-                const idOne = returnedItemOne.id;
-                createdItems.push({name: itemOneName, id: idOne});
-                const itemOne = {id: idOne, name: itemOneName};
-                const itemTwoName = `Cypress productId ${queryName}2 test`;
-                const itemTwoInput = {name: itemTwoName, options: [{name: "Cypress pId option"}]};
-                cy.createAndGetId(createMutName, createPath, toFormattedString(itemTwoInput), extraInput).then((returnedItemTwo) => {
-                    optionIds.push(returnedItemTwo.options[0].id);
-                    const idTwo = returnedItemTwo.id;
-                    createdItems.push({name: itemTwoName, id: idTwo});
-                    const itemTwo = {id: idTwo, name: itemTwoName};
-                    const productName = `Cypress ${queryName} ProductID`; 
-                    const productInput = {
-                        productInfo: [{
-                            name: productName,
-                            languageCode: "Standard",
-                        }],
-                        specificationOptionIds: optionIds
-                    };
-                    cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((productId: string) => {
-                        createdProducts.push({name: productName, id: productId});
-                        const query = `{
-                            ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
-                                ${standardQueryBody}
-                            }
-                        }`;
-                        cy.postAndValidate(query, queryName).then((respo) => {
-                            const { nodes, totalCount } = respo.body.data[queryName];
-                            expect(totalCount).to.be.eql(2);
-                            expect(nodes).to.deep.include(itemOne);
-                            expect(nodes).to.deep.include(itemTwo);
-                            // Now delete the product
-                            cy.deleteItem("deleteProduct", productId).then(() => {
-                                cy.deleteItem(deleteName, idOne).then(() => {
-                                    cy.deleteItem(deleteName, idTwo);
-                                });
+            const extraItemInput = {name: `Cypress productId ${queryName} test`, options: [{name: "Cypress pId option"}]};
+            cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput, extraInput).then((results) => {
+                const { deletionIds, items, itemIds, fullItems } = results;
+                addCreated(false, deletionIds);
+                const optionIds = retrieveOptionsIds(fullItems);
+                const productInput = {
+                    productInfo: [{
+                        name: `Cypress ${queryName} ProductID`,
+                        languageCode: "Standard",
+                    }],
+                    specificationOptionIds: optionIds
+                };
+                cy.createAssociatedItems(1, productMutName, productPath, productQuery, productInput).then((results) => {
+                    const { deletionIds } = results;
+                    addCreated(true, deletionIds);
+                    const productId = results.itemIds[0];
+                    const query = `{
+                        ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
+                            ${standardQueryBody}
+                        }
+                    }`;
+                    cy.postAndValidate(query, queryName).then((respo) => {
+                        const { nodes, totalCount } = respo.body.data[queryName];
+                        expect(totalCount).to.be.eql(2);
+                        items.forEach((item) => {
+                            expect(nodes).to.deep.include(item);
+                        });
+                        // Now delete the product
+                        cy.deleteItem(productDelete, productId).then(() => {
+                            itemIds.forEach((id) => {
+                                cy.deleteItem(deleteName, id);
+                                cy.wait(1000);
                             });
                         });
                     });
@@ -211,17 +216,18 @@ describe('Query: productSpecifications', () => {
         });
 
         it("Query with 'productId' input that has no associated items will return an empty array", () => {
-            const productName = `Cypress ${queryName} productId`;
             const productInput = {
                 productInfo: [{
-                    name: productName,
+                    name: `Cypress ${queryName} productId`,
                     languageCode: "Standard",
                 }]
             };
-            cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((returnedId: string) => {
-                createdProducts.push({name: productName, id: returnedId});
+            cy.createAssociatedItems(1, productMutName, productPath, productQuery, productInput).then((results) => {
+                const { deletionIds, itemIds } = results;
+                addCreated(true, deletionIds);
+                const productId = itemIds[0];
                 const query = `{
-                    ${queryName}(productId: "${returnedId}", orderBy: {direction: ASC, field: NAME}) {
+                    ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -230,49 +236,39 @@ describe('Query: productSpecifications', () => {
                     expect(totalCount).to.be.eql(0);
                     expect(nodes.length).to.eql(0);
                     // Now delete the product
-                    cy.deleteItem("deleteProduct", returnedId);
+                    cy.deleteItem(productDelete, productId);
                 });
             });
         });
 
         it("Query using the 'productId' of a deleted product will return an error", () => {
-            const itemOneName = `Cypress productId ${queryName}1 delete`;
-            const itemOneInput = {name: itemOneName, options: [{name: "Cypress pId option"}]};
-            const extraInput = `options {
-                id
-                name
-            }`;
-            cy.createAndGetId(createMutName, createPath, toFormattedString(itemOneInput), extraInput).then((returnedItemOne) => {
-                const optionIds = [returnedItemOne.options[0].id];
-                const idOne = returnedItemOne.id;
-                createdItems.push({name: itemOneName, id: idOne});
-                const itemTwoName = `Cypress productId ${queryName}2 test`;
-                const itemTwoInput = {name: itemTwoName, options: [{name: "Cypress pId option"}]};
-                cy.createAndGetId(createMutName, createPath, toFormattedString(itemTwoInput), extraInput).then((returnedItemTwo) => {
-                    optionIds.push(returnedItemTwo.options[0].id);
-                    const idTwo = returnedItemTwo.id;
-                    createdItems.push({name: itemTwoName, id: idTwo});
-                    const productName = `Cypress ${queryName} ProductID delete`; 
-                    const productInput = {
-                        productInfo: [{
-                            name: productName,
-                            languageCode: "Standard",
-                        }],
-                        specificationOptionIds: optionIds
-                    };
-                    cy.createAndGetId("createProduct", "product", toFormattedString(productInput)).then((productId: string) => {
-                        createdProducts.push({name: productName, id: productId});
-                        // Now delete the product
-                        cy.deleteItem("deleteProduct", productId).then(() => {
-                            const query = `{
-                                ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
-                                    ${standardQueryBody}
-                                }
-                            }`;
-                            cy.postAndConfirmError(query).then(() => {
-                                cy.deleteItem(deleteName, idOne).then(() => {
-                                    cy.deleteItem(deleteName, idTwo);
-                                });
+            const extraItemInput = {name: `Cypress productId ${queryName} delete`, options: [{name: "Cypress pId option"}]};
+            cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput, extraInput).then((results) => {
+                const { deletionIds, items, itemIds, fullItems } = results;
+                addCreated(false, deletionIds);
+                const optionIds = retrieveOptionsIds(fullItems);
+                const productInput = {
+                    productInfo: [{
+                        name: `Cypress ${queryName} ProductID delete`,
+                        languageCode: "Standard",
+                    }],
+                    specificationOptionIds: optionIds
+                };
+                cy.createAssociatedItems(1, productMutName, productPath, productQuery, productInput).then((results) => {
+                    const { deletionIds } = results;
+                    addCreated(true, deletionIds);
+                    const productId = results.itemIds[0];
+                    // Now delete the product
+                    cy.deleteItem(productDelete, productId).then(() => {
+                        const query = `{
+                            ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
+                                ${standardQueryBody}
+                            }
+                        }`;
+                        cy.postAndConfirmError(query).then(() => {
+                            itemIds.forEach((id) => {
+                                cy.deleteItem(deleteName, id);
+                                cy.wait(1000);
                             });
                         });
                     });
