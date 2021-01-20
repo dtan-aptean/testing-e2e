@@ -731,17 +731,33 @@ describe('Mutation: updateProduct', () => {
         });
 
         it("Mutation with 'specificationOptionIds' input will successfully attach the specificationOptions", () => {
-            const productSpecification = {name: `Cypress ${mutationName} specificationOption 1`, options: [{name: "specificationOption 1"}, {name: "specificationOption2"}] };
+            const retrieveOptions = (responseBodies: []) => {
+                const options = [];
+                responseBodies.forEach((response) => {
+                    options.push(response.options);
+                });
+                return options;
+            };
+            const getOptIds = (options: []) => {
+                const ids = [] as string[];
+                options.forEach((opt) => {
+                    ids.push(opt.id);
+                });
+                return ids;
+            };
+            const extraCreate = "createProductSpecification";
+            const extraPath = "productSpecification";
+            const extraQuery = "productSpecifications";
+            const extraItemInput = { name: `Cypress ${mutationName} specificationOption`, options: [{name: "specificationOption 1"}, {name: "specificationOption 2"}] };
             const optionsField = `options {
                 id
                 name
             }`;
-            cy.createAndGetId("createProductSpecification", "productSpecification", toFormattedString(productSpecification), optionsField).then((returnedItem) => {
-                assert.exists(returnedItem.id);
-                assert.exists(returnedItem.options);
-                extraIds.push({itemId: returnedItem.id, deleteName: "deleteProductSpecification", itemName: productSpecification.name, queryName: "productSpecifications"});
-                const specificationOptionIds = [returnedItem.options[0].id, returnedItem.options[1].id];
-                const options = returnedItem.options;
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const options = retrieveOptions(fullItems);
+                const specificationOptionIds = getOptIds(options);
                 updateCount++;
                 const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard"}];
                 const mutation = `mutation {
@@ -766,9 +782,9 @@ describe('Mutation: updateProduct', () => {
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                     const propNames = [infoName];
-                        const propValues = [info];
+                    const propValues = [info];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                        cy.queryByProductId("productSpecifications", optionsField, id, options);
+                        cy.queryByProductId(extraQuery, optionsField, id, options);
                     });
                 });
             });
