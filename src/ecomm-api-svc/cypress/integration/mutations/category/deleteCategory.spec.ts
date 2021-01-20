@@ -32,7 +32,8 @@ describe('Mutation: deleteCategory', () => {
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
-        cy.searchOrCreate(name, queryName, creationName, undefined, infoName).then((returnedId: string) => {
+        const input = `{${infoName}: [{name: "${name}", description: "Cypress testing for ${mutationName}", languageCode: "Standard"}] }`;
+        cy.createAndGetId(creationName, "category", input).then((returnedId: string) => {
             updateIdAndName(returnedId, name);
         });
     });
