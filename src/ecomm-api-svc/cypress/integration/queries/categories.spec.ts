@@ -141,21 +141,13 @@ describe('Query: categories', () => {
             if (createdProducts.length > 0) {
                 createdProducts.forEach((item) => {
                     cy.wait(2000);
-                    cy.queryForDeleted(false, item.name, item.id, "products", "productInfo").then((itemPresent: boolean) => {
-                        if (itemPresent) {
-                            cy.deleteItem("deleteProduct", item.id);
-                        }
-                    });
+                    cy.safeDelete("products", "deleteProduct", item.id, item.name, "productInfo");
                 });
             }
             if (createdItems.length > 0) {
                 createdItems.forEach((item) => {
                     cy.wait(2000);
-                    cy.queryForDeleted(false, item.name, item.id, queryName, infoName).then((itemPresent: boolean) => {
-                        if (itemPresent) {
-                            cy.deleteItem(deleteName, item.id);
-                        }
-                    });
+                    cy.safeDelete(queryName, deleteName, item.id, item.name, infoName);
                 });
             }
         });

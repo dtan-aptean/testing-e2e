@@ -48,12 +48,8 @@ describe('Mutation: deleteCategory', () => {
         }
         if (id !== '') {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
-            cy.queryForDeleted(false, currentItemName, id, queryName, infoName).then((itemPresent: boolean) => {
-                if (itemPresent) {
-                    cy.deleteItem(mutationName, id).then(() => {
-                        updateIdAndName();
-                    });
-                }
+            cy.safeDelete(queryName, mutationName, id, currentItemName, infoName).then(() => {
+                updateIdAndName();
             });
         }
     });

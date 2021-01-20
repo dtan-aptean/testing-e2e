@@ -871,6 +871,27 @@ Cypress.Commands.add("deleteItem", (mutationName: string, id: string) => {
     return cy.postMutAndValidate(mutation, mutationName, "deleteMutation");
 });
 
+// Queries for an item that may have already been deleted, then deletes it if found. To use in afterEach/after hooks for clean up
+Cypress.Commands.add("safeDelete", (queryName: string, mutationName: string, itemId: string, itemName: string, infoName?: string) => {
+    Cypress.log({
+        name: "safeDelete",
+        message: `Checking ${queryName} for item ${itemId}`,
+        consoleProps: () => {
+            return {
+                "Query Name": queryName,
+                "Delete Mutation Name": mutationName,
+                "Item's Id": itemId,
+                "Item's name": itemName
+            };
+        },
+    });
+    return cy.queryForDeleted(false, itemName, itemId, queryName, infoName).then((itemPresent: boolean) => {
+        if (itemPresent) {
+            return cy.deleteItem(mutationName, itemId);
+        }
+    });
+});
+
 /**
  * COMMANDS FOR VERIFYING THAT A CREATE/UPDATE MUTATION SUCCESSFULLY CREATED/UPDATED AN ITEM WITH THE EXPECTED VALUES
  * TODO: Consolidate the helper functions. 
