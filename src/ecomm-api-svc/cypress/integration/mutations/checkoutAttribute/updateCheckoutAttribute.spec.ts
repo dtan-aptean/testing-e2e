@@ -8,7 +8,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
     var updateCount = 0;
     var taxCategoryId = '';
     var values = '';
-    const extraIds = [] as {itemId: "example", deleteName: "example"}[];
+    const extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'updateCheckoutAttribute';
     const queryName = "checkoutAttributes";
     const itemPath = 'checkoutAttribute';
@@ -43,12 +43,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
     after(() => {
         if (id !== "") {
             // Delete any supplemental items we created
-            if (extraIds.length > 0) {
-                for (var i = 0; i < extraIds.length; i++) {
-                    cy.wait(2000);
-                    cy.deleteItem(extraIds[i].deleteName, extraIds[i].itemId);
-                }
-            }
+            cy.deleteSupplementalItems(extraIds);
             // Delete the item we've been updating
             cy.deleteItem("deleteCheckoutAttribute", id);
             cy.wait(1000);
@@ -223,7 +218,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
             cy.createAndGetId(createName, itemPath, input, extraInput).then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteCheckoutAttribute"});
+                extraIds.push({itemId: createdItem.id, deleteName: "deleteCheckoutAttribute", itemName: name, queryName: queryName});
                 const newName = `Cypress ${mutationName} CD extra updated`;
                 const newValues = createdItem.values;
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};

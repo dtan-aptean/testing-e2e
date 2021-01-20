@@ -6,7 +6,7 @@ import { toFormattedString } from "../../../support/commands";
 describe('Mutation: updateTaxCategory', () => {
     var id = '';
     var updateCount = 0;
-    const extraIds = [] as {itemId: string, deleteName: string}[];
+    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'updateTaxCategory';
     const queryName = "taxCategories";
     const itemPath = 'taxCategory';
@@ -33,12 +33,7 @@ describe('Mutation: updateTaxCategory', () => {
     after(() => {
         if (id !== "") {
             // Delete any supplemental items we created
-            if (extraIds.length > 0) {
-                for (var i = 0; i < extraIds.length; i++) {
-                    cy.wait(2000);
-                    cy.deleteItem(extraIds[i].deleteName, extraIds[i].itemId);
-                }
-            }
+            cy.deleteSupplementalItems(extraIds);
             // Delete the item we've been updating
             cy.deleteItem("deleteTaxCategory", id);
         }
@@ -163,7 +158,7 @@ describe('Mutation: updateTaxCategory', () => {
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteTaxCategory"});
+                extraIds.push({itemId: createdItem.id, deleteName: "deleteTaxCategory", itemName: name, queryName: queryName});
                 const newName = `Cypress ${mutationName} CD extra updated`;
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
                 const mutation = `mutation {

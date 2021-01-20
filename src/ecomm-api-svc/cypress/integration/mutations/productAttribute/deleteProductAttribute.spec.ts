@@ -6,7 +6,7 @@ import { toFormattedString } from "../../../support/commands";
 describe('Mutation: deleteProductAttribute', () => {
     var id = '';
     var currentItemName = '';
-    const extraIds = [] as {itemId: string, deleteName: string}[];
+    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'deleteProductAttribute';
     const creationName = 'createProductAttribute';
     const queryName = "productAttributes";
@@ -39,13 +39,9 @@ describe('Mutation: deleteProductAttribute', () => {
 
     afterEach(() => {
         // Delete any supplemental items we created
-        if (extraIds.length > 0) {
-            for (var i = 0; i < extraIds.length; i++) {
-                cy.wait(2000);
-                cy.deleteItem(extraIds[i].deleteName, extraIds[i].itemId);
-            }
+        cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];
-        }
+        });
         if (id !== '') {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
             cy.safeDelete(queryName, mutationName, id, currentItemName).then(() => {
@@ -134,7 +130,7 @@ describe('Mutation: deleteProductAttribute', () => {
             }`;
             cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
                 const productId = res.body.data[extraMutationName][extraItemPath].id;
-                extraIds.push({itemId: productId, deleteName: "deleteProduct"});
+                extraIds.push({itemId: productId, deleteName: "deleteProduct", itemName: info[0].name, queryName: "products"});
                 const propNames = [productInfoName];
                 const propValues = [info];
                 cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {

@@ -892,6 +892,29 @@ Cypress.Commands.add("safeDelete", (queryName: string, mutationName: string, ite
     });
 });
 
+// Safely delete supplemental items created for a test
+Cypress.Commands.add("deleteSupplementalItems", (extraItems: {itemId: string, deleteName: string, itemName: string, queryName: string}[]) => {
+    Cypress.log({
+        name: "deleteSupplementalItems",
+        message: `Deleting ${extraItems.length} supplemental items created for testing`,
+        consoleProps: () => {
+            return {
+                "Number of supplemental items": extraItems.length,
+                "Supplemental Items": toFormattedString(extraItems, true);
+            };
+        },
+    });
+    if (extraItems.length > 0) {
+        const infoQueries = ["categories", "manufacturers", "products", "vendors"];
+        const infoNames = ["categoryInfo", "manufacturerInfo", "productInfo", "vendorInfo"];
+        for (var i = 0; i < extraItems.length; i++) {
+            cy.wait(2000);
+            var infoName = infoQueries.indexOf(extraItems[i].queryName) !== -1 ? infoNames[infoQueries.indexOf(extraItems[i].queryName)]: null;
+            cy.safeDelete(extraItems[i].queryName, extraItems[i].deleteName, extraItems[i].itemId, extraItems[i].itemName, infoName);
+        }
+    }
+});
+
 /**
  * COMMANDS FOR VERIFYING THAT A CREATE/UPDATE MUTATION SUCCESSFULLY CREATED/UPDATED AN ITEM WITH THE EXPECTED VALUES
  * TODO: Consolidate the helper functions. 

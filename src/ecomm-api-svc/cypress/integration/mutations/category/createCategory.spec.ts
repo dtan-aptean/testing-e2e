@@ -5,7 +5,7 @@ import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/
 // TEST COUNT: 13
 describe('Mutation: createCategory', () => {
     var id = '';
-    const extraIds = [] as {itemId: string, deleteName: string}[];
+    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'createCategory';
     const queryName = "categories";
     const itemPath = 'category';
@@ -33,13 +33,9 @@ describe('Mutation: createCategory', () => {
         }
         if (id !== "") {
             // Delete any supplemental items we created
-            if (extraIds.length > 0) {
-                for (var i = 0; i < extraIds.length; i++) {
-                    cy.wait(2000);
-                    cy.deleteItem(extraIds[i].deleteName, extraIds[i].itemId);
-                }
+            cy.deleteSupplementalItems(extraIds).then(() => {
                 extraIds = [];
-            }
+            });
 
             cy.deleteItem("deleteCategory", id).then(() => {
                 id = "";
@@ -301,7 +297,7 @@ describe('Mutation: createCategory', () => {
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                     const subCategoryId = res.body.data[mutationName][itemPath].id;
-                    extraIds.push({itemId: subCategoryId, deleteName: "deleteCategory"});
+                    extraIds.push({itemId: subCategoryId, deleteName: "deleteCategory", itemName: info[0].name, queryName: queryName});
                     const propNames = ["parent", infoName];
                     const propValues = [parentCategory, info];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
@@ -333,13 +329,13 @@ describe('Mutation: createCategory', () => {
         it("Mutation with 'discountIds' input will successfully attach the discounts", () => {
             const discountOne = {name: `Cypress ${mutationName} discount 1`, discountAmount: {amount: 15, currency: "USD"}, discountType: "ASSIGNED_TO_CATEGORIES"};
             cy.createAndGetId("createDiscount", "discount", toFormattedString(discountOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteDiscount"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteDiscount", itemName: discountOne.name, queryName: "discounts"});
                 discountOne.id = returnedId;
                 const discounts = [discountOne];
                 const discountIds = [returnedId];
                 const discountTwo = {name: `Cypress ${mutationName} discount 2`, discountAmount: {amount: 30, currency: "USD"}, discountType: "ASSIGNED_TO_CATEGORIES"};
                 cy.createAndGetId("createDiscount", "discount", toFormattedString(discountTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteDiscount"});
+                    extraIds.push({itemId: secondId, deleteName: "deleteDiscount", itemName: discountTwo.name, queryName: "discounts"});
                     discountTwo.id = secondId;
                     discounts.push(discountTwo);
                     discountIds.push(secondId);
@@ -409,13 +405,13 @@ describe('Mutation: createCategory', () => {
         it("Mutation with 'roleBasedAccess' input will successfully create an item with attached roles.", () => {
             const roleOne = {name: `Cypress ${mutationName} role 1`};
             cy.createAndGetId("createCustomerRole", "customerRole", toFormattedString(roleOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteCustomerRole"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteCustomerRole", itemName: roleOne.name, queryName: "customerRoles"});
                 roleOne.id = returnedId;
                 const roles = [roleOne];
                 const custRoleIds = [returnedId];
                 const roleTwo = {name: `Cypress ${mutationName} role 2`};
                 cy.createAndGetId("createCustomerRole", "customerRole", toFormattedString(roleTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteCustomerRole"});
+                    extraIds.push({itemId: secondId, deleteName: "deleteCustomerRole", itemName: roleTwo.name, queryName: "customerRoles"});
                     roleTwo.id = secondId;
                     roles.push(roleTwo)
                     custRoleIds.push(secondId);

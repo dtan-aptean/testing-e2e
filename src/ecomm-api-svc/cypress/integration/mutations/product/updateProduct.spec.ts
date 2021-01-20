@@ -6,7 +6,7 @@ import { toFormattedString } from "../../../support/commands";
 describe('Mutation: updateProduct', () => {
     var id = '';
     var updateCount = 0;
-    const extraIds = [] as {itemId: string, deleteName: string}[];
+    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'updateProduct';
     const queryName = "products";
     const itemPath = 'product';
@@ -37,12 +37,7 @@ describe('Mutation: updateProduct', () => {
     after(() => {
         if (id !== "") {
             // Delete any supplemental items we created
-            if (extraIds.length > 0) {
-                for (var i = 0; i < extraIds.length; i++) {
-                    cy.wait(2000);
-                    cy.deleteItem(extraIds[i].deleteName, extraIds[i].itemId);
-                }
-            }
+            cy.deleteSupplementalItems(extraIds);
             // Delete the item we've been updating
             cy.deleteItem("deleteProduct", id);
         }
@@ -204,7 +199,7 @@ describe('Mutation: updateProduct', () => {
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteProduct"});
+                extraIds.push({itemId: createdItem.id, deleteName: "deleteProduct", itemName: info[0].name, queryName: queryName});
                 const newInfo = [{name: `Cypress ${mutationName} CD extra updated`, languageCode: "Standard"}];
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
                 const mutation = `mutation {
@@ -468,7 +463,7 @@ describe('Mutation: updateProduct', () => {
         it("Mutation with 'vendorId' input will successfully attach the vendor", () => {
             const vendor = {vendorInfo: [{name: `Cypress ${mutationName} vendor`, languageCode: "Standard"}]};
             cy.createAndGetId("createVendor", "vendor", toFormattedString(vendor)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteVendor"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteVendor", itemName: vendor.vendorInfo[0].name, queryName: "vendors"});
                 vendor.id = returnedId;
                 updateCount++;
                 const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard"}];
@@ -530,7 +525,7 @@ describe('Mutation: updateProduct', () => {
         it("Mutation with 'taxCategoryId' input will successfully attach the tax category", () => {
             const taxCategory = {name: `Cypress ${mutationName} taxCategory 1`};
             cy.createAndGetId("createTaxCategory", "taxCategory", toFormattedString(taxCategory)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteTaxCategory"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteTaxCategory", itemName: taxCategory.name, queryName: "taxCategories"});
                 taxCategory.id = returnedId;
                 updateCount++;
                 const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard"}];
@@ -591,13 +586,13 @@ describe('Mutation: updateProduct', () => {
         it("Mutation with 'categoryIds' input will successfully attach the categories", () => {
             const categoryOne = { categoryInfo: [{ name:`Cypress ${mutationName} category 1`, languageCode: "Standard" }] };
             cy.createAndGetId("createCategory", "category", toFormattedString(categoryOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteCategory"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteCategory", itemName: categoryOne.categoryInfo[0].name, queryName: "categories"});
                 categoryOne.id = returnedId;
                 const categories = [categoryOne];
                 const categoryIds = [returnedId];
                 const categoryTwo = {categoryInfo: [{name: `Cypress ${mutationName} category 2`, languageCode: "Standard"}] };
                 cy.createAndGetId("createCategory", "category", toFormattedString(categoryTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteCategory"});
+                    extraIds.push({itemId: secondId, deleteName: "deleteCategory", itemName: categoryTwo.categoryInfo[0].name, queryName: "categories"});
                     categoryTwo.id = secondId;
                     categories.push(categoryTwo);
                     categoryIds.push(secondId);
@@ -642,13 +637,13 @@ describe('Mutation: updateProduct', () => {
         it("Mutation with 'manufacturerIds' input will successfully attach the manufacturers", () => {
             const manufacturerOne = {manufacturerInfo: [{ name: `Cypress ${mutationName} manufacturer 1`, languageCode: "Standard" }] };
             cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteManufacturer"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteManufacturer", itemName: manufacturerOne.manufacturerInfo[0].name, queryName: "manufacturers"});
                 manufacturerOne.id = returnedId;
                 const manufacturers = [manufacturerOne];
                 const manufacturerIds = [returnedId];
                 const manufacturerTwo = {manufacturerInfo: [{ name: `Cypress ${mutationName} manufacturer 2`, languageCode: "Standard" }] };
                 cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteManufacturer"});
+                    extraIds.push({itemId: secondId, deleteName: "deleteManufacturer", itemName: manufacturerTwo.manufacturerInfo[0].name, queryName: "manufacturers"});
                     manufacturerTwo.id = secondId;
                     manufacturers.push(manufacturerTwo);
                     manufacturerIds.push(secondId);
@@ -693,13 +688,13 @@ describe('Mutation: updateProduct', () => {
         it("Mutation with 'attributeIds' input will successfully attach the attributes", () => {
             const attributeOne = {name: `Cypress ${mutationName} attribute 1`, values: [{name: "attribute 1"}] };
             cy.createAndGetId("createProductAttribute", "productAttribute", toFormattedString(attributeOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteProductAttribute"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteProductAttribute", itemName: attributeOne.name, queryName: "productAttributes"});
                 attributeOne.id = returnedId;
                 const attributes = [attributeOne];
                 const attributeIds = [returnedId];
                 const attributeTwo = {name: `Cypress ${mutationName} attribute 2`, values: [{name: "attribute 2"}] };
                 cy.createAndGetId("createProductAttribute", "productAttribute", toFormattedString(attributeTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteProductAttribute"});
+                    extraIds.push({itemId: secondId, deleteName: "deleteProductAttribute", itemName: attributeTwo.name, queryName: "productAttributes"});
                     attributeTwo.id = secondId;
                     attributes.push(attributeTwo);
                     attributeIds.push(secondId);
@@ -750,7 +745,7 @@ describe('Mutation: updateProduct', () => {
             cy.createAndGetId("createProductSpecification", "productSpecification", toFormattedString(productSpecification), optionsField).then((returnedItem) => {
                 assert.exists(returnedItem.id);
                 assert.exists(returnedItem.options);
-                extraIds.push({itemId: returnedItem.id, deleteName: "deleteProductSpecification"});
+                extraIds.push({itemId: returnedItem.id, deleteName: "deleteProductSpecification", itemName: productSpecification.name, queryName: "productSpecifications"});
                 const specificationOptionIds = [returnedItem.options[0].id, returnedItem.options[1].id];
                 const options = returnedItem.options;
                 updateCount++;

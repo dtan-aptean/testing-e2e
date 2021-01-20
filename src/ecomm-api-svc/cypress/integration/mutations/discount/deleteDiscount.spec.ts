@@ -6,7 +6,7 @@ import { toFormattedString } from "../../../support/commands";
 describe('Mutation: deleteDiscount', () => {
     var id = '';
     var currentItemName = '';
-    const extraIds = [] as {itemId: string, deleteName: string}[];
+    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'deleteDiscount';
     const creationName = 'createDiscount';
     const queryName = "discounts";
@@ -39,13 +39,9 @@ describe('Mutation: deleteDiscount', () => {
 
     afterEach(() => {
         // Delete any supplemental items we created
-        if (extraIds.length > 0) {
-            for (var i = 0; i < extraIds.length; i++) {
-                cy.wait(2000);
-                cy.deleteItem(extraIds[i].deleteName, extraIds[i].itemId);
-            }
+        cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];
-        }
+        });
         if (id !== '') {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
             cy.safeDelete(queryName, mutationName, id, currentItemName).then(() => {
@@ -168,7 +164,7 @@ describe('Mutation: deleteDiscount', () => {
                     }`;
                     cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
                         const categoryId = res.body.data[extraMutationName][extraItemPath].id;
-                        extraIds.push({itemId: categoryId, deleteName: "deleteCategory"});
+                        extraIds.push({itemId: categoryId, deleteName: "deleteCategory", itemName: info[0].name, queryName: extraQueryName});
                         const propNames = [infoName, "discounts"];
                         const propValues = [info, discounts];
                         cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
@@ -272,7 +268,7 @@ describe('Mutation: deleteDiscount', () => {
                     }`;
                     cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
                         const manufacturerId = res.body.data[extraMutationName][extraItemPath].id;
-                        extraIds.push({itemId: manufacturerId, deleteName: "deleteManufacturer"});
+                        extraIds.push({itemId: manufacturerId, deleteName: "deleteManufacturer", itemName: info[0].name, queryName: extraQueryName});
                         const propNames = [infoName, "discounts"];
                         const propValues = [info, discounts];
                         cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {

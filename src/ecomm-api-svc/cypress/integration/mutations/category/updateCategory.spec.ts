@@ -6,7 +6,7 @@ import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/
 describe('Mutation: updateCategory', () => {
     var id = '';
     var updateCount = 0;
-    const extraIds = [] as {itemId: string, deleteName: string}[];
+    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'updateCategory';
     const queryName = "categories";
     const itemPath = 'category';
@@ -46,12 +46,7 @@ describe('Mutation: updateCategory', () => {
         }
         if (id !== '') {
             // Delete any supplemental items we created
-            if (extraIds.length > 0) {
-                for (var i = 0; i < extraIds.length; i++) {
-                    cy.wait(2000);
-                    cy.deleteItem(extraIds[i].deleteName, extraIds[i].itemId);
-                }
-            }
+            cy.deleteSupplementalItems(extraIds);
             // Delete the item we've been updating
             cy.deleteItem("deleteCategory", id);
         }
@@ -211,7 +206,7 @@ describe('Mutation: updateCategory', () => {
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteCategory"});
+                extraIds.push({itemId: createdItem.id, deleteName: "deleteCategory", itemName: info[0].name, queryName: queryName});
                 const newInfo = [{name: `Cypress ${mutationName} CD extra updated`, description: `${mutationName} CD cypress test`, languageCode: "Standard"}];
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
                 const mutation = `mutation {
@@ -352,7 +347,7 @@ describe('Mutation: updateCategory', () => {
             const input = `{${infoName}: [{name: "${name}", languageCode: "Standard"}] }`;
             cy.createAndGetId(createName, itemPath, input).then((returnedId: string) => {
                 var subCategoryId = returnedId;
-                extraIds.push({itemId: subCategoryId, deleteName: "deleteCategory"});
+                extraIds.push({itemId: subCategoryId, deleteName: "deleteCategory", itemName: name, queryName: queryName});
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -398,13 +393,13 @@ describe('Mutation: updateCategory', () => {
         it("Mutation with 'discountIds' input will successfully attach the discounts", () => {
             const discountOne = {name: `Cypress ${mutationName} discount 1`, discountType: "ASSIGNED_TO_CATEGORIES", discountAmount: {amount: 15, currency: "USD"}};
             cy.createAndGetId("createDiscount", "discount", toFormattedString(discountOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteDiscount"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteDiscount", itemName: discountOne.name, queryName: "discounts"});
                 discountOne.id = returnedId;
                 const discounts = [discountOne];
                 const discountIds = [returnedId];
                 const discountTwo = {name: `Cypress ${mutationName} discount 2`, discountType: "ASSIGNED_TO_CATEGORIES", discountAmount: {amount: 30, currency: "USD"}};
                 cy.createAndGetId("createDiscount", "discount", toFormattedString(discountTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteDiscount"});
+                    extraIds.push({itemId: secondId, deleteName: "deleteDiscount", itemName: discountTwo.name, queryName: "discounts"});
                     discountTwo.id = secondId;
                     discounts.push(discountTwo);
                     discountIds.push(secondId);
@@ -475,13 +470,13 @@ describe('Mutation: updateCategory', () => {
         it("Mutation with 'roleBasedAccess' input will successfully attach the roles", () => {
             const roleOne = {name: `Cypress ${mutationName} role 1`};
             cy.createAndGetId("createCustomerRole", "customerRole", toFormattedString(roleOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteCustomerRole"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteCustomerRole", itemName: roleOne.name, queryName: "customerRoles"});
                 roleOne.id = returnedId;
                 const roles = [roleOne];
                 const custRoleIds = [returnedId];
                 const roleTwo = {name: `Cypress ${mutationName} role 2`};
                 cy.createAndGetId("createCustomerRole", "customerRole", toFormattedString(roleTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteCustomerRole"});
+                    extraIds.push({itemId: secondId, deleteName: "deleteCustomerRole", itemName: roleTwo.name, queryName: "customerRoles"});
                     roleTwo.id = secondId;
                     roles.push(roleTwo)
                     custRoleIds.push(secondId);
@@ -560,7 +555,7 @@ describe('Mutation: updateCategory', () => {
             const pageSize = 10;
             const input = {categoryInfo: [{name: name, languageCode: "Standard"}], published: published, displayOrder: displayOrder, pageSize: pageSize}
             cy.createAndGetId(createName, itemPath, toFormattedString(input), undefined, originalBaseUrl).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteCategory"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteCategory", itemName: name, queryName: queryName});
                 name = `Cypress TopMenu Update ${Cypress._.random(0, 999)}`;
                 const newInfo = [{name: name, languageCode: "Standard"}];
                 const showInTopMenu = true;

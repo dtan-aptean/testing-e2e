@@ -6,7 +6,7 @@ import { toFormattedString } from "../../../support/commands";
 describe('Mutation: deleteTaxCategory', () => {
     var id = '';
     var currentItemName = '';
-    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];    // Should push objects formatted as {itemId: "example", deleteName: "example"}
+    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'deleteTaxCategory';
     const creationName = 'createTaxCategory';
     const queryName = "taxCategories";
@@ -38,14 +38,9 @@ describe('Mutation: deleteTaxCategory', () => {
 
     afterEach(() => {
         // Delete any supplemental items we created
-        if (extraIds.length > 0) {
-            for (var i = 0; i < extraIds.length; i++) {
-                cy.wait(2000);
-                const infoName = extraIds[i].queryName === "products" ? "productInfo" : null;
-                cy.safeDelete(extraIds[i].queryName, extraIds[i].deleteName, extraIds[i].itemId, extraIds[i].itemName, infoName);
-            }
+        cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];
-        }
+        });
         if (id !== '') {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
             cy.safeDelete(queryName, mutationName, id, currentItemName).then(() => {

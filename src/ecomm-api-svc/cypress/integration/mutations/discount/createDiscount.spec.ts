@@ -5,7 +5,7 @@ import { toFormattedString } from "../../../support/commands";
 // TEST COUNT: 16
 describe('Mutation: createDiscount', () => {
     var id = '';
-    const extraIds = [] as {itemId: string, deleteName: string}[];
+    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'createDiscount';
     const queryName = "discounts";
     const itemPath = 'discount';
@@ -26,13 +26,9 @@ describe('Mutation: createDiscount', () => {
     afterEach(() => {
         if (id !== "") {
             // Delete any supplemental items we created
-            if (extraIds.length > 0) {
-                for (var i = 0; i < extraIds.length; i++) {
-                    cy.wait(2000);
-                    cy.deleteItem(extraIds[i].deleteName, extraIds[i].itemId);
-                }
+            cy.deleteSupplementalItems(extraIds).then(() => {
                 extraIds = [];
-            }
+            });
             cy.deleteItem("deleteDiscount", id).then(() => {
                 id = "";
             });
@@ -760,13 +756,13 @@ describe('Mutation: createDiscount', () => {
         it("Mutation with 'productIds' input will successfully create a discount with attached products", () => {
             const productOne = {productInfo: [{ name:`Cypress ${mutationName} product 1`, languageCode: "Standard"}]};
             cy.createAndGetId("createProduct", "product", toFormattedString(productOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteProduct"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteProduct", itemName: productOne.productInfo[0].name, queryName: "products"});
                 productOne.id = returnedId;
                 const products = [productOne];
                 const productIds = [returnedId];
                 const productTwo = {productInfo: [{ name: `Cypress ${mutationName} product 2`, languageCode: "Standard"}]};
                 cy.createAndGetId("createProduct", "product", toFormattedString(productTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteProduct"});
+                    extraIds.push({itemId: secondId, deleteName: "deleteProduct", itemName: productTwo.productInfo[0].name, queryName: "products"});
                     productTwo.id = secondId;
                     products.push(productTwo);
                     productIds.push(secondId);
@@ -841,13 +837,13 @@ describe('Mutation: createDiscount', () => {
         it("Mutation with 'categoryIds' input will successfully create a discount with attached categories", () => {
             const categoryOne = { categoryInfo: [{ name:`Cypress ${mutationName} category 1`, languageCode: "Standard" }] };
             cy.createAndGetId("createCategory", "category", toFormattedString(categoryOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteCategory"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteCategory", itemName: categoryOne.categoryInfo[0].name, queryName: "categories"});
                 categoryOne.id = returnedId;
                 const categories = [categoryOne];
                 const categoryIds = [returnedId];
                 const categoryTwo = {categoryInfo: [{name: `Cypress ${mutationName} category 2`, languageCode: "Standard"}] };
                 cy.createAndGetId("createCategory", "category", toFormattedString(categoryTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteCategory"});
+                    extraIds.push({itemId: secondId, deleteName: "deleteCategory", itemName: categoryTwo.categoryInfo[0].name, queryName: "categories"});
                     categoryTwo.id = secondId;
                     categories.push(categoryTwo);
                     categoryIds.push(secondId);
@@ -922,13 +918,13 @@ describe('Mutation: createDiscount', () => {
         it("Mutation with 'manufacturerIds' input will successfully create a discount with attached manufacturers", () => {
             const manufacturerOne = {manufacturerInfo: [{ name: `Cypress ${mutationName} manufacturer 1`, languageCode: "Standard" }] };
             cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteManufacturer"});
+                extraIds.push({itemId: returnedId, deleteName: "deleteManufacturer", itemName: manufacturerOne.manufacturerInfo[0].name, queryName: "manufacturers"});
                 manufacturerOne.id = returnedId;
                 const manufacturers = [manufacturerOne];
                 const manufacturerIds = [returnedId];
                 const manufacturerTwo = {manufacturerInfo: [{ name: `Cypress ${mutationName} manufacturer 2`, languageCode: "Standard" }] };
                 cy.createAndGetId("createManufacturer", "manufacturer", toFormattedString(manufacturerTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteManufacturer"});
+                    extraIds.push({itemId: secondId, deleteName: "deleteManufacturer", itemName: manufacturerTwo.manufacturerInfo[0].name, queryName: "manufacturers"});
                     manufacturerTwo.id = secondId;
                     manufacturers.push(manufacturerTwo);
                     manufacturerIds.push(secondId); 
