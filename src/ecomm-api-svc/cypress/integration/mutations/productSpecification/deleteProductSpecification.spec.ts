@@ -8,7 +8,7 @@ describe('Mutation: deleteProductSpecification', () => {
     var currentItemName = '';
     var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'deleteProductSpecification';
-    const creationName = 'createProductSpecification';
+    const createName = 'createProductSpecification';
     const queryName = "productSpecifications";
     const standardMutationBody = `
         code
@@ -31,8 +31,8 @@ describe('Mutation: deleteProductSpecification', () => {
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
-        const mutationInput = 'options: [{name: "PA deletee option"}]';
-        cy.searchOrCreate(name, queryName, creationName, mutationInput).then((returnedId: string) => {
+        const input = `{name: "${name}", options: [{name: "PA deletee option"}]}`;
+        cy.createAndGetId(createName, "productSpecification", input).then((returnedId: string) => {
             updateIdAndName(returnedId, name);
         });
     });

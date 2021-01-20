@@ -4,7 +4,7 @@ describe('Mutation: deleteReturnReason', () => {
     var id = '';
     var currentItemName = '';
     const mutationName = 'deleteReturnReason';
-    const creationName = 'createReturnReason';
+    const createName = 'createReturnReason';
     const queryName = "returnReasons";
     const standardMutationBody = `
         code
@@ -27,7 +27,8 @@ describe('Mutation: deleteReturnReason', () => {
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
-        cy.searchOrCreate(name, queryName, creationName).then((returnedId: string) => {
+        const input = `{name: "${name}"}`;
+        cy.createAndGetId(createName, "returnReason", input).then((returnedId: string) => {
             updateIdAndName(returnedId, name);
         });
     });

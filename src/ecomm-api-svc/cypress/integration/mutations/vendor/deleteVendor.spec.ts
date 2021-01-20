@@ -8,7 +8,7 @@ describe('Mutation: deleteVendor', () => {
     var currentItemName = '';
     var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[]; 
     const mutationName = 'deleteVendor';
-    const creationName = 'createVendor';
+    const createName = 'createVendor';
     const queryName = "vendors";
     const infoName = 'vendorInfo';
     const standardMutationBody = `
@@ -33,7 +33,8 @@ describe('Mutation: deleteVendor', () => {
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
-        cy.searchOrCreate(name, queryName, creationName, undefined, infoName).then((returnedId: string) => {
+        const input = `{${infoName}: [{name: "${name}", description: "Cypress testing for ${mutationName}", languageCode: "Standard"}] }`;
+        cy.createAndGetId(createName, "vendor", input).then((returnedId: string) => {
             updateIdAndName(returnedId, name);
         });
     });

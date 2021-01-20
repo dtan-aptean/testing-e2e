@@ -8,7 +8,7 @@ describe('Mutation: deleteDiscount', () => {
     var currentItemName = '';
     var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'deleteDiscount';
-    const creationName = 'createDiscount';
+    const createName = 'createDiscount';
     const queryName = "discounts";
     const standardMutationBody = `
         code
@@ -31,8 +31,8 @@ describe('Mutation: deleteDiscount', () => {
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
-        const input = 'discountAmount: {amount: 15, currency: "USD"}';
-        cy.searchOrCreate(name, queryName, creationName, input).then((returnedId: string) => {
+        const input = `{name: "${name}", discountAmount: {amount: 15, currency: "USD"}}`;
+        cy.createAndGetId(createName, "discount", input).then((returnedId: string) => {
             updateIdAndName(returnedId, name);
         });
     });

@@ -8,7 +8,7 @@ describe('Mutation: deleteRefund', () => {
     var orderInUse = '';
     var refund = 0;
     const mutationName = 'deleteRefund';
-    const creationName = 'createRefund';
+    const createName = 'createRefund';
     const queryName = "refunds";
     const standardMutationBody = `
         code
@@ -31,7 +31,7 @@ describe('Mutation: deleteRefund', () => {
     
     const refundOrder = () => {
         const mutation = `mutation {
-                ${creationName}(input: {orderId: "${orderInUse}", refundAmount: {amount: ${refund}, currency: "USD"}}) {
+                ${createName}(input: {orderId: "${orderInUse}", refundAmount: {amount: ${refund}, currency: "USD"}}) {
                     ${standardMutationBody}
                     refund {
                         order {
@@ -40,7 +40,7 @@ describe('Mutation: deleteRefund', () => {
                     }
                 }
             }`;
-        return cy.postMutAndValidate(mutation, creationName, "refund", originalBaseUrl).then(() => {
+        return cy.postMutAndValidate(mutation, createName, "refund", originalBaseUrl).then(() => {
             updateIds(orderInUse);
         });
     };

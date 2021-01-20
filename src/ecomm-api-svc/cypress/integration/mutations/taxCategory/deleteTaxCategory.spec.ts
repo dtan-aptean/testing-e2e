@@ -8,7 +8,7 @@ describe('Mutation: deleteTaxCategory', () => {
     var currentItemName = '';
     var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
     const mutationName = 'deleteTaxCategory';
-    const creationName = 'createTaxCategory';
+    const createName = 'createTaxCategory';
     const queryName = "taxCategories";
     const standardMutationBody = `
         code
@@ -31,7 +31,8 @@ describe('Mutation: deleteTaxCategory', () => {
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
-        cy.searchOrCreate(name, queryName, creationName).then((returnedId: string) => {
+        const input = `{name: "${name}"}`;
+        cy.createAndGetId(createName, "taxCategory", input).then((returnedId: string) => {
             updateIdAndName(returnedId, name);
         });
     });
