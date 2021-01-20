@@ -16,12 +16,24 @@ describe('Mutation: deleteCategory', () => {
         message
         error
     `;
+    const queryInformation = {
+        queryName: queryName, 
+        itemId: id, 
+        itemName: currentItemName, 
+        infoName: infoName
+    };
+
+    const updateIdAndName = (providedId?: string, providedName?: string) => {
+        id = providedId ? providedId : "";
+        queryInformation.itemId = providedId ? providedId : "";
+        currentItemName = providedName ? providedName : "";
+        queryInformation.itemName = providedName ? providedName : "";
+    };
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         cy.searchOrCreate(name, queryName, creationName, undefined, infoName).then((returnedId: string) => {
-            id = returnedId;
-            currentItemName = name;
+            updateIdAndName(returnedId, name);
         });
     });
 
@@ -39,8 +51,7 @@ describe('Mutation: deleteCategory', () => {
             cy.queryForDeleted(false, currentItemName, id, queryName, infoName).then((itemPresent: boolean) => {
                 if (itemPresent) {
                     cy.deleteItem(mutationName, id).then(() => {
-                        id = '';
-                        currentItemName = '';
+                        updateIdAndName();
                     });
                 }
             });
@@ -81,10 +92,8 @@ describe('Mutation: deleteCategory', () => {
                     ${standardMutationBody}
                 }
             }`;
-            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
             cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                id = '';
-                currentItemName = '';
+                updateIdAndName();
             });
         });
 
@@ -94,10 +103,8 @@ describe('Mutation: deleteCategory', () => {
                     ${standardMutationBody}
                 }
             }`;
-            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
             cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                id = '';
-                currentItemName = '';
+                updateIdAndName();
                 cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
@@ -183,10 +190,8 @@ describe('Mutation: deleteCategory', () => {
                                 cy.postAndConfirmDelete(secondMutation, mutationName, queryInfoTwo).then(() => {
                                     extraIds.shift();
                                     // Now attempt to delete the parent again. Should pass this time
-                                    const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
                                     cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                                        id = '';
-                                        currentItemName = '';
+                                        updateIdAndName();
                                     });
                                 });
                             });
@@ -271,10 +276,8 @@ describe('Mutation: deleteCategory', () => {
                                 ${standardMutationBody}
                             }
                         }`;
-                        const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
-                            id = '';
-                            currentItemName = '';
+                            updateIdAndName();
                             const newPropValues = [[], name, discountType];
                             cy.confirmUsingQuery(query, extraQueryName, discountId, propNames, newPropValues);
                         });
@@ -325,10 +328,8 @@ describe('Mutation: deleteCategory', () => {
                                 ${standardMutationBody}
                             }
                         }`;
-                        const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
-                            id = '';
-                            currentItemName = '';
+                            updateIdAndName();
                             cy.queryByProductId("categories", queryBody, productId, []);
                         });
                     });

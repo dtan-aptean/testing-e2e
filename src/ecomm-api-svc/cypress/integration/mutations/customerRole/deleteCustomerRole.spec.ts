@@ -16,11 +16,23 @@ describe('Mutation: deleteCustomerRole', () => {
         error
     `;
 
+    const queryInformation = {
+        queryName: queryName, 
+        itemId: id, 
+        itemName: currentItemName
+    };
+
+    const updateIdAndName = (providedId?: string, providedName?: string) => {
+        id = providedId ? providedId : "";
+        queryInformation.itemId = providedId ? providedId : "";
+        currentItemName = providedName ? providedName : "";
+        queryInformation.itemName = providedName ? providedName : "";
+    };
+
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         cy.searchOrCreate(name, queryName, creationName).then((returnedId: string) => {
-            id = returnedId;
-            currentItemName = name;
+            updateIdAndName(returnedId, name);
         });
     });
 
@@ -38,8 +50,7 @@ describe('Mutation: deleteCustomerRole', () => {
             cy.queryForDeleted(false, currentItemName, id, queryName).then((itemPresent: boolean) => {
                 if (itemPresent) {
                     cy.deleteItem(mutationName, id).then(() => {
-                        id = '';
-                        currentItemName = '';
+                        updateIdAndName();
                     });
                 }
             });
@@ -80,10 +91,8 @@ describe('Mutation: deleteCustomerRole', () => {
                     ${standardMutationBody}
                 }
             }`;
-            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
             cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                id = '';
-                currentItemName = '';
+                updateIdAndName();
             });
         });
 
@@ -93,10 +102,8 @@ describe('Mutation: deleteCustomerRole', () => {
                     ${standardMutationBody}
                 }
             }`;
-            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
             cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                id = '';
-                currentItemName = '';
+                updateIdAndName();
                 cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
@@ -170,10 +177,8 @@ describe('Mutation: deleteCustomerRole', () => {
                                 ${standardMutationBody}
                             }
                         }`;
-                        const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
-                            id = '';
-                            currentItemName = '';
+                            updateIdAndName();
                             const newRoleBasedAccess = {enabled: true, roles: []};
                             const newPropValues = [info, newRoleBasedAccess];
                             cy.confirmUsingQuery(query, extraQueryName, categoryId, propNames, newPropValues);
@@ -250,10 +255,8 @@ describe('Mutation: deleteCustomerRole', () => {
                                 ${standardMutationBody}
                             }
                         }`;
-                        const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
-                            id = '';
-                            currentItemName = '';
+                            updateIdAndName();
                             const newRoleBasedAccess = {enabled: true, roles: []};
                             const newPropValues = [info, newRoleBasedAccess];
                             cy.confirmUsingQuery(query, extraQueryName, manufacturerId, propNames, newPropValues);

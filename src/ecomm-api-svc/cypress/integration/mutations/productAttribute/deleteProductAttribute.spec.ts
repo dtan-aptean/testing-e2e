@@ -16,12 +16,24 @@ describe('Mutation: deleteProductAttribute', () => {
         error
     `;
 
+    const queryInformation = {
+        queryName: queryName, 
+        itemId: id, 
+        itemName: currentItemName
+    };
+
+    const updateIdAndName = (providedId?: string, providedName?: string) => {
+        id = providedId ? providedId : "";
+        queryInformation.itemId = providedId ? providedId : "";
+        currentItemName = providedName ? providedName : "";
+        queryInformation.itemName = providedName ? providedName : "";
+    };
+
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         const mutationInput = 'values: [{name: "PA deletee value"}]';
         cy.searchOrCreate(name, queryName, creationName, mutationInput).then((returnedId: string) => {
-            id = returnedId;
-            currentItemName = name;
+            updateIdAndName(returnedId, name);
         });
     });
 
@@ -39,8 +51,7 @@ describe('Mutation: deleteProductAttribute', () => {
             cy.queryForDeleted(false, currentItemName, id, queryName).then((itemPresent: boolean) => {
                 if (itemPresent) {
                     cy.deleteItem(mutationName, id).then(() => {
-                        id = '';
-                        currentItemName = '';
+                        updateIdAndName();
                     });
                 }
             });
@@ -81,10 +92,8 @@ describe('Mutation: deleteProductAttribute', () => {
                     ${standardMutationBody}
                 }
             }`;
-            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
             cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                id = '';
-                currentItemName = '';
+                updateIdAndName();
             });
         });
 
@@ -94,10 +103,8 @@ describe('Mutation: deleteProductAttribute', () => {
                     ${standardMutationBody}
                 }
             }`;
-            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
             cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                id = '';
-                currentItemName = '';
+                updateIdAndName();
                 cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
@@ -146,10 +153,8 @@ describe('Mutation: deleteProductAttribute', () => {
                                 ${standardMutationBody}
                             }
                         }`;
-                        const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                            id = '';
-                            currentItemName = '';
+                            updateIdAndName();
                             cy.queryByProductId("productAttributes", queryBody, productId, []);
                         });
                     });

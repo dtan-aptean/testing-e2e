@@ -16,11 +16,23 @@ describe('Mutation: deleteTaxCategory', () => {
         error
     `;
 
+    const queryInformation = {
+        queryName: queryName, 
+        itemId: id, 
+        itemName: currentItemName
+    };
+
+    const updateIdAndName = (providedId?: string, providedName?: string) => {
+        id = providedId ? providedId : "";
+        queryInformation.itemId = providedId ? providedId : "";
+        currentItemName = providedName ? providedName : "";
+        queryInformation.itemName = providedName ? providedName : "";
+    };
+
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         cy.searchOrCreate(name, queryName, creationName).then((returnedId: string) => {
-            id = returnedId;
-            currentItemName = name;
+            updateIdAndName(returnedId, name);
         });
     });
 
@@ -43,8 +55,7 @@ describe('Mutation: deleteTaxCategory', () => {
             cy.queryForDeleted(false, currentItemName, id, queryName).then((itemPresent: boolean) => {
                 if (itemPresent) {
                     cy.deleteItem(mutationName, id).then(() => {
-                        id = '';
-                        currentItemName = '';
+                        updateIdAndName();
                     });
                 }
             });
@@ -85,10 +96,8 @@ describe('Mutation: deleteTaxCategory', () => {
                     ${standardMutationBody}
                 }
             }`;
-            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
             cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                id = '';
-                currentItemName = '';
+                updateIdAndName();
             });
         });
 
@@ -98,10 +107,8 @@ describe('Mutation: deleteTaxCategory', () => {
                     ${standardMutationBody}
                 }
             }`;
-            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
             cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                id = '';
-                currentItemName = '';
+                updateIdAndName();
                 cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
@@ -178,10 +185,8 @@ describe('Mutation: deleteTaxCategory', () => {
                             const extraQueryInfo = {queryName: extraQueryName, itemId: attributeId, itemName: name}
                             cy.postAndConfirmDelete(deleteExtra, extraDeleteName, extraQueryInfo).then((exRes) => {
                                 // connected item has been deleted, delete the taxCategory
-                                const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
                                 cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                                    id = '';
-                                    currentItemName = '';
+                                    updateIdAndName();
                                 });
                             });
                         });
@@ -264,10 +269,8 @@ describe('Mutation: deleteTaxCategory', () => {
                             const extraQueryInfo = {queryName: extraQueryName, itemId: productId, itemName: info[0].name, infoName: productInfoName};
                             cy.postAndConfirmDelete(deleteExtra, extraDeleteName, extraQueryInfo).then((exRes) => {
                                 // connected item has been deleted, delete the taxCategory
-                                const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
                                 cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                                    id = '';
-                                    currentItemName = '';
+                                    updateIdAndName();
                                 });
                             });
                         });

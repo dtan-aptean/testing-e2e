@@ -16,6 +16,17 @@ describe('Mutation: deleteRefund', () => {
         error
     `;
 
+    const queryInformation = {
+        queryName: queryName, 
+        itemId: id, 
+        searchParameter: "searchString"
+    };
+
+    const updateIds = (providedId?: string) => {
+        id = providedId ? providedId : "";
+        queryInformation.itemId = providedId ? providedId : "";
+    };
+
     var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
     
     const refundOrder = () => {
@@ -30,7 +41,7 @@ describe('Mutation: deleteRefund', () => {
                 }
             }`;
         return cy.postMutAndValidate(mutation, creationName, "refund", originalBaseUrl).then(() => {
-            id = orderInUse;
+            updateIds(orderInUse);
         });
     };
 
@@ -59,9 +70,8 @@ describe('Mutation: deleteRefund', () => {
                             ${standardMutationBody}
                         }
                     }`;
-                    const queryInformation = {queryName: queryName, itemId: id, searchParameter: "searchString"};
                     cy.postAndConfirmDelete(mutation, mutationName, queryInformation, originalBaseUrl).then(() => {
-                        id = '';
+                        updateIds();
                     });
                 }
             });
@@ -114,9 +124,8 @@ describe('Mutation: deleteRefund', () => {
                         ${standardMutationBody}
                     }
                 }`;
-                const queryInformation = {queryName: queryName, itemId: id, searchParameter: "searchString"};
                 cy.postAndConfirmDelete(mutation, mutationName, queryInformation, originalBaseUrl).then((res) => {
-                    id = '';
+                    updateIds();
                 });
             });
         });
@@ -149,9 +158,8 @@ describe('Mutation: deleteRefund', () => {
                             ${standardMutationBody}
                         }
                     }`;
-                    const queryInformation = {queryName: queryName, itemId: id, searchParameter: "searchString"};
                     cy.postAndConfirmDelete(mutation, mutationName, queryInformation, originalBaseUrl).then((res) => {
-                        id = '';
+                        updateIds();
                         const postDeleteOrder = {
                             id: orderInUse,
                             paymentStatus: "PAID",

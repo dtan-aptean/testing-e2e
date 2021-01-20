@@ -17,11 +17,24 @@ describe('Mutation: deleteManufacturer', () => {
         error
     `;
 
+    const queryInformation = {
+        queryName: queryName, 
+        itemId: id, 
+        itemName: currentItemName, 
+        infoName: infoName
+    };
+    
+    const updateIdAndName = (providedId?: string, providedName?: string) => {
+        id = providedId ? providedId : "";
+        queryInformation.itemId = providedId ? providedId : "";
+        currentItemName = providedName ? providedName : "";
+        queryInformation.itemName = providedName ? providedName : "";
+    };
+
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         cy.searchOrCreate(name, queryName, creationName, undefined, infoName).then((returnedId: string) => {
-            id = returnedId;
-            currentItemName = name;
+            updateIdAndName(returnedId, name);
         });
     });
 
@@ -39,8 +52,7 @@ describe('Mutation: deleteManufacturer', () => {
             cy.queryForDeleted(false, currentItemName, id, queryName, infoName).then((itemPresent: boolean) => {
                 if (itemPresent) {
                     cy.deleteItem(mutationName, id).then(() => {
-                        id = '';
-                        currentItemName = '';
+                        updateIdAndName();
                     });
                 }
             });
@@ -81,10 +93,8 @@ describe('Mutation: deleteManufacturer', () => {
                     ${standardMutationBody}
                 }
             }`;
-            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
             cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                id = '';
-                currentItemName = '';
+                updateIdAndName();
             });
         });
 
@@ -94,10 +104,8 @@ describe('Mutation: deleteManufacturer', () => {
                     ${standardMutationBody}
                 }
             }`;
-            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
             cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                id = '';
-                currentItemName = '';
+                updateIdAndName();
                 cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
@@ -177,10 +185,8 @@ describe('Mutation: deleteManufacturer', () => {
                                 ${standardMutationBody}
                             }
                         }`;
-                        const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                            id = '';
-                            currentItemName = '';
+                            updateIdAndName();
                             const newPropValues = [[], name, discountType];
                             cy.confirmUsingQuery(query, extraQueryName, discountId, propNames, newPropValues);
                         });
@@ -231,10 +237,8 @@ describe('Mutation: deleteManufacturer', () => {
                                 ${standardMutationBody}
                             }
                         }`;
-                        const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
-                            id = '';
-                            currentItemName = '';
+                            updateIdAndName();
                             cy.queryByProductId("manufacturers", queryBody, productId, []);
                         });
                     });
