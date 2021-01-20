@@ -739,7 +739,7 @@ Cypress.Commands.add("createAssociatedItems", (
     var infoName = getInfoName(inputBase);
     var nameBase = infoName ? inputBase[infoName][0].name : inputBase.name;
     for (var i = 1; i <= numberToMake; i++) {
-        var name = `${nameBase} ${i}`;
+        var name = i !== 1 ? `${nameBase} ${i}` : nameBase;
         var item = createInput(inputBase, name, infoName);
         cy.createAndGetId(createName, itemPath, toFormattedString(item)).then((returnedId: string) => {
             createdIds.push(returnedId);
