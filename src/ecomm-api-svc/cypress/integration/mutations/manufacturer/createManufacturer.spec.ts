@@ -23,6 +23,12 @@ describe('Mutation: createManufacturer', () => {
         }
     `;
 
+    const addExtraItemIds = (extIds: {itemId: string, deleteName: string, itemName: string, queryName: string}[]) => {
+        extIds.forEach((id) => {
+            extraIds.push(id);
+        });
+    };
+
     afterEach(() => {
         if (id !== "") {
             // Delete any supplemental items we created
@@ -252,126 +258,115 @@ describe('Mutation: createManufacturer', () => {
 
     context("Testing connecting to other items and features", () => {
         it("Mutation with 'discountIds' input will successfully attach the discounts", () => {
-            const discountOne = {name: `Cypress ${mutationName} discount 1`, discountType: "ASSIGNED_TO_MANUFACTURERS", discountAmount: {amount: 15, currency: "USD"}};
-            cy.createAndGetId("createDiscount", "discount", toFormattedString(discountOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteDiscount", itemName: discountOne.name, queryName: "discounts"});
-                discountOne.id = returnedId;
-                const discounts = [discountOne];
-                const discountIds = [returnedId];
-                const discountTwo = {name: `Cypress ${mutationName} discount 2`, discountType: "ASSIGNED_TO_MANUFACTURERS", discountAmount: {amount: 30, currency: "USD"}};
-                cy.createAndGetId("createDiscount", "discount", toFormattedString(discountTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteDiscount", itemName: discountTwo.name, queryName: "discounts"});
-                    discountTwo.id = secondId;
-                    discounts.push(discountTwo);
-                    discountIds.push(secondId);
-                    const info = [{name: `Cypress ${mutationName} discountIds test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
-                    const mutation = `mutation {
-                        ${mutationName}(
-                            input: { 
-                                discountIds: ${toFormattedString(discountIds)}
-                                ${infoName}: ${toFormattedString(info)}
-                            }
-                        ) {
-                            code
-                            message
-                            error
-                            ${itemPath} {
+            const extraCreate = "createDiscount";
+            const extraPath = "discount";
+            const extraQuery = "discounts";
+            const extraItemInput = {name: `Cypress ${mutationName} discount`, discountAmount: {amount: 15, currency: "USD"}, discountType: "ASSIGNED_TO_MANUFACTURERS"};
+            cy.createAssociatedItems(2, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
+                const { deletionIds, items, itemIds } = results;
+                addExtraItemIds(deletionIds);
+                const info = [{name: `Cypress ${mutationName} discountIds test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            discountIds: ${toFormattedString(itemIds)}
+                            ${infoName}: ${toFormattedString(info)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${itemPath} {
+                            id
+                            discounts {
                                 id
-                                discounts {
-                                    id
-                                    name
-                                    discountAmount {
-                                        amount
-                                        currency
-                                    }
-                                    discountType
+                                name
+                                discountAmount {
+                                    amount
+                                    currency
                                 }
-                                ${infoName} {
-                                    name
-                                    description
-                                    languageCode
-                                }
+                                discountType
+                            }
+                            ${infoName} {
+                                name
+                                description
+                                languageCode
                             }
                         }
-                    }`;
-                    cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                        id = res.body.data[mutationName][itemPath].id;
-                        const propNames = [infoName, "discounts"];
-                        const propValues = [info, discounts];
-                        cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                            const query = `{
-                                ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
-                                    nodes {
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    id = res.body.data[mutationName][itemPath].id;
+                    const propNames = [infoName, "discounts"];
+                    const propValues = [info, items];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                                nodes {
+                                    id
+                                    discounts {
                                         id
-                                        discounts {
-                                            id
-                                            name
-                                            discountAmount {
-                                                amount
-                                                currency
-                                            }
-                                            discountType
+                                        name
+                                        discountAmount {
+                                            amount
+                                            currency
                                         }
-                                        ${infoName} {
-                                            name
-                                            description
-                                            languageCode
-                                        }
+                                        discountType
+                                    }
+                                    ${infoName} {
+                                        name
+                                        description
+                                        languageCode
                                     }
                                 }
-                            }`;
-                            cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
-                        });
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
                     });
                 });
             });
         });
 
         it("Mutation with 'roleBasedAccess' input will successfully create an item with attached roles.", () => {
-            const roleOne = {name: `Cypress ${mutationName} role 1`};
-            cy.createAndGetId("createCustomerRole", "customerRole", toFormattedString(roleOne)).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteCustomerRole", itemName: roleOne.name, queryName: "customerRoles"});
-                roleOne.id = returnedId;
-                const roles = [roleOne];
-                const custRoleIds = [returnedId];
-                const roleTwo = {name: `Cypress ${mutationName} role 2`};
-                cy.createAndGetId("createCustomerRole", "customerRole", toFormattedString(roleTwo)).then((secondId: string) => {
-                    extraIds.push({itemId: secondId, deleteName: "deleteCustomerRole", itemName: roleTwo.name, queryName: "customerRoles"});
-                    roleTwo.id = secondId;
-                    roles.push(roleTwo)
-                    custRoleIds.push(secondId);
-                    const info = [{name: `Cypress ${mutationName} rBA test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
-                    const roleBasedAccess = {enabled: true, roleIds: custRoleIds};
-                    const mutation = `mutation {
-                        ${mutationName}(
-                            input: { 
-                                roleBasedAccess: ${toFormattedString(roleBasedAccess)}
-                                ${infoName}: ${toFormattedString(info)}
-                            }
-                        ) {
-                            code
-                            message
-                            error
-                            ${itemPath} {
-                                id
-                                roleBasedAccess {
-                                    enabled
-                                    roles {
-                                        id
-                                        name
-                                    }
-                                }
-                                ${infoName} {
+            const extraCreate = "createCustomerRole";
+            const extraPath = "customerRole";
+            const extraQuery = "customerRoles";
+            const extraItemInput = {name: `Cypress ${mutationName} role`};
+            cy.createAssociatedItems(2, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
+                const { deletionIds, items, itemIds } = results;
+                addExtraItemIds(deletionIds);
+                const info = [{name: `Cypress ${mutationName} rBA test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
+                const roleBasedAccess = {enabled: true, roleIds: itemIds};
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            roleBasedAccess: ${toFormattedString(roleBasedAccess)}
+                            ${infoName}: ${toFormattedString(info)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${itemPath} {
+                            id
+                            roleBasedAccess {
+                                enabled
+                                roles {
+                                    id
                                     name
-                                    description
-                                    languageCode
                                 }
+                            }
+                            ${infoName} {
+                                name
+                                description
+                                languageCode
                             }
                         }
-                    }`;
-                    cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                        id = res.body.data[mutationName][itemPath].id;
-                        const roleAccess = {enabled: roleBasedAccess.enabled, roles: roles};
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    id = res.body.data[mutationName][itemPath].id;
+                    const roleAccess = {enabled: roleBasedAccess.enabled, roles: items};
                         const propNames = [infoName, "roleBasedAccess"];
                         const propValues = [info, roleAccess];
                         cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
