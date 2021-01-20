@@ -11,7 +11,6 @@ describe('Mutation: deleteVendor', () => {
     const creationName = 'createVendor';
     const queryName = "vendors";
     const infoName = 'vendorInfo';
-    const deletedMessage = "vendor";
     const standardMutationBody = `
         code
         message
@@ -87,12 +86,10 @@ describe('Mutation: deleteVendor', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
-                    id = '';
-                    currentItemName = '';
-                });
+            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
+            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
+                id = '';
+                currentItemName = '';
             });
         });
 
@@ -102,13 +99,11 @@ describe('Mutation: deleteVendor', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
-                    id = '';
-                    currentItemName = '';
-                    cy.postAndConfirmMutationError(mutation, mutationName);
-                });
+            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
+            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+                id = '';
+                currentItemName = '';
+                cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
     });
@@ -186,14 +181,13 @@ describe('Mutation: deleteVendor', () => {
                                     ${standardMutationBody}
                                 }
                             }`;
-                            cy.postAndConfirmDelete(deleteExtra, extraDeleteName).then((exRes) => {
+                            const extraQueryInfo = {queryName: extraQueryName, itemId: productId, itemName: info[0].name, infoName: productInfoName};
+                            cy.postAndConfirmDelete(deleteExtra, extraDeleteName, extraQueryInfo).then((exRes) => {
                                 // connected item has been deleted, delete the taxCategory
-                                cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                                    expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                                    cy.queryForDeleted(true, currentItemName, id, queryName, infoName).then(() => {
-                                        id = '';
-                                        currentItemName = '';
-                                    });
+                                const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName, infoName: infoName};
+                                cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+                                    id = '';
+                                    currentItemName = '';
                                 });
                             });
                         });

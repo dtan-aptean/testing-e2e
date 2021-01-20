@@ -66,7 +66,8 @@ describe('Mutation: updateRefund', () => {
                     error
                 }
             }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName, originalBaseUrl);
+            const queryInformation = {queryName: queryName, itemId: id, searchParameter: "searchString"};
+            cy.postAndConfirmDelete(removalMutation, deletionName, queryInformation, originalBaseUrl);
         }
     });
     context("Testing basic required inputs", () => {

@@ -6,7 +6,6 @@ describe('Mutation: deleteReturnReason', () => {
     const mutationName = 'deleteReturnReason';
     const creationName = 'createReturnReason';
     const queryName = "returnReasons";
-    const deletedMessage = "returnReason";
     const standardMutationBody = `
         code
         message
@@ -69,12 +68,10 @@ describe('Mutation: deleteReturnReason', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                    id = '';
-                    currentItemName = '';
-                });
+            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
+            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+                id = '';
+                currentItemName = '';
             });
         });
 
@@ -84,13 +81,11 @@ describe('Mutation: deleteReturnReason', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                    id = '';
-                    currentItemName = '';
-                    cy.postAndConfirmMutationError(mutation, mutationName);
-                });
+            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
+            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+                id = '';
+                currentItemName = '';
+                cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
     });

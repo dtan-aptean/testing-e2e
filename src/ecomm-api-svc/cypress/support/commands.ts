@@ -816,8 +816,7 @@ Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, se
 Cypress.Commands.add("postAndConfirmDelete", (
     gqlMut: string, 
     mutationName: string, 
-    queryForItem: boolean,
-    queryInformation?: {
+    queryInformation: {
         queryName: string
         itemId: string,
         itemName?: string,
@@ -829,12 +828,11 @@ Cypress.Commands.add("postAndConfirmDelete", (
 ) => {
     Cypress.log({
         name: "postAndConfirmDelete",
-        message: `${mutationName}, confirm deletion by query: ${queryForItem}`,
+        message: `delete ${mutationName.replace("delete", "")} with id "${queryInformation.itemId}"`,
         consoleProps: () => {
             return {
                 "Mutation Body": gqlMut,
                 "Mutation Name": mutationName,
-                "Query for item after deletion": queryForItem,
                 "URL used": altUrl ? altUrl : Cypress.config("baseUrl"),
                 "Query Information": queryInformation ? toFormattedString(queryInformation, true) : "No query information provided"
             };
@@ -842,13 +840,11 @@ Cypress.Commands.add("postAndConfirmDelete", (
     });
     return cy.postMutAndValidate(gqlMut, mutationName, "deleteMutation", altUrl).then((res) => {
         // query for the deleted item to make sure it's gone
-        if (queryForItem && queryInformation) {
-            const asTest = queryInformation.asTest ? queryInformation.asTest : true;
-            if (queryInformation.itemName) {
-                cy.queryForDeleted(asTest, queryInformation.itemName, queryInformation.itemId, queryInformation.queryName, queryInformation.infoName);
-            } else {
-                cy.queryForDeletedById(asTest, queryInformation.itemId, queryInformation.searchParameter, queryInformation.queryName, altUrl);
-            }
+        const asTest = (queryInformation.asTest !== null && queryInformation.asTest !== undefined) ? queryInformation.asTest : true;
+        if (queryInformation.itemName) {
+            cy.queryForDeleted(asTest, queryInformation.itemName, queryInformation.itemId, queryInformation.queryName, queryInformation.infoName);
+        } else {
+            cy.queryForDeletedById(asTest, queryInformation.itemId, queryInformation.searchParameter, queryInformation.queryName, altUrl);
         }
     });
 });
@@ -872,7 +868,7 @@ Cypress.Commands.add("deleteItem", (mutationName: string, id: string) => {
             error
         }
     }`;
-    return cy.postAndConfirmDelete(mutation, mutationName, false);
+    return cy.postMutAndValidate(mutation, mutationName, "deleteMutation");
 });
 
 /**

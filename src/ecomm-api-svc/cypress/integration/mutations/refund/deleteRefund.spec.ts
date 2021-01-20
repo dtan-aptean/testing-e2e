@@ -10,7 +10,6 @@ describe('Mutation: deleteRefund', () => {
     const mutationName = 'deleteRefund';
     const creationName = 'createRefund';
     const queryName = "refunds";
-    const deletedMessage = "refund";
     const standardMutationBody = `
         code
         message
@@ -60,7 +59,8 @@ describe('Mutation: deleteRefund', () => {
                             ${standardMutationBody}
                         }
                     }`;
-                    cy.postAndConfirmDelete(mutation, mutationName, originalBaseUrl).then(() => {
+                    const queryInformation = {queryName: queryName, itemId: id, searchParameter: "searchString"};
+                    cy.postAndConfirmDelete(mutation, mutationName, queryInformation, originalBaseUrl).then(() => {
                         id = '';
                     });
                 }
@@ -114,11 +114,9 @@ describe('Mutation: deleteRefund', () => {
                         ${standardMutationBody}
                     }
                 }`;
-                cy.postAndConfirmDelete(mutation, mutationName, originalBaseUrl).then((res) => {
-                    expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                    cy.queryForDeletedById(true, id, "searchString", queryName, originalBaseUrl).then(() => {
-                        id = '';
-                    });
+                const queryInformation = {queryName: queryName, itemId: id, searchParameter: "searchString"};
+                cy.postAndConfirmDelete(mutation, mutationName, queryInformation, originalBaseUrl).then((res) => {
+                    id = '';
                 });
             });
         });
@@ -151,20 +149,18 @@ describe('Mutation: deleteRefund', () => {
                             ${standardMutationBody}
                         }
                     }`;
-                    cy.postAndConfirmDelete(mutation, mutationName, originalBaseUrl).then((res) => {
-                        expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                        cy.queryForDeletedById(true, id, "searchString", queryName, originalBaseUrl).then(() => {
-                            id = '';
-                            const postDeleteOrder = {
-                                id: orderInUse,
-                                paymentStatus: "PAID",
-                                refundedAmount: {
-                                    amount: 0,
-                                    currency: "USD"
-                                }
-                            };
-                            cy.confirmUsingQuery(orderQuery, "orders", orderInUse, Object.getOwnPropertyNames(postDeleteOrder), Object.values(postDeleteOrder), originalBaseUrl);
-                        });
+                    const queryInformation = {queryName: queryName, itemId: id, searchParameter: "searchString"};
+                    cy.postAndConfirmDelete(mutation, mutationName, queryInformation, originalBaseUrl).then((res) => {
+                        id = '';
+                        const postDeleteOrder = {
+                            id: orderInUse,
+                            paymentStatus: "PAID",
+                            refundedAmount: {
+                                amount: 0,
+                                currency: "USD"
+                            }
+                        };
+                        cy.confirmUsingQuery(orderQuery, "orders", orderInUse, Object.getOwnPropertyNames(postDeleteOrder), Object.values(postDeleteOrder), originalBaseUrl);
                     });
                 });
             });

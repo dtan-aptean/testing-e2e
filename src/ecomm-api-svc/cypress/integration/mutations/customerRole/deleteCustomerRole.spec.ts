@@ -10,7 +10,6 @@ describe('Mutation: deleteCustomerRole', () => {
     const mutationName = 'deleteCustomerRole';
     const creationName = 'createCustomerRole';
     const queryName = "customerRoles";
-    const deletedMessage = "customer roles";
     const standardMutationBody = `
         code
         message
@@ -81,12 +80,10 @@ describe('Mutation: deleteCustomerRole', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                    id = '';
-                    currentItemName = '';
-                });
+            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
+            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+                id = '';
+                currentItemName = '';
             });
         });
 
@@ -96,13 +93,11 @@ describe('Mutation: deleteCustomerRole', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                    id = '';
-                    currentItemName = '';
-                    cy.postAndConfirmMutationError(mutation, mutationName);
-                });
+            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
+            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+                id = '';
+                currentItemName = '';
+                cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
     });
@@ -175,15 +170,13 @@ describe('Mutation: deleteCustomerRole', () => {
                                 ${standardMutationBody}
                             }
                         }`;
-                        cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                            expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                            cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                                id = '';
-                                currentItemName = '';
-                                const newRoleBasedAccess = {enabled: true, roles: []};
-                                const newPropValues = [info, newRoleBasedAccess];
-                                cy.confirmUsingQuery(query, extraQueryName, categoryId, propNames, newPropValues);
-                            });
+                        const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
+                        cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
+                            id = '';
+                            currentItemName = '';
+                            const newRoleBasedAccess = {enabled: true, roles: []};
+                            const newPropValues = [info, newRoleBasedAccess];
+                            cy.confirmUsingQuery(query, extraQueryName, categoryId, propNames, newPropValues);
                         });
                     });
                 });
@@ -257,15 +250,13 @@ describe('Mutation: deleteCustomerRole', () => {
                                 ${standardMutationBody}
                             }
                         }`;
-                        cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                            expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                            cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                                id = '';
-                                currentItemName = '';
-                                const newRoleBasedAccess = {enabled: true, roles: []};
-                                const newPropValues = [info, newRoleBasedAccess];
-                                cy.confirmUsingQuery(query, extraQueryName, manufacturerId, propNames, newPropValues);
-                            });
+                        const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
+                        cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
+                            id = '';
+                            currentItemName = '';
+                            const newRoleBasedAccess = {enabled: true, roles: []};
+                            const newPropValues = [info, newRoleBasedAccess];
+                            cy.confirmUsingQuery(query, extraQueryName, manufacturerId, propNames, newPropValues);
                         });
                     });
                 });

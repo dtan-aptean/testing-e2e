@@ -60,9 +60,10 @@ describe('Mutation: createRefund', () => {
                     error
                 }
             }`;
-            cy.postAndConfirmDelete(removalMutation, deletionName, originalBaseUrl).then(() => {
+            const queryInformation = {queryName: queryName, itemId: id, searchParameter: "searchString"};
+            cy.postAndConfirmDelete(removalMutation, deletionName, queryInformation, originalBaseUrl).then(() => {
                 refundCreated = false;
-            })
+            });
         }
     });
 

@@ -10,7 +10,6 @@ describe('Mutation: deleteDiscount', () => {
     const mutationName = 'deleteDiscount';
     const creationName = 'createDiscount';
     const queryName = "discounts";
-    const deletedMessage = "discount";
     const standardMutationBody = `
         code
         message
@@ -82,12 +81,10 @@ describe('Mutation: deleteDiscount', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                    id = '';
-                    currentItemName = '';
-                });
+            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
+            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+                id = '';
+                currentItemName = '';
             });
         });
 
@@ -97,13 +94,11 @@ describe('Mutation: deleteDiscount', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                    id = '';
-                    currentItemName = '';
-                    cy.postAndConfirmMutationError(mutation, mutationName);
-                });
+            const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
+            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+                id = '';
+                currentItemName = '';
+                cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
     });
@@ -201,14 +196,12 @@ describe('Mutation: deleteDiscount', () => {
                                         ${standardMutationBody}
                                     }
                                 }`;
-                                cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                                    expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                                    cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                                        id = '';
-                                        currentItemName = '';
-                                        const newPropValues = [info, []];
-                                        cy.confirmUsingQuery(query, extraQueryName, categoryId, propNames, newPropValues);
-                                    });
+                                const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
+                                cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
+                                    id = '';
+                                    currentItemName = '';
+                                    const newPropValues = [info, []];
+                                    cy.confirmUsingQuery(query, extraQueryName, categoryId, propNames, newPropValues);
                                 });
                             });
                         });
@@ -309,14 +302,12 @@ describe('Mutation: deleteDiscount', () => {
                                         ${standardMutationBody}
                                     }
                                 }`;
-                                cy.postAndConfirmDelete(mutation, mutationName).then((res) => {
-                                    expect(res.body.data[mutationName].message).to.be.eql(`${deletedMessage} deleted`);
-                                    cy.queryForDeleted(true, currentItemName, id, queryName).then(() => {
-                                        id = '';
-                                        currentItemName = '';
-                                        const newPropValues = [info, []];
-                                        cy.confirmUsingQuery(query, extraQueryName, manufacturerId, propNames, newPropValues);
-                                    });
+                                const queryInformation = {queryName: queryName, itemId: id, itemName: currentItemName};
+                                cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
+                                    id = '';
+                                    currentItemName = '';
+                                    const newPropValues = [info, []];
+                                    cy.confirmUsingQuery(query, extraQueryName, manufacturerId, propNames, newPropValues);
                                 });
                             });
                         });
