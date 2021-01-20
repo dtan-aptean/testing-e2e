@@ -1,13 +1,13 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../../support/commands";
+import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 12
 describe('Mutation: updateProductSpecification', () => {
     var id = '';
     var updateCount = 0;
     var options = '';
-    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+    var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateProductSpecification';
     const queryName = "productSpecifications";
     const itemPath = 'productSpecification';

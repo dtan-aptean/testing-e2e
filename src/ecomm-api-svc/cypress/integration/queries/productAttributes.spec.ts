@@ -1,5 +1,7 @@
 /// <reference types="cypress" />
 
+import { SupplementalItemRecord } from "../../support/commands";
+
 // TEST COUNT: 40
 describe('Query: productAttributes', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
@@ -124,8 +126,8 @@ describe('Query: productAttributes', () => {
     
     context("Testing 'productId' input", () => {
         // Items created for the productId test
-        const createdItems = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
-        const createdProducts =  [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+        const createdItems = [] as SupplementalItemRecord[];
+        const createdProducts =  [] as SupplementalItemRecord[];
         const deleteName = "deleteProductAttribute";
         const createMutName = "createProductAttribute";
         const createPath = "productAttribute";
@@ -134,7 +136,7 @@ describe('Query: productAttributes', () => {
         const productQuery = "products";
         const productDelete = "deleteProduct";
 
-        const addCreated = (isProduct: boolean, extIds: {itemId: string, deleteName: string, itemName: string, queryName: string}[]) => {
+        const addCreated = (isProduct: boolean, extIds: SupplementalItemRecord[]) => {
             extIds.forEach((id) => {
                 if (isProduct) {
                     createdProducts.push(id);

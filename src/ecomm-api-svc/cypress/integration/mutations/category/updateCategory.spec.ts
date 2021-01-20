@@ -1,12 +1,12 @@
 /// <reference types="cypress" />
 
-import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/commands";
+import { confirmStorefrontEnvValues, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 16
 describe('Mutation: updateCategory', () => {
     var id = '';
     var updateCount = 0;
-    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+    var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateCategory';
     const queryName = "categories";
     const itemPath = 'category';
@@ -28,7 +28,7 @@ describe('Mutation: updateCategory', () => {
     var originalBaseUrl = Cypress.config("baseUrl");
     confirmStorefrontEnvValues();
 
-    const addExtraItemIds = (extIds: {itemId: string, deleteName: string, itemName: string, queryName: string}[]) => {
+    const addExtraItemIds = (extIds: SupplementalItemRecord[]) => {
         extIds.forEach((id) => {
             extraIds.push(id);
         });

@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../../support/commands";
+import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 13
 describe('Mutation: updateCheckoutAttribute', () => {
@@ -8,7 +8,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
     var updateCount = 0;
     var taxCategoryId = '';
     var values = '';
-    const extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+    const extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateCheckoutAttribute';
     const queryName = "checkoutAttributes";
     const itemPath = 'checkoutAttribute';

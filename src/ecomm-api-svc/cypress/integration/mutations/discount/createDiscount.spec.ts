@@ -1,11 +1,11 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../../support/commands";
+import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 16
 describe('Mutation: createDiscount', () => {
     var id = '';
-    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+    var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'createDiscount';
     const queryName = "discounts";
     const itemPath = 'discount';
@@ -23,7 +23,7 @@ describe('Mutation: createDiscount', () => {
         }
     `;
 
-    const addExtraItemIds = (extIds: {itemId: string, deleteName: string, itemName: string, queryName: string}[]) => {
+    const addExtraItemIds = (extIds: SupplementalItemRecord[]) => {
         extIds.forEach((id) => {
             extraIds.push(id);
         });

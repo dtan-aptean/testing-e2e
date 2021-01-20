@@ -642,7 +642,7 @@ Cypress.Commands.add("createAssociatedItems", (
         return retInput;
     };
     const deleteName = createName.replace("create", "delete");
-    const deletionIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+    const deletionIds = [] as SupplementalItemRecord[];
     const createdItems = [];
     const createdIds = [] as string[];
     const fullResBodies = [];
@@ -662,7 +662,7 @@ Cypress.Commands.add("createAssociatedItems", (
             }
         });
     };
-    const resObject = {deletionIds: deletionIds, items: createdItems, itemIds: createdIds} as {deletionIds: {itemId: string, deleteName: string, itemName: string, queryName: string}[], items: any[], itemIds: string[], fullItems?: any[]};
+    const resObject = {deletionIds: deletionIds, items: createdItems, itemIds: createdIds} as {deletionIds: SupplementalItemRecord[], items: any[], itemIds: string[], fullItems?: any[]};
     if (additionalResFields) {
         resObject.fullItems = fullResBodies;
     }
@@ -874,7 +874,7 @@ Cypress.Commands.add("safeDelete", (queryName: string, mutationName: string, ite
 });
 
 // Safely delete supplemental items created for a test
-Cypress.Commands.add("deleteSupplementalItems", (extraItems: {itemId: string, deleteName: string, itemName: string, queryName: string}[]) => {
+Cypress.Commands.add("deleteSupplementalItems", (extraItems: SupplementalItemRecord[]) => {
     Cypress.log({
         name: "deleteSupplementalItems",
         message: `Deleting ${extraItems.length} supplemental items created for testing`,

@@ -1,12 +1,12 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../../support/commands";
+import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 18
 describe('Mutation: updateProduct', () => {
     var id = '';
     var updateCount = 0;
-    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+    var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateProduct';
     const queryName = "products";
     const itemPath = 'product';
@@ -25,7 +25,7 @@ describe('Mutation: updateProduct', () => {
     `;
     const createName = 'createProduct';
 
-    const addExtraItemIds = (extIds: {itemId: string, deleteName: string, itemName: string, queryName: string}[]) => {
+    const addExtraItemIds = (extIds: SupplementalItemRecord[]) => {
         extIds.forEach((id) => {
             extraIds.push(id);
         });

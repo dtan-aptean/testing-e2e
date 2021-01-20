@@ -5,7 +5,7 @@ import { confirmStorefrontEnvValues, SupplementalItemRecord, toFormattedString }
 // TEST COUNT: 13
 describe('Mutation: createCategory', () => {
     var id = '';
-    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+    var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'createCategory';
     const queryName = "categories";
     const itemPath = 'category';
@@ -25,7 +25,7 @@ describe('Mutation: createCategory', () => {
     var originalBaseUrl = Cypress.config("baseUrl");
     confirmStorefrontEnvValues();
 
-    const addExtraItemIds = (extIds: {itemId: string, deleteName: string, itemName: string, queryName: string}[]) => {
+    const addExtraItemIds = (extIds: SupplementalItemRecord[]) => {
         extIds.forEach((id) => {
             extraIds.push(id);
         });
@@ -526,50 +526,6 @@ describe('Mutation: createCategory', () => {
                         cy.findCategoryInMenu(name);
                     });
                 });
-            });
-        });
-    });
-
-    context("Special command test", () => {
-        it.only("Other special test", () => {
-            const arr = [] as SupplementalItemRecord[];
-            const name = "InterfaceTest"
-            const id = "ajsksjakd";
-            const queryName = "yay query";
-            const mutationName = "yay mut";
-            arr.push({itemId: id, itemName: name, queryName: queryName, deleteName: mutationName});
-            console.log("ARR: " + toFormattedString(arr, true));
-            expect(arr.length).to.eql(1);
-        });
-
-        it("Special test", () => {
-            const retrieveOptionsIds = (responseBodies: []) => {
-                const ids = [] as string[];
-                responseBodies.forEach((response) => {
-                    response.options.forEach((opt) => {
-                        ids.push(opt.id);
-                    });
-                });
-                return ids;
-            };
-            const extraCreate = "createProductSpecification";
-            const extraPath = "productSpecification";
-            const extraQuery = "productSpecifications";
-            const extraInput = `options {
-                id
-                name
-            }`;
-            const extraItemInput = {name: `Cypress productId ${queryName} test`, options: [{name: "Cypress pId option"}]};
-            cy.createAssociatedItems(2, extraCreate, extraPath, extraQuery, extraItemInput, extraInput).then((results) => {
-                const { deletionIds, items, itemIds, fullItems } = results;
-                console.log("DELETION IDS: " + toFormattedString(deletionIds, true));
-                deletionIds.forEach((del) => {
-                    extraIds.push(del);
-                });
-                const optionIds = retrieveOptionsIds(fullItems);
-                console.log("OPTION IDS: " + toFormattedString(optionIds, true));
-                expect(optionIds.length).to.eql(2);
-                console.log("FULL ITEMS " + toFormattedString(fullItems, true));
             });
         });
     });

@@ -1,12 +1,12 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../../support/commands";
+import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 7
 describe('Mutation: deleteCustomerRole', () => {
     var id = '';
     var currentItemName = '';
-    var extraIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+    var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'deleteCustomerRole';
     const createName = 'createCustomerRole';
     const queryName = "customerRoles";
