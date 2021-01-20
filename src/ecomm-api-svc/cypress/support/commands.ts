@@ -144,6 +144,30 @@ const createErrorMessage = (res, gqlBody: string, queryOrMut: string): string =>
     return errorMessage;
 };
 
+// Create the generic message we expect to see back for most successful mutations, and some unsuccessful mutation
+const createMutResMessage = (isSuccess: boolean, mutationName: string): string => {
+    const transformFeature = (str: string): string => {
+        while(str.search(/[A-Z]/g) !== -1) {
+            str = str.replace(str.charAt(str.search(/[A-Z]/g)), " " + str.charAt(str.search(/[A-Z]/g)).toLowerCase());
+        }
+        return str;
+    };
+    var mutationFeature = mutationName.substring(6).replace(mutationName.charAt(6), mutationName.charAt(6).toLowerCase());
+    var mutation = isSuccess ? `${mutationName.substring(0, 6)}d` : `Error ${mutationName.substring(0, 5)}ing`;
+    var message = "";
+    switch (mutationFeature) {
+        case "category":
+            message = "categories";
+            break;
+        case "returnReason":
+            message = "returnReason";
+            break;
+        default : 
+            message = (mutationFeature === "customerRole" || mutationFeature === "manufacturer") ? `${transformFeature(mutationFeature)}s` : transformFeature(mutationFeature);
+    };
+    return isSuccess ? `${message} ${mutation}` : `${mutation} ${message}`;
+};
+
 /**
  * THE POST COMMAND USED BY ALL COMMANDS THAT MAKE API CALLS
  */
@@ -227,7 +251,8 @@ Cypress.Commands.add('validateQueryRes', (gqlQuery: string, res, queryName: stri
 
 // Test the standard mutation response for standard valid data
 // When validating a delete mutation, pass in the itemPath as "deleteMutation" 
-Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: string, itemPath: string, successMessage: string) => {
+Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: string, itemPath: string) => {
+    const successMessage = createMutResMessage(true, mutationName);
     Cypress.log({
         name: "validateMutationRes",
         message: `Validate response for ${mutationName}`,
@@ -296,7 +321,8 @@ Cypress.Commands.add("confirmError", (res, expect200?: boolean) => {
 
 // Tests the response for errors. Use when we expect it to fail
 // For use with mutations that still return data and an okay status when erroring
-Cypress.Commands.add("confirmMutationError", (res, mutationName: string, failureMessage: string, itemPath?: string) => {
+Cypress.Commands.add("confirmMutationError", (res, mutationName: string, itemPath?: string) => {
+    const failureMessage = createMutResMessage(false, mutationName);
     Cypress.log({
         name: "confirmMutationError",
         message: `Confirm expected errors for ${mutationName}`,
@@ -354,7 +380,7 @@ Cypress.Commands.add("postAndValidate", (gqlQuery: string, queryName: string, al
 
 // Post mutation and validate
 // When validating a delete mutation, pass in the itemPath as "deleteMutation" 
-Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string, itemPath: string, successMessage: string, altUrl?: string) => {
+Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string, itemPath: string, altUrl?: string) => {
     Cypress.log({
         name: "postMutAndValidate",
         message: mutationName,
@@ -363,13 +389,12 @@ Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string
                 "Mutation Body": gqlMut,
                 "Mutation Name": mutationName,
                 "Response item path": itemPath,
-                "Expected Success message": successMessage,
                 "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
             };
         },
     });
     return cy.postGQL(gqlMut, altUrl).then((res) => {
-        cy.validateMutationRes(gqlMut, res, mutationName, itemPath, successMessage).then(() => {
+        cy.validateMutationRes(gqlMut, res, mutationName, itemPath).then(() => {
             return res;
         });
     });
@@ -395,7 +420,7 @@ Cypress.Commands.add("postAndConfirmError", (gqlBody: string, expect200?: boolea
     });
 });
 
-Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutationName: string, failureMessage: string, itemPath?: string, altUrl?: string) => {
+Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutationName: string, itemPath?: string, altUrl?: string) => {
     Cypress.log({
         name: "postAndConfirmMutationError",
         message: mutationName,
@@ -403,14 +428,13 @@ Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutati
             return {
                 "Mutation Body": gqlMutation,
                 "Mutation Name": mutationName,
-                "Expected failure message": failureMessage,
                 "Response item path": itemPath ? itemPath : "Not provided",
                 "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
             };
         },
     });
     return cy.postGQL(gqlMutation, altUrl).then((res) => {
-        cy.confirmMutationError(res, mutationName, failureMessage, itemPath).then(() => {
+        cy.confirmMutationError(res, mutationName, itemPath).then(() => {
             return res;
         });
     });
@@ -526,7 +550,7 @@ Cypress.Commands.add("postAndCheckCustom", (query: string, queryName: string, id
  * TODO: Phase out searchOrCreate. It causes more problems than it solves
  */
 // Queries for an item and if it doesn't find it, creates the item. Returns id of item
-Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutationName: string, successMessage: string, mutationInput?: string, infoName?: string) => {
+Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutationName: string, mutationInput?: string, infoName?: string) => {
     var itemPath = mutationName.replace("create", "");
     itemPath = itemPath.replace(itemPath.charAt(0), itemPath.charAt(0).toLowerCase());
     Cypress.log({
@@ -610,7 +634,7 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
                 }
             }
         }`;
-        cy.postMutAndValidate(creationMutation, mutationName, itemPath, successMessage).then((resp) => {
+        cy.postMutAndValidate(creationMutation, mutationName, itemPath).then((resp) => {
             if (infoName) {
                 const infoItem = resp.body.data[mutationName][itemPath][infoName].filter((subItem) => {
                     return subItem.languageCode === "Standard";
@@ -626,7 +650,7 @@ Cypress.Commands.add("searchOrCreate", (name: string, queryName: string, mutatio
 
 // Create a new item, validate it, and return the id. Pass in the full input value as a string
 // If you need more information than just the id, pass in the additional fields as a string and the entire new item will be returned
-Cypress.Commands.add("createAndGetId", (mutationName: string, itemPath: string, input: string, successMessage: string, additionalFields?: string, altUrl?: string) => {
+Cypress.Commands.add("createAndGetId", (mutationName: string, itemPath: string, input: string, additionalFields?: string, altUrl?: string) => {
     Cypress.log({
         name: "createAndGetId",
         message: `Creating ${itemPath}. Additional fields: ${!!additionalFields}`,
@@ -635,7 +659,6 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, itemPath: string, 
                 "Mutation": mutationName,
                 "Response item path": itemPath,
                 "Input string": input,
-                "Expected success message": successMessage,
                 "Additional fields string": additionalFields ? additionalFields : "Not provided",
                 "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
             };
@@ -655,7 +678,7 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, itemPath: string, 
             }
         }
     }`;
-    return cy.postMutAndValidate(mutation, mutationName, itemPath, successMessage, altUrl).then((res) => {
+    return cy.postMutAndValidate(mutation, mutationName, itemPath, altUrl).then((res) => {
         const id = itemPath === "refund" ? res.body.data[mutationName][itemPath].order.id : res.body.data[mutationName][itemPath].id;
         if (additionalFields) {
             return res.body.data[mutationName][itemPath];
@@ -793,7 +816,6 @@ Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, se
 Cypress.Commands.add("postAndConfirmDelete", (
     gqlMut: string, 
     mutationName: string, 
-    successMessage: string,
     queryForItem: boolean,
     queryInformation?: {
         queryName: string
@@ -812,14 +834,13 @@ Cypress.Commands.add("postAndConfirmDelete", (
             return {
                 "Mutation Body": gqlMut,
                 "Mutation Name": mutationName,
-                "Expected Success message": successMessage,
                 "Query for item after deletion": queryForItem,
                 "URL used": altUrl ? altUrl : Cypress.config("baseUrl"),
                 "Query Information": queryInformation ? toFormattedString(queryInformation, true) : "No query information provided"
             };
         },
     });
-    return cy.postMutAndValidate(gqlMut, mutationName, "deleteMutation", successMessage, altUrl).then((res) => {
+    return cy.postMutAndValidate(gqlMut, mutationName, "deleteMutation", altUrl).then((res) => {
         // query for the deleted item to make sure it's gone
         if (queryForItem && queryInformation) {
             const asTest = queryInformation.asTest ? queryInformation.asTest : true;
@@ -833,7 +854,7 @@ Cypress.Commands.add("postAndConfirmDelete", (
 });
 
 // Flat delete the the item, without querying for it afterwards
-Cypress.Commands.add("deleteItem", (mutationName: string, id: string, successMessage: string) => {
+Cypress.Commands.add("deleteItem", (mutationName: string, id: string) => {
     Cypress.log({
         name: "deleteItem",
         message: `delete ${mutationName.replace("delete", "")} with id "${id}"`,
@@ -851,7 +872,7 @@ Cypress.Commands.add("deleteItem", (mutationName: string, id: string, successMes
             error
         }
     }`;
-    return cy.postAndConfirmDelete(mutation, mutationName, successMessage, false);
+    return cy.postAndConfirmDelete(mutation, mutationName, false);
 });
 
 /**
