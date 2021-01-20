@@ -168,6 +168,34 @@ const createMutResMessage = (isSuccess: boolean, mutationName: string): string =
     return isSuccess ? `${message} ${mutation}` : `${mutation} ${message}`;
 };
 
+// Check if the provided item has an infoName field, and if so, return it.
+// Can check object for infoField, will compare a string to a query/mutation name
+const getInfoName = (item): string | null => {
+    const infoNames = ["categoryInfo", "manufacturerInfo", "productInfo", "vendorInfo"];
+    const infoQueries = ["categories", "manufacturers", "products", "vendors"];
+    const infoMuts = ["Category", "Manufacturer", "Product", "Vendor"];
+    var name = null;
+    if (typeof item === "string") {
+        var index = infoQueries.indexOf(item);
+        if (index === -1) {
+            infoMuts.forEach((mut, mutIndex) => {
+                if (item.includes(mut)) {
+                    index = mutIndex;
+                }
+            });
+        }
+        name = index !== -1 ? infoNames[index] : null;
+    } else if (typeof item === "object" && !Array.isArray(item)) {
+        for (var f = 0; f < infoNames.length; f++) {
+            if (item[infoNames[f]]) {
+                name = infoNames[f];
+                break;
+            }
+        }
+    }
+    return name;
+};
+
 /**
  * THE POST COMMAND USED BY ALL COMMANDS THAT MAKE API CALLS
  */
@@ -688,6 +716,41 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, itemPath: string, 
     });
 });
 
+Cypress.Commands.add("createAssociatedItems", (
+    numberToMake: number,
+    createName: string,
+    itemPath: string,
+    queryName: string,
+    inputBase
+) => {
+    const createInput = (input, newName: string, infoName: string | null) => {
+        const retInput = JSON.parse(JSON.stringify(input));
+        if (infoName) {
+            retInput[infoName][0].name = newName;
+        } else {
+            retInput.name = newName;
+        }
+        return retInput;
+    };
+    const deleteName = createName.replace("create", "delete");
+    const deletionIds = [] as {itemId: string, deleteName: string, itemName: string, queryName: string}[];
+    const createdItems = [];
+    const createdIds = [] as string[];
+    var infoName = getInfoName(inputBase);
+    var nameBase = infoName ? inputBase[infoName][0].name : inputBase.name;
+    for (var i = 1; i <= numberToMake; i++) {
+        var name = `${nameBase} ${i}`;
+        var item = createInput(inputBase, name, infoName);
+        cy.createAndGetId(createName, itemPath, toFormattedString(item)).then((returnedId: string) => {
+            createdIds.push(returnedId);
+            item.id = returnedId;
+            createdItems.push(item);
+            deletionIds.push({itemId: returnedId, deleteName: deleteName, itemName: name, queryName: queryName});
+        });
+    };
+    return cy.wrap({deletionIds: deletionIds, items: createdItems, itemIds: createdIds});
+});
+
 /**
  * COMMANDS FOR DELETING AN ITEM
  */
@@ -900,17 +963,14 @@ Cypress.Commands.add("deleteSupplementalItems", (extraItems: {itemId: string, de
         consoleProps: () => {
             return {
                 "Number of supplemental items": extraItems.length,
-                "Supplemental Items": toFormattedString(extraItems, true);
+                "Supplemental Items": toFormattedString(extraItems, true)
             };
         },
     });
     if (extraItems.length > 0) {
-        const infoQueries = ["categories", "manufacturers", "products", "vendors"];
-        const infoNames = ["categoryInfo", "manufacturerInfo", "productInfo", "vendorInfo"];
         for (var i = 0; i < extraItems.length; i++) {
             cy.wait(2000);
-            var infoName = infoQueries.indexOf(extraItems[i].queryName) !== -1 ? infoNames[infoQueries.indexOf(extraItems[i].queryName)]: null;
-            cy.safeDelete(extraItems[i].queryName, extraItems[i].deleteName, extraItems[i].itemId, extraItems[i].itemName, infoName);
+            cy.safeDelete(extraItems[i].queryName, extraItems[i].deleteName, extraItems[i].itemId, extraItems[i].itemName, getInfoName(extraItems[i].queryName));
         }
     }
 });
