@@ -412,12 +412,11 @@ Cypress.Commands.add("makePayment", (count) => {
             // Grab the first payment from the table and pay by credit card
             cy.get("table")
               .find("tr")
-              .eq(0)
-              .find("td")
               .eq(1)
+              .find("td")
+              .eq(4)
               .find("button")
-              .eq(0)
-              .click();
+              .click({force: true});
             // Wait for page to load
             cy.wait(5000);
             // TODO: Set up command to deal when payer has no payment method or doesn't have default payment method, etc
