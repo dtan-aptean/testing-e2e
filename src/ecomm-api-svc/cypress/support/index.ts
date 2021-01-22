@@ -15,6 +15,8 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands';
+import './paginationCommands';
+import './storefrontCommands';
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
