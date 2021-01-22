@@ -1269,7 +1269,7 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, itemP
         }
     };
     function matchArray(resArray: [], matchArray: [], originalProperty: string) {
-        //expect(resArray.length).to.be.eql(matchArray.length, `Updated ${matchArray.length} items of ${originalProperty}`);
+        expect(resArray.length).to.be.gte(matchArray.length, `Response array should have at least ${matchArray.length} items`);
         for (var f = 0; f < matchArray.length; f++) {
             if (resArray.length > matchArray.length) {
                 searchArray(resArray, matchArray, `${originalProperty}[${f}]`);

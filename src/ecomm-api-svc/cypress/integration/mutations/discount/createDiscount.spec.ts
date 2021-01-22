@@ -2,7 +2,7 @@
 
 import { createInfoDummy, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 16
+// TEST COUNT: 19
 describe('Mutation: createDiscount', () => {
     var id = '';
     var extraIds = [] as SupplementalItemRecord[];
@@ -607,7 +607,7 @@ describe('Mutation: createDiscount', () => {
             cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 id = res.body.data[mutationName][itemPath].id;
                 const propNames = ["applyDiscountToSubCategories", "discountType", "name", "discountAmount"];
-                const propValues = [discountType, name, discountAmount];
+                const propValues = [applyDiscountToSubCategories, discountType, name, discountAmount];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
@@ -623,7 +623,7 @@ describe('Mutation: createDiscount', () => {
                             }
                         }
                     }`;
-                    cy.confirmUsingQuery(query, queryName, id, ["applyDiscountToSubCategories", "discountType", "name", "discountAmount"], [applyDiscountToSubCategories, discountType, name, discountAmount]);
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
                 });
             });
         });

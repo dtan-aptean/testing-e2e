@@ -2,7 +2,7 @@
 
 import { createInfoDummy, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 19
+// TEST COUNT: 22
 describe('Mutation: updateDiscount', () => {
     var id = '';
     var updateCount = 0;
@@ -614,14 +614,121 @@ describe('Mutation: updateDiscount', () => {
         });
 
         it("Mutation will not accept 'applyDiscountToSubCategories' if the discountType isn't set to categories", () => {
-            // TODO
+            updateCount++;
+            const name = `Cypress wrong type ${updateCount}`;
+            const discountAmount = {
+                amount: Cypress._.random(1, 200),
+                currency: "USD"
+            };
+            const discountType = "ASSIGNED_TO_ORDER_SUBTOTAL";
+            const applyDiscountToSubCategories = true;
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${id}"
+                        applyDiscountToSubCategories: ${applyDiscountToSubCategories}
+                        discountType: ${discountType}
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        discountType
+                        applyDiscountToSubCategories
+                        name
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = ["applyDiscountToSubCategories", "discountType", "name", "discountAmount"];
+                const propValues = [false, discountType, name, discountAmount];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                discountType
+                                applyDiscountToSubCategories
+                                name
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
         });
 
         it("Mutation will accept 'applyDiscountToSubCategories' if the discountType is ASSIGNED_TO_CATEGORIES", () => {
-            // TODO
+            updateCount++;
+            const name =`Cypress discount cat type ${updateCount}`;
+            const discountAmount = {
+                amount: Cypress._.random(1, 200),
+                currency: "USD"
+            };
+            const discountType = "ASSIGNED_TO_CATEGORIES";
+            const applyDiscountToSubCategories = true;
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${id}"
+                        applyDiscountToSubCategories: ${applyDiscountToSubCategories}
+                        discountType: ${discountType}
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        discountType
+                        applyDiscountToSubCategories
+                        name
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = ["applyDiscountToSubCategories", "discountType", "name", "discountAmount"];
+                const propValues = [applyDiscountToSubCategories, discountType, name, discountAmount];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                discountType
+                                applyDiscountToSubCategories
+                                name
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
         });
 
         it("Mutation will create a discount that applies to subCategories", () => {
+            updateCount++;
             childCatName = `Cypress ${mutationName} childCat`;
             parentCatName = `Cypress ${mutationName} parentCat`;
             cy.createParentAndChildCat(childCatName, parentCatName).then((results) => {
@@ -630,7 +737,74 @@ describe('Mutation: updateDiscount', () => {
                 childCatId = childId;
                 const categories = [createInfoDummy(parentCatName, "categoryInfo", parentCatId), createInfoDummy(childCatName, "categoryInfo", childCatId)];
                 const categoryIds = [parentCatId];
-                // TODO: Actual discount-related part
+                const name = `Cypress ${mutationName} subCategories test`;
+                const discountAmount = {
+                    amount: Cypress._.random(1, 200),
+                    currency: "USD"
+                };
+                const discountType = "ASSIGNED_TO_CATEGORIES";
+                const applyDiscountToSubCategories = true;
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: {
+                            id: "${id}"
+                            categoryIds: ${toFormattedString(categoryIds)}
+                            applyDiscountToSubCategories: ${applyDiscountToSubCategories}
+                            discountType: ${discountType}
+                            name: "${name}"
+                            discountAmount: ${toFormattedString(discountAmount)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${itemPath} {
+                            id
+                            discountType
+                            applyDiscountToSubCategories
+                            name
+                            discountAmount {
+                                amount
+                                currency
+                            }
+                            categories {
+                                id
+                                categoryInfo {
+                                    name
+                                    languageCode
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const propNames = ["applyDiscountToSubCategories", "categories", "name", "discountType", "discountAmount"];
+                    const propValues = [applyDiscountToSubCategories, categories, name, discountType, discountAmount];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                                nodes {
+                                    id
+                                    discountType
+                                    applyDiscountToSubCategories
+                                    name
+                                    discountAmount {
+                                        amount
+                                        currency
+                                    }
+                                    categories {
+                                        id
+                                        categoryInfo {
+                                            name
+                                            languageCode
+                                        }
+                                    }
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    });
+                });
             });
         });
     });
