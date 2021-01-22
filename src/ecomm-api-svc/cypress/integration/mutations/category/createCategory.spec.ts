@@ -289,7 +289,7 @@ describe('Mutation: createCategory', () => {
                 childCatId = childId;
                 parentCatId = parentId;
                 const propNames = ["parent", infoName];
-                const propValues = [createInfoDummy(parentCatName, infoName, parentId), createInfoDummy(childCatName, infoName)];
+                const propValues = [createInfoDummy(parentCatName, infoName, parentId), createInfoDummy(childCatName)];
                 cy.confirmMutationSuccess(childRes, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${childCatName}", orderBy: {direction: ASC, field: NAME}) {

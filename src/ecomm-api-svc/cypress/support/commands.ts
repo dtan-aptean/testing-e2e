@@ -131,12 +131,14 @@ export const confirmStorefrontEnvValues = () => {
     });
 };
 
-export const createInfoDummy = (name: string, infoName: string, id?: string) => {
+// Given a name, will create an array that mimics the array that endpoints like categories use to store their name
+// Given a name, infoName, and an id, will create an object that mimics a basic response node for one of these endpoints
+export const createInfoDummy = (name: string, infoName?: string, id?: string) => {
     const infoDummy = [{
         name: name,
         languageCode: "Standard"
     }];
-    if (id) {
+    if (id && infoName) {
         const dummy = {
             id: id
         };
@@ -146,6 +148,8 @@ export const createInfoDummy = (name: string, infoName: string, id?: string) => 
     return infoDummy;
 };
 
+// An interface used by most files. Used for creating and deleting extra items created for testing purposes
+// EX, a product mutation test creates a vendor and stores the vendor's information in an item of this type
 export interface SupplementalItemRecord {
     itemId: string;
     itemName: string;
