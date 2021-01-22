@@ -7,6 +7,7 @@ describe('Mutation: updateProduct', () => {
     var id = '';
     var updateCount = 0;
     var extraIds = [] as SupplementalItemRecord[];
+    var deleteAfterProducts = [] as SupplementalItemRecord[]; // Items that can only be deleted after the attached product is deleted
     const mutationName = 'updateProduct';
     const queryName = "products";
     const itemPath = 'product';
@@ -25,10 +26,16 @@ describe('Mutation: updateProduct', () => {
     `;
     const createName = 'createProduct';
 
-    const addExtraItemIds = (extIds: SupplementalItemRecord[]) => {
-        extIds.forEach((id) => {
-            extraIds.push(id);
-        });
+    const addExtraItemIds = (extIds: SupplementalItemRecord[], afterProduct?: boolean) => {
+        if (afterProduct) {
+            extIds.forEach((id) => {
+                deleteAfterProducts.push(id);
+            });
+        } else {
+            extIds.forEach((id) => {
+                extraIds.push(id);
+            });
+        }
     };
 
     before(() => {
@@ -46,6 +53,8 @@ describe('Mutation: updateProduct', () => {
             cy.deleteSupplementalItems(extraIds);
             // Delete the item we've been updating
             cy.deleteItem("deleteProduct", id);
+            // Delete items that must be deleted after their product
+            cy.deleteSupplementalItems(deleteAfterProducts);
         }
     });
 
@@ -284,7 +293,7 @@ describe('Mutation: updateProduct', () => {
                 },
                 isTaxExempt: Cypress._.random(0, 1) === 1,
                 availableForPreOrder: preOrder,
-                preOrderAvailabilityStartDateTime: preOrder ? today.toUTCString(): null
+                preOrderAvailabilityStartDate: preOrder ? today.toUTCString(): null
             }; 
             const published = Cypress._.random(0, 1) === 1;
             const seoData = [{
@@ -308,7 +317,7 @@ describe('Mutation: updateProduct', () => {
                 availableEndDate: twoWeeks.toUTCString(),
                 markAsNew: Cypress._.random(0, 1) === 1,
                 availableForPreOrder: priceInformation.availableForPreOrder,
-                preOrderAvailabilityStartDateTime: priceInformation.preOrderAvailabilityStartDateTime,
+                preOrderAvailabilityStartDate: priceInformation.preOrderAvailabilityStartDate,
                 minimumStockQuantity: Cypress._.random(5, 20),
                 allowBackInStockNotification: Cypress._.random(0, 1) === 1,
             };
@@ -326,7 +335,7 @@ describe('Mutation: updateProduct', () => {
                         isTaxExempt: ${priceInformation.isTaxExempt}
                         availableForPreOrder: ${priceInformation.availableForPreOrder}
                         published: ${published}
-                        preOrderAvailabilityStartDateTime: ${priceInformation.preOrderAvailabilityStartDateTime ? `"${priceInformation.preOrderAvailabilityStartDateTime}"`: null}
+                        preOrderAvailabilityStartDate: ${priceInformation.preOrderAvailabilityStartDate ? `"${priceInformation.preOrderAvailabilityStartDate}"`: null}
                         seoData: ${toFormattedString(seoData)}
                     }
                 ) {
@@ -473,7 +482,7 @@ describe('Mutation: updateProduct', () => {
             const extraItemInput = { vendorInfo: [{name: `Cypress ${mutationName} vendor`, languageCode: "Standard"}] };
             cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
-                addExtraItemIds(deletionIds);
+                addExtraItemIds(deletionIds, true);
                 updateCount++;
                 const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard"}];
                 const mutation = `mutation {
@@ -538,7 +547,7 @@ describe('Mutation: updateProduct', () => {
             const extraItemInput = { name: `Cypress ${mutationName} taxCategory` };
             cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
-                addExtraItemIds(deletionIds);
+                addExtraItemIds(deletionIds, true);
                 updateCount++;
                 const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard"}];
                 const dummyPriceInfo = {taxCategory: items[0]};
@@ -731,17 +740,12 @@ describe('Mutation: updateProduct', () => {
         });
 
         it("Mutation with 'specificationOptionIds' input will successfully attach the specificationOptions", () => {
-            const retrieveOptions = (responseBodies: []) => {
-                const options = [];
-                responseBodies.forEach((response) => {
-                    options.push(response.options);
-                });
-                return options;
-            };
-            const getOptIds = (options: []) => {
+            const retrieveOptionsIds = (responseBodies: []) => {
                 const ids = [] as string[];
-                options.forEach((opt) => {
-                    ids.push(opt.id);
+                responseBodies.forEach((response) => {
+                    response.options.forEach((opt) => {
+                        ids.push(opt.id);
+                    });
                 });
                 return ids;
             };
@@ -756,8 +760,7 @@ describe('Mutation: updateProduct', () => {
             cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
                 const { deletionIds, fullItems } = results;
                 addExtraItemIds(deletionIds);
-                const options = retrieveOptions(fullItems);
-                const specificationOptionIds = getOptIds(options);
+                const specificationOptionIds = retrieveOptionsIds(fullItems);
                 updateCount++;
                 const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard"}];
                 const mutation = `mutation {
@@ -784,7 +787,9 @@ describe('Mutation: updateProduct', () => {
                     const propNames = [infoName];
                     const propValues = [info];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                        cy.queryByProductId(extraQuery, optionsField, id, options);
+                        const queryBody = `id
+                        ${optionsField}`;
+                        cy.queryByProductId(extraQuery, queryBody, id, fullItems);
                     });
                 });
             });

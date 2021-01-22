@@ -6,6 +6,7 @@ import { SupplementalItemRecord, toFormattedString } from "../../../support/comm
 describe('Mutation: createProduct', () => {
     var id = '';
     var extraIds = [] as SupplementalItemRecord[];
+    var deleteAfterProducts = [] as SupplementalItemRecord[];   // Items that can only be deleted after the attached product is deleted
     const mutationName = 'createProduct';
     const queryName = "products";
     const itemPath = 'product';
@@ -23,10 +24,16 @@ describe('Mutation: createProduct', () => {
         }
     `;
 
-    const addExtraItemIds = (extIds: SupplementalItemRecord[]) => {
-        extIds.forEach((id) => {
-            extraIds.push(id);
-        });
+    const addExtraItemIds = (extIds: SupplementalItemRecord[], afterProduct?: boolean) => {
+        if (afterProduct) {
+            extIds.forEach((id) => {
+                deleteAfterProducts.push(id);
+            });
+        } else {
+            extIds.forEach((id) => {
+                extraIds.push(id);
+            });
+        }
     };
 
     afterEach(() => {
@@ -39,6 +46,10 @@ describe('Mutation: createProduct', () => {
                 id = "";
             });
         }
+        // Delete items that must be deleted after their product
+        cy.deleteSupplementalItems(deleteAfterProducts).then(() => {
+            deleteAfterProducts = [];
+        });
     });
     
     context("Testing basic required inputs", () => {
@@ -210,7 +221,7 @@ describe('Mutation: createProduct', () => {
                     },
                     isTaxExempt: Cypress._.random(0, 1) === 1,
                     availableForPreOrder: preOrder,
-                    preOrderAvailabilityStartDateTime: preOrder ? today.toUTCString(): null
+                    preOrderAvailabilityStartDate: preOrder ? today.toUTCString(): null
                 }; 
                 const published = Cypress._.random(0, 1) === 1;
                 const seoData = [
@@ -236,7 +247,7 @@ describe('Mutation: createProduct', () => {
                     availableEndDate: twoWeeks.toUTCString(),
                     markAsNew: Cypress._.random(0, 1) === 1,
                     availableForPreOrder: priceInformation.availableForPreOrder,
-                    preOrderAvailabilityStartDateTime: priceInformation.preOrderAvailabilityStartDateTime,
+                    preOrderAvailabilityStartDate: priceInformation.preOrderAvailabilityStartDate,
                     minimumStockQuantity: Cypress._.random(5, 20),
                     allowBackInStockNotification: Cypress._.random(0, 1) === 1,
                 };
@@ -253,7 +264,7 @@ describe('Mutation: createProduct', () => {
                             isTaxExempt: ${priceInformation.isTaxExempt}
                             availableForPreOrder: ${priceInformation.availableForPreOrder}
                             published: ${published}
-                            preOrderAvailabilityStartDateTime: ${priceInformation.preOrderAvailabilityStartDateTime ? `"${priceInformation.preOrderAvailabilityStartDateTime}"`: null}
+                            preOrderAvailabilityStartDate: ${priceInformation.preOrderAvailabilityStartDate ? `"${priceInformation.preOrderAvailabilityStartDate}"`: null}
                             seoData: ${toFormattedString(seoData)}
                         }
                     ) {
@@ -401,7 +412,7 @@ describe('Mutation: createProduct', () => {
             const extraItemInput = { vendorInfo: [{name: `Cypress ${mutationName} vendor`, languageCode: "Standard"}] };
             cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
-                addExtraItemIds(deletionIds);
+                addExtraItemIds(deletionIds, true);
                 const info = [{name: `Cypress ${mutationName} vendorId test`, languageCode: "Standard"}];
                 const mutation = `mutation {
                     ${mutationName}(
@@ -465,7 +476,7 @@ describe('Mutation: createProduct', () => {
             const extraItemInput = { name: `Cypress ${mutationName} taxCategory` };
             cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
-                addExtraItemIds(deletionIds);
+                addExtraItemIds(deletionIds, true);
                 const info = [{name: `Cypress ${mutationName} taxCategoryId test`, languageCode: "Standard"}];
                 const dummyPriceInfo = {taxCategory: items[0]};
                 const mutation = `mutation {
@@ -654,17 +665,12 @@ describe('Mutation: createProduct', () => {
         });
 
         it("Mutation with 'specificationOptionIds' input will successfully create a product with attached specificationOptions", () => {
-            const retrieveOptions = (responseBodies: []) => {
-                const options = [];
-                responseBodies.forEach((response) => {
-                    options.push(response.options);
-                });
-                return options;
-            };
-            const getOptIds = (options: []) => {
+            const retrieveOptionsIds = (responseBodies: []) => {
                 const ids = [] as string[];
-                options.forEach((opt) => {
-                    ids.push(opt.id);
+                responseBodies.forEach((response) => {
+                    response.options.forEach((opt) => {
+                        ids.push(opt.id);
+                    });
                 });
                 return ids;
             };
@@ -679,8 +685,7 @@ describe('Mutation: createProduct', () => {
             cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
                 const { deletionIds, fullItems } = results;
                 addExtraItemIds(deletionIds);
-                const options = retrieveOptions(fullItems);
-                const specificationOptionIds = getOptIds(options);
+                const specificationOptionIds = retrieveOptionsIds(fullItems);
                 const info = [{name: `Cypress ${mutationName} specificationOptionsIds test`, languageCode: "Standard"}];
                 const mutation = `mutation {
                     ${mutationName}(
@@ -706,7 +711,9 @@ describe('Mutation: createProduct', () => {
                     const propNames = [infoName];
                     const propValues = [info];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                        cy.queryByProductId(extraQuery, optionsField, id, options);
+                        const queryBody = `id
+                            ${optionsField}`;
+                        cy.queryByProductId(extraQuery, queryBody, id, fullItems);
                     });
                 });
             });
