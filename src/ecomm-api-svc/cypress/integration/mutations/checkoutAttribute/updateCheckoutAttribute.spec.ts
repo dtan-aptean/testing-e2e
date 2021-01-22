@@ -381,7 +381,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
                             id: "${id}"
                             name: "${newName}"
                             values: ${toFormattedString(valuesCopy)}
-                            taxCategoryId: "${returnedId}"
+                            taxCategoryId: "${taxCategoryId}"
                         }
                     ) {
                         code
