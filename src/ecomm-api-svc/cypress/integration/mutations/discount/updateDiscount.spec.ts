@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { createInfoDummy, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 19
 describe('Mutation: updateDiscount', () => {
@@ -604,35 +604,13 @@ describe('Mutation: updateDiscount', () => {
     });
 
     context(("Testing 'applyDiscountToSubCategories'"), () => {
-        var parentId = "";
-        var childId = "";
+        var parentCatName = "";
+        var childCatName = "";
+        var parentCatId = "";
+        var childCatId = "";
 
-        afterEach(() => {
-            const categoryDelete = "deleteCategory"
-            if (childId !== "") {
-                var deleteMut = `mutation {
-                    ${categoryDelete}(input: { id: "${childId}" }) {
-                        code
-                        message
-                        error
-                    }
-                }`;
-                cy.postAndConfirmDelete(deleteMut, categoryDelete).then(() => {
-                    childId = "";
-                });
-            }
-            if (parentId !== "") {
-                var deleteMut = `mutation {
-                    ${categoryDelete}(input: { id: "${parentId}" }) {
-                        code
-                        message
-                        error
-                    }
-                }`;
-                cy.postAndConfirmDelete(deleteMut, categoryDelete).then(() => {
-                    parentId = "";
-                });
-            }
+        after(() => {
+            cy.deleteParentAndChildCat({name: childCatName, id: childCatId}, parentCatName, parentCatId);
         });
 
         it("Mutation will not accept 'applyDiscountToSubCategories' if the discountType isn't set to categories", () => {
@@ -644,7 +622,16 @@ describe('Mutation: updateDiscount', () => {
         });
 
         it("Mutation will create a discount that applies to subCategories", () => {
-            // TODO
+            childCatName = `Cypress ${mutationName} childCat`;
+            parentCatName = `Cypress ${mutationName} parentCat`;
+            cy.createParentAndChildCat(childCatName, parentCatName).then((results) => {
+                const { parentId, childId } = results;
+                parentCatId = parentId;
+                childCatId = childId;
+                const categories = [createInfoDummy(parentCatName, "categoryInfo", parentCatId), createInfoDummy(childCatName, "categoryInfo", childCatId)];
+                const categoryIds = [parentCatId];
+                // TODO: Actual discount-related part
+            });
         });
     });
 

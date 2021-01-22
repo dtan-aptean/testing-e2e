@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { confirmStorefrontEnvValues, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { confirmStorefrontEnvValues, createInfoDummy, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 13
 describe('Mutation: createCategory', () => {
@@ -30,6 +30,10 @@ describe('Mutation: createCategory', () => {
             extraIds.push(id);
         });
     };
+    var childCatName = "";
+    var parentCatName = "";
+    var childCatId = "";
+    var parentCatId = "";
 
     afterEach(() => {
         if (originalBaseUrl !== "" && Cypress.config("baseUrl") !== originalBaseUrl) {
@@ -40,6 +44,14 @@ describe('Mutation: createCategory', () => {
         // Delete any supplemental items we created
         cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];
+        });
+
+        // Delete the child and parent category
+        cy.deleteParentAndChildCat({name: childCatName, id: childCatId}, parentCatName, parentCatId).then(() => {
+            childCatName = "";
+            parentCatName = "";
+            childCatId = "";
+            parentCatId = "";
         });
 
         if (id !== "") {
@@ -270,64 +282,34 @@ describe('Mutation: createCategory', () => {
 
     context("Testing connecting to other items and features", () => {
         it("Mutation with 'parentCategoryId' will succesfully create a subcategory", () => {
-            const parentCategory = {categoryInfo: [{name: `Cypress ParentCategory`, languageCode: "Standard"}] };
-            cy.createAndGetId(mutationName, itemPath, toFormattedString(parentCategory)).then((returnedId: string) => {
-                id = returnedId;
-                parentCategory.id = returnedId;
-                const info = [{name: "Cypress subCategory", languageCode: "Standard"}];
-                const mutation = `mutation {
-                    ${mutationName}(
-                        input: { 
-                            parentCategoryId: "${id}"
-                            ${infoName}: ${toFormattedString(info)}
-                        }
-                    ) {
-                        code
-                        message
-                        error
-                        ${itemPath} {
-                            id
-                            ${infoName} {
-                                name
-                                languageCode
-                            }
-                            parent {
+            childCatName = "Cypress subCategory";
+            parentCatName = "Cypress ParentCategory"
+            cy.createParentAndChildCat(childCatName, parentCatName).then((results) => {
+                const { parentId, childId, childRes } = results;
+                childCatId = childId;
+                parentCatId = parentId;
+                const propNames = ["parent", infoName];
+                const propValues = [createInfoDummy(parentCatName, infoName, parentId), createInfoDummy(childCatName, infoName)];
+                cy.confirmMutationSuccess(childRes, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${childCatName}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
                                 ${infoName} {
                                     name
                                     languageCode
                                 }
-                                id
-                            }
-                        }
-                    }
-                }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const subCategoryId = res.body.data[mutationName][itemPath].id;
-                    extraIds.push({itemId: subCategoryId, deleteName: "deleteCategory", itemName: info[0].name, queryName: queryName});
-                    const propNames = ["parent", infoName];
-                    const propValues = [parentCategory, info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                        const query = `{
-                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
-                                nodes {
+                                parent {
                                     id
                                     ${infoName} {
                                         name
                                         languageCode
                                     }
-                                    parent {
-                                        ${infoName} {
-                                            name
-                                            languageCode
-                                        }
-                                        id
-                                    }
-                                    id
                                 }
                             }
-                        }`;
-                        cy.confirmUsingQuery(query, queryName, subCategoryId, propNames, propValues);
-                    });
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, childId, propNames, propValues);
                 });
             });
         });

@@ -131,6 +131,28 @@ export const confirmStorefrontEnvValues = () => {
     });
 };
 
+export const createInfoDummy = (name: string, infoName: string, id?: string) => {
+    const infoDummy = [{
+        name: name,
+        languageCode: "Standard"
+    }];
+    if (id) {
+        const dummy = {
+            id: id
+        };
+        dummy[infoName] = infoDummy;
+        return dummy;
+    }
+    return infoDummy;
+};
+
+export interface SupplementalItemRecord {
+    itemId: string;
+    itemName: string;
+    deleteName: string;
+    queryName: string;
+};
+
 // Crafts an error message to use when a response has unexpected errors, so that we have good visibility on issues that cause us to fail
 const createErrorMessage = (res, gqlBody: string, queryOrMut: string): string => {
     var errorMessage = `No errors while executing ${queryOrMut}: \n${gqlBody}`;
@@ -165,14 +187,7 @@ const createMutResMessage = (isSuccess: boolean, mutationName: string): string =
         default : 
             message = (mutationFeature === "customerRole" || mutationFeature === "manufacturer") ? `${transformFeature(mutationFeature)}s` : transformFeature(mutationFeature);
     };
-    return isSuccess ? `${message} ${mutation}` : `${mutation} ${message}`;
-};
-
-export interface SupplementalItemRecord {
-    itemId: string;
-    itemName: string;
-    deleteName: string;
-    queryName: string;
+    return isSuccess ? `${message} ${mutation}` : `${mutation}${mutationName.includes("delete") ? " the" : ""} ${message}`;
 };
 
 // Check if the provided item has an infoName field, and if so, return it.
@@ -649,7 +664,7 @@ Cypress.Commands.add("createAssociatedItems", (
     var infoName = getInfoName(inputBase);
     var nameBase = infoName ? inputBase[infoName][0].name : inputBase.name;
     for (var i = 1; i <= numberToMake; i++) {
-        var name = i !== 1 ? `${nameBase} ${i}` : nameBase;
+        var name = numberToMake !== 1 ? `${nameBase} ${i}` : nameBase;
         var item = createInput(inputBase, name, infoName);
         cy.createAndGetId(createName, itemPath, toFormattedString(item), additionalResFields).then((returnedBody) => {
             const returnedId = additionalResFields ? returnedBody.id : returnedBody;
@@ -667,6 +682,57 @@ Cypress.Commands.add("createAssociatedItems", (
         resObject.fullItems = fullResBodies;
     }
     return cy.wrap(resObject);
+});
+
+// Creates a parent and child category.
+//Pass in names to create new categories, or a name and an id to create a child and attach it to an existing parent
+Cypress.Commands.add("createParentAndChildCat", (
+    newChildName: string,
+    newParentName?: string, 
+    existingParent?: string 
+    ) => {
+    const createChild = (parentId: string) => {
+        const mutation = `mutation {
+            createCategory(
+                input: { 
+                    parentCategoryId: "${parentId}"
+                    categoryInfo: [{ name: "${newChildName}", languageCode: "Standard" }]
+                }
+            ) {
+                code
+                message
+                error
+                category {
+                    id
+                    categoryInfo {
+                        name
+                        languageCode
+                    }
+                    parent {
+                        id
+                        categoryInfo {
+                            name
+                            languageCode
+                        }
+                    }
+                }
+            }
+        }`;
+        return cy.postMutAndValidate(mutation, "createCategory","category").then((res) => {
+            const id = res.body.data.createCategory.category.id;
+            return cy.wrap({parentId: parentId, childId: id, childRes: res});
+        });
+    };
+    if (existingParent) {
+        return createChild(existingParent);
+    } else if (newParentName) {
+        const parentCategory = {categoryInfo: [{name: newParentName, languageCode: "Standard"}] };
+        return cy.createAndGetId("createCategory", "category", toFormattedString(parentCategory)).then((parentId: string) => {
+            return createChild(parentId);
+        });
+    } else {
+        assert.exists(newParentName, "Command must receive either an existing category's id or a name to use for creating a new category");
+    }
 });
 
 /**
@@ -699,15 +765,16 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
             languageCode
         }`;
     }
-    const searchQuery = `{
+    var searchQuery = `{
         ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: NAME}) {
+            totalCount
             nodes {
                 id
                 ${nameField}
             }
         }
     }`;
-    return cy.postAndValidate(searchQuery, queryName).then((res) => {
+    const checkSearchResults = (res) => {
         const nodes = res.body.data[queryName].nodes;
         var message = "Query did not return item, assumed successful deletion"
         if (nodes.length === 0) {
@@ -719,16 +786,25 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
         } else {
             // Compare ids to make sure it's not there.
             var matchingItems;
+            var validName = itemName !== "";
             if (infoName) {
                 matchingItems = nodes.filter((item) => {
-                    var nameMatches = item[infoName].filter((infoItem) => {
-                        return infoItem.name === itemName && infoItem.languageCode === "Standard";
-                    });
-                    return item.id === itemId && nameMatches.length > 0;
+                    if (validName) {
+                        var nameMatches = item[infoName].filter((infoItem) => {
+                            return infoItem.name === itemName && infoItem.languageCode === "Standard";
+                        });
+                        return item.id === itemId && nameMatches.length > 0;
+                    } else {
+                        return item.id === itemId;
+                    }
                 });
             } else {
                 matchingItems = nodes.filter((item) => {
-                    return item.id === itemId && item.name === itemName;
+                    if (validName) {
+                        return item.id === itemId && item.name === itemName;
+                    } else {
+                        return item.id === itemId;
+                    }
                 });
             }
             if (matchingItems.length > 0) {
@@ -739,6 +815,18 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
             }
             assert.isEmpty(matchingItems, message);
             return false;
+        }
+    };
+    return cy.postAndValidate(searchQuery, queryName).then((res) => {
+        const totalCount = res.body.data[queryName].totalCount;
+        if (totalCount > 25) {
+            var insertIndex = searchQuery.indexOf("searchString");
+            searchQuery = searchQuery.slice(0, insertIndex) + `first: ${totalCount},` + searchQuery.slice(insertIndex);
+            return cy.postAndValidate(searchQuery, queryName).then((resp) => {
+                return checkSearchResults(resp);
+            });
+        } else {
+            return checkSearchResults(res);
         }
     });
 });
@@ -875,22 +963,132 @@ Cypress.Commands.add("safeDelete", (queryName: string, mutationName: string, ite
 
 // Safely delete supplemental items created for a test
 Cypress.Commands.add("deleteSupplementalItems", (extraItems: SupplementalItemRecord[]) => {
-    Cypress.log({
-        name: "deleteSupplementalItems",
-        message: `Deleting ${extraItems.length} supplemental items created for testing`,
-        consoleProps: () => {
-            return {
-                "Number of supplemental items": extraItems.length,
-                "Supplemental Items": toFormattedString(extraItems, true)
-            };
-        },
-    });
     if (extraItems.length > 0) {
+        Cypress.log({
+            name: "deleteSupplementalItems",
+            message: `Deleting ${extraItems.length} supplemental items created for testing`,
+            consoleProps: () => {
+                return {
+                    "Number of supplemental items": extraItems.length,
+                    "Supplemental Items": toFormattedString(extraItems, true)
+                };
+            },
+        });
         for (var i = 0; i < extraItems.length; i++) {
             cy.wait(2000);
             cy.safeDelete(extraItems[i].queryName, extraItems[i].deleteName, extraItems[i].itemId, extraItems[i].itemName, getInfoName(extraItems[i].queryName));
         }
     }
+});
+
+/**
+ * Deletes child categories, and only deletes the parent afterwards. Can pass in a single child or multiple
+ * Prefers to delete by id, but attempts to prioritize parent deletion by deleting all possible children
+ * If a childId is not known (ex, test failed before mut could return the id), it will find children by childName.
+ * After finding children by name, it will delete all children whose parent's id matches parentId
+ * If parentName but no parentId, it will delete all children whose parent's name matches parentName
+ * If no parentName, it will delete all categories with a matching child name.
+ */
+Cypress.Commands.add("deleteParentAndChildCat", (children: {name: string, id: string} | {name: string, id: string}[], parentName: string, parentId: string) => {
+    const queryName = "categories";
+    const deleteName = "deleteCategory";
+    const infoName = "categoryInfo";
+    const makeInfoFilter = (name: string, parent?: boolean) => {
+        return function infoFilter(item) {
+            var infoArr = parent ? item.parent[infoName] : item[infoName];
+            var nameMatches = infoArr.filter((infoItem) => {
+                return infoItem.name === name && infoItem.languageCode === "Standard";
+            });
+            return nameMatches.length > 0;
+        };
+    };
+    const deleteCats = (items) => {
+        items.forEach((item) => {
+            cy.wait(2000);
+            cy.deleteItem(deleteName, item.id);
+        });
+    };
+    const removeChild = (childId: string, childName: string) => {
+        if (childId !== "") {
+            cy.safeDelete(queryName, deleteName, childId, childName, infoName);
+        } else if (childName !== "") {
+            const query = `{
+                ${queryName}(searchString: "${childName}", orderBy: {direction: ASC, field: NAME}) {
+                    nodes {
+                        id
+                        categoryInfo {
+                        name
+                        languageCode
+                        }
+                        parent {
+                            id
+                            categoryInfo {
+                                name
+                                languageCode
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndValidate(query, "categories").then((res) => {
+                const cats = res.body.data.categories.nodes;
+                if (cats.length > 0) {
+                    const childFilter = makeInfoFilter(childName);
+                    var childCats = cats.filter(childFilter);
+                    if (parentId !== "" && childCats.length > 0) {
+                        var child = childCats.filter((cat) => {
+                            return cat.parent && cat.parent.id === parentId;
+                        });
+                        deleteCats(child);
+                    } else if (parentName !== "" && childCats.length > 0) {
+                        const parentFilter = makeInfoFilter(parentName, true);
+                        var children = childCats.filter((cat) => {
+                            return cat.parent;
+                        }).filter(parentFilter);
+                        deleteCats(children);
+                    } else {
+                        deleteCats(childCats);
+                    }
+                }
+            });
+        }
+    };
+
+    Cypress.log({
+        name: "deleteParentAndChildCat",
+        message: `Deleting ${Array.isArray(children) ? children.length + " child categories" : `child category "${children.id !== "" ? children.id : children.name}"`}, then parent "${parentId}"`,
+        consoleProps: () => {
+            return {
+                "Child categories": toFormattedString(children, true),
+                "Parent category name": parentName,
+                "Parent category id": parentId
+            };
+        },
+    });
+
+    if (Array.isArray(children)) {
+        var idChildren = children.filter((kiddo) => {
+            return kiddo.id !== "";
+        });;
+        var nameChildren = children.filter((kiddo) => {
+            return kiddo.id === "" && kiddo.name !== "";
+        });
+        idChildren.forEach((idChild) => {
+            cy.wait(2000);
+            removeChild(idChild.id, idChild.name);
+        });
+        nameChildren.forEach((nameChild) => {
+            cy.wait(2000);
+            removeChild(nameChild.id, nameChild.name);
+        });
+    } else {
+        removeChild(children.id, children.name);
+    }
+
+    if (parentId !== "") {
+        cy.safeDelete(queryName, deleteName, parentId, parentName, infoName);
+    }
+    // We won't attempt to find a parent category by name in case it still has a child left.
 });
 
 /**

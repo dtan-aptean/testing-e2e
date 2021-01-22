@@ -23,11 +23,22 @@ describe('Mutation: deleteCategory', () => {
         infoName: infoName
     };
 
+    var childCategories = [{name: "", id: ""}] as {name: string, id: string}[];
+    var parentCatName = "";
+    var parentCatId = "";
+
     const updateIdAndName = (providedId?: string, providedName?: string) => {
         id = providedId ? providedId : "";
         queryInformation.itemId = providedId ? providedId : "";
         currentItemName = providedName ? providedName : "";
         queryInformation.itemName = providedName ? providedName : "";
+    };
+
+    const prepChildCategory = (newCat: {name: string, id: string}) => {
+        if (childCategories.length === 1 && (childCategories[0].name === "" && childCategories[0].id === "")) {
+            childCategories.pop();
+        }
+        childCategories.push(newCat);
     };
 
     beforeEach(() => {
@@ -42,6 +53,11 @@ describe('Mutation: deleteCategory', () => {
         // Delete any supplemental items we created
         cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];
+        });
+        cy.deleteParentAndChildCat(childCategories, parentCatName, parentCatId).then(() => {
+            childCategories = [{name: "", id: ""}];
+            parentCatName = "";
+            parentCatId = "";
         });
         if (id !== '') {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
@@ -105,19 +121,20 @@ describe('Mutation: deleteCategory', () => {
 
     context("Testing parent category deletion", () => {
         it("Mutation will fail if attempting to delete a parent category with children", () => {
-            const additionalFields = `parent {
-                id
-            }`;
-            const subCatOne = {parentCategoryId: id, categoryInfo: [{name: `Cypress ${mutationName} subCat 1`, languageCode: "Standard"}] };
-            cy.createAndGetId("createCategory", "category", toFormattedString(subCatOne), additionalFields).then((returnedBody) => {
-                assert.exists(returnedBody.id);
-                extraIds.push({itemId: returnedBody.id, deleteName: mutationName, itemName: subCatOne.categoryInfo[0].name, queryName: queryName});
-                expect(returnedBody.parent.id).to.be.eql(id);
-                const subCatTwo = {parentCategoryId: id, categoryInfo: [{name: `Cypress ${mutationName} subCat 2`, languageCode: "Standard"}] };
-                cy.createAndGetId("createCategory", "category", toFormattedString(subCatTwo), additionalFields).then((returnedData) => {
-                    assert.exists(returnedData.id);
-                    extraIds.push({itemId: returnedData.id, deleteName: mutationName, itemName: subCatTwo.categoryInfo[0].name, queryName: queryName});
-                    expect(returnedData.parent.id).to.be.eql(id);
+            const catOneName = `Cypress ${mutationName} subCat 1`;
+            prepChildCategory({name: catOneName, id: ""});
+            cy.createParentAndChildCat(catOneName, undefined, id).then((results) => {
+                const { parentId, childId } = results;
+                expect(parentId).to.be.eql(id);
+                parentCatName = currentItemName;
+                parentCatId = id;
+                childCategories[childCategories.length - 1].id = childId;
+                const catTwoName = `Cypress ${mutationName} subCat 2`;
+                prepChildCategory({name: catTwoName, id: ""});
+                cy.createParentAndChildCat(catTwoName, undefined, id).then((secondResults) => {
+                    const { parentId, childId } = secondResults;
+                    expect(parentId).to.be.eql(id);
+                    childCategories[childCategories.length - 1].id = childId;
                     // Now attempt to delete the parent
                     const mutation = `mutation {
                         ${mutationName}(input: { id: "${id}" }) {
@@ -130,21 +147,22 @@ describe('Mutation: deleteCategory', () => {
         });
 
         it("Mutation will successfully delete parent category if all children are deleted first", () => {
-            const additionalFields = `parent {
-                id
-            }`;
-            const subCatOne = {parentCategoryId: id, categoryInfo: [{name: `Cypress ${mutationName} subCat 3`, languageCode: "Standard"}] };
-            cy.createAndGetId("createCategory", "category", toFormattedString(subCatOne), additionalFields).then((returnedBody) => {
-                assert.exists(returnedBody.id);
-                const subCatOneId = returnedBody.id;
-                extraIds.push({itemId: subCatOneId, deleteName: mutationName, itemName: subCatOne.categoryInfo[0].name, queryName: queryName});
-                expect(returnedBody.parent.id).to.be.eql(id);
-                const subCatTwo = {parentCategoryId: id, categoryInfo: [{name: `Cypress ${mutationName} subCat 4`, languageCode: "Standard"}] };
-                cy.createAndGetId("createCategory", "category", toFormattedString(subCatTwo), additionalFields).then((returnedData) => {
-                    assert.exists(returnedData.id);
-                    const subCatTwoId = returnedData.id;
-                    extraIds.push({itemId: subCatTwoId.id, deleteName: mutationName, itemName: subCatTwo.categoryInfo[0].name, queryName: queryName});
-                    expect(returnedData.parent.id).to.be.eql(id);
+            const catOneName = `Cypress ${mutationName} subCat 3`;
+            prepChildCategory({name: catOneName, id: ""});
+            cy.createParentAndChildCat(catOneName, undefined, id).then((results) => {
+                const { parentId, childId } = results;
+                expect(parentId).to.be.eql(id);
+                parentCatName = currentItemName;
+                parentCatId = id;
+                childCategories[childCategories.length - 1].id = childId;
+                const catOneId = childId;
+                const catTwoName = `Cypress ${mutationName} subCat 4`;
+                prepChildCategory({name: catTwoName, id: ""});
+                cy.createParentAndChildCat(catTwoName, undefined, id).then((secondResults) => {
+                    const { parentId, childId } = secondResults;
+                    expect(parentId).to.be.eql(id);
+                    childCategories[childCategories.length - 1].id = childId;
+                    const catTwoId = childId;
                     // Now attempt to delete the parent
                     const mutation = `mutation {
                         ${mutationName}(input: { id: "${id}" }) {
@@ -152,39 +170,41 @@ describe('Mutation: deleteCategory', () => {
                         }
                     }`;
                     cy.postAndConfirmMutationError(mutation, mutationName).then(() => {
-                        // Delete first child
-                        const firstMutation = `mutation {
-                            ${mutationName}(input: { id: "${subCatOneId}" }) {
+                        // Delete childCatTwo (Just because it's easier to pop the most recent child from the array)
+                        const firstDeletion = `mutation {
+                            ${mutationName}(input: { id: "${catTwoId}" }) {
                                 ${standardMutationBody}
                             }
                         }`;
                         const queryInfoOne = {
                             queryName: queryName, 
-                            itemId: subCatOneId, 
-                            itemName: subCatOne.categoryInfo[0].name, 
+                            itemId: catTwoId,
+                            itemName: catTwoName, 
                             infoName: infoName
                         };
-                        cy.postAndConfirmDelete(firstMutation, mutationName, queryInfoOne).then(() => {
-                            extraIds.shift();
+                        cy.postAndConfirmDelete(firstDeletion, mutationName, queryInfoOne).then(() => {
+                            childCategories.pop();
                             // Now attempt to delete the parent again
                             cy.postAndConfirmMutationError(mutation, mutationName).then(() => {
-                                // Delete second child
+                                // Delete childCatOne
                                 const secondMutation = `mutation {
-                                    ${mutationName}(input: { id: "${subCatTwoId}" }) {
+                                    ${mutationName}(input: { id: "${catOneId}" }) {
                                         ${standardMutationBody}
                                     }
                                 }`;
                                 const queryInfoTwo = {
                                     queryName: queryName, 
-                                    itemId: subCatTwoId,
-                                    itemName: subCatTwo.categoryInfo[0].name, 
+                                    itemId: catOneId,
+                                    itemName: catOneName, 
                                     infoName: infoName
                                 };
                                 cy.postAndConfirmDelete(secondMutation, mutationName, queryInfoTwo).then(() => {
-                                    extraIds.shift();
+                                    childCategories.pop();
                                     // Now attempt to delete the parent again. Should pass this time
                                     cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
                                         updateIdAndName();
+                                        parentCatName = "";
+                                        parentCatId = "";
                                     });
                                 });
                             });

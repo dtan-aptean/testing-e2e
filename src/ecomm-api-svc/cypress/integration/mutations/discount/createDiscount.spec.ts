@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { createInfoDummy, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 16
 describe('Mutation: createDiscount', () => {
@@ -507,52 +507,13 @@ describe('Mutation: createDiscount', () => {
     });
 
     context(("Testing 'applyDiscountToSubCategories'"), () => {
-        const childCatName = `Cypress ${mutationName} childCat`;
-        var parentId = "";
-        var childId = "";
+        var parentCatName = "";
+        var childCatName = "";
+        var parentCatId = "";
+        var childCatId = "";
 
         after(() => {
-            const categoryDelete = "deleteCategory";
-            // If we know child was confirmed created, delete it.
-            // Otherwise, look for it and if we find one with the parent cat attached to it, delete it
-            if (childId !== "") {
-                cy.deleteItem(categoryDelete, childId).then(() => {
-                    childId = "";
-                });
-            } else if (childId === "" && parentId !== "") {
-                const query = `{
-                    categories(searchString: "${childCatName}", orderBy: {direction: ASC, field: NAME}) {
-                        totalCount
-                        nodes {
-                            id
-                            categoryInfo {
-                              name
-                              languageCode
-                            }
-                            parent {
-                                id
-                            }
-                        }
-                    }
-                }`;
-                cy.postAndValidate(query, "categories").then((res) => {
-                    const cats = res.body.data.categories;
-                    if (cats.totalCount > 0) {
-                        const children = cats.nodes.filter((node) => {
-                            return node.parent && node.parent.id === parentId;
-                        });
-                        if (children.length === 1) {
-                            cy.deleteItem(categoryDelete, childId);
-                        }
-                    }
-                })
-            }
-            // Delete the parent
-            if (parentId !== "") {
-                cy.deleteItem(categoryDelete, parentId).then(() => {
-                    parentId = "";
-                });
-            }
+            cy.deleteParentAndChildCat({name: childCatName, id: childCatId}, parentCatName, parentCatId);
         });
 
         it("Mutation will not accept 'applyDiscountToSubCategories' if the discountType isn't set to categories", () => {
@@ -668,90 +629,80 @@ describe('Mutation: createDiscount', () => {
         });
 
         it("Mutation will create a discount that applies to subCategories", () => {
-            const categoryOne = { categoryInfo: [{ name: `Cypress ${mutationName} parentCat`, languageCode: "Standard" }] };
-            cy.createAndGetId("createCategory", "category", toFormattedString(categoryOne)).then((returnedId: string) => {
-                parentId = returnedId;
-                categoryOne.id = returnedId;
-                categoryOne.parent = null;
-                const categories = [categoryOne];
-                const categoryIds = [returnedId];
-                const categoryTwo = {categoryInfo: [{name: childCatName, languageCode: "Standard"}], parentCategoryId: parentId };
-                cy.createAndGetId("createCategory", "category", toFormattedString(categoryTwo)).then((secondId: string) => {
-                    childId = secondId
-                    categoryTwo.id = secondId;
-                    categoryTwo.parent = categoryOne;
-                    categories.push(categoryTwo);
-                    const categoryBody = `id
-                    categoryInfo {
-                      name
-                      languageCode
-                    }`;
-                    const name = `Cypress ${mutationName} subCategories test`;
-                    const discountAmount = {
-                        amount: Cypress._.random(1, 200),
-                        currency: "USD"
-                    };
-                    const discountType = "ASSIGNED_TO_CATEGORIES";
-                    const applyDiscountToSubCategories = true;
-                    const mutation = `mutation {
-                        ${mutationName}(
-                            input: {
-                                categoryIds: ${toFormattedString(categoryIds)}
-                                applyDiscountToSubCategories: ${applyDiscountToSubCategories}
-                                discountType: ${discountType}
-                                name: "${name}"
-                                discountAmount: ${toFormattedString(discountAmount)}
+            childCatName = `Cypress ${mutationName} childCat`;
+            parentCatName = `Cypress ${mutationName} parentCat`;
+            cy.createParentAndChildCat(childCatName, parentCatName).then((results) => {
+                const { parentId, childId } = results;
+                parentCatId = parentId;
+                childCatId = childId;
+                const categories = [createInfoDummy(parentCatName, "categoryInfo", parentCatId), createInfoDummy(childCatName, "categoryInfo", childCatId)];
+                const categoryIds = [parentCatId];
+                const name = `Cypress ${mutationName} subCategories test`;
+                const discountAmount = {
+                    amount: Cypress._.random(1, 200),
+                    currency: "USD"
+                };
+                const discountType = "ASSIGNED_TO_CATEGORIES";
+                const applyDiscountToSubCategories = true;
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: {
+                            categoryIds: ${toFormattedString(categoryIds)}
+                            applyDiscountToSubCategories: ${applyDiscountToSubCategories}
+                            discountType: ${discountType}
+                            name: "${name}"
+                            discountAmount: ${toFormattedString(discountAmount)}
+                        }
+                    ) {
+                        code
+                        message
+                        error
+                        ${itemPath} {
+                            id
+                            discountType
+                            applyDiscountToSubCategories
+                            name
+                            discountAmount {
+                                amount
+                                currency
                             }
-                        ) {
-                            code
-                            message
-                            error
-                            ${itemPath} {
+                            categories {
                                 id
-                                discountType
-                                applyDiscountToSubCategories
-                                name
-                                discountAmount {
-                                    amount
-                                    currency
-                                }
-                                categories {
-                                    ${categoryBody}
-                                    parent {
-                                    ${categoryBody}
-                                    }
+                                categoryInfo {
+                                    name
+                                    languageCode
                                 }
                             }
                         }
-                    }`;
-                    cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                        id = res.body.data[mutationName][itemPath].id;
-                        const propNames = ["applyDiscountToSubCategories", "categories", "name", "discountType", "discountAmount"];
-                        const propValues = [applyDiscountToSubCategories, categories, name, discountType, discountAmount];
-                        cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                            const query = `{
-                                ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
-                                    nodes {
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    id = res.body.data[mutationName][itemPath].id;
+                    const propNames = ["applyDiscountToSubCategories", "categories", "name", "discountType", "discountAmount"];
+                    const propValues = [applyDiscountToSubCategories, categories, name, discountType, discountAmount];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                                nodes {
+                                    id
+                                    discountType
+                                    applyDiscountToSubCategories
+                                    name
+                                    discountAmount {
+                                        amount
+                                        currency
+                                    }
+                                    categories {
                                         id
-                                        discountType
-                                        applyDiscountToSubCategories
-                                        name
-                                        discountAmount {
-                                            amount
-                                            currency
-                                        }
-                                        categories {
-                                            id
-                                            categoryInfo {
-                                                name
-                                                languageCode
-                                            }
+                                        categoryInfo {
+                                            name
+                                            languageCode
                                         }
                                     }
                                 }
-                            }`;
-                            cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
-                        });
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
                     });
                 });
             });
