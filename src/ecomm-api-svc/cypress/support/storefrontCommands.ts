@@ -356,8 +356,8 @@ Cypress.Commands.add("createShippingOrderId", (
             }
         }
     }`;
-    //return cy.postGQL(query, gqlUrl).then((res) => {
-        //const orgOrders =  res.body.data.orders.nodes;
+    return cy.postGQL(query, gqlUrl).then((res) => {
+        const orgOrders =  res.body.data.orders.nodes;
         return cy.placeOrder(checkoutOptions, productOptions).then((orderNumber: string) => {
             cy.wait(1000);
             return cy.postGQL(query, gqlUrl).then((resp) => {
@@ -377,7 +377,7 @@ Cypress.Commands.add("createShippingOrderId", (
                 return cy.wrap(trueId);
             });
         });
-    //});
+    });
 });
 
 Cypress.Commands.add("findCategoryInMenu", (categoryName: string) => {
