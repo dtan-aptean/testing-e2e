@@ -426,6 +426,7 @@ Cypress.Commands.add("postAndValidate", (gqlQuery: string, queryName: string, al
         },
     });
     return cy.postGQL(gqlQuery, altUrl).then((res) => {
+        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
         cy.validateQueryRes(gqlQuery, res, queryName).then(() => {
             return res;
         });
@@ -448,6 +449,7 @@ Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string
         },
     });
     return cy.postGQL(gqlMut, altUrl).then((res) => {
+        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
         cy.validateMutationRes(gqlMut, res, mutationName, itemPath).then(() => {
             return res;
         });
@@ -468,6 +470,7 @@ Cypress.Commands.add("postAndConfirmError", (gqlBody: string, expect200?: boolea
         },
     });
     return cy.postGQL(gqlBody, altUrl).then((res) => {
+        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
         cy.confirmError(res, expect200).then(() => {
             return res;
         });
@@ -488,6 +491,7 @@ Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutati
         },
     });
     return cy.postGQL(gqlMutation, altUrl).then((res) => {
+        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
         cy.confirmMutationError(res, mutationName, itemPath).then(() => {
             return res;
         });

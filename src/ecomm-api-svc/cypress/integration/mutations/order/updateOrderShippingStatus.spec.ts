@@ -7,28 +7,6 @@ const orderStatuses = ["PENDING", "PROCESSING", "COMPLETE", "CANCELLED"];
 const shippingStatuses = ["NOT_YET_SHIPPED", "SHIPPING_NOT_REQUIRED", "PARTIALLY_SHIPPED", "SHIPPED", "DELIVERED"];
 const shippingMethods = ["Ground", "Next Day Air", "2nd Day Air"];
 
-
-const validateQuery = (query: string, res, dataPath?: string, expectMultiple?: boolean) => {
-    const path = dataPath ? dataPath : "orders";
-    expect(res.isOkStatusCode).to.be.equal(true);
-    var errorMessage = `No errors while executing query: \n${query}`;
-    if (res.body.errors) {
-        errorMessage = `One or more errors ocuured while executing query: \n${query}`;
-        res.body.errors.forEach((item) => {
-            errorMessage = errorMessage + " \n" + item.extensions.code + ". " + item.message;
-        });
-        errorMessage = errorMessage + "\n";
-    }
-    assert.notExists(res.body.errors, errorMessage);
-    assert.exists(res.body.data);
-    assert.isArray(res.body.data[path].nodes);
-    if (expectMultiple) {
-        expect(res.body.data[path].nodes.length).to.be.gt(0);
-    } else {
-        expect(res.body.data[path].nodes.length).to.be.eql(1);
-    }
-};
-
 const goHomeAndOrder = (checkoutOptions?) => {
     return cy.goToPublicHome().then(() => {
         return cy.get(".header-links").then(($el) => {
@@ -57,8 +35,7 @@ const productQtyWgtId = (orderId: string) => {
             }
         }
     }`;
-    return cy.postGQL(productQuery, originalBaseUrl).then((res) => {
-        validateQuery(productQuery, res);
+    return cy.postAndValidate(productQuery, "orders", originalBaseUrl).then((res) => {
         const orderItems = res.body.data.orders.nodes[0].items;
         expect(orderItems.length).to.be.gt(0);
         var items = [] as {quantity: number, weight: number, id: string}[];
