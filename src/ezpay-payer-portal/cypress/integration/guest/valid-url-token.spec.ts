@@ -257,9 +257,6 @@ describe('Payer Portal - Guest User', function() {
       cy.get('[data-cy=make-payment]').click();
       cy.get('[data-cy=pay-now').click();
       cy.get('[data-cy=payment-success-message]').should('be.visible');
-      cy.wait(10000);
-      cy.reload();
-      cy.get('[data-cy=payment-request-processing]').should('be.visible');
     });
   });
 });
