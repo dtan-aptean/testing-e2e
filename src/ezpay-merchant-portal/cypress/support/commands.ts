@@ -414,7 +414,7 @@ Cypress.Commands.add("makePayment", (count) => {
               .find("tr")
               .eq(1)
               .find("td")
-              .eq(4)
+              .eq(5)
               .find("button")
               .click({force: true});
             // Wait for page to load
