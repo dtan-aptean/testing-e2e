@@ -426,6 +426,7 @@ Cypress.Commands.add("postAndValidate", (gqlQuery: string, queryName: string, al
         },
     });
     return cy.postGQL(gqlQuery, altUrl).then((res) => {
+        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
         cy.validateQueryRes(gqlQuery, res, queryName).then(() => {
             return res;
         });
@@ -448,6 +449,7 @@ Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string
         },
     });
     return cy.postGQL(gqlMut, altUrl).then((res) => {
+        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
         cy.validateMutationRes(gqlMut, res, mutationName, itemPath).then(() => {
             return res;
         });
@@ -468,6 +470,7 @@ Cypress.Commands.add("postAndConfirmError", (gqlBody: string, expect200?: boolea
         },
     });
     return cy.postGQL(gqlBody, altUrl).then((res) => {
+        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
         cy.confirmError(res, expect200).then(() => {
             return res;
         });
@@ -488,6 +491,7 @@ Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutati
         },
     });
     return cy.postGQL(gqlMutation, altUrl).then((res) => {
+        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
         cy.confirmMutationError(res, mutationName, itemPath).then(() => {
             return res;
         });
@@ -564,7 +568,7 @@ Cypress.Commands.add("checkCustomData", (res, queryName: string, expectData?: bo
 });
 
 // Posts query and checks custom Data. Query body should have searchString for a specific item, and ask for id and customData
-Cypress.Commands.add("postAndCheckCustom", (query: string, queryName: string, id: string, customData) => {
+Cypress.Commands.add("postAndCheckCustom", (query: string, queryName: string, id: string, customData, altUrl?: string) => {
     Cypress.log({
         name: "postAndCheckCustom",
         message: `Item's id: ${id}, query: ${queryName}`,
@@ -577,7 +581,7 @@ Cypress.Commands.add("postAndCheckCustom", (query: string, queryName: string, id
             };
         },
     });
-    cy.postAndValidate(query, queryName).then((res) => {
+    cy.postAndValidate(query, queryName, altUrl).then((res) => {
         const nodes = res.body.data[queryName].nodes;
         if (nodes.length === 1) {
             cy.checkCustomData(res, queryName, true, customData);
