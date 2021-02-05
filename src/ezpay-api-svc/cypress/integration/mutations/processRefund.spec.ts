@@ -136,6 +136,7 @@ describe("Mutation: processRefund", () => {
     cy.generatePaymentRequestAndPay().then((res) => {
       paymentId = res.id;
       amount = res.amount;
+      refundReason = "Item not as requested";
       cy.wait(120000); // Wait for the payment to be completed...
 
       const gqlQuery = `mutation {

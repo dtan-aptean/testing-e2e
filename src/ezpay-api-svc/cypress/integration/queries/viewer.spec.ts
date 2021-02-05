@@ -50,24 +50,76 @@ describe('Query: viewer', () => {
             refundId
           }
           payerProfile {
-            billing {
-              address {
-                city
-                country
-                line1
-                line2
-                postalCode
-                region
+            paymentMethods {
+              isDefault
+              paymentMethod {
+                id
+                creditCard {
+                  cardHolder {
+                    phone {
+                      countryCode
+                      number
+                    }
+                    address {
+                      city
+                      country
+                      line1
+                      line2
+                      postalCode
+                      region
+                    }
+                    email
+                    holderName
+                  }
+                  cardBrand
+                  displayName
+                  expirationMonth
+                  expirationYear
+                  lastFour
+                  cardOnFile
+                  recurring
+                  cvvProvided
+                }
+                createdAt
+                createdBy
+                customData
+                updatedAt
+                updatedBy
+                isLongLived
+                status
+                type
+                owner {
+                  tenantId
+                  adjustmentId
+                  disputeId
+                  paymentId
+                  personId
+                  payoutId
+                  recoveryId
+                  refundId
+                  paymentRequestId
+                }
+                paymentBank {
+                  lastFour
+                  accountType
+                  accountHolder {
+                    phone {
+                      countryCode
+                      number
+                    }
+                    address {
+                      city
+                      country
+                      line1
+                      line2
+                      postalCode
+                      region
+                    }
+                    email
+                    holderName
+                  }
+                }
               }
-              firstName
-              lastName
-              email
-            }
-            paymentMethod {
-              status
-              accountType
-              accountLastFour
-              accountHolder
             }
           }
           updatedAt
