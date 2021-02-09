@@ -653,7 +653,7 @@ describe('Query: refunds', () => {
                         id
                         paymentStatus                    
                     }
-                    isPartialRefund;
+                    isPartialRefund
                 }
                 pageInfo {
                     endCursor

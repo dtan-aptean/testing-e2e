@@ -103,22 +103,22 @@ describe('Query: productSpecifications', () => {
             }`;
             cy.postAndValidate(gqlQuery, queryName);
         });
-    });
 
-    it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
-        const trueTotalQuery = `{
-            ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-                ${standardQueryBody}
-            }
-        }`;
-        cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
-            const descQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: DESC, field: NAME}) {
+        it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
+            const trueTotalQuery = `{
+                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(descQuery, queryName).then((descRes) => {
-                cy.verifyReverseOrder(queryName, ascRes, descRes);
+            cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
+                const descQuery = `{
+                    ${queryName}(${trueTotalInput}orderBy: {direction: DESC, field: NAME}) {
+                        ${standardQueryBody}
+                    }
+                }`;
+                cy.postAndValidate(descQuery, queryName).then((descRes) => {
+                    cy.verifyReverseOrder(queryName, ascRes, descRes);
+                });
             });
         });
     });
@@ -184,7 +184,27 @@ describe('Query: productSpecifications', () => {
                     const productId = results.itemIds[0];
                     const query = `{
                         ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
-                            ${standardQueryBody}
+                            edges {
+                                cursor
+                                node {
+                                    id
+                                    name
+                                }
+                            }
+                            nodes {
+                                id
+                                name
+                                options {
+                                    name
+                                }
+                            }
+                            pageInfo {
+                                endCursor
+                                hasNextPage
+                                hasPreviousPage
+                                startCursor
+                            }
+                            totalCount
                         }
                     }`;
                     cy.postAndValidate(query, queryName).then((respo) => {
@@ -267,7 +287,7 @@ describe('Query: productSpecifications', () => {
                                 ${standardQueryBody}
                             }
                         }`;
-                        cy.postAndConfirmError(query).then(() => {
+                        cy.postAndConfirmError(query, true).then(() => {
                             itemIds.forEach((id) => {
                                 cy.deleteItem(deleteName, id);
                                 cy.wait(1000);

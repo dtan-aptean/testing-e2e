@@ -260,7 +260,7 @@ describe('Query: manufacturers', () => {
                                 ${standardQueryBody}
                             }
                         }`;
-                        cy.postAndConfirmError(query).then(() => {
+                        cy.postAndConfirmError(query, true).then(() => {
                             itemIds.forEach((id) => {
                                 cy.deleteItem(deleteName, id);
                                 cy.wait(1000);
