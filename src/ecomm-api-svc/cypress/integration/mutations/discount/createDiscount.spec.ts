@@ -190,7 +190,7 @@ describe('Mutation: createDiscount', () => {
             const usePercentageForDiscount = Cypress._.random(0, 1) === 1;
             const discountPercentage = usePercentageForDiscount ? Cypress._.random(1, 20) : 0;
             const discountAmount = {
-                amount: usePercentageForDiscount ? Cypress._.random(1, 20) : 0,
+                amount: usePercentageForDiscount ? 0 : Cypress._.random(1, 20),
                 currency: "USD"
             };
             const name = "Cypress Discount Input";

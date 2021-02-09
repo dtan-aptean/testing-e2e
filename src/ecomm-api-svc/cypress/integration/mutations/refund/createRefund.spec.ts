@@ -153,7 +153,7 @@ describe('Mutation: createRefund', () => {
                         ${standardMutationBody}
                     }
                 }`;
-                cy.postAndConfirmError(secondMutation, undefined, originalBaseUrl);
+                cy.postAndConfirmMutationError(secondMutation, mutationName, itemPath, originalBaseUrl);
             });
         });
 

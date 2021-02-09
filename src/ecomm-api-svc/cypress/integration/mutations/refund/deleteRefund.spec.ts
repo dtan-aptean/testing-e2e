@@ -113,7 +113,7 @@ describe('Mutation: deleteRefund', () => {
                 }
             }`;
             cy.postAndConfirmMutationError(mutation, mutationName, undefined, originalBaseUrl).then((res) => {
-                expect(res.body.errors[0].message).to.include("Refund Not Exist For this Order");
+                expect(res.body.errors[0].message).to.include("Refund does not exist for this order");
             });
         });
 

@@ -79,7 +79,7 @@ describe('Mutation: createProductSpecification', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will fail with invalid 'options' input", () => {

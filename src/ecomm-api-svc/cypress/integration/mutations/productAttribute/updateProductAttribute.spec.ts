@@ -81,7 +81,7 @@ describe('Mutation: updateProductAttribute', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will fail with no 'Name' input", () => {
@@ -115,7 +115,7 @@ describe('Mutation: updateProductAttribute', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will fail with invalid 'Values' input", () => {

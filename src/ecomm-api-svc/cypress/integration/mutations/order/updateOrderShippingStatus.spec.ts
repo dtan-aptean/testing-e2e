@@ -500,7 +500,7 @@ describe('Mutation: updateOrderShippingStatus', () => {
                             orderStatus: ${orderStatus}
                             shippingMethodName: "${shippingMethodName}"
                             shippingStatus: ${shippingStatus}
-                            customData
+                            customData: ${toFormattedString(customData)}
                             shipmentRecords: ${toFormattedString(shipmentRecords)}
                         }) {
                             ${standardMutationBody}

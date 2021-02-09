@@ -78,7 +78,7 @@ describe('Mutation: updateVendor', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will fail with no 'languageCode' input", () => {

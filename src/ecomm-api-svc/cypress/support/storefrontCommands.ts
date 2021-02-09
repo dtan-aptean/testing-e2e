@@ -277,14 +277,13 @@ Cypress.Commands.add("createOrderGetAmount", (doNotPayOrder?: boolean) => {
             .contains("View")
             .click({force: true});
         cy.wait(500);
-        cy.location("pathname").should("include", `/Order/Edit/${orderNumber}`);
+        cy.location("pathname").should("include", `/Order/Edit/${orderNumber.split("-")[0]}`);
         return cy.contains("Order total")
             .parents(".form-group")
             .find('.form-text-row')
             .invoke("text")
             .then(($totalText) => {
-                var orderTotal = Number($totalText.slice(0).replace("$", ""));
-                orderTotal = orderTotal * 100;
+                var orderTotal = Math.floor(Number($totalText.slice(0).replace("$", "").replace(",", "")) * 100);
                 if (!doNotPayOrder) {
                     cy.get("#markorderaspaid").click({force: true});
                     cy.wait(100);
