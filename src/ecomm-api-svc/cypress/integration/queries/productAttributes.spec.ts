@@ -170,7 +170,27 @@ describe('Query: productAttributes', () => {
                     const productId = results.itemIds[0];
                     const query = `{
                         ${queryName}(productId: "${productId}", orderBy: {direction: ASC, field: NAME}) {
-                            ${standardQueryBody}
+                            edges {
+                                cursor
+                                node {
+                                    id
+                                    name
+                                }
+                            }
+                            nodes {
+                                id
+                                name
+                                values {
+                                    name
+                                }
+                            }
+                            pageInfo {
+                                endCursor
+                                hasNextPage
+                                hasPreviousPage
+                                startCursor
+                            }
+                            totalCount
                         }
                     }`;
                     cy.postAndValidate(query, queryName).then((respo) => {
@@ -252,7 +272,7 @@ describe('Query: productAttributes', () => {
                                 ${standardQueryBody}
                             }
                         }`;
-                        cy.postAndConfirmError(query).then(() => {
+                        cy.postAndConfirmError(query, true).then(() => {
                             itemIds.forEach((id) => {
                                 cy.deleteItem(deleteName, id);
                                 cy.wait(1000);

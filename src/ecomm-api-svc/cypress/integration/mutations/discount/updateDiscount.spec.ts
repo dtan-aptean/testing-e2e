@@ -282,7 +282,7 @@ describe('Mutation: updateDiscount', () => {
             const usePercentageForDiscount = Cypress._.random(0, 1) === 1;
             const discountPercentage = usePercentageForDiscount ? Cypress._.random(1, 20) : 0;
             const newDiscountAmount = {
-                amount: discountAmount.amount + Cypress._.random(1, 5),
+                amount: usePercentageForDiscount ? 0 : discountAmount.amount + Cypress._.random(1, 5),
                 currency: "USD"
             };
             const maximumDiscountAmount = {
@@ -389,7 +389,7 @@ describe('Mutation: updateDiscount', () => {
                     }
                 }
             }`;
-            cy.postAndConfirmError(mutation, mutationName, itemPath);
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation with input 'usePercentageForDiscount'=true but no 'discountPercentage' input will fail", () => {

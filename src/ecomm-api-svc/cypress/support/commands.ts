@@ -655,6 +655,20 @@ Cypress.Commands.add("createAssociatedItems", (
     inputBase,
     additionalResFields?
 ) => {
+    Cypress.log({
+        name: "createAssociatedItems",
+        message: `Creating ${numberToMake} items with ${createName}`,
+        consoleProps: () => {
+            return {
+                "Number to make": numberToMake,
+                "Create mutation": createName,
+                "Query name": queryName,
+                "Item path": itemPath,
+                "Input base": toFormattedString(inputBase, true),
+                "Additional response fields": additionalResFields ? additionalResFields : "Not provided"
+            };
+        }
+    });
     const createInput = (input, newName: string, infoName: string | null) => {
         const retInput = JSON.parse(JSON.stringify(input));
         if (infoName) {
@@ -671,9 +685,7 @@ Cypress.Commands.add("createAssociatedItems", (
     const fullResBodies = [];
     var infoName = getInfoName(inputBase);
     var nameBase = infoName ? inputBase[infoName][0].name : inputBase.name;
-    for (var i = 1; i <= numberToMake; i++) {
-        var name = numberToMake !== 1 ? `${nameBase} ${i}` : nameBase;
-        var item = createInput(inputBase, name, infoName);
+    const createAndPush = (item, name) => {
         cy.createAndGetId(createName, itemPath, toFormattedString(item), additionalResFields).then((returnedBody) => {
             const returnedId = additionalResFields ? returnedBody.id : returnedBody;
             createdIds.push(returnedId);
@@ -684,6 +696,12 @@ Cypress.Commands.add("createAssociatedItems", (
                 fullResBodies.push(returnedBody);
             }
         });
+    };
+    for (var i = 1; i <= numberToMake; i++) {
+        var name = numberToMake !== 1 ? `${nameBase} ${i}` : nameBase;
+        var item = createInput(inputBase, name, infoName);
+        cy.wait(4000);
+        createAndPush(item, name);
     };
     const resObject = {deletionIds: deletionIds, items: createdItems, itemIds: createdIds} as {deletionIds: SupplementalItemRecord[], items: any[], itemIds: string[], fullItems?: any[]};
     if (additionalResFields) {
@@ -1217,7 +1235,7 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, itemP
         message: mutationName,
         consoleProps: () => {
             return {
-                "Mutation response": res,
+                "Mutation response": res.body.data[mutationName],
                 "Mutation name": mutationName,
                 "Response item path": itemPath,
                 "Properties to check": toFormattedString(propNames, true),

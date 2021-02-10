@@ -82,7 +82,7 @@ describe('Mutation: updateProductSpecification', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will fail with no 'Name' input", () => {
@@ -97,7 +97,7 @@ describe('Mutation: updateProductSpecification', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will fail with invalid 'Name' input", () => {
@@ -116,7 +116,7 @@ describe('Mutation: updateProductSpecification', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will fail with invalid 'options' input", () => {

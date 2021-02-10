@@ -431,15 +431,17 @@ Cypress.Commands.add("validateInfoNameSearch", (res, queryName: string, infoName
     const totalCount = res.body.data[queryName].totalCount;
     const nodes = res.body.data[queryName].nodes;
     const edges = res.body.data[queryName].edges;
-    expect(totalCount).to.be.eql(nodes.length);
-    expect(totalCount).to.be.eql(edges.length);
+    if (totalCount <= 25) {
+        expect(totalCount).to.be.eql(nodes.length);
+        expect(totalCount).to.be.eql(edges.length);
+    }
     for (var i = 0; i < nodes.length; i++) {
         var infoArray = nodes[i][infoName].filter((val) => {
-            return val.name.includes(searchValue);
+            return val.name.toLowerCase().includes(searchValue.toLowerCase());
         });
         expect(infoArray.length).to.be.gte(1, `Node[${i}]`);
         var edgeInfoArray = edges[i].node[infoName].filter((val) => {
-            return  val.name.includes(searchValue);
+            return  val.name.toLowerCase().includes(searchValue.toLowerCase());
         });
         expect(edgeInfoArray.length).to.be.gte(1, `Edge[${i}]`);
         expect(infoArray.length).to.be.eql(edgeInfoArray.length);
