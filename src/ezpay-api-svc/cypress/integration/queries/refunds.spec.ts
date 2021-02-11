@@ -158,5 +158,69 @@ describe('Query: refund', () => {
         assert.exists(res.body.data);
       });
     });
+
+    it("should pass if the query cursor is working as expected", () => {
+      queryCursorRecursive({
+        endCursor: "",
+        tempResultCount: 0,
+        maxDepth: 100,
+        depth: 0,
+      });
+    });
+
   });
   
+  export function queryCursorRecursive(options: {
+    endCursor: string;
+    tempResultCount: number;
+    maxDepth: number;
+    depth: number;
+  }) {
+    const { endCursor, maxDepth, depth } = options;
+    let { tempResultCount } = options;
+    expect(depth).to.be.lessThan(maxDepth);
+  
+    let gqlQuery = `query {
+      refunds(orderBy: {direction:DESC, field:TIMESTAMP}, after: "${endCursor}"){
+        totalCount
+        pageInfo {
+          hasPreviousPage
+          hasNextPage
+          startCursor
+          endCursor
+        }
+        edges {
+          node {
+            amount
+            refundReason
+          }
+        }
+      }
+    }`;
+    cy.postGQL(gqlQuery).then((res) => {
+      const { body } = res;
+      const { data } = body;
+      const { refunds } = data;
+      const { edges } = refunds;
+      const { totalCount, pageInfo } = refunds;
+      const { hasNextPage, endCursor } = pageInfo;
+  
+      assert.exists(data);
+      assert.exists(refunds);
+      assert.exists(totalCount);
+      assert.exists(hasNextPage);
+      assert.exists(endCursor);
+  
+      tempResultCount += edges.length;
+      if (hasNextPage) {
+        queryCursorRecursive({
+          endCursor: endCursor,
+          tempResultCount: tempResultCount,
+          maxDepth: maxDepth,
+          depth: depth + 1,
+        });
+      } else {
+        assert.equal(tempResultCount, totalCount);
+      }
+    });
+  }
