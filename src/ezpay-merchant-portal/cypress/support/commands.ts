@@ -348,23 +348,22 @@ Cypress.Commands.add("makePayment", (count) => {
     return new Promise((resolve) => {
       setTimeout((x) => {
         // Log in - taken from payer portal login command
-        cy
-        .get("[data-cy=sign-in]")
-        .should("not.be.disabled")
-        .then(() => {
-          cy.get("[data-cy=sign-in]").click();
-          cy.wait(4000);
+        cy.get("body").then(($body) => {
+          if ($body.find("[data-cy=sign-in]").length) {
+            cy.get("[data-cy=sign-in]").click();
+            cy.wait(10000);
 
-          // check if clicking sign in automatically logs you in, else enter credentials on B2C page
-          cy.get("body").then(($bodye) => {
-            if ($bodye.find("input[id=logonIdentifier]").length) {
-              cy.get("input[id=logonIdentifier]").type(
-                Cypress.config("username")
-              );
-              cy.get("input[id=password]").type(Cypress.config("password"));
-              cy.get("button[id=next]").click();
-            }
-          });
+            // check if clicking sign in automatically logs you in, else enter credentials on B2C page
+            cy.get("body").then(($body) => {
+              if ($body.find("input[id=logonIdentifier]").length) {
+                cy.get("input[id=logonIdentifier]").type(
+                  Cypress.config("username")
+                );
+                cy.get("input[id=password]").type(Cypress.config("password"));
+                cy.get("button[id=next]").click();
+              }
+            });
+          }
         });
         // Wait to finish logging in, or to finish loading
         cy.wait(5000);
@@ -416,7 +415,7 @@ Cypress.Commands.add("makePayment", (count) => {
               .find("td")
               .eq(5)
               .find("button")
-              .click({force: true});
+              .click({ force: true });
             // Wait for page to load
             cy.wait(5000);
             // TODO: Set up command to deal when payer has no payment method or doesn't have default payment method, etc
@@ -502,29 +501,26 @@ Cypress.Commands.add(
  * selector - DOM selector to use.
  * invokeChildren - Whether or not to invoke children and return them vs the table body.
  */
-Cypress.Commands.add(
-    "getTableBodyAfterLoad",
-    (selector, invokeChildren) => {
-      function getTable (tableSelector) {
-        cy.get(tableSelector)
-          .invoke("children")
-          .then(($el) => {
-            if ($el && $el[0]) {
-              // Still loading.
-              const elements = $el[0].getElementsByClassName("MuiSkeleton-root");
-              if (elements && elements.length > 0) {
-                cy.wait(100);
-                getTable(tableSelector);
-              } else {
-                if (invokeChildren) {
-                  return $el;
-                } else {
-                  return $el.parent();
-                }
-              }
+Cypress.Commands.add("getTableBodyAfterLoad", (selector, invokeChildren) => {
+  function getTable(tableSelector) {
+    cy.get(tableSelector)
+      .invoke("children")
+      .then(($el) => {
+        if ($el && $el[0]) {
+          // Still loading.
+          const elements = $el[0].getElementsByClassName("MuiSkeleton-root");
+          if (elements && elements.length > 0) {
+            cy.wait(100);
+            getTable(tableSelector);
+          } else {
+            if (invokeChildren) {
+              return $el;
+            } else {
+              return $el.parent();
             }
-          });
-      };
-      return getTable(selector);
-    }
-);
+          }
+        }
+      });
+  }
+  return getTable(selector);
+});
