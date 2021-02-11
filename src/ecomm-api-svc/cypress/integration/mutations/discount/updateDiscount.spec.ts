@@ -2,7 +2,7 @@
 
 import { createInfoDummy, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 30
+// TEST COUNT: 31
 describe('Mutation: updateDiscount', () => {
     var id = '';
     var updateCount = 0;
@@ -269,6 +269,63 @@ describe('Mutation: updateDiscount', () => {
                         }`;
                         cy.postAndCheckCustom(query, queryName, id, newCustomData);
                     });
+                });
+            });
+        });
+
+        it("Mutation with requiresCouponCode = true will successfully save the couponCode", () => {
+            updateCount++;
+            const newName = `Cypress ${mutationName} CouponCode`;
+            const requiresCouponCode = true;
+            const couponCode = `cCodeReq${Cypress._.random(0, 1e5)}`;
+            const discountAmount = {
+                amount: Cypress._.random(200, 2000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${id}"
+                        name: "${newName}"
+                        requiresCouponCode: ${requiresCouponCode}
+                        couponCode: "${couponCode}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        name
+                        requiresCouponCode
+                        couponCode
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = ["name", "requiresCouponCode", "couponCode", "discountAmount"];
+                const propValues = [newName, requiresCouponCode, couponCode, discountAmount];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                requiresCouponCode
+                                couponCode
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
                 });
             });
         });

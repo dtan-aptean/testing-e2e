@@ -1235,7 +1235,7 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, itemP
         message: mutationName,
         consoleProps: () => {
             return {
-                "Mutation response": res.body.data[mutationName],
+                "Mutation response": res.body.data[mutationName][itemPath],
                 "Mutation name": mutationName,
                 "Response item path": itemPath,
                 "Properties to check": toFormattedString(propNames, true),
