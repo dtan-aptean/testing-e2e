@@ -5,7 +5,7 @@
 // Turns an array or object into a string to use as gql input or with a custom command's consoleProps logging functionality
 export const toFormattedString = (item, isMessage?: boolean, indentation?: number): string => {
     // Names of fields that are enum types and should not be wrapped in quotations.
-    const enumTypes = ["discountType", "discountLimitationType", "manageInventoryMethod", "erpBackOrderMode"];
+    const enumTypes = ["discountType", "discountLimitationType", "manageInventoryMethod", "backOrderMode"];
     function addTabs (depthLevel: number) {
         var indent = '  ';
         for (var i = 1; i < depthLevel; i++) {
