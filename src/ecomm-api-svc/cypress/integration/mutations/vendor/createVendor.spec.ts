@@ -1,8 +1,8 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../../support/commands";
+import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 9
+// TEST COUNT: 12
 describe('Mutation: createVendor', () => {
     var id = '';
     const mutationName = 'createVendor';
@@ -21,8 +21,16 @@ describe('Mutation: createVendor', () => {
             }
         }
     `;
+    
+    var originalBaseUrl = Cypress.config("baseUrl");
+    confirmStorefrontEnvValues();
 
     afterEach(() => {
+        if (originalBaseUrl !== "" && Cypress.config("baseUrl") !== originalBaseUrl) {
+            Cypress.log({message: "Switching the baseUrl back to the original"});
+            Cypress.config("baseUrl", originalBaseUrl);
+            cy.wait(1000);
+        }
         if (id !== "") {
             cy.deleteItem("deleteVendor", id).then(() => {
                 id = "";
@@ -162,7 +170,7 @@ describe('Mutation: createVendor', () => {
             const active = Cypress._.random(0, 1) === 1;
             const address = {
                 city: "Alpharetta",
-                country: "United States",
+                country: "US",
                 line1: "4325 Alexander Dr",
                 line2: "#100",
                 postalCode: "30022",
@@ -265,6 +273,172 @@ describe('Mutation: createVendor', () => {
                         }
                     }`;
                     cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+    });
+
+    context("Testing country codes on address", { baseUrl: `${Cypress.env("storefrontUrl")}` }, () => {
+        var countryNames = [] as string[];
+        var countryCodes = [] as string[];
+        var countryRegions = [] as string[][];
+        var countryCount = 0;
+        before(() => {
+            cy.getCountriesAndRegions().then((countryContents) => {
+                const { countries, codes, regions } = countryContents;
+                countryNames = countryNames.concat(countries);
+                countryCodes = countryCodes.concat(codes);
+                countryRegions = countryRegions.concat(regions);
+                countryCount = countryNames.length;
+            });
+        });
+
+        it("Mutation will fail when using the full name of a country instead of the ISO code", () => {
+            const countryIndex = Cypress._.random(0, countryCount - 1);
+            const regionArray = countryRegions[countryIndex];
+            const region = regionArray[Cypress._.random(0, regionArray.length - 1)];
+            const address = {
+                country: countryNames[countryIndex],
+                region: region
+            };
+            const info = [{name: `Cypress ${mutationName} country name`, languageCode: "Standard"}];
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        address: ${toFormattedString(address)}
+                        ${infoName}: ${toFormattedString(info)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        address {
+                            city
+                            country
+                            line1
+                            line2
+                            postalCode
+                            region
+                        }
+                        ${infoName} {
+                            name
+                            languageCode
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
+                const errorMessage = res.body.errors[0].message;
+                expect(errorMessage).to.contain("Country Or State Not Found");
+            });
+        });
+
+        it("Mutation will fail when using an invalid ISO code as the address' country field", () => {
+            const address = {
+                city: "Alpharetta",
+                country: "AP",
+                line1: "4325 Alexander Dr",
+                line2: "#100",
+                postalCode: "30022",
+                region: "Georgia"
+            };
+            const info = [{name: `Cypress ${mutationName} invalid country ISO`, languageCode: "Standard"}];
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        address: ${toFormattedString(address)}
+                        ${infoName}: ${toFormattedString(info)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        address {
+                            city
+                            country
+                            line1
+                            line2
+                            postalCode
+                            region
+                        }
+                        ${infoName} {
+                            name
+                            languageCode
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
+                const errorMessage = res.body.errors[0].message;
+                expect(errorMessage).to.contain("Country Or State Not Found");
+            });
+        });
+
+        it("Mutation will succeed when using a valid ISO code as the address' country", () => {
+            const countryIndex = Cypress._.random(0, countryCount - 1);
+            const regionArray = countryRegions[countryIndex];
+            const region = regionArray[Cypress._.random(0, regionArray.length - 1)];
+            const address = {
+                country: countryCodes[countryIndex],
+                region: region
+            };
+            const info = [{name: `Cypress ${mutationName} valid country ISO`, languageCode: "Standard"}];
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        address: ${toFormattedString(address)}
+                        ${infoName}: ${toFormattedString(info)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        address {
+                            city
+                            country
+                            line1
+                            line2
+                            postalCode
+                            region
+                        }
+                        ${infoName} {
+                            name
+                            languageCode
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = [infoName, "address"];
+                const propValues = [info, address];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                address {
+                                    city
+                                    country
+                                    line1
+                                    line2
+                                    postalCode
+                                    region
+                                }
+                                ${infoName} {
+                                    name
+                                    languageCode
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl);
                 });
             });
         });
