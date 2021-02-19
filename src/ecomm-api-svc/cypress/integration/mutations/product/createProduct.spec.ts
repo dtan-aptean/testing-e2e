@@ -595,7 +595,6 @@ describe('Mutation: createProduct', () => {
                             inventoryInformation {
                                 gtin
                                 backOrderMode
-                                manageInventoryMethod
                                 displayStockAvailability
                                 notifyAdminForQuantityBelow
                                 notReturnable
@@ -666,7 +665,6 @@ describe('Mutation: createProduct', () => {
                                     inventoryInformation {
                                         gtin
                                         backOrderMode
-                                        manageInventoryMethod
                                         displayStockAvailability
                                         notifyAdminForQuantityBelow
                                         notReturnable
