@@ -1,5 +1,4 @@
 /// <reference types="cypress" />
-
 // TEST COUNT: 43
 describe('Query: orders', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
