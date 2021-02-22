@@ -945,7 +945,7 @@ Cypress.Commands.add("postAndConfirmDelete", (
 });
 
 // Flat delete the the item, without querying for it afterwards
-Cypress.Commands.add("deleteItem", (mutationName: string, id: string) => {
+Cypress.Commands.add("deleteItem", (mutationName: string, id: string, altUrl?: string) => {
     Cypress.log({
         name: "deleteItem",
         message: `delete ${mutationName.replace("delete", "")} with id "${id}"`,
@@ -963,7 +963,7 @@ Cypress.Commands.add("deleteItem", (mutationName: string, id: string) => {
             error
         }
     }`;
-    return cy.postMutAndValidate(mutation, mutationName, "deleteMutation");
+    return cy.postMutAndValidate(mutation, mutationName, "deleteMutation", altUrl);
 });
 
 // Queries for an item that may have already been deleted, then deletes it if found. To use in afterEach/after hooks for clean up
