@@ -1,8 +1,6 @@
 /// <reference types="cypress" />
 
-import { confirmStorefrontEnvValues } from "../../support/commands";
-
-// TEST COUNT: 37
+// TEST COUNT: 36
 describe('Query: vendors', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "vendors";
@@ -39,9 +37,6 @@ describe('Query: vendors', () => {
     const infoName = "vendorInfo";
 
     var trueTotalInput = "";
-
-    var originalBaseUrl = Cypress.config("baseUrl");
-    confirmStorefrontEnvValues();
 
     before(() => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
@@ -680,53 +675,6 @@ describe('Query: vendors', () => {
                             }
                         }
                     });
-                }
-            });
-        });
-    });
-
-    context("Testing response of country field", { baseUrl: `${Cypress.env("storefrontUrl")}` }, () => {
-        var countryCodes = [] as string[];
-
-        before(() => {
-            cy.wait(10000);
-            cy.getCountries().then((countryContents) => {
-                const { codes } = countryContents;
-                countryCodes = countryCodes.concat(codes);
-            });
-        });
-
-        it("Query that requests address.country field will receive 2-digit ISO codes", () => {
-            const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-                    totalCount
-                    nodes {
-                        id
-                        address {
-                            city
-                            country
-                            line1
-                            line2
-                            postalCode
-                            region
-                        }
-                    }
-                }
-            }`;
-            cy.postAndValidate(query, queryName, originalBaseUrl).then((res) => {
-                const nodes = res.body.data[queryName].nodes;
-                const validNodes = nodes.filter((node) => {
-                    return node.address !== null;
-                });
-                if (validNodes.length > 0) {
-                    validNodes.forEach((node, index) => {
-                        const country = node.address.country;
-                        assert.isString(country, `Vendor ${index + 1}'s address.country is a string`);
-                        expect(country).to.have.length(2, `Vendor ${index + 1}'s address.country is a 2-digit value`);
-                        expect(countryCodes).to.include(country, `Vendor ${index + 1}'s address.country is a valid country code`);
-                    });
-                } else {
-                    Cypress.log({message: "Test inconclusive. No vendors with a non-null address"});
                 }
             });
         });
