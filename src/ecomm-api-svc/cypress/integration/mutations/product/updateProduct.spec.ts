@@ -101,7 +101,7 @@ describe('Mutation: updateProduct', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will fail with no 'Name' input", () => {
@@ -622,8 +622,6 @@ describe('Mutation: updateProduct', () => {
                 markAsNew: Cypress._.random(0, 1) === 1,
                 gtin: "abc123-cypress",
                 backOrderMode: backOrderModeValues[Cypress._.random(0, backOrderModeValues.length - 1)],
-                availableForPreOrder: priceInformation.availableForPreOrder,
-                preOrderAvailabilityStartDate: priceInformation.preOrderAvailabilityStartDate,
                 minimumStockQuantity: Cypress._.random(5, 20),
                 allowBackInStockNotification: Cypress._.random(0, 1) === 1,
             };
@@ -637,11 +635,7 @@ describe('Mutation: updateProduct', () => {
                         shippingInformation: ${toFormattedString(shippingInformation)}
                         inventoryInformation: ${toFormattedString(inventoryInfo)}
                         cartInformation : ${toFormattedString(cartInfo)}
-                        price: ${toFormattedString(priceInformation.price)}
-                        isTaxExempt: ${priceInformation.isTaxExempt}
-                        availableForPreOrder: ${priceInformation.availableForPreOrder}
                         published: ${published}
-                        preOrderAvailabilityStartDate: ${priceInformation.preOrderAvailabilityStartDate ? `"${priceInformation.preOrderAvailabilityStartDate}"`: null}
                         seoData: ${toFormattedString(seoData)}
                     }
                 ) {
@@ -675,8 +669,6 @@ describe('Mutation: updateProduct', () => {
                             availableStartDate
                             availableEndDate
                             markAsNew
-                            availableForPreorder
-                            preorderAvailabilityStartDate
                             minimumStockQuantity
                             allowBackInStockNotification
                         }
@@ -692,7 +684,7 @@ describe('Mutation: updateProduct', () => {
                             }
                             isTaxExempt
                             availableForPreorder
-                            preorderAvailabilityStartDate
+                            preOrderAvailabilityStartDate
                         }
                         published
                         seoData {
@@ -744,8 +736,6 @@ describe('Mutation: updateProduct', () => {
                                     availableStartDate
                                     availableEndDate
                                     markAsNew
-                                    availableForPreorder
-                                    preorderAvailabilityStartDate
                                     minimumStockQuantity
                                     allowBackInStockNotification
                                 }
@@ -761,7 +751,7 @@ describe('Mutation: updateProduct', () => {
                                     }
                                     isTaxExempt
                                     availableForPreorder
-                                    preorderAvailabilityStartDate
+                                    preOrderAvailabilityStartDate
                                 }
                                 published
                                 seoData {
@@ -863,11 +853,12 @@ describe('Mutation: updateProduct', () => {
                 updateCount++;
                 const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard"}];
                 const dummyPriceInfo = {taxCategory: items[0]};
+                const inputPriceInfo = { taxCategoryId: itemIds[0] };
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
-                            taxCategoryId: "${itemIds[0]}"
+                            priceInformation: ${toFormattedString(inputPriceInfo)}
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
