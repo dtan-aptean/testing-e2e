@@ -395,3 +395,193 @@ Cypress.Commands.add("findCategoryInMenu", (categoryName: string) => {
         getVisibleMenu().get('li').should('include.text', categoryName);
     });
 });
+
+const getTableRows = (tableId: string, filterFunction) => {
+    return cy.get(tableId)
+        .find("tbody")
+        .find("tr")
+        .then(($rows) => {
+            const targetRows = $rows.filter(filterFunction);
+            return targetRows;
+        });
+};
+
+Cypress.Commands.add("getCountries", () => {
+    Cypress.log({
+        name: "getCountries"
+    });
+    const pullFromTable = () => {
+        const countryFilter = (index, item) => {
+            return item.cells[10].innerHTML.includes("true-icon") && item.cells[8].innerText !== "0";
+        };
+        return getTableRows("#countries-grid", countryFilter).then((targetRows) => {
+            if (targetRows.length > 0) {
+                const names = [] as string[];
+                const isoCodes = [] as string[];
+                targetRows.each((index, el) => {
+                    names.push(el.cells[1].innerText);
+                    isoCodes.push(el.cells[4].innerText);
+                });
+                expect(names.length).to.eql(isoCodes.length, "Should be same number of items");
+                return cy.wrap({ countries: names, codes: isoCodes });
+            }
+        });
+    };
+    const pageThrough = (total: number, names: string[], isoCodes: string[]) => {
+        return pullFromTable().then((contents) => {
+            const { countries, codes } = contents;
+            if (countries && codes) {     
+                names = names.concat(countries);
+                isoCodes = isoCodes.concat(codes);
+            }
+            return cy.get(".pagination").find('.active').then(($item) => {
+                var currentPage = Number($item[0].innerText);
+                if (currentPage < total) {
+                    cy.get("#countries-grid_next").find("a").click({ force: true });
+                    cy.wait(2000);
+                    pageThrough(total, names, isoCodes);
+                } else {
+                    expect(names.length).to.eql(isoCodes.length, "Should be same number of items");
+                    return cy.wrap({ countries: names, codes: isoCodes});
+                }
+            });
+        });
+    };
+    cy.visit("/", {timeout: 120000});
+    cy.wait(2000);
+    return cy.storefrontLogin().then(() => {
+        // Admin site has undefined Globalize, causes Cypress to autofail tests
+        cy.on("uncaught:exception", (err, runnable) => {
+            return false;
+        });
+        cy.visit('/Admin/Country/List');
+        return cy.get(".pagination").invoke('children').then(($li) => {
+            if ($li.length === 2) {
+                // No items in table, nothing to edit
+                expect($li.length).to.be.gt(0, "There needs to be items in the table");
+            } else if ($li.length === 3) {
+                // Table has one page
+                return pullFromTable();
+            } else if ($li.length > 3) {
+                // Table has multiple pages to search.
+                return pageThrough(Number($li[$li.length - 2].innerText), [], []);
+            }
+        });
+    });
+});
+
+Cypress.Commands.add("getRegions", (countryNames: string[]) => {
+    Cypress.log({
+        name: "getRegions"
+    });
+    const runFilter = (name: string) => {
+        const filterFn = (index, item) => {
+            return item.cells[1].innerText === name;
+        };
+        return getTableRows("#countries-grid", filterFn).then((targetRows) => {
+            if (targetRows.length > 0) {
+                return targetRows;
+            } else {
+                return null;
+            }
+        });
+    };
+    const pullFromPage = () => {
+        const filterFn = (index, item) => {
+            return item.cells[2].innerHTML.includes("true-icon");
+        };
+        return getTableRows("#states-grid", filterFn).then((targetRows) => {
+            if (targetRows.length > 0) {
+                const names = [] as string[];
+                targetRows.each((index, el) => {
+                    names.push(el.cells[0].innerText);
+                });
+                return cy.wrap(names);
+            }
+        });
+    }
+    const pullStates = (totalPages: number, regionNames) => {
+        return pullFromPage().then((regions) => {
+            if (regions) {
+                regionNames = regionNames.concat(regions);
+            }
+            return cy.get("#states-grid_paginate").find(".pagination").find('.active').then(($item) => {
+                var currentPage = Number($item[0].innerText);
+                if (currentPage < totalPages) {
+                    cy.get("#states-grid_next").find("a").click();
+                    cy.wait(2000);
+                    pullStates(totalPages, regionNames);
+                } else {
+                    return cy.wrap(regionNames);
+                }
+            });
+        });
+    };
+    const findCountry = (total: number, countryIndex: number, regions) => {
+        const returnOrRestart = () => {
+            if (countryIndex === countryNames.length - 1) {
+                return cy.wrap(regions);
+            } else {
+                const newIndex = countryIndex + 1;
+                cy.visit('/Admin/Country/List');
+                cy.wait(2000);
+                findCountry(total, newIndex, regions);
+            }
+        };
+        return runFilter(countryNames[countryIndex]).then((row) => {
+            if (row) {
+                // If we encounter the country, we open it and retrieve the regions
+                cy.wrap(row).find("td").contains("Edit").click({ force: true });
+                cy.wait(1000);
+                return cy.get("#states-grid_paginate").find(".pagination").invoke('children').then(($li) => {
+                    return pullStates(Number($li[$li.length - 2].innerText), []).then((regionNames) => {
+                        regions.push(regionNames);
+                        // Call function to either return the collected regions or start looking for the next country
+                        returnOrRestart();
+                    });
+                });
+            } else {
+                // If country is not on this page, go to the next page and look again
+                return cy.get(".pagination").find('.active').then(($item) => {
+                    var currentPage = Number($item[0].innerText);
+                    if (currentPage < total) {
+                        cy.get("#countries-grid_next").find("a").click();
+                        cy.wait(2000);
+                        findCountry(total, countryIndex, regions);
+                    } else {
+                        // Call function to either return the collected regions or start looking for the next country
+                        returnOrRestart();
+                    }
+                });
+            }
+        });
+    };
+    cy.visit("/");
+    cy.wait(2000);
+    return cy.storefrontLogin().then(() => {
+        // Admin site has undefined Globalize, causes Cypress to autofail tests
+        cy.on("uncaught:exception", (err, runnable) => {
+            return false;
+        });
+        cy.visit('/Admin/Country/List');
+        return cy.get(".pagination").invoke('children').then(($li) => {
+            if ($li.length === 2) {
+                // No items in table, nothing to edit
+                expect($li.length).to.be.gt(0, "There needs to be items in the table");
+            } else {
+                return findCountry(Number($li[$li.length - 2].innerText), 0, []);
+            }
+        });
+    });
+});
+
+Cypress.Commands.add("getCountriesAndRegions", () => {
+    Cypress.log({
+        name: "getCountriesAndRegions"
+    });
+    return cy.getCountries().then((countryContents) => {
+        return cy.getRegions(countryContents.countries).then((regionsList) => {
+            cy.wrap({countries: countryContents.countries, codes: countryContents.codes, regions: regionsList});
+        });
+    });
+});

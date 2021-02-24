@@ -21,7 +21,7 @@ describe('Mutation: createVendor', () => {
             }
         }
     `;
-
+    
     afterEach(() => {
         if (id !== "") {
             cy.deleteItem("deleteVendor", id).then(() => {
@@ -162,7 +162,7 @@ describe('Mutation: createVendor', () => {
             const active = Cypress._.random(0, 1) === 1;
             const address = {
                 city: "Alpharetta",
-                country: "United States",
+                country: "US",
                 line1: "4325 Alexander Dr",
                 line2: "#100",
                 postalCode: "30022",
