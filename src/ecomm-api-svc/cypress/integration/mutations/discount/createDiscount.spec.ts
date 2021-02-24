@@ -2,7 +2,7 @@
 
 import { createInfoDummy, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 19
+// TEST COUNT: 28
 describe('Mutation: createDiscount', () => {
     var id = '';
     var extraIds = [] as SupplementalItemRecord[];
@@ -183,6 +183,62 @@ describe('Mutation: createDiscount', () => {
             });
         });
 
+        it("Mutation with requiresCouponCode = true will successfully save the couponCode", () => {
+            const name = `Cypress ${mutationName} CouponCode`;
+            const requiresCouponCode = true;
+            const couponCode = `cCodeReq${Cypress._.random(0, 1e5)}`;
+            const discountAmount = {
+                amount: Cypress._.random(200, 2000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        name: "${name}"
+                        requiresCouponCode: ${requiresCouponCode}
+                        couponCode: "${couponCode}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        name
+                        requiresCouponCode
+                        couponCode
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = ["name", "requiresCouponCode", "couponCode", "discountAmount"];
+                const propValues = [name, requiresCouponCode, couponCode, discountAmount];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                requiresCouponCode
+                                couponCode
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+
         it("Mutation creates item that has all included input", () => {
             const isCumulative = Cypress._.random(0, 1) === 1;
             const requiresCouponCode = Cypress._.random(0, 1) === 1;
@@ -264,7 +320,7 @@ describe('Mutation: createDiscount', () => {
     });
 
     context("Testing 'usePercentageForDiscount'", () => {
-        it("Mutation with input 'usePercentageForDiscount'=true but no 'maximumDiscountAmount' input will fail", () => {
+        it("Mutation with input 'usePercentageForDiscount' = true but no 'maximumDiscountAmount' input will fail", () => {
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -299,7 +355,7 @@ describe('Mutation: createDiscount', () => {
             cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
-        it("Mutation with input 'usePercentageForDiscount'=true but no 'discountPercentage' input will fail", () => {
+        it("Mutation with input 'usePercentageForDiscount' = true but no 'discountPercentage' input will fail", () => {
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -335,6 +391,153 @@ describe('Mutation: createDiscount', () => {
                 }
             }`;
             cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+        });
+
+        it("Mutation with input 'usePercentageForDiscount' = true will save the correct values", () => {
+            const usePercentageForDiscount = true;
+            const discountPercentage = Cypress._.random(100, 800);
+            const discountAmount = {
+                amount: 0,
+                currency: "USD"
+            };
+            const inputDiscountAmount = {
+                amount: Cypress._.random(1000, 10000),
+                currency: "USD"
+            };
+            const maximumDiscountAmount = {
+                amount: Cypress._.random(100, 2000),
+                currency: "USD"
+            };
+            const name = `Cypress ${mutationName} Discount Percent`;
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        usePercentageForDiscount: ${usePercentageForDiscount}
+                        discountPercentage: ${discountPercentage}
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(inputDiscountAmount)}
+                        maximumDiscountAmount: ${toFormattedString(maximumDiscountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        name
+                        usePercentageForDiscount
+                        discountPercentage
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                        maximumDiscountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = ["usePercentageForDiscount", "discountPercentage", "maximumDiscountAmount", "discountAmount", "name"];
+                const propValues = [usePercentageForDiscount, discountPercentage, maximumDiscountAmount, discountAmount, name];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                usePercentageForDiscount
+                                discountPercentage
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                                maximumDiscountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation with input 'usePercentageForDiscount'= false will save the correct values", () => {
+            const usePercentageForDiscount = false;
+            const discountPercentage = 0;
+            const inputDiscountPercentage = Cypress._.random(100, 800);
+            const discountAmount = {
+                amount: Cypress._.random(1000, 10000),
+                currency: "USD"
+            };
+            const inputMaximumDiscountAmount = {
+                amount: Cypress._.random(100, 2000),
+                currency: "USD"
+            };
+            const maximumDiscountAmount = {
+                amount: 0,
+                currency: "USD"
+            };
+            const name = `Cypress ${mutationName} Discount non-Percent`;
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        usePercentageForDiscount: ${usePercentageForDiscount}
+                        discountPercentage: ${inputDiscountPercentage}
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                        maximumDiscountAmount: ${toFormattedString(inputMaximumDiscountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        name
+                        usePercentageForDiscount
+                        discountPercentage
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                        maximumDiscountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = ["usePercentageForDiscount", "discountAmount", "discountPercentage", "maximumDiscountAmount", "name"];
+                const propValues = [usePercentageForDiscount, discountAmount, discountPercentage, maximumDiscountAmount, name];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                usePercentageForDiscount
+                                discountPercentage
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                                maximumDiscountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
         });
     });
 
@@ -506,7 +709,7 @@ describe('Mutation: createDiscount', () => {
         });
     });
 
-    context(("Testing 'applyDiscountToSubCategories'"), () => {
+    context("Testing 'applyDiscountToSubCategories'", () => {
         var parentCatName = "";
         var childCatName = "";
         var parentCatId = "";
@@ -704,6 +907,344 @@ describe('Mutation: createDiscount', () => {
                         }`;
                         cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
                     });
+                });
+            });
+        });
+    });
+
+    context("Testing 'maximumDiscountQuantity'", () => {
+        it("Mutation will not save maximumDiscountQuantity when using a discountType input of 'ASSIGNED_TO_ORDER_TOTAL'", () => {
+            const name = `Cypress ${mutationName} mDQ OrderTotal`;
+            const maximumDiscountQuantity = Cypress._.random(10, 50);
+            const discountType = "ASSIGNED_TO_ORDER_TOTAL";
+            const discountAmount = {
+                amount: Cypress._.random(1000, 10000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        name: "${name}"
+                        maximumDiscountQuantity: ${maximumDiscountQuantity}
+                        discountType: ${discountType}
+                        discountAmount: ${toFormattedString(discountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        name
+                        maximumDiscountQuantity
+                        discountType
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = ["name", "discountAmount", "discountType", "maximumDiscountQuantity"];
+                const propValues = [name, discountAmount, discountType, 0];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                maximumDiscountQuantity
+                                discountType
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will not save maximumDiscountQuantity when using a discountType input of 'ASSIGNED_TO_SHIPPING'", () => {
+            const name = `Cypress ${mutationName} mDQ Shipping`;
+            const maximumDiscountQuantity = Cypress._.random(10, 50);
+            const discountType = "ASSIGNED_TO_SHIPPING";
+            const discountAmount = {
+                amount: Cypress._.random(1000, 10000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        name: "${name}"
+                        maximumDiscountQuantity: ${maximumDiscountQuantity}
+                        discountType: ${discountType}
+                        discountAmount: ${toFormattedString(discountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        name
+                        maximumDiscountQuantity
+                        discountType
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = ["name", "discountAmount", "discountType", "maximumDiscountQuantity"];
+                const propValues = [name, discountAmount, discountType, 0];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                maximumDiscountQuantity
+                                discountType
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will not save maximumDiscountQuantity when using a discountType input of 'ASSIGNED_TO_ORDER_SUBTOTAL'", () => {
+            const name = `Cypress ${mutationName} mDQ OrderSubtotal`;
+            const maximumDiscountQuantity = Cypress._.random(10, 50);
+            const discountType = "ASSIGNED_TO_ORDER_SUBTOTAL";
+            const discountAmount = {
+                amount: Cypress._.random(1000, 10000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        name: "${name}"
+                        maximumDiscountQuantity: ${maximumDiscountQuantity}
+                        discountType: ${discountType}
+                        discountAmount: ${toFormattedString(discountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        name
+                        maximumDiscountQuantity
+                        discountType
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = ["name", "discountAmount", "discountType", "maximumDiscountQuantity"];
+                const propValues = [name, discountAmount, discountType, 0];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                maximumDiscountQuantity
+                                discountType
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will successfully save the maximumDiscountQuantity with a discountType input of 'ASSIGNED_TO_CATEGORIES'", () => {
+            const name = `Cypress ${mutationName} mDQ Categories`;
+            const maximumDiscountQuantity = Cypress._.random(10, 50);
+            const discountType = "ASSIGNED_TO_CATEGORIES";
+            const discountAmount = {
+                amount: Cypress._.random(1000, 10000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        name: "${name}"
+                        maximumDiscountQuantity: ${maximumDiscountQuantity}
+                        discountType: ${discountType}
+                        discountAmount: ${toFormattedString(discountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        name
+                        maximumDiscountQuantity
+                        discountType
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = ["name", "discountAmount", "discountType", "maximumDiscountQuantity"];
+                const propValues = [name, discountAmount, discountType, maximumDiscountQuantity];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                maximumDiscountQuantity
+                                discountType
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will successfully save the maximumDiscountQuantity with a discountType input of 'ASSIGNED_TO_PRODUCTS'", () => {
+            const name = `Cypress ${mutationName} mDQ Products`;
+            const maximumDiscountQuantity = Cypress._.random(10, 50);
+            const discountType = "ASSIGNED_TO_PRODUCTS";
+            const discountAmount = {
+                amount: Cypress._.random(1000, 10000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        name: "${name}"
+                        maximumDiscountQuantity: ${maximumDiscountQuantity}
+                        discountType: ${discountType}
+                        discountAmount: ${toFormattedString(discountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        name
+                        maximumDiscountQuantity
+                        discountType
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = ["name", "discountAmount", "discountType", "maximumDiscountQuantity"];
+                const propValues = [name, discountAmount, discountType, maximumDiscountQuantity];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                maximumDiscountQuantity
+                                discountType
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will successfully save the maximumDiscountQuantity with a discountType input of 'ASSIGNED_TO_MANUFACTURERS'", () => {
+            const name = `Cypress ${mutationName} mDQ Manufacturers`;
+            const maximumDiscountQuantity = Cypress._.random(10, 50);
+            const discountType = "ASSIGNED_TO_MANUFACTURERS";
+            const discountAmount = {
+                amount: Cypress._.random(1000, 10000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        name: "${name}"
+                        maximumDiscountQuantity: ${maximumDiscountQuantity}
+                        discountType: ${discountType}
+                        discountAmount: ${toFormattedString(discountAmount)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        name
+                        maximumDiscountQuantity
+                        discountType
+                        discountAmount {
+                            amount
+                            currency
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = ["name", "discountAmount", "discountType", "maximumDiscountQuantity"];
+                const propValues = [name, discountAmount, discountType, maximumDiscountQuantity];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                maximumDiscountQuantity
+                                discountType
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
                 });
             });
         });
