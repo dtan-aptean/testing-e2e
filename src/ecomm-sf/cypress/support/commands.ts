@@ -95,7 +95,7 @@ Cypress.Commands.add("login", () => {
   });
   cy.get(".header-links").then(($el) => {
     if (!$el[0].innerText.includes('LOG OUT')) {
-      cy.get(".header-links").find(".ico-login").click();
+      cy.get(".header-links").find(".ico-login").click({force: true});
       cy.wait(200);
       cy.get(".email").type(Cypress.config("username"));
       cy.get(".password").type(Cypress.config("password"));
@@ -265,11 +265,13 @@ Cypress.Commands.add("goToPublic", () => {
 // Checks to make sure English is the language. Used for navigating the sidebar in Admin.
 Cypress.Commands.add("correctLanguage", () => {
   Cypress.log({ name: "correctLanguage" });
-  cy.get("#customerlanguage").then(($select) => {
-    if ($select[0].selectedOptions[0].text !== "English") {
-      cy.switchLanguage("English");
-    }
-  })
+  if (Cypress.$("#customerlanguage").length !== 0) {
+    cy.get("#customerlanguage").then(($select) => {
+      if ($select[0].selectedOptions[0].text !== "English") {
+        cy.switchLanguage("English");
+      }
+    });
+  }
 });
 
 // Goes to the languages page under configurations in admin store
@@ -589,14 +591,14 @@ Cypress.Commands.add("deleteCampaign", (campaignName: string, shouldExist?: bool
 });
 
 // Send a test email for a specific campaign. Assumes you're on the campaign list page
-Cypress.Commands.add("sendCampaignTest", (campaignName, email?) => {
+Cypress.Commands.add("sendCampaignTest", (campaignName, email) => {
   Cypress.log({
     name: "sendCampaignTest",
     message: campaignName,
     consoleProps: () => {
       return {
         "Campaign name": campaignName,
-        "Email Used": email? email : Cypress.config("campaignReceiver")
+        "Email Used": email
       };
     },
   });
@@ -608,7 +610,7 @@ Cypress.Commands.add("sendCampaignTest", (campaignName, email?) => {
     if (!loc.includes("Campaign/Edit")) {
       cy.editCampaign(campaignName, true);
     }
-    cy.get("#TestEmail").type(email? email : Cypress.config("campaignReceiver"));
+    cy.get("#TestEmail").type(email);
     cy.get("button[name=send-test-email").click();
     cy.wait(500);
     cy.get(".alert").should(
