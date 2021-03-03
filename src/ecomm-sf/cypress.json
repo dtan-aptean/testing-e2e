@@ -5,7 +5,12 @@
   "defaultCategory": "Cypress Trees",
   "defaultCategoryUrl": "cypress",
   "defaultLanguage": "English",
-  "env": {},
+  "env": {
+    "apiUrl": "#{ECOMM_API_URL}#",
+    "x-aptean-apim": "#{X_APTEAN_APIM}#", 
+    "x-aptean-tenant": "#{X_ECOMM_TENANT}#",
+    "x-aptean-tenant-secret": "#{X_ECOMM_TENANT_SECRET}#"
+  },
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
   "supportFile": "cypress/support/index.ts"

@@ -93,6 +93,9 @@ Cypress.Commands.add("login", () => {
   Cypress.log({
     name: "login",
   });
+  cy.on("uncaught:exception", (err, runnable) => {
+    return false;
+  });
   cy.get(".header-links").then(($el) => {
     if (!$el[0].innerText.includes('LOG OUT')) {
       cy.get(".header-links").find(".ico-login").click({force: true});
