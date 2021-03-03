@@ -31,7 +31,7 @@ describe('Merchant portal', function() {
       const referenceNumber = Cypress._.random(0, 1e9);
 
       // mandatory field validation for payment request
-      cy.get('[data-cy=payment-request-error]').should('not.be.visible');
+      cy.get('[data-cy=payment-request-error]').should('not.exist');
       cy.get('[data-cy=send-payment]').should('be.disabled');
 
       // validate that invoice is mandatory
@@ -70,7 +70,7 @@ describe('Merchant portal', function() {
         .type(referenceNumber)
         .should('have.value', referenceNumber.toString());
       cy.get('[data-cy=send-payment]').click();
-      cy.get('[data-cy=payment-request-error]').should('not.be.visible');
+      cy.get('[data-cy=payment-request-error]').should('not.exist');
     });
 
     it('should fail if same reference number is entered', () => {
@@ -90,7 +90,7 @@ describe('Merchant portal', function() {
         .should('have.value', referenceNumber.toString());
       cy.getInput('invoice').attachFile(invoicePath);
       cy.get('[data-cy=send-payment]').click();
-      cy.get('[data-cy=payment-request-error]').should('not.be.visible');
+      cy.get('[data-cy=payment-request-error]').should('not.exist');
       
       // wait for payment completed
       cy.get('[data-cy=send-payment]').should('be.disabled');

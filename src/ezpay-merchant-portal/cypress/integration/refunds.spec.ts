@@ -29,13 +29,12 @@ describe("Merchant portal", function () {
         .find("td")
         .as("firstPaymentRequestCells");
     });
-
+    //need to change to general user
     it("Unpaid payment cannot refund", () => {
       const amount = 10;
       const invoicePath = "sample.pdf";
       const referenceNumber = Cypress._.random(0, 1e9);
-      const email = "user1@aptean.cypress.com";
-      cy.getInput("recipient-email").type(email);
+      cy.getInput("recipient-email").type(Cypress.config("username"));
       cy.getInput("amount").type(amount);
       cy.getInput("reference-number").type(referenceNumber);
       cy.getInput("invoice").attachFile(invoicePath);
@@ -350,13 +349,9 @@ describe("Merchant portal", function () {
       // Close the modal
       cy.get("[data-cy=cancel-refund]").click();
       // Make sure the modal isn't showing anymore
-      cy.get("[data-cy=refund-dialog-title]")
-        .should("not.exist")
-        .and("not.be.visible");
+      cy.get("[data-cy=refund-dialog-title]").should("not.exist");
       // Make sure the payments table is showing
-      cy.get("[data-cy=payments-table-body]")
-        .should("exist")
-        .and("be.visible");
+      cy.get("[data-cy=payments-table-body]").should("exist").and("be.visible");
 
       //Checking in payment requests
       cy.get("[data-cy=payment-requests-tab]").click();
@@ -375,16 +370,14 @@ describe("Merchant portal", function () {
       // Close the modal
       cy.get("[data-cy=cancel-refund]").click();
       // Make sure the modal isn't showing anymore
-      cy.get("[data-cy=refund-dialog-title]")
-        .should("not.exist")
-        .and("not.be.visible");
+      cy.get("[data-cy=refund-dialog-title]").should("not.exist");
       // Make sure the payment request table is showing
       cy.get("[data-cy=payment-request-table-body]")
         .should("exist")
         .and("be.visible");
     });
 
-    it("Refunding a request updates that request in the table", () => {
+    it("Refunding a request updates that request and payment in the table", () => {
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
@@ -407,21 +400,69 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=process-refund]").click();
       cy.wait(5000);
       // Make sure the modal isn't showing anymore
-      cy.get("[data-cy=refund-dialog-title]")
-        .should("not.exist")
-        .and("not.be.visible");
+      cy.get("[data-cy=refund-dialog-title]").should("not.exist");
       // Make sure the table is showing
       cy.get("[data-cy=payment-request-table-body]")
         .should("exist")
         .and("be.visible");
 
-
-        cy.get("@firstPaymentRequestCells")
+      cy.get("@firstPaymentRequestCells")
         .eq(1)
         .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Partially Refunded");
+          expect($cell.eq(0)).to.contain("Refund Pending");
+        });
+
+      cy.get("[data-cy=payment-tab]").click();
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(3000);
+
+      cy.get("@firstPaymentCells")
+        .eq(1)
+        .should(($cell) => {
+          expect($cell.eq(0)).to.contain("Refund Pending");
+        });
+    });
+
+    it("Refunding a payment updates the payment and request in the table", () => {
+      //creating the payment
+      cy.createAndPay(1, "10.00", "payment");
+      cy.wait(35000);
+      cy.get("[data-cy=payment-tab]").click();
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(3000);
+
+      //making remaining amount refund
+      cy.get("@firstPaymentCells")
+        .eq(1)
+        .should(($cell) => {
+          expect($cell.eq(0)).to.contain("Completed");
         })
         .click();
+      cy.get("[data-cy=refund]").should("be.enabled").click();
+      cy.get("[data-cy=refund-dialog-title]")
+        .should("exist")
+        .should("be.visible");
+      cy.get("[data-cy=refund-reason]").find("input").type("test");
+      cy.get("[data-cy=process-refund]").click();
+      cy.wait(5000);
+      cy.get("[data-cy=refund-dialog-title]").should("not.exist");
+
+      //checking payment status
+      cy.get("@firstPaymentCells")
+        .eq(1)
+        .should(($cell) => {
+          expect($cell.eq(0)).to.contain("Refund Pending");
+        });
+
+      //checking payment request status
+      cy.get("[data-cy=payment-requests-tab]").click();
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(3000);
+      cy.get("@firstPaymentRequestCells")
+        .eq(1)
+        .should(($cell) => {
+          expect($cell.eq(0)).to.contain("Refund Pending");
+        });
     });
   });
 });

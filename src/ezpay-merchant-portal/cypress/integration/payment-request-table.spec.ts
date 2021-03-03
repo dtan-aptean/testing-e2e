@@ -146,8 +146,7 @@ describe("Payment Request Table", function () {
       const amount = 10;
       const invoicePath = "sample.pdf";
       const referenceNumber = Cypress._.random(0, 1e9);
-      const email = "user1@aptean.cypress.com";
-      cy.getInput("recipient-email").type(email);
+      cy.getInput("recipient-email").type(Cypress.config("username"));
       cy.getInput("amount").type(amount);
       cy.getInput("reference-number").type(referenceNumber);
       cy.getInput("invoice").attachFile(invoicePath);
@@ -174,7 +173,7 @@ describe("Payment Request Table", function () {
       //Checking in case of Completed
       cy.makePayment(1);
       cy.visit("/");
-      cy.wait(20000);
+      cy.wait(35000);
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(4000);
@@ -194,7 +193,7 @@ describe("Payment Request Table", function () {
       cy.get("[data-cy=refund-amount]").find("input").type("5");
       cy.get("[data-cy=refund-reason]").find("input").type("test");
       cy.get("[data-cy=process-refund]").click();
-      cy.wait(15000);
+      cy.wait(60000);
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(4000);
@@ -287,7 +286,7 @@ describe("Payment Request Table", function () {
       cy.wait(4000);
       // creating the completed payment request record to check the refund modal
       cy.createAndPay(1, "1.00", "refund");
-      cy.wait(20000);
+      cy.wait(35000);
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(2000);
@@ -309,17 +308,10 @@ describe("Payment Request Table", function () {
       cy.get("[data-cy=refund").click({ force: true });
       cy.get("[data-cy=cancel-refund]").should("exist").and("be.visible");
       cy.get("[data-cy=cancel-refund]").click();
-      cy.get("[data-cy=cancel-refund]")
-        .should("not.exist");
+      cy.get("[data-cy=cancel-refund]").should("not.exist");
 
       //checking via info modal
       cy.wait(2000);
-      cy.get("@newCells")
-        .eq(1)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
       cy.get("[data-cy=view-details]").scrollIntoView().should("be.visible");
       cy.get("[data-cy=view-details]").click({ force: true });
       cy.get("[data-cy=pr-details-refund]")
@@ -328,8 +320,7 @@ describe("Payment Request Table", function () {
         .click();
       cy.get("[data-cy=cancel-refund]").should("exist").and("be.visible");
       cy.get("[data-cy=cancel-refund]").click();
-      cy.get("[data-cy=cancel-refund]")
-        .should("not.exist");
+      cy.get("[data-cy=cancel-refund]").should("not.exist");
     });
 
     it("should pass if a new request shows in the table", () => {
@@ -427,88 +418,107 @@ describe("Payment Request Table", function () {
     }); */
 
     it("should pass if searching brings up the correct result", () => {
-      cy.generatePaymentRequest().then((response) => {
-        const referenceNumber = response.referenceNumber;
-        const email = response.email;
-        const phone = response.phone;
+      const amount = 10;
+      const invoicePath = "sample.pdf";
+      const referenceNumber = Cypress._.random(0, 1e9);
+      const email = Cypress.config("username");
+      const phone = "5555555555";
+      cy.getInput("recipient-email").type(email);
+      cy.getInput("recipient-phone").type(phone);
+      cy.getInput("amount").type(amount);
+      cy.getInput("reference-number").type(referenceNumber);
+      cy.getInput("invoice").attachFile(invoicePath);
+      cy.get("[data-cy=send-payment]").should("not.be.disabled").click();
+      cy.wait(2000);
 
-        cy.get("[data-cy=refresh]").click();
-        // search for reference number and get created payment request
-        cy.getInput("search")
-          .type(referenceNumber)
-          .should("have.value", referenceNumber.toString());
-        cy.wait(10000);
-        cy.get("[data-cy=payment-request-table-body]")
-          .find("tr")
-          .as("searchedRows");
-        cy.get("@searchedRows").should("have.length.greaterThan", 0);
-        let matches = false;
-        cy.get("@searchedRows").then(($list) => {
-          cy.wrap($list[0])
-            .find("td")
-            .eq(2)
-            .contains(referenceNumber.toString())
-            .then((el) => {
-              if (el.text() === referenceNumber.toString()) {
-                matches = true;
-              }
-              cy.expect(matches).to.equal(true);
-            });
+      cy.get("[data-cy=refresh]").click();
+      // search for reference number and get created payment request
+      cy.getInput("search")
+        .type(referenceNumber)
+        .should("have.value", referenceNumber.toString());
+      cy.get("[data-cy=search]")
+        .parent()
+        .parent()
+        .within(() => {
+          cy.get('a[href="#"]').click();
         });
+      cy.wait(10000);
+      cy.get("[data-cy=payment-request-table-body]")
+        .find("tr")
+        .as("searchedRows");
+      cy.get("@searchedRows").should("have.length.greaterThan", 0);
+      let matches = false;
+      cy.get("@searchedRows").then(($list) => {
+        cy.wrap($list[0])
+          .find("td")
+          .eq(2)
+          .contains(referenceNumber.toString())
+          .then((el) => {
+            if (el.text() === referenceNumber.toString()) {
+              matches = true;
+            }
+            cy.expect(matches).to.equal(true);
+          });
+      });
 
-        // Clear search field and refresh table
-        cy.getInput("search").clear();
-        cy.wait(5000);
-        cy.get("[data-cy=refresh]").click();
+      // Clear search field and refresh table
+      cy.getInput("search").clear();
+      cy.wait(5000);
+      cy.get("[data-cy=refresh]").click();
 
-        // search for email and get created payment request
-        cy.getInput("search")
-          .type(email)
-          .should("have.value", email.toString());
-        cy.wait(10000);
-        cy.get("[data-cy=payment-request-table-body]").find("tr").as("newRows");
-        cy.get("@newRows").should("have.length.greaterThan", 0);
-        let emailMatches = false;
-        cy.get("@newRows").then(($newList) => {
-          cy.wrap($newList[0])
-            .find("td")
-            .eq(2)
-            .contains(referenceNumber.toString())
-            .then((newEl) => {
-              if (newEl.text() === referenceNumber.toString()) {
-                emailMatches = true;
-              }
-              cy.expect(emailMatches).to.equal(true);
-            });
+      // search for email and get created payment request
+      cy.getInput("search").type(email).should("have.value", email.toString());
+      cy.get("[data-cy=search]")
+        .parent()
+        .parent()
+        .within(() => {
+          cy.get('a[href="#"]').click();
         });
+      cy.wait(10000);
+      cy.get("[data-cy=payment-request-table-body]").find("tr").as("newRows");
+      cy.get("@newRows").should("have.length.greaterThan", 0);
+      let emailMatches = false;
+      cy.get("@newRows").then(($newList) => {
+        cy.wrap($newList[0])
+          .find("td")
+          .eq(2)
+          .contains(referenceNumber.toString())
+          .then((newEl) => {
+            if (newEl.text() === referenceNumber.toString()) {
+              emailMatches = true;
+            }
+            cy.expect(emailMatches).to.equal(true);
+          });
+      });
 
-        // Clear search field and refresh table
-        cy.getInput("search").clear();
-        cy.wait(5000);
-        cy.get("[data-cy=refresh]").click();
+      // Clear search field and refresh table
+      cy.getInput("search").clear();
+      cy.wait(5000);
+      cy.get("[data-cy=refresh]").click();
 
-        // search for email and get created payment request
-        cy.getInput("search")
-          .type(phone)
-          .should("have.value", phone.toString());
-        cy.wait(10000);
-        cy.get("[data-cy=payment-request-table-body]")
-          .find("tr")
-          .as("phoneRows");
-        cy.get("@phoneRows").should("have.length.greaterThan", 0);
-        let phoneMatches = false;
-        cy.get("@newRows").then(($phoneList) => {
-          cy.wrap($phoneList[0])
-            .find("td")
-            .eq(2)
-            .contains(referenceNumber.toString())
-            .then((phoneEl) => {
-              if (phoneEl.text() === referenceNumber.toString()) {
-                phoneMatches = true;
-              }
-              cy.expect(phoneMatches).to.equal(true);
-            });
+      // search for email and get created payment request
+      cy.getInput("search").type(phone).should("have.value", phone.toString());
+      cy.get("[data-cy=search]")
+        .parent()
+        .parent()
+        .within(() => {
+          cy.get('a[href="#"]').click();
         });
+      cy.wait(10000);
+      cy.get("[data-cy=payment-request-table-body]").find("tr").as("phoneRows");
+      cy.get("@phoneRows").should("have.length.greaterThan", 0);
+      let phoneMatches = false;
+      cy.get("@newRows").then(($phoneList) => {
+        cy.wrap($phoneList[0])
+          .find("td")
+          .eq(2)
+          .contains(referenceNumber.toString())
+          .then((phoneEl) => {
+            if (phoneEl.text() === referenceNumber.toString()) {
+              phoneMatches = true;
+            }
+            cy.expect(phoneMatches).to.equal(true);
+          });
       });
     });
 
