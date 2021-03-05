@@ -159,22 +159,82 @@ Cypress.Commands.add("makePayment", () => {
   // Let table load
   cy.wait(5000);
   cy.visit("/");
-  cy.wait(10000);
-  // Grab the first payment from the table and pay by credit card
-  cy.get("table")
-    .find("tr")
-    .eq(1)
-    .find("td")
-    .eq(5)
-    .find("button")
-    .click({ force: true });
-  // Wait for page to load
   cy.wait(5000);
-  // TODO: Set up command to deal when payer portal has the wallet
-  cy.get("[data-cy=submit-payment-button]").click();
-  cy.wait(500);
-  cy.get("[data-cy=pay-now]").click();
-  cy.wait(5000);
-  cy.visit("/");
-  cy.wait(5000);
+
+  cy.get("body").then(($body) => {
+    //Adding payment method according to our need
+
+    //function to add the credit card
+    const addCreditCard = (length: number) => {
+      //opening the modal
+      cy.get("[data-cy=add-credit-card]").click();
+      cy.get("[data-cy=payment-method-add]")
+        .should("exist")
+        .should("be.visible");
+      //opening the add address modal
+      //In case the default address is selected
+      cy.get("[data-cy=payment-method-add]").then(($modal) => {
+        if (!$modal.find("[data-cy=add-address]").length) {
+          cy.get("[data-cy=address-list-icon]").click();
+        }
+      });
+      cy.get("[data-cy=add-address]").click();
+      cy.get("[data-cy=billing-address-modal]").should("be.visible");
+      // Entering the address details
+      cy.get("[data-cy=holder-name]").type("Test User");
+      cy.get("[data-cy=email]").type("testuser@testusers.com");
+      cy.get("[data-cy=street-address]").type("4324 somewhere st");
+      cy.get("[data-cy=country]").find("select").select("US");
+      cy.get("[data-cy=zipcode]").type("30022");
+      cy.get("[data-cy=country-code]").type("1");
+      cy.get("[data-cy=phone-number]").type("6784324574");
+      cy.get("[data-cy=continue-to-payment]")
+        .last()
+        .should("be.enabled")
+        .click({ force: true });
+      cy.wait(2000);
+      //Entering card details
+      getIframeBody().find("#text-input-cc-number").type("4111111111111111");
+      getIframeBody().find("#text-input-expiration-month").type("12");
+      getIframeBody().find("#text-input-expiration-year").type("30");
+      getIframeBody().find("#text-input-cvv-number").type("123");
+      cy.get("[data-cy=continue-to-payment]").first().click({ force: true });
+      cy.wait(20000);
+      cy.get("[data-cy=menu-options]").should("have.length", length + 1);
+    };
+
+    if (
+      $body.find("[data-cy=menu-options]").length === 1 &&
+      !$body.find("[data-cy=add-bank-account]").length
+    ) {
+      addCreditCard($body.find("[data-cy=menu-options]").length);
+    } else if (!$body.find("[data-cy=menu-options]").length) {
+      addCreditCard(1);
+    }
+
+    cy.wait(10000);
+    // Grab the first payment from the table and pay by credit card
+    cy.get("table")
+      .find("tr")
+      .eq(1)
+      .find("td")
+      .eq(5)
+      .find("button")
+      .click({ force: true });
+    // Wait for page to load
+    cy.wait(5000);
+    if (!$body.find("[data-cy=submit-payment-button]").length) {
+      cy.get(".MuiFormGroup-root")
+        .children()
+        .contains("Card ending in")
+        .last()
+        .click({ force: true });
+    }
+    cy.get("[data-cy=submit-payment-button]").click();
+    cy.wait(500);
+    cy.get("[data-cy=pay-now]").click();
+    cy.wait(5000);
+    cy.visit("/");
+    cy.wait(5000);
+  });
 });
