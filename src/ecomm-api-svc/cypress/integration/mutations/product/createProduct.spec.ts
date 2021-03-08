@@ -609,7 +609,7 @@ describe('Mutation: createProduct', () => {
                                     currency
                                 }
                                 isTaxExempt
-                                availableForPreorder
+                                availableForPreOrder
                                 preOrderAvailabilityStartDate
                             }
                             published
@@ -677,7 +677,7 @@ describe('Mutation: createProduct', () => {
                                             currency
                                         }
                                         isTaxExempt
-                                        availableForPreorder
+                                        availableForPreOrder
                                         preOrderAvailabilityStartDate
                                     }
                                     published

@@ -3,8 +3,10 @@
 import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 10
+var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
+confirmStorefrontEnvValues();
 
-describe('Mutation: updateRefund', () => {
+describe('Mutation: updateRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` }, () => {
     var id = '';
     var orderTotal = 0;
     const mutationName = 'updateRefund';
@@ -33,11 +35,8 @@ describe('Mutation: updateRefund', () => {
         }
     `;
     const createName = 'createRefund';
-    var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
 
     before(() => {
-        confirmStorefrontEnvValues();
-        Cypress.config("baseUrl", Cypress.env("storefrontUrl"));
         cy.wait(1000);
         cy.visit("/");  // Go to the storefront and login
         cy.storefrontLogin();

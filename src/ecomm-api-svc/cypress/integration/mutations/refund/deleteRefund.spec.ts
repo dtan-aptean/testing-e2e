@@ -3,7 +3,10 @@
 import { confirmStorefrontEnvValues } from "../../../support/commands";
 
 // TEST COUNT: 6
-describe('Mutation: deleteRefund', () => {
+var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
+confirmStorefrontEnvValues();
+
+describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` }, () => {
     var id = '';
     var orderInUse = '';
     var refund = 0;
@@ -27,7 +30,6 @@ describe('Mutation: deleteRefund', () => {
         queryInformation.itemId = providedId ? providedId : "";
     };
 
-    var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
     
     const refundOrder = () => {
         const mutation = `mutation {
@@ -46,8 +48,6 @@ describe('Mutation: deleteRefund', () => {
     };
 
     before(() => {
-        confirmStorefrontEnvValues();
-        Cypress.config("baseUrl", Cypress.env("storefrontUrl"));
         cy.wait(1000);
         cy.visit("/");  // Go to the storefront and login
         cy.storefrontLogin();

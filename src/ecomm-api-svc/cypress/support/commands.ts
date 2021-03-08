@@ -362,15 +362,17 @@ Cypress.Commands.add("confirmError", (res, expect200?: boolean) => {
     });
     if (expect200) {
         // Should be 200 ok
-        expect(res.isOkStatusCode).to.be.equal(true);
+        expect(res.isOkStatusCode).to.be.equal(true, "Status code should be 200");
     } else {
         // should not be 200 ok
-        expect(res.isOkStatusCode).to.be.equal(false);
+        expect(res.isOkStatusCode).to.be.equal(false, "Status code should not be 200");
+        // Usually expecting a 400 error
+        expect(res.status).to.be.equal(400, "Status code should be 400");
     }
     // should have errors
-    assert.exists(res.body.errors);
+    assert.exists(res.body.errors, "Errors should be present");
     // no data
-    assert.notExists(res.body.data);
+    assert.notExists(res.body.data, "Response data should not exist");
 });
 
 // Tests the response for errors. Use when we expect it to fail
@@ -1125,13 +1127,17 @@ Cypress.Commands.add("deleteParentAndChildCat", (children: {name: string, id: st
  */
 
 // Helper functions for these commands
-const verifySeoData = (seo, expectedSeo) => {
+const verifySeoData = (seo, expectedSeo, itemInfo) => {
     expectedSeo.forEach((seoItem, index) => {
         var currSeo = seo[index];
         const props = Object.getOwnPropertyNames(seoItem);
         for (var i = 0; i < props.length; i++) {
-            if (props[i] === "searchEngineFriendlyPageName" && seoItem[props[i]].length > 0) {
-                expect(currSeo[props[i]]).to.include(seoItem[props[i]].toLowerCase().replace(' ', '-'), `Verify seoData[${index}].${props[i]}`);
+            if (props[i] === "searchEngineFriendlyPageName") {
+                if (expectedSeo.searchEngineFriendlyPageName === "") {
+                    expect(currSeo[props[i]]).to.include(itemInfo[index].name.toLowerCase().replace(' ', '-'), `Verify seoData[${index}].${props[i]}`);
+                } else {
+                    expect(currSeo[props[i]]).to.include(seoItem[props[i]].toLowerCase().replace(' ', '-'), `Verify seoData[${index}].${props[i]}`);
+                }
             }  else {
                 expect(currSeo[props[i]]).to.be.eql(seoItem[props[i]], `Verify seoData[${index}].${props[i]}`);
             }
@@ -1212,7 +1218,10 @@ const matchArrayItems = (resArray: [], matchArray: [], originalProperty: string,
 const compareExpectedToResults = (subject, propertyNames: string[], expectedValues: []) => {
     for (var i = 0; i < propertyNames.length; i++) {
         if (propertyNames[i] === "seoData"){
-            verifySeoData(subject[propertyNames[i]], expectedValues[i]);
+            var infoIndex = propertyNames.indexOf(propertyNames.find((name) => {
+                return name.includes("Info");
+            }));
+            verifySeoData(subject[propertyNames[i]], expectedValues[i], expectedValues[infoIndex]);
         } else {
             if (expectedValues[i] && subject[propertyNames[i]] === null) {
                 assert.exists(subject[propertyNames[i]], `${propertyNames[i]} should not be null`);
@@ -1302,7 +1311,10 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, itemP
     };
     for (var i = 0; i < propNames.length; i++) {
         if (propNames[i] === "seoData"){
-            verifySeoData(result[propNames[i]], values[i]);
+            var infoIndex = propNames.indexOf(propNames.find((name) => {
+                return name.includes("Info");
+            }));
+            verifySeoData(result[propNames[i]], values[i], values[infoIndex]);
         } else {
             if (values[i] && result[propNames[i]] === null) {
                 assert.exists(result[propNames[i]], `${propNames[i]} should not be null`);

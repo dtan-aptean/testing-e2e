@@ -683,7 +683,7 @@ describe('Mutation: updateProduct', () => {
                                 currency
                             }
                             isTaxExempt
-                            availableForPreorder
+                            availableForPreOrder
                             preOrderAvailabilityStartDate
                         }
                         published
@@ -750,7 +750,7 @@ describe('Mutation: updateProduct', () => {
                                         currency
                                     }
                                     isTaxExempt
-                                    availableForPreorder
+                                    availableForPreOrder
                                     preOrderAvailabilityStartDate
                                 }
                                 published
