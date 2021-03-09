@@ -75,7 +75,7 @@ describe("Ecommerce Portal", function () {
         .get("#payment-success")
         .should(
           "contain.text",
-          "Your payment has been successfully processed!"
+          "Your payment information has been successfully received!"
         );
 
       cy.get("#payment-info-buttons-container > .button-1")

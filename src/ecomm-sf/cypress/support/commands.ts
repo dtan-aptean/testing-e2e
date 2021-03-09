@@ -113,7 +113,7 @@ Cypress.Commands.add("goToCart", () => {
     name: "goToCart",
   });
   cy.get(".header-links").find(".ico-cart").click({ force: true });
-  cy.wait(1000);
+  cy.wait(15000);
 });
 
 // Empty the cart and remove applied discounts
@@ -200,7 +200,7 @@ Cypress.Commands.add("goToProduct", (productName, categoryName) => {
     .scrollIntoView()
     .should("be.visible");
   cy.get("@targetProduct").find(".product-title").find("a").click();
-  cy.wait(500);
+  cy.wait(10000);
 });
 
 // Adds a product to the cart, go to cart, agree with TOS, and click checkout
@@ -238,7 +238,7 @@ Cypress.Commands.add("switchLanguage", (newLanguage) => {
   cy.get("#customerlanguage").select(
     newLanguage || Cypress.config("defaultLanguage")
   );
-  cy.wait(1000);
+  cy.wait(15000);
 });
 
 // Goes to the admin site. Assumes user is logged in
