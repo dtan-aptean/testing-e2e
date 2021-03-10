@@ -52,7 +52,7 @@ describe("Merchant portal", function () {
         .click();
 
       // checking via refund button
-      cy.get("[data-cy=refund]").should("not.exist");
+      cy.get("[data-cy=refund]").should("be.disabled");
 
       // checking via info modal
       cy.get("[data-cy=view-details]").should("be.visible").click();

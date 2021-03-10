@@ -117,7 +117,7 @@ describe("All Payments Table", function () {
       cy.wait(5000);
       cy.get("[data-cy=refund-dialog-title]").should("not.exist");
       cy.get("@firstRow").click();
-      cy.get("[data-cy=refund]").should("not.exist");
+      cy.get("[data-cy=refund]").should("be.disabled");
     });
 
     it("Fully refunded payment should not have refund button in payment details modal", () => {
@@ -181,13 +181,13 @@ describe("All Payments Table", function () {
     //To be tested once the payment starts failing for magic number
     it.skip("Failed payment should not have refund option", () => {
       cy.createAndPay(1, "6.61", "payment");
-      cy.wait(20000);
+      cy.wait(35000);
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
       cy.get("@firstRow").find("td").eq(1).should("contain", "Failed");
       cy.get("@firstRow").click();
-      cy.get("[data-cy=refund]").should("not.exist");
+      cy.get("[data-cy=refund]").should("be.disabled");
     });
 
     it.skip("Failed payment should not have refund button in payment details modal", () => {
