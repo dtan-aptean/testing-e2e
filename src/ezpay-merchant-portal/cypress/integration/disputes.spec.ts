@@ -89,7 +89,7 @@ describe("Merchant portal", function () {
                 cy.get("[data-cy=payment-disputes-tab]", {
                   timeout: 20000,
                 }).click();
-                cy.wait(7000);
+                cy.wait(35000);
                 cy.get("[data-cy=refresh]").click();
                 cy.wait(3000);
                 cy.get("@rows").should("have.length.gte", 1);
@@ -213,9 +213,7 @@ describe("Merchant portal", function () {
           cy.get("[data-cy=close-dispute]").should("exist").and("be.visible");
           cy.get("[data-cy=close-dispute]").click();
           // Make sure modal is closed
-          cy.get("[data-cy=dispute-information]")
-            .should("not.exist")
-            .and("not.be.visible");
+          cy.get("[data-cy=dispute-information]").should("not.exist");
           // Open the modal again
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.wrap(detailsArray[0]).trigger("mouseover");
@@ -311,7 +309,7 @@ describe("Merchant portal", function () {
     });
 
     it("The search bar is hidden while on the disputes tab", () => {
-      cy.get("[data-cy=search]").should("be.not.visible");
+      cy.get("[data-cy=search]").should("not.exist");
     });
 
     it("The review button is showing for a row that needs action", () => {
@@ -420,9 +418,7 @@ describe("Merchant portal", function () {
           cy.get("[data-cy=concede]").should("exist");
           cy.get("[data-cy=concede]").click();
           // Makes sure the chargeback modal has closed and concede modal opens
-          cy.get("[data-cy=chargeback-review]")
-            .should("not.exist")
-            .and("not.be.visible");
+          cy.get("[data-cy=chargeback-review]").should("not.exist");
           cy.get("[data-cy=concede-modal]").should("exist").and("be.visible");
         });
     });
@@ -462,17 +458,13 @@ describe("Merchant portal", function () {
           // Open the concede modal
           cy.get("[data-cy=concede]").should("exist");
           cy.get("[data-cy=concede]").click();
-          cy.get("[data-cy=chargeback-review]")
-            .should("not.exist")
-            .and("not.be.visible");
+          cy.get("[data-cy=chargeback-review]").should("not.exist");
           cy.get("[data-cy=concede-modal]").should("exist").and("be.visible");
           // Find the back button
           cy.get("[data-cy=back-concede]").should("exist").and("be.visible");
           cy.get("[data-cy=back-concede]").click();
           // Make sure chargeback modal has opened and concede modal has closed
-          cy.get("[data-cy=concede-modal]")
-            .should("not.exist")
-            .and("not.be.visible");
+          cy.get("[data-cy=concede-modal]").should("not.exist");
           cy.get("[data-cy=chargeback-review]")
             .should("exist")
             .and("be.visible");
@@ -515,9 +507,7 @@ describe("Merchant portal", function () {
           // Open the concede modal
           cy.get("[data-cy=concede]").should("exist");
           cy.get("[data-cy=concede]").click();
-          cy.get("[data-cy=chargeback-review]")
-            .should("not.exist")
-            .and("not.be.visible");
+          cy.get("[data-cy=chargeback-review]").should("not.exist");
           cy.get("[data-cy=concede-modal]").should("exist").and("be.visible");
           // Find the gray backdrop and click it
           cy.get("div.MuiDialog-root")
@@ -566,9 +556,7 @@ describe("Merchant portal", function () {
           // Open the concede modal
           cy.get("[data-cy=concede]").should("exist");
           cy.get("[data-cy=concede]").click();
-          cy.get("[data-cy=chargeback-review]")
-            .should("not.exist")
-            .and("not.be.visible");
+          cy.get("[data-cy=chargeback-review]").should("not.exist");
           cy.get("[data-cy=concede-modal]").should("exist").and("be.visible");
           cy.get("[data-cy=submit-concede]").should("exist").and("be.visible");
           // Submit the concede without entering an explanation
@@ -621,9 +609,7 @@ describe("Merchant portal", function () {
           // Open the concede modal
           cy.get("[data-cy=concede]").should("exist");
           cy.get("[data-cy=concede]").click();
-          cy.get("[data-cy=chargeback-review]")
-            .should("not.exist")
-            .and("not.be.visible");
+          cy.get("[data-cy=chargeback-review]").should("not.exist");
           cy.get("[data-cy=concede-modal]").should("exist").and("be.visible");
           cy.get("[data-cy=submit-concede]").should("exist").and("be.visible");
           // Enter an explanation
@@ -635,9 +621,7 @@ describe("Merchant portal", function () {
           // Watch the concede button become disabled
           cy.get("[data-cy=submit-concede]").should("be.disabled");
           // Modal should close
-          cy.get("[data-cy=concede-modal]")
-            .should("not.exist")
-            .and("not.be.visible");
+          cy.get("[data-cy=concede-modal]").should("not.exist");
           // Wait for table to refresh
           cy.wait(5000);
           // Get table rows

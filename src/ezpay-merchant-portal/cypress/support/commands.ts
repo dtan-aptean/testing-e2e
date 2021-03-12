@@ -368,35 +368,7 @@ Cypress.Commands.add("makePayment", (count) => {
         // Wait to finish logging in, or to finish loading
         cy.wait(5000);
         cy.get("div").then(($boday) => {
-          // Check if we need to fill in billing information
-          const billing = $boday.find("button").filter((index, item) => {
-            return item.innerText === "ADD BILLING INFORMATION";
-          });
-          // Fill in billing information if we find the button
-          if (billing.length) {
-            cy.get("button").contains("ADD BILLING INFORMATION").click();
-            cy.wait(500);
-            cy.getInput("first-name").clear();
-            cy.getInput("first-name").type("Johnny");
-            cy.getInput("last-name").clear();
-            cy.getInput("last-name").type("Tester");
-            cy.getInput("email").clear();
-            cy.getInput("email").type(Cypress.config("username"));
-            cy.getInput("street-address").clear();
-            cy.getInput("street-address").type(
-              "4325 Alexander Dr #100, Alpharetta, GA"
-            );
-            cy.getSelect("country").select("US");
-            cy.getInput("zipcode").clear();
-            cy.getInput("zipcode").type("30022");
-            cy.getInput("country-code").clear();
-            cy.getInput("country-code").type("+1");
-            cy.getInput("phone-number").clear();
-            cy.getInput("phone-number").type("6785555555");
-            cy.get("[data-cy=continue-to-payment]").click();
-            cy.wait(2000);
-          }
-          // Get the credit iframe - taken from payer portal tests
+          //function to get cc iframe
           const getIframeBody = () => {
             return cy
               .get("#cc_iframe_iframe")
@@ -404,6 +376,58 @@ Cypress.Commands.add("makePayment", (count) => {
               .should("not.be.empty")
               .then(cy.wrap);
           };
+
+          //function to add the credit card
+          const addCreditCard = (length: number) => {
+            //opening the modal
+            cy.get("[data-cy=add-credit-card]").click();
+            cy.get("[data-cy=payment-method-add]")
+              .should("exist")
+              .should("be.visible");
+            //opening the add address modal
+            //In case the default address is selected
+            cy.get("[data-cy=payment-method-add]").then(($modal) => {
+              if (!$modal.find("[data-cy=add-address]").length) {
+                cy.get("[data-cy=address-list-icon]").click();
+              }
+            });
+            cy.get("[data-cy=add-address]").click();
+            cy.get("[data-cy=billing-address-modal]").should("be.visible");
+            // Entering the address details
+            cy.get("[data-cy=holder-name]").type("Test User");
+            cy.get("[data-cy=email]").type("testuser@testusers.com");
+            cy.get("[data-cy=street-address]").type("4324 somewhere st");
+            cy.get("[data-cy=country]").find("select").select("US");
+            cy.get("[data-cy=zipcode]").type("30022");
+            cy.get("[data-cy=country-code]").type("1");
+            cy.get("[data-cy=phone-number]").type("6784324574");
+            cy.get("[data-cy=continue-to-payment]")
+              .last()
+              .should("be.enabled")
+              .click({ force: true });
+            cy.wait(2000);
+            //Entering card details
+            getIframeBody()
+              .find("#text-input-cc-number")
+              .type("4111111111111111");
+            getIframeBody().find("#text-input-expiration-month").type("12");
+            getIframeBody().find("#text-input-expiration-year").type("30");
+            getIframeBody().find("#text-input-cvv-number").type("123");
+            cy.get("[data-cy=continue-to-payment]")
+              .first()
+              .click({ force: true });
+            cy.wait(20000);
+            cy.get("[data-cy=menu-options]").should("have.length", length + 1);
+          };
+
+          if (
+            $boday.find("[data-cy=menu-options]").length === 1 &&
+            !$boday.find("[data-cy=add-bank-account]").length
+          ) {
+            addCreditCard($boday.find("[data-cy=menu-options]").length);
+          } else if (!$boday.find("[data-cy=menu-options]").length) {
+            addCreditCard(1);
+          }
           // Complete assigned payments
           for (var i = 0; i < count; i++) {
             // Let table load
@@ -419,6 +443,13 @@ Cypress.Commands.add("makePayment", (count) => {
             // Wait for page to load
             cy.wait(5000);
             // TODO: Set up command to deal when payer has no payment method or doesn't have default payment method, etc
+            if (!$boday.find("[data-cy=submit-payment-button]").length) {
+              cy.get(".MuiFormGroup-root")
+                .children()
+                .contains("Card ending in")
+                .last()
+                .click({ force: true });
+            }
             cy.get("[data-cy=submit-payment-button]").click();
             cy.wait(500);
             cy.get("[data-cy=pay-now]").click();
