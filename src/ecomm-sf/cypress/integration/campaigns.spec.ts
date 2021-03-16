@@ -1,85 +1,6 @@
 /// <reference types="cypress" />
 // TEST COUNT: 9
 
-const saveCustomer = () => {
-  cy.get("button[name=save]").click();
-  cy.wait(500);
-  cy.get(".alert").should(
-    "contain.text",
-    "The customer has been updated successfully."
-  );
-};
-// Verify that the customer is subscribed to the newsletter; if not, subscribe them and return true since we know the sub is now active
-// If already subscribed, return false because we don't know if it's an active subscription
-const verifyNewsletterSub = () => {
-  var subbed = false;
-  cy.get('#SelectedNewsletterSubscriptionStoreIds_taglist')
-    .invoke('text')
-    .then((text) => {
-      if (!text.includes('Your store name')) {
-        cy.get('#SelectedNewsletterSubscriptionStoreIds').select('Your store name', {force: true});
-        subbed = true;
-        saveCustomer();
-      }
-    });
-  return subbed;
-};
-// Verify that the customer's newsletter subscription is active, and activate it if not
-const verifyActiveSub = (email: string) => {
-  cy.goToSubscribers();
-  const subscriptionFilter = (index, item) => {
-    return item.cells[0].innerText === email;
-  };
-  cy.findTableItem("#newsletter-subscriptions-grid", "#newsletter-subscriptions-grid", subscriptionFilter).then((row) => {
-    if (!row[0].cells[1].innerHTML.includes('nop-value="true"')) {
-      cy.wrap(row).find("td").contains("Edit").click({ force: true });
-      cy.get('input[type=checkbox]').check({ force: true });
-      cy.get('a').contains('Update').click({ force: true });
-      cy.wait(200);
-      cy.contains(email).parent().find('td').eq(1).should('contain.html', 'nop-value="true"');
-    }
-  });
-};
-// Select the messages in the message queue that were created by cypress and are to a certain email
-const selectMessagesInQueue = (email: string) => {
-  cy.get("#queuedEmails-grid")
-    .find("tbody")
-    .find("tr")
-    .then(($rows) => {
-      const rowsToCheck = $rows.filter((index, item) => {
-        return item.cells[2].innerText.includes("Cypress") && item.cells[4].innerText === email;
-      });
-      if (rowsToCheck.length > 0) {
-        for (var i = 0; i < rowsToCheck.length; i++) {
-          cy.wrap(rowsToCheck[i]).find('input[type=checkbox]').check({force: true});
-        }
-      }
-    });
-};
-// Retrieve a customer's current email, correct their roles if needed, and verify newsletter subscription
-const verifyCustomer = (tableRow, needsEdit: boolean, roleArray: string[]) => {
-  cy.wrap(tableRow).find("td").contains("Edit").click();
-  return cy.get('#Email').invoke('val').then((val) => {
-    assert.isString(val);
-    assert.isNotEmpty(val);
-    if (needsEdit) {
-      cy.get('#SelectedCustomerRoleIds_taglist')
-        .find('.k-select')
-        .then(($els) => {
-          for(var i = 0; i < $els.length; i++) {
-            cy.wait(200);
-            cy.wrap($els[i]).click();
-          }
-          cy.get('#SelectedCustomerRoleIds').select(roleArray, {force: true});
-        });
-    }
-    const subbed = verifyNewsletterSub();
-    if (!subbed && needsEdit) {
-      saveCustomer();
-    }
-    return cy.wrap({email: val, subscribed: subbed});
-  });
-};
 // Grab the message tokens from the allowed tokens when creating a campaign, separate them into an array, and return it
 // Use incudeHeader to only grab tokens that include a certain value(s), or omit it to grab all
 const getMessageTokensAsArray = (includeHeader?: string | string[]) => {
@@ -153,6 +74,7 @@ describe("Ecommerce", function () {
     var adminEmail = "";
     const registeredEmails = [] as string[];
     var guestEmail = "";
+    // TODO: Phase createdCampaigns and queuedMessages out? Current method is to just delete everything, so they aren't really needed.
     const createdCampaigns = [] as string[];
     var queuedMessages = false;
     // Add a new campaign and push the campaign name. Intended to make sure created campaigns get logged and deleted
@@ -173,67 +95,17 @@ describe("Ecommerce", function () {
 
     // Look for these roles needed for testing, create them if the don't already exist, or edit them if there's something wrong with them
     before(() => {
-      // roleData emails may not match what is already in system
-      // Therefore, we have to grab the email from the existing customer, which we find by first and last name.
-      // If we have to create a new user, the included random numbers should ensure the email is unique every time
-      const roleData = [
-        {
-          email: `cypress.admin${Cypress._.random(0, 1e9)}@testenvironment.com`, 
-          password: "CypressAdmin",
-          first: "Cypress",
-          last: "Admin",
-          gender: Cypress._.random(0, 1) === 1 ? "Female" : "Male",
-          dob: "08/10/1990",
-          newsletter: ["Your store name"],
-          roles: ["Administrators","Registered"]
-        },
-        {
-          email: `cypress.registered${Cypress._.random(0, 1e9)}@testenvironment.com`, 
-          password: "CypressUser",
-          first: "Cypress",
-          last: "User",
-          gender: Cypress._.random(0, 1) === 1 ? "Female" : "Male",
-          dob: "04/20/1990",
-          newsletter: ["Your store name"],
-          roles: ["Registered"]
-        },
-        {
-          email: `cypress.guest${Cypress._.random(0, 1e9)}@testenvironment.com`,
-          password: "CypressGuest",
-          first: "Cypress",
-          last: "Guest",
-          gender: Cypress._.random(0, 1) === 1 ? "Female" : "Male",
-          dob: "01/30/1990",
-          newsletter: ["Your store name"],
-          roles: ["Guests"]
-        },
-      ];
       cy.visit("/");
       cy.login();
-      cy.goToCustomers();
-      roleData.forEach((customer, index) => {
-        cy.searchForCustomer(customer.first, customer.last).then((customerRow) => {
-          if (customerRow === null) {
-            cy.addNewCustomer(roleData[index]);
-          } else {
-            verifyCustomer(customerRow, customerRow[0].cells[3].innerText !== roleData[index].roles.join(', '), roleData[index].roles).then((returnVal) => {
-              const { subscribed, email } = returnVal;
-              if (!subscribed) {
-                verifyActiveSub(email);
-                cy.goToCustomers();
-              }
-              if (roleData[index].roles.includes('Registered')) {
-                if (roleData[index].roles.includes('Administrators')) {
-                  adminEmail = email;
-                }
-                registeredEmails.push(email);
-              } else if (roleData[index].roles.includes('Guests')) {
-                guestEmail = email;
-              }
-              customerEmails.push(email);
-            });
-          }
+      cy.setupCustomers().then((emails: string[]) => {
+        emails.forEach((email) => {
+          customerEmails.push(email);
         });
+        adminEmail = emails[0];
+        registeredEmails.push(emails[0]);
+        registeredEmails.push(emails[1]);
+        guestEmail = emails[2];
+        cy.cleanupCampaigns();
       });
     });
     
@@ -245,30 +117,22 @@ describe("Ecommerce", function () {
     // Delete the campaigns we created and delete the queued messages
     afterEach(() => {
       if (queuedMessages) {
-        cy.goToMessageQueue();
-        cy.wait(1000);
-        customerEmails.forEach((email) => {
-          selectMessagesInQueue(email);
-        });
-        cy.wait(500);
-        cy.get("#delete-selected").click({force: true});
-        cy.wait(200);
-        cy.get("#delete-selected-action-confirmation-submit-button").click({force: true});
-        queuedMessages = false;
+        cy.cleanupMessageQueue();
       }
       if (createdCampaigns.length > 0) {
-        cy.goToCampaigns();
-        const removedCampaigns = [] as string[];
-        for(var i = 0; i < createdCampaigns.length; i++) {
-          cy.wait(1000);
-          cy.deleteCampaign(createdCampaigns[i]).then(() => {
-            removedCampaigns.push(createdCampaigns[i]);
-          });
-        }
-        for (var f = 0; f < removedCampaigns.length; f++) {
-          createdCampaigns.splice(createdCampaigns.indexOf(removedCampaigns[i]), 1);
-        }
+        cy.cleanupCampaigns();
       }
+    });
+
+    after(() => {
+      // Make sure there's nothing in the message queue
+      cy.cleanupMessageQueue().then(() => {
+        // Make sure any campaigns get deleted
+        cy.cleanupCampaigns().then(() => {
+          // Clean up cypress customers
+          cy.cleanupCustomers();
+        });
+      });
     });
 
     it("Creating and deleting a campaign updates the table", () => {
@@ -305,9 +169,9 @@ describe("Ecommerce", function () {
       const campaignName = "Cypress Admin Campaign";
       const campaignSubject = "Cypress' Admin campaign";
       const today = new Date();
-      const twoMinAhead = new Date(today.valueOf() + 120000);
+      const twoDaysAhead = new Date(today.valueOf() + 172800000);
       cy.goToCampaigns();
-      createAndPush(campaignName, campaignSubject, "A test campaign created by cypress for Admins", twoMinAhead, "Administrators");
+      createAndPush(campaignName, campaignSubject, "A test campaign created by cypress for Admins", twoDaysAhead, "Administrators");
       sendMassAndConfirmQueue(campaignName, campaignSubject).then((rows) => {
         cy.wrap(rows).should('contain.text', adminEmail);
         const nonAdmin = registeredEmails.filter(value => value !== adminEmail);
@@ -319,9 +183,9 @@ describe("Ecommerce", function () {
       const campaignName = "Cypress Registered Users Campaign";
       const campaignSubject = "Cypress' Reg User campaign";
       const today = new Date();
-      const twoMinAhead = new Date(today.valueOf() + 120000);
+      const twoDaysAhead = new Date(today.valueOf() + 172800000);
       cy.goToCampaigns();
-      createAndPush(campaignName, campaignSubject,"A test campaign created by cypress for registered users", twoMinAhead, "Registered");
+      createAndPush(campaignName, campaignSubject,"A test campaign created by cypress for registered users", twoDaysAhead, "Registered");
       sendMassAndConfirmQueue(campaignName, campaignSubject).then((rows) => {
         cy.wrap(rows).should('not.contain.text', guestEmail);
         registeredEmails.forEach((reg) => {
@@ -334,9 +198,9 @@ describe("Ecommerce", function () {
       const campaignName = "Cypress Guests Campaign";
       const campaignSubject = "Cypress' Guest campaign";
       const today = new Date();
-      const twoMinAhead = new Date(today.valueOf() + 120000);
+      const twoDaysAhead = new Date(today.valueOf() + 172800000);
       cy.goToCampaigns();
-      createAndPush(campaignName, campaignSubject, "A test campaign created by cypress for guest", twoMinAhead, "Guests");
+      createAndPush(campaignName, campaignSubject, "A test campaign created by cypress for guest", twoDaysAhead, "Guests");
       sendMassAndConfirmQueue(campaignName, campaignSubject).then((rows) => {
         cy.wrap(rows).should('contain.text', guestEmail);
         cy.wrap(rows).should('not.contain.text', adminEmail);
@@ -353,8 +217,8 @@ describe("Ecommerce", function () {
       const token = "%Store.Name%";
       const campaignSubjectFull = campaignSubject + token;
       const today = new Date();
-      const twoMinAhead = new Date(today.valueOf() + 120000);
-      createAndPush(campaignName, campaignSubjectFull, "Cypress testing message tokens in the subject line", twoMinAhead, "Administrators");
+      const twoDaysAhead = new Date(today.valueOf() + 172800000);
+      createAndPush(campaignName, campaignSubjectFull, "Cypress testing message tokens in the subject line", twoDaysAhead, "Administrators");
       const formatedToday = today.toLocaleString(undefined, {month: "2-digit", day: "2-digit", year: "numeric"});
       const altQueueFilter = (index, item) => {
         return item.cells[2].innerText.includes(campaignSubject) && item.cells[5].innerText.includes(formatedToday);
@@ -386,8 +250,8 @@ describe("Ecommerce", function () {
         const campaignName = "Cypress Store Tokens";
         const campaignSubject = "Cypress' Store Tokens Test";
         const today = new Date();
-        const twoMinAhead = new Date(today.valueOf() + 120000);
-        createAndPush(campaignName, campaignSubject, bodyInput, twoMinAhead, "Administrators");
+        const twoDaysAhead = new Date(today.valueOf() + 172800000);
+        createAndPush(campaignName, campaignSubject, bodyInput, twoDaysAhead, "Administrators");
         cy.editCampaign(campaignName, true);
         cy.get("#EmailAccountId").invoke("text").then((val) => {
           assert.isString(val);
@@ -431,9 +295,9 @@ describe("Ecommerce", function () {
           const campaignName = "Cypress Social Tokens";
           const campaignSubject = "Cypress' Social Tokens Test";
           const today = new Date();
-          const twoMinAhead = new Date(today.valueOf() + 120000);
+          const twoDaysAhead = new Date(today.valueOf() + 172800000);
           cy.goToCampaigns();
-          createAndPush(campaignName, campaignSubject, bodyInput, twoMinAhead, "Administrators");
+          createAndPush(campaignName, campaignSubject, bodyInput, twoDaysAhead, "Administrators");
           sendMassAndConfirmQueue(campaignName, campaignSubject).then((rows) => {
             cy.wrap(rows).should('contain.text', adminEmail);
             cy.wrap(rows).find('td').contains('Edit').click();
@@ -466,12 +330,12 @@ describe("Ecommerce", function () {
         const campaignName = "Cypress Newsletter Tokens";
         const campaignSubject = "Cypress' Newsletter Tokens Test";
         const today = new Date();
-        const twoMinAhead = new Date(today.valueOf() + 120000);
-        createAndPush(campaignName, campaignSubject, bodyInput, twoMinAhead, "Administrators");
+        const twoDaysAhead = new Date(today.valueOf() + 172800000);
+        createAndPush(campaignName, campaignSubject, bodyInput, twoDaysAhead, "Administrators");
         sendMassAndConfirmQueue(campaignName, campaignSubject).then((rows) => {
-          expect(rows).to.have.length(1);
+          expect(rows.length).to.be.gte(1, "Should be at least one email in the message queue");
           cy.wrap(rows).should('contain.text', adminEmail);
-          cy.wrap(rows).find('td').contains('Edit').click();
+          cy.wrap(rows).find('td').contains(adminEmail).parent().find("td").contains('Edit').click();
           cy.wait(500);
           cy.get("#Body").invoke("val").then((bodyVal) => {
             tokenArray.forEach((token) => {

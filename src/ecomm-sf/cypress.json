@@ -2,15 +2,9 @@
   "baseUrl": "#{ECOMM_PORTAL_BASE_URL}#",
   "username": "#{USERNAME}#",
   "password": "#{PASSWORD}#",
-  "defaultCategory": "Cypress Trees",
-  "defaultCategoryUrl": "cypress",
-  "defaultLanguage": "English",
-  "env": {
-    "apiUrl": "#{ECOMM_API_URL}#",
-    "x-aptean-apim": "#{X_APTEAN_APIM}#", 
-    "x-aptean-tenant": "#{X_ECOMM_TENANT}#",
-    "x-aptean-tenant-secret": "#{X_ECOMM_TENANT_SECRET}#"
-  },
+  "doNotPrepEnv": false,
+  "doNotClearEnv": false,
+  "env": {},
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
   "supportFile": "cypress/support/index.ts"

@@ -14,8 +14,32 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
+import 'cypress-file-upload';
 import './commands';
-import './cleanup';
+import './setupCommands';
 
+
+/**
+ * These hooks will prepare the environment with required products and categories before the tests run
+ * The before hook will delete any existing Cypress products and categories, then create new Cypress products and categories
+ * After the tests run, the after hook will deleting the products and categories created by the before hook
+ * 
+ * doNotPrepEnv and doNotClearEnv are configs for when one is writing tests
+ * After the environment is prepped the first time, set doNotPrepEnv to true in cypress.json to prevent the environment from being cleaned and prepared again.
+ * Similarly, set doNotClearEnv to true in cypress.json if you don't want the categories and products to be cleared after the tests
+ */
+
+if (!Cypress.config("doNotPrepEnv")) {
+    before(() => {
+        Cypress.log({displayName: "Index.ts", message: "Preparing enviornment"});
+        cy.prepareEnvironment();
+    });
+}
+if (!Cypress.config("doNotClearEnv")) {
+    after(() => {
+        Cypress.log({displayName: "Index.ts", message: "Clearing enviornment"});
+        cy.revertEnvironment();
+    });
+}
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
