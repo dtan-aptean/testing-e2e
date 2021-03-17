@@ -88,6 +88,7 @@ const addProductOrCategory = (
         });
         cy.get(`${buttonId}`).click();
         cy.get("@popup").should("be.called");
+        cy.allowLoad();
         cy.get(`${gridId}`)
           .find("tbody")
           .find("tr")
@@ -546,12 +547,7 @@ describe("Ecommerce", function () {
   });
   context("Discounts", () => {
     after(() => {
-      cy.visit("/");
-      cy.login();
-      cy.wait(1000);
-      cy.clearCart();
-      cy.wait(1000);
-      cy.cleanupDiscounts();
+      cy.revertDiscounts();
     });
 
     beforeEach(() => {

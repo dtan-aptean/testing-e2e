@@ -5,7 +5,7 @@
 
 // Names of products and categories created
 export const mainCategory = "Cypress Trees"
-export var mainCategorySeo = "";
+export var mainCategorySeo = "cypress-trees";
 export const secondCategory = "Non-Cypress Flora";
 export const mainProductOne = "Bald Cypress";
 export const mainProductTwo = "Montezuma Cypress";
@@ -35,10 +35,27 @@ Cypress.Commands.add("revertEnvironment", () => {
   }); 
   cy.cleanupEnvironment().then(() => {
     var disableDiscounts = Cypress.env("envDisableDiscounts");
-    if (disableDiscounts === "true") {
+    if (disableDiscounts === true) {
       cy.switchEnabledDiscounts(true);
     }
   });
+});
+
+// Clean up discounts and check if discounts needs to be re-disabled.
+// This is called in the after of discounts.spec.ts
+Cypress.Commands.add("revertDiscounts", () => {
+  cy.visit("/");
+  cy.login();
+  cy.wait(1000);
+  cy.clearCart();
+  cy.wait(1000);
+  cy.cleanupDiscounts();
+  const disableDiscounts = Cypress.env("envDisableDiscounts");
+  if (disableDiscounts === true) {
+    cy.switchEnabledDiscounts(true).then(() => {
+      Cypress.env("envDisableDiscounts", false);
+    });
+  }
 });
 
 // Delete any Cypress discounts, products, and categories
@@ -104,31 +121,32 @@ Cypress.Commands.add("cleanupEnvironment", () => {
   });
 });
 
-const deleteEditableItem = (tableId: string, deleteId: string, listPath: string, filterFunction?) => {
-  // TODO: May be simpler to use findTableItem
-  const filterFn = filterFunction ? filterFunction : (index, row) => {
-      const text = row[0].innerText.toLowerCase();
-      return text.includes("cypress");
-    };
-  cy.get(`#${tableId}-grid`)
-    .find("tbody")
-    .find("tr")
-    .then(($rows) => {
-      const cypressRows = $rows.filter(filterFn);
-      if (cypressRows.length > 0) {
-        cy.wrap(cypressRows[0])
-          .find(".button-column")
-          .find("a")
-          .click({force: true});
-        cy.wait(5000);
-        cy.get(`#${deleteId}-delete`).click({force: true});
-        cy.get(`#${deleteId}model-Delete-delete-confirmation`)
-          .find("button[type=submit]")
-          .click({force: true});
-        cy.wait(10000);
-        cy.location("pathname").should("eql", `/Admin/${listPath}/List`);
-      }  
-    });
+const deleteItem = (row, deleteId: string, pathName: string) => {
+  var editPath = new RegExp(`/Admin/${pathName}/Edit`, "g");
+  cy.intercept(editPath).as("editPageLoaded");
+  cy.wrap(row)
+    .find(".button-column")
+    .find("a")
+    .click({force: true});
+  cy.wait(5000);
+  cy.wait("@editPageLoaded");
+  cy.get(`#${deleteId}-delete`).click({force: true});
+  cy.get(`#${deleteId}model-Delete-delete-confirmation`)
+    .find("button[type=submit]")
+    .click({force: true});
+  cy.wait(10000);
+  cy.location("pathname").should("eql", `/Admin/${pathName}/List`);
+};
+
+// TODO: function is now only being used by cleanupDiscounts. Remove it and move its functionalities back into cleanupDiscounts
+const openEditableItem = (tableId: string, deleteId: string, pathName: string, filterFn) => {
+  return cy.findTableItem(`#${tableId}-grid`, `#${tableId}-grid_next`, filterFn).then((cypressRows) => {
+    if (cypressRows) {
+      deleteItem(cypressRows[0], deleteId, pathName);
+    } else {
+      return true;
+    }
+  });
 };
 
 // Delete any Cypress discounts
@@ -142,7 +160,11 @@ Cypress.Commands.add("cleanupDiscounts", () => {
       if ($li.length === 2) {
         return;
       } else {
-        deleteEditableItem("discounts", "discount", "Discount");
+        var discountFilter = (index, row) => {
+          const text = row.innerText.toLowerCase();
+          return text.includes("cypress");
+        };
+        openEditableItem("discounts", "discount", "Discount", discountFilter);
         cleanupDiscounts();
       }
     });
@@ -161,24 +183,31 @@ Cypress.Commands.add("cleanupCustomers", () => {
         cy.get("span[title=delete]").click({force: true});
       }
     });
-    cy.get("#SearchFirstName").type("Cypress", {force: true});
+    cy.get("#SearchFirstName").clear({force: true}).type("Cypress", {force: true});
     cy.get("#search-customers").click({force: true});
     cy.allowLoad();
     return cy.get(".pagination").invoke('children').then(($li) => {
       if ($li.length === 2) {
         return;
       } else {
-        const verifyFn = (index, row) => {
+        const customerFilter = (index, row) => {
           const name = row.cells[2].innerText;
           const emailGood = row.cells[1].innerText !== Cypress.config("username");
           const nameGood = name.includes("cypress") || name.includes("Cypress");
           return emailGood && nameGood;
         };
-        deleteEditableItem("customers", "customer", "Customer", verifyFn);
-        cleanupCustomers();
+        return cy.findTableItem("#customers-grid", "customers-grid_next", customerFilter).then((row) => {
+          if (row) {
+            deleteItem(row[0], "customer", "Customer");
+            cleanupCustomers();
+          } else {
+            return
+          }
+        });
       }
     });
   };
+  
   cy.visit("/Admin/Customer/List")
   cy.allowLoad();
   cleanupCustomers();
@@ -193,23 +222,13 @@ Cypress.Commands.add("cleanupCampaigns", () => {
       if ($li.length === 2) {
         return;
       } else {
-        const filterFn = (index, item) => {
+        const campaignFilter = (index, item) => {
           const text = item.cells[0].innerText.toLowerCase();
           return text.includes("cypress");
         }
-        cy.findTableItem("#campaigns-grid", "campaigns-grid_next", filterFn).then((row) => {
+        cy.findTableItem("#campaigns-grid", "campaigns-grid_next", campaignFilter).then((row) => {
           if (row) {
-            cy.wrap(row[0])
-              .find(".button-column")
-              .find("a")
-              .click({force: true});
-            cy.wait(5000);
-            cy.get("#campaign-delete").click({force: true});
-            cy.get("#campaignmodel-Delete-delete-confirmation")
-              .find("button[type=submit]")
-              .click({force: true});
-            cy.wait(5000);
-            cy.location("pathname").should("eql", "/Admin/Campaign/List");
+            deleteItem(row[0], "campaign", "Campaign");
             cleanupCampaigns();
           } else {
             return;
@@ -228,9 +247,11 @@ Cypress.Commands.add("cleanupMessageQueue", () => {
   Cypress.log({displayName: "cleanupMessageQueue", message: "Deleting queued Cypress messages"});
   const cleanupEmails = () => {
     cy.get("#queuedEmails-grid").find("tbody").find("tr").then(($rows) => {
-      const textOfRows = $rows.text();
-      if (textOfRows.includes("Cypress") || textOfRows.includes("cypress")) {
-        cy.wrap($rows).each(($row, index, $list) => {
+      var cypressEmails = $rows.filter((index, item) => {
+        return item.cells[2].innerText.includes("cypress") || item.cells[2].innerText.includes("Cypress");
+      });
+      if (cypressEmails.length > 0) {
+        cy.wrap(cypressEmails).each(($row, index, $list) => {
           const subject = $row[0].cells[2].innerText;
           if (subject.includes("Cypress") || subject.includes("cypress")) {
             cy.wrap($row).find("input[name=checkbox_queuedemails]").check({force: true});
@@ -294,11 +315,10 @@ Cypress.Commands.add("switchEnabledDiscounts", (disableDiscounts: boolean) => {
       } else {
         // Check that discounts aren't disabled, as that would interfere with our tests
         // If they are disabled, enabled them and save an env variable so that post-test clean up will disable them again once we're done
-        Cypress.log({displayName: "switchEnabledDiscounts", message: "Enabling discounts"});
         if (Cypress.$("#IgnoreDiscounts").prop("checked") === true) {
           cy.get("#IgnoreDiscounts").uncheck({force: true});
           cy.get("button[name=save]").click({force: true});
-          Cypress.env("envDisableDiscounts", "true");
+          Cypress.env("envDisableDiscounts", true);
           cy.wait(10000);
         }
       }
@@ -572,7 +592,6 @@ Cypress.Commands.add("setupCategories", () => {
 // Set up products that tests depend on
 Cypress.Commands.add("setupProducts", () => {
   Cypress.log({displayName: "setupProducts", message: "Creating 3 Cypress products"});
-  //cy.intercept(/\/Admin\/Product\/Edit\//g).as("productOpened");
   cy.intercept("/Admin/Product/Create").as("productCreation");
   const addProduct = (
     name: string, 
