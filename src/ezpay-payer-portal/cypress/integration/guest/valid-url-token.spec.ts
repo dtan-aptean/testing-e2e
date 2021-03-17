@@ -15,8 +15,8 @@ describe('Payer Portal - Guest User', function() {
 
     before(() => {
       cy.generatePaymentRequest().then(response => {
-        urlToken = response.paymentUrl.substring(response.paymentUrl.indexOf('/?') + 2);
-        cy.visit(`/?${urlToken}`);
+        urlToken = response.paymentUrl.substring(response.paymentUrl.indexOf('?'));
+        cy.visit(`${urlToken}`);
       })
         .then(() => {
           cy.wait(2000);
