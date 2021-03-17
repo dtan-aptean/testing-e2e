@@ -125,6 +125,8 @@ describe("Ecommerce", function () {
     });
 
     after(() => {
+      cy.visit("/");
+      cy.login();
       // Make sure there's nothing in the message queue
       cy.cleanupMessageQueue().then(() => {
         // Make sure any campaigns get deleted

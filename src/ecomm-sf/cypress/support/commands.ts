@@ -12,15 +12,19 @@ Cypress.Commands.add("allowLoad", () => {
   Cypress.log({displayName: "allowLoad"});
   const checkLoadSymbol = () => {
     const loadingSymbol = Cypress.$("#ajaxBusy");
-    if (loadingSymbol.attr("style").includes("display: block")) {
-      // If the loading symbol is still visible, wait another 3 seconds, then call the function again
-      cy.wait(3000).then(() => {
-        totalTime+=3000;
-        checkLoadSymbol();
-      });
+    if (loadingSymbol.attr("style")) {
+      if (loadingSymbol.attr("style").includes("display: block")) {
+        // If the loading symbol is still visible, wait another 3 seconds, then call the function again
+        cy.wait(3000).then(() => {
+          totalTime+=3000;
+          checkLoadSymbol();
+        });
+      } else {
+        // If it's not visible, end the recursive function.
+        Cypress.log({displayName: "allowLoad", message: `Waited ${totalTime / 1000}s for the page to load`});
+        return;
+      }
     } else {
-      // If it's not visible, end the recursive function.
-      Cypress.log({displayName: "allowLoad", message: `Waited ${totalTime / 1000}s for the table to load`});
       return;
     }
   };
@@ -560,6 +564,7 @@ Cypress.Commands.add("goToGeneralSettings", () => {
 // Find an item in the table. Pass in table id, id for pagination next button, and function to filter with
 // Can work for finding multiple items if remaining on the same page.
 Cypress.Commands.add("findTableItem", (tableId: string, nextButtonId: string, filterFunction) => {
+  Cypress.log({displayName: "findTableItem"});
   // Filter this page of the table. Return the row if found, null otherwise
   const runFilter = () => {
     return cy.get(tableId)
@@ -596,6 +601,7 @@ Cypress.Commands.add("findTableItem", (tableId: string, nextButtonId: string, fi
               // Go to the next page if not on the last page
               cy.get(nextButtonId).find("a").click();
               cy.wait(1000);
+              cy.allowLoad();
             } else {
               return null;
             }
@@ -741,7 +747,7 @@ Cypress.Commands.add("sendMassCampaign", (campaignName) => {
     if (!loc.includes("Campaign/Edit")) {
       cy.editCampaign(campaignName, true);
     }
-    cy.get("button[name=send-mass-email").click();
+    cy.get("button[name=send-mass-email]").click();
     cy.get(".alert").invoke('text').should(
       "not.include",
       "0 emails have been successfully queued."
@@ -763,10 +769,12 @@ Cypress.Commands.add("searchMessageQueue", (subject) => {
       };
     },
   });
+  const today = new Date();
+  cy.get("#SearchStartDate").type(today.toLocaleString(undefined, {dateStyle: "short"}), {force: true});
+  cy.get("#search-queuedemails").click({force: true});
+  cy.allowLoad();
   const messageQueueFilter = (index, item) => {
-    const today = new Date();
-    const formatedToday = today.toLocaleString(undefined, {month: "2-digit", day: "2-digit", year: "numeric"});
-    return item.cells[2].innerText === subject && item.cells[5].innerText.includes(formatedToday);
+    return item.cells[2].innerText === subject && item.cells[4].innerText.includes("cypress");
   };
   return cy.findTableItem("#queuedEmails-grid", "#queuedEmails-grid_next", messageQueueFilter).then((rows) => {
     expect(rows.length).to.be.gte(1, "Expecting at least one email in the queue");
@@ -788,7 +796,7 @@ Cypress.Commands.add("addNewCustomer", (roleObject) => {
   };
   Cypress.log({
     name: "addNewCustomer",
-    message: `${roleObject.email} as ${roleObject.role}`,
+    message: `${roleObject.email} as ${roleObject.roles[0]}`,
     consoleProps: () => {
       return {
         "Customer Object": displayObject(roleObject),
