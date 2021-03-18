@@ -28,7 +28,9 @@ describe('Merchant portal', function() {
     it('should pass if able to make a payment request when mandatory fields are completed', () => {
       const amount = Cypress._.random(0, 1e3);
       const invoicePath = 'sample.pdf';
-      const referenceNumber = Cypress._.random(0, 1e9);
+      const referenceNumber = `${Date.now()
+        .toString()
+        .slice(-4)}-${Cypress._.random(0, 1e12)}`;
 
       // mandatory field validation for payment request
       cy.get('[data-cy=payment-request-error]').should('not.exist');
@@ -76,7 +78,9 @@ describe('Merchant portal', function() {
     it('should fail if same reference number is entered', () => {
       const amount = Cypress._.random(0, 1e3);
       const invoicePath = 'sample.pdf';
-      const referenceNumber = Cypress._.random(0, 1e9);
+      const referenceNumber = `${Date.now()
+        .toString()
+        .slice(-4)}-${Cypress._.random(0, 1e12)}`;
 
       // make first payment request
       cy.getInput('recipient-email')

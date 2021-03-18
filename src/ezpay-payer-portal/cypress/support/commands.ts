@@ -164,6 +164,15 @@ Cypress.Commands.add("makePayment", () => {
   cy.get("body").then(($body) => {
     //Adding payment method according to our need
 
+    //function to select the credit card iframe
+    const getIframeBody = () => {
+      return cy
+        .get("#cc_iframe_iframe")
+        .its("0.contentDocument.body")
+        .should("not.be.empty")
+        .then(cy.wrap);
+    };
+
     //function to add the credit card
     const addCreditCard = (length: number) => {
       //opening the modal
@@ -209,10 +218,11 @@ Cypress.Commands.add("makePayment", () => {
     ) {
       addCreditCard($body.find("[data-cy=menu-options]").length);
     } else if (!$body.find("[data-cy=menu-options]").length) {
-      addCreditCard(1);
+      addCreditCard(0);
+    } else {
+      cy.wait(10000);
     }
 
-    cy.wait(10000);
     // Grab the first payment from the table and pay by credit card
     cy.get("table")
       .find("tr")
@@ -223,18 +233,29 @@ Cypress.Commands.add("makePayment", () => {
       .click({ force: true });
     // Wait for page to load
     cy.wait(5000);
-    if (!$body.find("[data-cy=submit-payment-button]").length) {
-      cy.get(".MuiFormGroup-root")
-        .children()
-        .contains("Card ending in")
-        .last()
-        .click({ force: true });
-    }
+    cy.get("body").then(($makePaymentBody) => {
+      if (!$makePaymentBody.find("[data-cy=submit-payment-button]").length) {
+        cy.get(".MuiFormGroup-root")
+          .children()
+          .contains("Card ending in")
+          .last()
+          .click({ force: true });
+      } else if (
+        $makePaymentBody.find("div:contains(Account ending in)").length
+      ) {
+        cy.get(".MuiIconButton-label > .MuiSvgIcon-root").click({
+          force: true,
+        });
+        cy.get(".MuiFormGroup-root")
+          .children()
+          .contains("Card ending in")
+          .last()
+          .click({ force: true });
+      }
+    });
     cy.get("[data-cy=submit-payment-button]").click();
     cy.wait(500);
     cy.get("[data-cy=pay-now]").click();
-    cy.wait(5000);
-    cy.visit("/");
     cy.wait(5000);
   });
 });

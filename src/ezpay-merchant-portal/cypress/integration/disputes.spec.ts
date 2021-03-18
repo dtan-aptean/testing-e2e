@@ -75,7 +75,7 @@ describe("Merchant portal", function () {
               let status = undefined;
               cy.wrap($row)
                 .find("td")
-                .eq(0)
+                .eq(1)
                 .then(($cell) => {
                   status = $cell.text();
                   if (status === "Action Needed") {
@@ -100,7 +100,7 @@ describe("Merchant portal", function () {
                     let status = undefined;
                     cy.wrap($el)
                       .find("td")
-                      .eq(0)
+                      .eq(1)
                       .then(($cell) => {
                         status = $cell.text();
                         if (status === "Action Needed") {
@@ -133,7 +133,7 @@ describe("Merchant portal", function () {
       });
     });
 
-    it("Details modal shows after clicking details button", () => {
+    it("Details modal shows after clicking details button and dispute id", () => {
       cy.get("@rows").should("have.length.gte", 1);
       const detailsArray = [];
       // Find the disputes that aren't active
@@ -143,7 +143,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(0)
+            .eq(1)
             .then(($cell) => {
               status = $cell.text();
               if (status !== "Action Needed") {
@@ -152,25 +152,37 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
+          //using details button
           // Find the cell that holds the button
-          cy.wrap(detailsArray[0]).find("td").eq(4).as("actionsCell");
+          cy.wrap(detailsArray[0]).find("td").eq(5).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
-          // Trigger the mouseover that will show the button
+          // Trigger the mouseover
           cy.wrap(detailsArray[0]).trigger("mouseover");
-          cy.get("@actionsCell").should("not.be.empty");
-          // Click the button and open the modal
-          cy.get("@actionsCell").within(() => {
-            cy.get("[data-cy=view-dispute]")
-              .scrollIntoView()
-              .should("be.visible");
-            cy.get("[data-cy=view-dispute]").click();
-          });
-          // Check that the modal is visible
+          cy.get("@actionsCell").should("be.empty");
+
+          //using view deatils option
+          cy.wrap(detailsArray[0]).click();
+          cy.get("[data-cy=dispute-details]").should("be.enabled").click();
           cy.get("[data-cy=dispute-information]")
             .should("exist")
             .and("be.visible");
           cy.get("[data-cy=close-dispute]").should("exist").and("be.visible");
           cy.get("[data-cy=close-dispute]").click();
+          cy.get("[data-cy=dispute-information]").should("not.exist");
+
+          //using dispute id link
+          cy.wrap(detailsArray[0])
+            .find("td")
+            .eq(0)
+            .within(() => {
+              cy.get('a[href="#"]').click({ force: true });
+            });
+          cy.get("[data-cy=dispute-information]")
+            .should("exist")
+            .and("be.visible");
+          cy.get("[data-cy=close-dispute]").should("exist").and("be.visible");
+          cy.get("[data-cy=close-dispute]").click();
+          cy.get("[data-cy=dispute-information]").should("not.exist");
         });
     });
 
@@ -184,7 +196,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(0)
+            .eq(1)
             .then(($cell) => {
               status = $cell.text();
               if (status !== "Action Needed") {
@@ -194,18 +206,12 @@ describe("Merchant portal", function () {
         })
         .then(($list) => {
           // Find the cell that holds the button
-          cy.wrap(detailsArray[0]).find("td").eq(4).as("actionsCell");
+          cy.wrap(detailsArray[0]).find("td").eq(5).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
-          // Trigger the mouseover that will show the button
+          // Trigger the mouseover
           cy.wrap(detailsArray[0]).trigger("mouseover");
-          cy.get("@actionsCell").should("not.be.empty");
-          // Click the button and open the modal
-          cy.get("@actionsCell").within(() => {
-            cy.get("[data-cy=view-dispute]")
-              .scrollIntoView()
-              .should("be.visible");
-            cy.get("[data-cy=view-dispute]").click({ force: true });
-          });
+          cy.get("@actionsCell").should("be.empty");
+          cy.wrap(detailsArray[0]).dblclick();
           cy.get("[data-cy=dispute-information]")
             .should("exist")
             .and("be.visible");
@@ -217,13 +223,8 @@ describe("Merchant portal", function () {
           // Open the modal again
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.wrap(detailsArray[0]).trigger("mouseover");
-          cy.get("@actionsCell").should("not.be.empty");
-          cy.get("@actionsCell").within(() => {
-            cy.get("[data-cy=view-dispute]")
-              .scrollIntoView()
-              .should("be.visible");
-            cy.get("[data-cy=view-dispute]").click({ force: true });
-          });
+          cy.get("@actionsCell").should("be.empty");
+          cy.wrap(detailsArray[0]).dblclick();
           cy.get("[data-cy=dispute-information]")
             .should("exist")
             .and("be.visible");
@@ -242,7 +243,7 @@ describe("Merchant portal", function () {
       cy.get("@rows").should("have.length.gte", 1);
       cy.get("@rows").eq(0).as("firstRow");
       // Just get the first row, there's an invoice regardless of status
-      cy.get("@firstRow").find("td").eq(4).as("actionsCell");
+      cy.get("@firstRow").find("td").eq(5).as("actionsCell");
       cy.get("@actionsCell").scrollIntoView().should("be.visible");
       cy.get("@firstRow").trigger("mouseover");
       cy.get("@actionsCell").within(() => {
@@ -271,14 +272,14 @@ describe("Merchant portal", function () {
       cy.get("@rows")
         .eq(0)
         .find("td")
-        .eq(2)
+        .eq(3)
         .then((el) => {
           const originalDate = el.text();
 
           // Change the date ordering
           cy.get("[data-cy=payment-disputes-panel]")
             .find("table>thead>tr>th")
-            .eq(2)
+            .eq(3)
             .as("date");
           cy.get("@date").click();
           cy.wait(5000);
@@ -288,7 +289,7 @@ describe("Merchant portal", function () {
             .find("tr")
             .eq(0)
             .find("td")
-            .eq(2)
+            .eq(3)
             .then((newEl) => {
               // Confirm that the new value is different than the previous value
               cy.expect(newEl.text()).to.not.equal(originalDate);
@@ -300,7 +301,7 @@ describe("Merchant portal", function () {
                 .find("tr")
                 .eq(0)
                 .find("td")
-                .eq(2)
+                .eq(3)
                 .then((finalEl) => {
                   cy.expect(finalEl.text()).to.equal(originalDate);
                 });
@@ -322,7 +323,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(0)
+            .eq(1)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -331,7 +332,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           cy.get("@actionsCell").within(() => {
@@ -352,7 +353,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(0)
+            .eq(1)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -361,7 +362,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Click the review button
@@ -370,7 +371,7 @@ describe("Merchant portal", function () {
               .scrollIntoView()
               .should("be.visible");
             cy.get("[data-cy=view-dispute]").should("have.text", "Review");
-            cy.get("[data-cy=view-dispute]").click();
+            cy.get("[data-cy=view-dispute]").click({ force: true });
           });
           // Check that the modal is open
           cy.get("[data-cy=chargeback-review]")
@@ -391,7 +392,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(0)
+            .eq(1)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -400,7 +401,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Open the modal
@@ -409,7 +410,7 @@ describe("Merchant portal", function () {
               .scrollIntoView()
               .should("be.visible");
             cy.get("[data-cy=view-dispute]").should("have.text", "Review");
-            cy.get("[data-cy=view-dispute]").click();
+            cy.get("[data-cy=view-dispute]").click({ force: true });
           });
           cy.get("[data-cy=chargeback-review]")
             .should("exist")
@@ -432,7 +433,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(0)
+            .eq(1)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -441,7 +442,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Open the chargeback modal
@@ -450,7 +451,7 @@ describe("Merchant portal", function () {
               .scrollIntoView()
               .should("be.visible");
             cy.get("[data-cy=view-dispute]").should("have.text", "Review");
-            cy.get("[data-cy=view-dispute]").click();
+            cy.get("[data-cy=view-dispute]").click({ force: true });
           });
           cy.get("[data-cy=chargeback-review]")
             .should("exist")
@@ -481,7 +482,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(0)
+            .eq(1)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -490,7 +491,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Open the chargeback modal
@@ -499,7 +500,7 @@ describe("Merchant portal", function () {
               .scrollIntoView()
               .should("be.visible");
             cy.get("[data-cy=view-dispute]").should("have.text", "Review");
-            cy.get("[data-cy=view-dispute]").click();
+            cy.get("[data-cy=view-dispute]").click({ force: true });
           });
           cy.get("[data-cy=chargeback-review]")
             .should("exist")
@@ -530,7 +531,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(0)
+            .eq(1)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -539,7 +540,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Open chargeback review modal
@@ -548,7 +549,7 @@ describe("Merchant portal", function () {
               .scrollIntoView()
               .should("be.visible");
             cy.get("[data-cy=view-dispute]").should("have.text", "Review");
-            cy.get("[data-cy=view-dispute]").click();
+            cy.get("[data-cy=view-dispute]").click({ force: true });
           });
           cy.get("[data-cy=chargeback-review]")
             .should("exist")
@@ -580,7 +581,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(0)
+            .eq(1)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -592,7 +593,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(4).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Open chargeback review modal
@@ -601,7 +602,7 @@ describe("Merchant portal", function () {
               .scrollIntoView()
               .should("be.visible");
             cy.get("[data-cy=view-dispute]").should("have.text", "Review");
-            cy.get("[data-cy=view-dispute]").click();
+            cy.get("[data-cy=view-dispute]").click({ force: true });
           });
           cy.get("[data-cy=chargeback-review]")
             .should("exist")
@@ -630,7 +631,7 @@ describe("Merchant portal", function () {
           cy.get("@updatedRows").then(($rowList) => {
             cy.wrap($rowList[relevantIndex])
               .find("td")
-              .eq(0)
+              .eq(1)
               .should("have.text", "Conceded (Processing)");
           });
         });

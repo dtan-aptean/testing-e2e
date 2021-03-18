@@ -24,8 +24,24 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
+
+      //checking if status is still pending and then waiting accordingly
+      cy.get("body").then(($body) => {
+        if (
+          $body
+            .find("[data-cy=payments-table-body]")
+            .find("tr")
+            .eq(0)
+            .find("td:contains(Pending)").length
+        ) {
+          cy.wait(35000);
+          cy.get("[data-cy=refresh]").click();
+          cy.wait(3000);
+        }
+      });
+
       cy.get("@firstRow").find("td").eq(1).should("contain", "Completed");
-      cy.get("@firstRow").find("td").eq(4).should("contain", "10.00");
+      cy.get("@firstRow").find("td").eq(3).should("contain", "10.00");
     });
 
     it("Selecting completed payment should enable view details and refund button", () => {
@@ -37,8 +53,22 @@ describe("All Payments Table", function () {
     });
 
     it("should be able to open and close the info modal", () => {
+      //using view details button
       cy.get("@firstRow").click();
       cy.get("[data-cy=view-details]").should("be.enabled").click();
+      cy.get("[data-cy=payment-details-modal]")
+        .should("exist")
+        .should("be.visible");
+      cy.get("[data-cy=payment-details-close]").should("be.enabled").click();
+      cy.get("[data-cy=payment-details-modal]").should("not.exist");
+
+      //using payment id hyperlink
+      cy.get("@firstRow")
+        .get("td")
+        .eq(0)
+        .within(() => {
+          cy.get('a[href="#"]').click({ force: true });
+        });
       cy.get("[data-cy=payment-details-modal]")
         .should("exist")
         .should("be.visible");
@@ -137,6 +167,21 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
 
+      //checking if status is still pending and then waiting accordingly
+      cy.get("body").then(($body) => {
+        if (
+          $body
+            .find("[data-cy=payments-table-body]")
+            .find("tr")
+            .eq(0)
+            .find("td:contains(Pending)").length
+        ) {
+          cy.wait(35000);
+          cy.get("[data-cy=refresh]").click();
+          cy.wait(3000);
+        }
+      });
+
       //making partial refund
       cy.get("@firstRow").click();
       cy.get("[data-cy=refund]").should("be.enabled").click();
@@ -154,7 +199,7 @@ describe("All Payments Table", function () {
 
       //checking the status for partially refunded
       cy.get("@firstRow").find("td").eq(1).contains("Refund Pending");
-      cy.wait(60000);
+      cy.wait(90000);
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
       cy.get("@firstRow").find("td").eq(1).contains("Partially Refunded");
@@ -172,7 +217,7 @@ describe("All Payments Table", function () {
 
       //checking the status for fully refunded
       cy.get("@firstRow").find("td").eq(1).contains("Refund Pending");
-      cy.wait(60000);
+      cy.wait(90000);
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
       cy.get("@firstRow").find("td").eq(1).contains("Fully Refunded");
@@ -181,7 +226,7 @@ describe("All Payments Table", function () {
     //To be tested once the payment starts failing for magic number
     it.skip("Failed payment should not have refund option", () => {
       cy.createAndPay(1, "6.61", "payment");
-      cy.wait(35000);
+      cy.wait(20000);
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);

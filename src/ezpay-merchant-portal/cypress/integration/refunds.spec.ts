@@ -33,7 +33,9 @@ describe("Merchant portal", function () {
     it("Unpaid payment cannot refund", () => {
       const amount = 10;
       const invoicePath = "sample.pdf";
-      const referenceNumber = Cypress._.random(0, 1e9);
+      const referenceNumber = `${Date.now()
+        .toString()
+        .slice(-4)}-${Cypress._.random(0, 1e12)}`;
       cy.getInput("recipient-email").type(Cypress.config("username"));
       cy.getInput("amount").type(amount);
       cy.getInput("reference-number").type(referenceNumber);
@@ -56,9 +58,7 @@ describe("Merchant portal", function () {
 
       // checking via info modal
       cy.get("[data-cy=view-details]").should("be.visible").click();
-      cy.get("[data-cy=pr-details-refund]")
-        .should("exist")
-        .should("be.disabled");
+      cy.get("[data-cy=pr-details-refund]").should("not.exist");
     });
 
     it("Merchant clicks the refund button and an issue refund modal opens", () => {
@@ -70,6 +70,21 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
+
+      //checking if status is still pending and then waiting accordingly
+      cy.get("body").then(($body) => {
+        if (
+          $body
+            .find("[data-cy=payments-table-body]")
+            .find("tr")
+            .eq(0)
+            .find("td:contains(Pending)").length
+        ) {
+          cy.wait(35000);
+          cy.get("[data-cy=refresh]").click();
+          cy.wait(3000);
+        }
+      });
 
       cy.get("@firstPaymentCells")
         .eq(1)
@@ -431,6 +446,21 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
 
+      //checking if status is still pending and then waiting accordingly
+      cy.get("body").then(($body) => {
+        if (
+          $body
+            .find("[data-cy=payments-table-body]")
+            .find("tr")
+            .eq(0)
+            .find("td:contains(Pending)").length
+        ) {
+          cy.wait(35000);
+          cy.get("[data-cy=refresh]").click();
+          cy.wait(3000);
+        }
+      });
+
       //making remaining amount refund
       cy.get("@firstPaymentCells")
         .eq(1)
@@ -461,7 +491,7 @@ describe("Merchant portal", function () {
       cy.get("@firstPaymentRequestCells")
         .eq(1)
         .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Refund Pending");
+          expect($cell.eq(0)).to.contain("Refund");
         });
     });
   });

@@ -29,7 +29,9 @@ describe("Payment Request Table", function () {
           // If there are not entries, create a new one and make sure we can access it
           const amount = Cypress._.random(1, 1e3);
           const invoicePath = "sample.pdf";
-          const referenceNumber = Cypress._.random(0, 1e9);
+          const referenceNumber = `${Date.now()
+            .toString()
+            .slice(-4)}-${Cypress._.random(0, 1e12)}`;
           cy.getInput("recipient-email").type("john.doe@aptean.com");
           cy.getInput("amount").type(amount);
           cy.getInput("reference-number").type(referenceNumber);
@@ -82,6 +84,21 @@ describe("Payment Request Table", function () {
         .find(".MuiBackdrop-root")
         .click({ force: true }); // Force the click because Cypress considers the backdrop not visible, and thus unclickable
       cy.get("[data-cy=payment-request-details-modal]").should("not.exist");
+
+      //open model using refence hyperlink
+      cy.get("@rows")
+        .eq(0)
+        .get("td")
+        .eq(0)
+        .within(() => {
+          cy.get('a[href="#"]').click({ force: true });
+        });
+      cy.get("[data-cy=payment-request-details-modal]")
+        .should("exist")
+        .and("be.visible");
+      cy.get("[data-cy=pr-details-close]").should("exist");
+      cy.get("[data-cy=pr-details-close]").click({ force: true });
+      cy.get("[data-cy=payment-request-details-modal]").should("not.exist");
     });
 
     it("should pass if it can successfully send a reminder when unpaid, failed, or canceled, and when the reminder button is disabled otherwise", () => {
@@ -118,7 +135,7 @@ describe("Payment Request Table", function () {
                 .should("have.length.greaterThan", originalLength);
             });
         } else {
-          cy.get("[data-cy=pr-details-remind]").should("be.disabled");
+          cy.get("[data-cy=pr-details-remind]").should("not.exist");
         }
       });
     });
@@ -144,7 +161,7 @@ describe("Payment Request Table", function () {
           ) {
             cy.get("[data-cy=pr-details-refund]").should("not.be.disabled");
           } else {
-            cy.get("[data-cy=pr-details-refund]").should("be.disabled");
+            cy.get("[data-cy=pr-details-refund]").should("not.exist");
           }
           cy.get("[data-cy=pr-details-close]").click({ force: true });
         });
@@ -155,7 +172,9 @@ describe("Payment Request Table", function () {
       cy.wait(4000);
       const amount = 10;
       const invoicePath = "sample.pdf";
-      const referenceNumber = Cypress._.random(0, 1e9);
+      const referenceNumber = `${Date.now()
+        .toString()
+        .slice(-4)}-${Cypress._.random(0, 1e12)}`;
       cy.getInput("recipient-email").type(Cypress.config("username"));
       cy.getInput("amount").type(amount);
       cy.getInput("reference-number").type(referenceNumber);
@@ -184,6 +203,22 @@ describe("Payment Request Table", function () {
       cy.makePayment(1);
       cy.visit("/");
       cy.wait(35000);
+
+      //checking if status is still pending and then waiting accordingly
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(3000);
+      cy.get("body").then(($body) => {
+        if (
+          $body
+            .find("[data-cy=payments-table-body]")
+            .find("tr")
+            .eq(0)
+            .find("td:contains(Pending)").length
+        ) {
+          cy.wait(35000);
+        }
+      });
+
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(4000);
@@ -206,7 +241,7 @@ describe("Payment Request Table", function () {
       cy.get("[data-cy=refund-amount]").find("input").type("5");
       cy.get("[data-cy=refund-reason]").find("input").type("test");
       cy.get("[data-cy=process-refund]").click();
-      cy.wait(60000);
+      cy.wait(90000);
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(4000);
@@ -306,6 +341,22 @@ describe("Payment Request Table", function () {
       // creating the completed payment request record to check the refund modal
       cy.createAndPay(1, "1.00", "refund");
       cy.wait(35000);
+
+      //checking if status is still pending and then waiting accordingly
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(2000);
+      cy.get("body").then(($body) => {
+        if (
+          $body
+            .find("[data-cy=payments-table-body]")
+            .find("tr")
+            .eq(0)
+            .find("td:contains(Pending)").length
+        ) {
+          cy.wait(35000);
+        }
+      });
+
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(2000);
@@ -351,7 +402,9 @@ describe("Payment Request Table", function () {
     it("should pass if a new request shows in the table", () => {
       const amount = Cypress._.random(1, 1e3);
       const invoicePath = "sample.pdf";
-      const referenceNumber = Cypress._.random(0, 1e9);
+      const referenceNumber = `${Date.now()
+        .toString()
+        .slice(-4)}-${Cypress._.random(0, 1e12)}`;
       const email = "john.doe@aptean.com";
       cy.getInput("recipient-email").type(email);
       cy.getInput("amount").type(amount);
@@ -373,25 +426,25 @@ describe("Payment Request Table", function () {
           expect($cell.eq(0)).to.contain("Unpaid");
         });
       cy.get("@newCells")
-        .eq(4)
+        .eq(3)
         .should(($cell) => {
           const today = new Date().toLocaleDateString();
           expect($cell.eq(0)).to.contain(today);
         });
       cy.get("@newCells")
-        .eq(5)
+        .eq(4)
         .should(($cell) => {
           // TODO: Fix this to work with other currencies
           const amountFormatted = amount.toString();
           expect($cell.eq(0).text()).to.include(amountFormatted);
         });
       cy.get("@newCells")
-        .eq(3)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain(email);
         });
       cy.get("@newCells")
-        .eq(2)
+        .eq(0)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain(referenceNumber);
         });
@@ -445,7 +498,9 @@ describe("Payment Request Table", function () {
     it("should pass if searching brings up the correct result", () => {
       const amount = 10;
       const invoicePath = "sample.pdf";
-      const referenceNumber = Cypress._.random(0, 1e9);
+      const referenceNumber = `${Date.now()
+        .toString()
+        .slice(-4)}-${Cypress._.random(0, 1e12)}`;
       const email = Cypress.config("username");
       const phone = "5555555555";
       cy.getInput("recipient-email").type(email);
@@ -476,7 +531,7 @@ describe("Payment Request Table", function () {
       cy.get("@searchedRows").then(($list) => {
         cy.wrap($list[0])
           .find("td")
-          .eq(2)
+          .eq(0)
           .contains(referenceNumber.toString())
           .then((el) => {
             if (el.text() === referenceNumber.toString()) {
@@ -506,7 +561,7 @@ describe("Payment Request Table", function () {
       cy.get("@newRows").then(($newList) => {
         cy.wrap($newList[0])
           .find("td")
-          .eq(2)
+          .eq(0)
           .contains(referenceNumber.toString())
           .then((newEl) => {
             if (newEl.text() === referenceNumber.toString()) {
@@ -536,7 +591,7 @@ describe("Payment Request Table", function () {
       cy.get("@newRows").then(($phoneList) => {
         cy.wrap($phoneList[0])
           .find("td")
-          .eq(2)
+          .eq(0)
           .contains(referenceNumber.toString())
           .then((phoneEl) => {
             if (phoneEl.text() === referenceNumber.toString()) {

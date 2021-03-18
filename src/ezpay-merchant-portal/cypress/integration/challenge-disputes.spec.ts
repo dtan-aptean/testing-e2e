@@ -39,7 +39,7 @@ describe("Merchant Portal", function () {
                 let status = undefined;
                 cy.wrap($row)
                   .find("td")
-                  .eq(0)
+                  .eq(1)
                   .then(($cell) => {
                     status = $cell.text();
                     if (status === "Action Needed") {
@@ -64,7 +64,7 @@ describe("Merchant Portal", function () {
                       let status = undefined;
                       cy.wrap($el)
                         .find("td")
-                        .eq(0)
+                        .eq(1)
                         .then(($cell) => {
                           status = $cell.text();
                           if (status === "Action Needed") {
@@ -89,19 +89,19 @@ describe("Merchant Portal", function () {
         .as("activeDispute");
       cy.get("@activeDispute")
         .find("td")
-        .eq(4)
+        .eq(5)
         .scrollIntoView()
         .should("be.visible");
       // Open the modal
       cy.get("@activeDispute")
         .find("td")
-        .eq(4)
+        .eq(5)
         .within(() => {
           cy.get("[data-cy=view-dispute]")
             .scrollIntoView()
             .should("be.visible")
             .and("have.text", "Review");
-          cy.get("[data-cy=view-dispute]").click();
+          cy.get("[data-cy=view-dispute]").click({ force: true });
         });
       cy.get("[data-cy=chargeback-review]").should("exist").and("be.visible");
     });
@@ -545,7 +545,7 @@ describe("Merchant Portal", function () {
       cy.get("[data-cy=hidden-file-input]")
         .find("input")
         .attachFile("disputeSample1.pdf");
-      cy.wait(1000);
+      cy.wait(5000);
 
       // Upload duplicate file
       cy.get("[data-cy=documentation-select]")
@@ -554,7 +554,7 @@ describe("Merchant Portal", function () {
       cy.get("[data-cy=hidden-file-input]")
         .find("input")
         .attachFile("disputeSample1.pdf");
-      cy.wait(1000);
+      cy.wait(5000);
       // Check for the error
       cy.get("[data-cy=challenge-dispute-error]")
         .should("exist")
@@ -638,7 +638,7 @@ describe("Merchant Portal", function () {
           .find("tr")
           .eq(index)
           .find("td")
-          .eq(0)
+          .eq(1)
           .should("have.text", "Challenged (Processing)");
       });
     });

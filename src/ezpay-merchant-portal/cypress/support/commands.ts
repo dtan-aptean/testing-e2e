@@ -261,7 +261,9 @@ Cypress.Commands.add("generatePaymentRequest", () => {
     })
     .then((uniqueId) => {
       const amount = Cypress._.random(100, 1e3);
-      const referenceNumber = Cypress._.random(0, 1e6);
+      const referenceNumber = `${Date.now()
+        .toString()
+        .slice(-4)}-${Cypress._.random(0, 1e12)}`;
       const email = "john.doe@aptean.com";
       const phone = "5555555555";
       const gqlQuery = `mutation {
@@ -366,7 +368,7 @@ Cypress.Commands.add("makePayment", (count) => {
           }
         });
         // Wait to finish logging in, or to finish loading
-        cy.wait(5000);
+        cy.wait(10000);
         cy.get("div").then(($boday) => {
           //function to get cc iframe
           const getIframeBody = () => {
@@ -426,7 +428,7 @@ Cypress.Commands.add("makePayment", (count) => {
           ) {
             addCreditCard($boday.find("[data-cy=menu-options]").length);
           } else if (!$boday.find("[data-cy=menu-options]").length) {
-            addCreditCard(1);
+            addCreditCard(0);
           }
           // Complete assigned payments
           for (var i = 0; i < count; i++) {
@@ -443,13 +445,28 @@ Cypress.Commands.add("makePayment", (count) => {
             // Wait for page to load
             cy.wait(5000);
             // TODO: Set up command to deal when payer has no payment method or doesn't have default payment method, etc
-            if (!$boday.find("[data-cy=submit-payment-button]").length) {
-              cy.get(".MuiFormGroup-root")
-                .children()
-                .contains("Card ending in")
-                .last()
-                .click({ force: true });
-            }
+            cy.get("body").then(($makePaymentBody) => {
+              if (
+                !$makePaymentBody.find("[data-cy=submit-payment-button]").length
+              ) {
+                cy.get(".MuiFormGroup-root")
+                  .children()
+                  .contains("Card ending in")
+                  .last()
+                  .click({ force: true });
+              } else if (
+                $makePaymentBody.find("div:contains(Account ending in)").length
+              ) {
+                cy.get(".MuiIconButton-label > .MuiSvgIcon-root").click({
+                  force: true,
+                });
+                cy.get(".MuiFormGroup-root")
+                  .children()
+                  .contains("Card ending in")
+                  .last()
+                  .click({ force: true });
+              }
+            });
             cy.get("[data-cy=submit-payment-button]").click();
             cy.wait(500);
             cy.get("[data-cy=pay-now]").click();
@@ -505,10 +522,9 @@ Cypress.Commands.add(
     // Make the requests
     for (var i = 0; i < requestCount; i++) {
       const money = amount || Cypress._.random(2, 1e3);
-      const referenceNumber = `${referencePrefix}-${Cypress._.random(
-        100,
-        1e9
-      )}`;
+      const referenceNumber = `${referencePrefix}-${Date.now()
+        .toString()
+        .slice(-4)}-${Cypress._.random(100, 1e12)}`;
       cy.getInput("recipient-email").type(Cypress.config("username"));
       cy.getInput("amount").type(money);
       cy.getInput("reference-number").type(referenceNumber);

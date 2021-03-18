@@ -2,8 +2,8 @@ const puppeteer = require('puppeteer');
 
 exports.authenticateUser = async function authenticateUser(userOptions) {
   const { email, password, root, scopes, clientId, authorityName, homeAccountIdentifier } = userOptions;
-  const contextClientKey = JSON.stringify({"authority":authorityName,"clientId":clientId,"scopes":clientId,"homeAccountIdentifier":homeAccountIdentifier});
-  const contextScopeKey = JSON.stringify({"authority":authorityName,"clientId":clientId,"scopes":scopes,"homeAccountIdentifier":homeAccountIdentifier});
+  const contextClientKey = JSON.stringify({ "authority": authorityName, "clientId": clientId, "scopes": clientId, "homeAccountIdentifier": homeAccountIdentifier });
+  const contextScopeKey = JSON.stringify({ "authority": authorityName, "clientId": clientId, "scopes": scopes, "homeAccountIdentifier": homeAccountIdentifier });
   const creds = await puppeteer
     .launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
     .then(async browser => {
@@ -26,8 +26,9 @@ exports.authenticateUser = async function authenticateUser(userOptions) {
         console.log('password success');
         await page.waitFor(500);
         await page.click("button[id=next]");
-        await page.waitFor(5000);
+        await page.waitFor(10000);
         await page.goto(`${root}/`);
+        await page.waitFor(5000);
         const sessionStorageData = await page.evaluate((contextClientKey, contextScopeKey) => {
           const accessToken = sessionStorage.getItem('msal.idtoken');
           const info = sessionStorage.getItem('msal.client.info');
