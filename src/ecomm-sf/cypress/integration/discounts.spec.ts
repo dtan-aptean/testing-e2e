@@ -58,24 +58,33 @@ const addProductOrCategory = (
   prodCatName: string,
   productOrCategory: string
 ) => {
-  var buttonId;
-  var gridId;
-  var panelId
+  var buttonId = "";
+  var gridId = "";
+  var panelId = "";
+  var searchId  = "";
+  var searchButtonId = "";
+  var nextButtonId = "";
   if (productOrCategory === "product") {
     panelId = "#discount-applied-to-products";
     buttonId = "#btnAddNewProduct";
     gridId = "#products-grid";
+    searchId = "#SearchProductName";
+    searchButtonId = "#search-products";
+    nextButtonId = "#products-grid_next";
   } else if (productOrCategory === "category") {
     panelId = "#discount-applied-to-categories";
     buttonId = "#btnAddNewCategory";
     gridId = "#categories-grid";
+    searchId = "#SearchCategoryName";
+    searchButtonId = "#search-categories";
+    nextButtonId = "#categories-grid_next";
   }
-  cy.get(`${panelId}`).then((panel) => {
+  cy.get(panelId).then((panel) => {
     if (!panel[0].innerHTML.includes("opened")) {
       cy.wrap(panel).click();
-      cy.get(`${panelId}`).should("contain.html", "opened");
+      cy.get(panelId).should("contain.html", "opened");
     }
-    cy.get(`${buttonId}`).then((button) => {
+    cy.get(buttonId).then((button) => {
       const url = button.attr("onclick")?.split('"')[1];
       cy.location("pathname").then((loc) => {
         const current = loc;
@@ -86,17 +95,18 @@ const addProductOrCategory = (
             win.location.href = Cypress.config().baseUrl + url;
           }).as("popup"); // alias it with popup, so we can wait refer it with @popup
         });
-        cy.get(`${buttonId}`).click();
+        cy.get(buttonId).click();
         cy.get("@popup").should("be.called");
         cy.allowLoad();
-        cy.get(`${gridId}`)
-          .find("tbody")
-          .find("tr")
-          .then(($rows) => {
-            const row = $rows.filter((index, item) => {
-              return item.cells[1].innerText === prodCatName;
-            });
-            cy.wrap(row).find("td").find("input").check();
+        cy.get(searchId).type(prodCatName);
+        cy.get(searchButtonId).click();
+        cy.allowLoad();
+        const rowFilter = (index, item) => {
+          return item.cells[1].innerText === prodCatName;
+        };
+        cy.findTableItem(gridId, nextButtonId, rowFilter).then(($row) => {
+          if ($row) {
+            cy.wrap($row).find("td").find("input").check();
             cy.get("button[name=save]").click();
             cy.wait(500);
             cy.visit(current);
@@ -106,7 +116,10 @@ const addProductOrCategory = (
               "contain.text",
               "The discount has been updated successfully."
             );
-          });
+          } else {
+            assert.exists($row, `Expected a row for ${prodCatName} in the ${productOrCategory} table`);
+          }
+        });
       });
     });
   });
