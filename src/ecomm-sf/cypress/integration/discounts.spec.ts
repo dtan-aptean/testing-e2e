@@ -142,12 +142,15 @@ const addProductsToCart = () => {
   cy.goToProduct(secondProduct, secondCategory);
   getOriginalPrice().then((altProductPrice) => {
     cy.get(".add-to-cart-button").click();
+    cy.allowLoad();
     cy.goToProduct(mainProductOne, mainCategory);
     getOriginalPrice().then((firstProductPrice) => {
       cy.get(".add-to-cart-button").click();
+      cy.allowLoad();
       cy.goToProduct(mainProductTwo, mainCategory);
       getOriginalPrice().then((secondProductPrice) => {
         cy.get(".add-to-cart-button").click();
+        cy.allowLoad();
         cy.wrap({ altProductPrice, firstProductPrice, secondProductPrice }).as("productPrices");
         cy.goToCart();
       });
@@ -461,14 +464,14 @@ const checkUnitSubtotal = (
     .get('.product-quantity')
     .invoke("text")
     .then((value) => {
-      getValue(value);
+      return getValue(value);
     });
   } else {
     return cy
     .get(".qty-input")
     .invoke("val")
     .then((value) => {
-      getValue(value);
+      return getValue(value);
     });
   }
 };
@@ -479,11 +482,16 @@ const checkCartRow = (
   discount: number,
   fullPrice: boolean
 ) => {
+  var subtotal = 0;
   return cy.wrap(tr).within(($tr) => {
     const unitPrice = fullPrice ? price : price - discount;
     const inCheckout = $tr[0].innerHTML.includes("product-quantity");
     checkUnitPrice(unitPrice);
-    checkUnitSubtotal(price, discount, fullPrice, inCheckout);
+    checkUnitSubtotal(price, discount, fullPrice, inCheckout).then((sbValue: number) => {
+      subtotal = sbValue;
+    });
+  }).then(() => {
+    return subtotal;
   });
 };
 // Examines the cart to make sure discounts are applied correctly.

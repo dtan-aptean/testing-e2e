@@ -17,7 +17,7 @@ Cypress.Commands.add("allowLoad", () => {
   Cypress.log({displayName: "allowLoad"});
   const checkLoadSymbol = () => {
     const loadingSymbol = Cypress.$(loadId);
-    if (loadingSymbol.attr("style")) {
+    if (loadingSymbol.attr("style") !== undefined) {
       if (!loadingSymbol.attr("style").includes("display: none")) {
         // If the loading symbol is still visible, wait another 3 seconds, then call the function again
         cy.wait(3000).then(() => {
@@ -892,6 +892,7 @@ Cypress.Commands.add("goToDiscounts", () => {
       .contains("Discounts")
       .click({ force: true });
     cy.wait(500);
+    cy.allowLoad();
   });
 });
 
