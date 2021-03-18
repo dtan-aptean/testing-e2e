@@ -257,5 +257,7 @@ Cypress.Commands.add("makePayment", () => {
     cy.wait(500);
     cy.get("[data-cy=pay-now]").click();
     cy.wait(5000);
+    cy.visit("/");
+    cy.wait(5000);
   });
 });
