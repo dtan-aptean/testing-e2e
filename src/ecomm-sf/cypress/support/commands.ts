@@ -1,19 +1,24 @@
 import { mainCategory, mainCategorySeo } from "./setupCommands";
 
-// Waits for tables and admin pages to finish loading by checking if the loading spinner is visible.
+// Waits for tables and pages to finish loading by checking if the loading spinner is visible.
 // Often the page finishes loading before the table finishes, so cy.server and cy.route are not helpful
 // Loading symbol often covers up the language dropdown as well
 Cypress.Commands.add("allowLoad", () => {
-  // Accounts for public store where the busy symbol isn't there
+  var loadId = "#ajaxBusy";
+  // Accounts for public store where the busy symbol has a different identifier
   if (Cypress.$("#ajaxBusy").length === 0) {
-    return;
+    if (Cypress.$(".ajax-loading-block-window").length > 0) {
+      loadId = ".ajax-loading-block-window";
+    } else {
+      return;
+    }
   }
   var totalTime = 10000;
   Cypress.log({displayName: "allowLoad"});
   const checkLoadSymbol = () => {
-    const loadingSymbol = Cypress.$("#ajaxBusy");
+    const loadingSymbol = Cypress.$(loadId);
     if (loadingSymbol.attr("style")) {
-      if (loadingSymbol.attr("style").includes("display: block")) {
+      if (!loadingSymbol.attr("style").includes("display: none")) {
         // If the loading symbol is still visible, wait another 3 seconds, then call the function again
         cy.wait(3000).then(() => {
           totalTime+=3000;

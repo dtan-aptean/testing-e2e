@@ -35,9 +35,9 @@ if (!Cypress.config("doNotPrepEnv")) {
         cy.prepareEnvironment();
     });
 }
-if (!Cypress.config("doNotClearEnv")) {
+if (!Cypress.config("doNotResetEnv")) {
     after(() => {
-        Cypress.log({displayName: "Index.ts", message: "Clearing enviornment"});
+        Cypress.log({displayName: "Index.ts", message: "Resetting enviornment"});
         cy.revertEnvironment();
     });
 }
