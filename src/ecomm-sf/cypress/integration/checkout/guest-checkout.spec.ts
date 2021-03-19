@@ -5,6 +5,7 @@ describe("Ecommerce", function () {
   context("Guest Checkout", () => {
     beforeEach(() => {
       cy.visit("/");
+      cy.clearCart();
     });
 
     it("Clicking a category brings us to the appropriate page", () => {

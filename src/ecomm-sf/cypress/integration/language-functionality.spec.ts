@@ -1,21 +1,37 @@
 /// <reference types="cypress" />
+
+import { mainCategory, mainProductOne, secondCategory } from "../support/setupCommands";
+
 // TEST COUNT: 13
 
 describe("Ecommerce", function () {
   context("Language Functionality", () => {
+    const availableLanguages = [] as string[];
+    before(() => {
+      cy.checkAvailableLanguages().then((languages) => {
+        languages.forEach((lang) => {
+          availableLanguages.push(lang);
+        });
+        cy.storeLanguageProperties(languages);
+      });
+    });
+
+    after(() => {
+      cy.resetLanguages();
+    });
+
     beforeEach(() => {
       cy.visit("/");
       cy.login();
     });
 
     it("Changing the language updates the url in the public store", () => {
-      cy.getSeoCodes();
-      cy.get("@seoCodes").then(($codes) => {
-        expect($codes.length).to.be.greaterThan(0);
+      const allLanguages = ["English"].concat(availableLanguages);
+      cy.getSeoCodes(allLanguages).then((codes) => {
         cy.goToPublic();
-        cy.get("#customerlanguage").find("option").each(($el, index, $options) => {
-          cy.switchLanguage($el[0].innerText);
-          cy.location("pathname").should("eq", `/${$codes[index]}/`);
+        cy.wrap(allLanguages).each((lang, index, $languages) => {
+          cy.switchLanguage(lang);
+          cy.location("pathname").should("eq", `/${codes[index]}/`);
         }).then(() => {
           cy.switchLanguage();
         });
@@ -23,27 +39,49 @@ describe("Ecommerce", function () {
     });
 
     it("Changing language overrides the standard", () => {
-      cy.getVisibleMenu().should("contain.text", "Cypress Trees");
-      cy.switchLanguage("German");
-      cy.getVisibleMenu()
-        .should("not.contain.text", "Cypress Trees")
-        .and("contain.text", "Zypressen");
-      cy.switchLanguage("English");
-      cy.goToAdmin();
-      cy.get(".content-header").should("contain.text", "Dashboard");
-      cy.switchLanguage("German");
-      cy.get(".content-header")
-        .should("not.contain.text", "Dashboard")
-        .and("contain.text", "Übersicht");
+      cy.getVisibleMenu().should("contain.text", mainCategory);
+      cy.getVisibleMenu().invoke("children").then(($li) => {
+        const target = $li.filter((index, item) => {
+          return item.innerText === mainCategory;
+        })[0];
+        const targetIndex = $li.index(target);
+        cy.switchLanguage(availableLanguages[0]);
+        cy.getVisibleMenu()
+          .invoke("children")
+          .eq(targetIndex)
+          .invoke("prop", "innerText")
+          .should("not.eql", mainCategory)
+          .and("eql", `${mainCategory} (${availableLanguages[0]})`);
+        cy.switchLanguage("English");
+        cy.goToAdmin();
+        cy.get(".content-header").should("contain.text", "Dashboard");
+        cy.switchLanguage(availableLanguages[0]);
+        cy.get(".content-header").should("not.contain.text", "Dashboard");
+      });
     });
 
     it("Standard shows when a language doesn't have a translation", () => {
+      cy.goToAdminCategory(secondCategory);
+      cy.wait(2000);
+      cy.get("#selected-tab-name-category-name-localized")
+          .siblings("ul")
+          .find("a")
+          .contains(availableLanguages[1])
+          .click();
+      cy.wait(2000)
+      cy.get("#category-name-localized")
+          .find(".tab-pane.active")
+          .find("input")
+          .eq(0)
+          .clear();
+      cy.get("button[name=save]").click();
+      cy.goToPublic();
       cy.getVisibleMenu().then(($el) => {
-        cy.wrap($el).should("contain.text", "Cypress Trees");
+        cy.wrap($el).should("contain.text", secondCategory);
         const originalText = $el.text();
-        cy.switchLanguage("Hindi");
+        cy.switchLanguage(availableLanguages[1]);
         cy.getVisibleMenu().then(($le) => {
-          cy.wrap($le).should("contain.text", "Cypress Trees");
+          cy.wrap($le).should("contain.text", secondCategory);
           expect($le.text()).to.not.equal(originalText);
         });
       });
@@ -51,55 +89,76 @@ describe("Ecommerce", function () {
 
     it("Switching language changes the labels in admin store", () => {
       cy.switchLanguage("English");
-      cy.goToAdminProduct("Bald Cypress");
-      cy.switchLanguage("German");
+      cy.goToAdminProduct(mainProductOne);
+      cy.switchLanguage(availableLanguages[0]);
       cy.get("#product-info-localized-standard-tab")
         .find(".form-group")
         .then(($divs) => {
           cy.wrap($divs[0])
             .find("label")
-            .should("not.have.text", "Product name")
-            .and("have.text", "Produktname");
+            .should("not.have.text", "Product name");
+          const firstLabel = Cypress.$($divs[0]).find("label").text();
           cy.wrap($divs[1])
             .find("label")
-            .should("not.have.text", "Short description")
-            .and("have.text", "Kurzbeschreibung");
+            .should("not.have.text", "Short description");
+          const secondLabel = Cypress.$($divs[1]).find("label").text();
           cy.wrap($divs[2])
             .find("label")
-            .should("not.have.text", "Full description")
-            .and("have.text", "Komplette Beschreibung");
+            .should("not.have.text", "Full description");
+          const thirdLabel = Cypress.$($divs[2]).find("label").text();
           cy.switchLanguage();
           cy.get("#product-info-localized-standard-tab")
             .find(".form-group")
             .then(($formGroups) => {
               cy.wrap($formGroups[0])
                 .find("label")
-                .should("not.have.text", "Produktname")
+                .should("not.have.text", firstLabel)
                 .and("have.text", "Product name");
               cy.wrap($formGroups[1])
                 .find("label")
-                .should("not.have.text", "Kurzbeschreibung")
+                .should("not.have.text", secondLabel)
                 .and("have.text", "Short description");
               cy.wrap($formGroups[2])
                 .find("label")
-                .should("not.have.text", "Komplette Beschreibung")
+                .should("not.have.text", thirdLabel)
                 .and("have.text", "Full description");
             });
         });
     });
 
     it("Changing the language updates the currency", () => {
-      cy.goToProduct("Bald Cypress");
-      cy.get(".product-price").then(($div) => {
-        const orgPrice = $div[0].innerText;
-        cy.switchLanguage("German");
-        cy.wait(200);
-        cy.get(".product-price").then(($newDiv) => {
-          const price = $newDiv[0].innerText;
-          expect(price).to.not.eq(orgPrice);
-          expect($newDiv[0]).to.not.contain.text(orgPrice.substring(0, 1));
-          expect($newDiv[0]).to.contain.text("€");
-          cy.switchLanguage("English");
+      // Make sure that the language uses a specific currency
+      cy.goToLanguages();
+      const langFilter = (index, item) => {
+        return item.cells[0].innerText === availableLanguages[0];
+      };
+      cy.findTableItem("#languages-grid", "#languages-grid_next", langFilter).then(($row) => {
+        if ($row) {
+          cy.wrap($row).find(".button-column").find("a").click();
+          cy.wait(5000).then(() => {
+            const selected = Cypress.$("#DefaultCurrencyId").prop("selectedOptions");
+            const originalValue = selected[0].innerText;
+            if (originalValue !== "Euro") {
+              cy.get("#DefaultCurrencyId").select("Euro");
+              cy.get("button[name=save]").click();
+            }
+          });
+        }
+      }).then(() => {
+        cy.goToPublic();
+        cy.goToProduct(mainProductOne);
+        cy.wait(5000);
+        cy.get(".product-price").then(($div) => {
+          const orgPrice = $div[0].innerText;
+          cy.switchLanguage(availableLanguages[0]);
+          cy.wait(5000);
+          cy.get(".product-price").then(($newDiv) => {
+            const price = $newDiv[0].innerText;
+            expect(price).to.not.eq(orgPrice);
+            expect($newDiv[0]).to.not.contain.text(orgPrice.substring(0, 1));
+            expect($newDiv[0]).to.contain.text("€");
+            cy.switchLanguage("English");
+          });
         });
       });
     });
@@ -107,11 +166,11 @@ describe("Ecommerce", function () {
     it("Changing from any language to any other language in the public store", () => {
       cy.getVisibleMenu().then(($en) => {
         const enMenu = $en.text();
-        cy.switchLanguage("Hindi");
+        cy.switchLanguage(availableLanguages[1]);
         cy.getVisibleMenu().then(($hi) => {
           const hiMenu = $hi.text();
           expect(hiMenu).to.not.equal(enMenu);
-          cy.switchLanguage("German");
+          cy.switchLanguage(availableLanguages[0]);
           cy.getVisibleMenu().then(($de) => {
             const deMenu = $de.text();
             expect(deMenu).to.not.equal(enMenu);
@@ -121,12 +180,12 @@ describe("Ecommerce", function () {
               .should("have.text", enMenu)
               .and("not.have.text", deMenu)
               .and("not.have.text", hiMenu);
-            cy.switchLanguage("German");
+            cy.switchLanguage(availableLanguages[0]);
             cy.getVisibleMenu()
               .should("have.text", deMenu)
               .and("not.have.text", enMenu)
               .and("not.have.text", hiMenu);
-            cy.switchLanguage("Hindi");
+            cy.switchLanguage(availableLanguages[1]);
             cy.getVisibleMenu()
               .should("have.text", hiMenu)
               .and("not.have.text", deMenu)
@@ -145,11 +204,11 @@ describe("Ecommerce", function () {
       cy.goToAdmin();
       cy.get(".content-header").then(($en) => {
         const enHeader = $en.text();
-        cy.switchLanguage("Hindi");
+        cy.switchLanguage(availableLanguages[1]);
         cy.get(".content-header").then(($hi) => {
           const hiHeader = $hi.text();
           expect(hiHeader).to.not.equal(enHeader);
-          cy.switchLanguage("German");
+          cy.switchLanguage(availableLanguages[0]);
           cy.get(".content-header").then(($de) => {
             const deHeader = $de.text();
             expect(deHeader).to.not.equal(enHeader);
@@ -159,12 +218,12 @@ describe("Ecommerce", function () {
               .should("have.text", enHeader)
               .and("not.have.text", deHeader)
               .and("not.have.text", hiHeader);
-            cy.switchLanguage("German");
+            cy.switchLanguage(availableLanguages[0]);
             cy.get(".content-header")
               .should("have.text", deHeader)
               .and("not.have.text", enHeader)
               .and("not.have.text", hiHeader);
-            cy.switchLanguage("Hindi");
+            cy.switchLanguage(availableLanguages[1]);
             cy.get(".content-header")
               .should("have.text", hiHeader)
               .and("not.have.text", deHeader)
@@ -179,216 +238,179 @@ describe("Ecommerce", function () {
       });
     });
 
-    it("Changing the language display order updates the table", () => {
-      cy.goToAdmin();
-      cy.goToLanguages();
-      cy.get("#languages-grid")
-        .find("tbody")
-        .find("tr")
-        .then(($list) => {
-          const indexOne = Cypress._.random(0, $list.length - 1);
-          const indexTwo =
-            indexOne > $list.length / 2 - 1
-              ? Cypress._.random(0, indexOne - 1)
-              : Cypress._.random(indexOne + 1, $list.length - 1);
-          const langOne = $list[indexOne].cells[0].innerText;
-          const langTwo = $list[indexTwo].cells[0].innerText;
-          // Swap the languages
-          cy.swapOrder(langOne, langTwo);
-          // Check for the correct order
-          cy.compareTableOrder(langOne, indexTwo, langTwo, indexOne, $list);
-          // Swap the languages back
-          cy.swapOrder(langOne, langTwo);
-          // compare order
-          cy.compareTableOrder(langOne, indexOne, langTwo, indexTwo, $list);
-        });
+    context("Subsection: Language display order", () => {
+      it("Changing the language display order updates the table", () => {
+        cy.goToLanguages();
+        cy.get("#languages-grid")
+          .find("tbody")
+          .find("tr")
+          .then(($list) => {
+            var indexOne = $list.filter((index, item) => {
+              return item.cells[0].innerText === availableLanguages[0];
+            }).prop("rowIndex") - 1;
+            var indexTwo = $list.filter((index, item) => {
+                return item.cells[0].innerText === availableLanguages[1];
+            }).prop("rowIndex") - 1;
+            // Swap the languages
+            cy.swapOrder(availableLanguages[0], availableLanguages[1]);
+            // Check for the correct order
+            cy.compareTableOrder(availableLanguages[0], indexTwo, availableLanguages[1], indexOne, $list);
+            // Swap the languages back
+            cy.swapOrder(availableLanguages[0], availableLanguages[1]);
+            // compare order
+            cy.compareTableOrder(availableLanguages[0], indexOne, availableLanguages[1], indexTwo, $list);
+          });
+      });
+
+      it("Changing the language display order updates the dropdown in the public store", () => {
+        cy.get("#customerlanguage")
+          .find("option")
+          .then(($options) => {
+            var indexOne = $options.filter((index, item) => {
+              return item.innerText === availableLanguages[0];
+            }).prop("index");
+            var indexTwo = $options.filter((index, item) => {
+              return item.innerText === availableLanguages[1];
+            }).prop("index");
+
+            cy.goToLanguages();
+            // Swap the languages
+            cy.swapOrder(availableLanguages[0], availableLanguages[1]);
+            // Check the public dropdown
+            cy.goToPublic();
+            cy.compareDropdownOrder(
+              availableLanguages[0],
+              indexTwo,
+              availableLanguages[1],
+              indexOne,
+              $options
+            );
+            // reset the languages
+            cy.goToLanguages();
+            cy.swapOrder(availableLanguages[0], availableLanguages[1]);
+            // Check the public dropdown
+            cy.goToPublic();
+            cy.compareDropdownOrder(
+              availableLanguages[0],
+              indexOne,
+              availableLanguages[1],
+              indexTwo,
+              $options
+            );
+          });
+      });
+
+      it("Changing the language display order updates the dropdowns in the admin store", () => {
+        cy.goToAdmin();
+        cy.get("#customerlanguage")
+          .find("option")
+          .then(($options) => {
+            var indexOne = $options.filter((index, item) => {
+              return item.innerText === availableLanguages[0];
+            }).prop("index");
+            var indexTwo = $options.filter((index, item) => {
+              return item.innerText === availableLanguages[1];
+            }).prop("index");
+
+            cy.goToLanguages();
+            // Swap the languages
+            cy.swapOrder(availableLanguages[0], availableLanguages[1]);
+            // Check the dropdown
+            cy.compareDropdownOrder(
+              availableLanguages[0],
+              indexTwo,
+              availableLanguages[1],
+              indexOne,
+              $options
+            );
+            // reset the languages
+            cy.goToLanguages();
+            cy.swapOrder(availableLanguages[0], availableLanguages[1]);
+            // Check the dropdown
+            cy.compareDropdownOrder(
+              availableLanguages[0],
+              indexOne,
+              availableLanguages[1],
+              indexTwo,
+              $options
+            );
+          });
+      });
     });
 
-    it("Changing the language display order updates the dropdown in the public store", () => {
-      cy.get("#customerlanguage")
-        .find("option")
-        .then(($options) => {
-          const indexOne = Cypress._.random(0, $options.length - 1);
-          const indexTwo =
-            indexOne > $options.length / 2 - 1
-              ? Cypress._.random(0, indexOne - 1)
-              : Cypress._.random(indexOne + 1, $options.length - 1);
-          const langOne = $options[indexOne].innerText;
-          const langTwo = $options[indexTwo].innerText;
-          cy.goToAdmin();
-          cy.goToLanguages();
-          // Swap the languages
-          cy.swapOrder(langOne, langTwo);
-          // Check the public dropdown
-          cy.goToPublic();
-          cy.compareDropdownOrder(
-            langOne,
-            indexTwo,
-            langTwo,
-            indexOne,
-            $options
-          );
-          // reset the languages
-          cy.goToAdmin();
-          cy.goToLanguages();
-          cy.swapOrder(langOne, langTwo);
-          // Check the public dropdown
-          cy.goToPublic();
-          cy.compareDropdownOrder(
-            langOne,
-            indexOne,
-            langTwo,
-            indexTwo,
-            $options
-          );
+    context.only("Subsection: Language publicity", () => {
+      // Make sure that the languages are publishe before these tests run
+      // Makes sure that if one of these fails, it doesn't affect the others
+      beforeEach(() => {
+        cy.goToLanguages();
+        cy.wrap(availableLanguages).each((langName) => {
+          cy.publishLanguage(langName);
         });
-    });
+      });
 
-    it("Changing the language display order updates the dropdowns in the admin store", () => {
-      cy.goToAdmin();
-      cy.get("#customerlanguage")
-        .find("option")
-        .then(($options) => {
-          const indexOne = Cypress._.random(0, $options.length - 1);
-          const indexTwo =
-            indexOne > $options.length / 2 - 1
-              ? Cypress._.random(0, indexOne - 1)
-              : Cypress._.random(indexOne + 1, $options.length - 1);
-          const langOne = $options[indexOne].innerText;
-          const langTwo = $options[indexTwo].innerText;
-          cy.goToLanguages();
-          // Swap the languages
-          cy.swapOrder(langOne, langTwo);
-          // Check the dropdown
-          cy.compareDropdownOrder(
-            langOne,
-            indexTwo,
-            langTwo,
-            indexOne,
-            $options
-          );
-          // reset the languages
-          cy.goToLanguages();
-          cy.swapOrder(langOne, langTwo);
-          // Check the dropdown
-          cy.compareDropdownOrder(
-            langOne,
-            indexOne,
-            langTwo,
-            indexTwo,
-            $options
-          );
-        });
-    });
-
-    it("Publishing and unpublishing a language updates the table", () => {
-      function publishIfNecessary(eligibleRows) {
-        return cy.get("#languages-grid")
+      it("Publishing and unpublishing a language updates the table", () => {
+        var testLanguage = availableLanguages[Cypress._.random(0, availableLanguages.length - 1)];      
+        cy.goToLanguages();
+        cy.get("#languages-grid")
           .find("tbody")
           .find("tr")
           .then(($rows) => {
-            if (eligibleRows.length === 1) {
-              const unpublished = $rows.filter((index, item) => {
-                return (item.innerHTML.includes("false-icon") && !item.innerText.includes("English"));
-              });
-              if (unpublished.length >= 1) {
-                const name = unpublished[0].cells[0].innerText;
-                cy.publishLanguage(name);
-                cy.get("#languages-grid")
-                  .find("tbody")
-                  .find("tr")
-                  .then(($tr) => {
-                    const validRows = $tr.filter((index, item) => {
-                      return (
-                        item.innerHTML.includes("true-icon") &&
-                        item.cells[0].innerText !== "English"
-                      );
-                    });
-                    return validRows;
-                  });
-              }
-            } else {
-              return null;
-            }
-          });
-      };
-      
-      cy.goToAdmin();
-      cy.goToLanguages();
-      cy.get("#languages-grid")
-        .find("tbody")
-        .find("tr")
-        .then(($el) => {
-          // returns the rows that are published - looks for the checkmark
-          const eligibleRows = $el.filter((index, item) => {
-            return (item.innerHTML.includes("true-icon") && !item.innerText.includes("English"));
-          });
-          expect(eligibleRows.length).to.be.gte(1);
-          // Call the function to publish another language if we need one
-          publishIfNecessary(eligibleRows).then((validRows) => {
-            // Find a random row to unpublish
-            var index = Cypress._.random(0, eligibleRows.length - 1);
-            var trueIndex = eligibleRows[index].rowIndex - 1; // The index of the row in the full table
-            if (validRows) {
-              // Find a random row to unpublish
-              index = Cypress._.random(0, validRows.length - 1);
-              trueIndex = validRows[index].rowIndex - 1; // The index of the row in the full table
-            }
-            cy.unpublishLanguage(trueIndex);
+            var index = $rows.filter((index, item) => {
+              return item.cells[0].innerText === testLanguage;
+            }).prop("rowIndex") - 1;
+            cy.unpublishLanguage(testLanguage);
             // Check that the table has updated.
             cy.get("#languages-grid")
               .find("tbody")
               .find("tr")
-              .eq(trueIndex)
+              .eq(index)
               .should("contain.html", "false-icon")
               .and("not.contain.html", "true-icon");
             // Republish the language
-            cy.get("@languageName").then((languageName) => {
-              cy.publishLanguage(languageName);
-              // Check that the table updated
-              cy.get("#languages-grid")
-                .find("tbody")
-                .find("tr")
-                .eq(trueIndex)
-                .should("contain.html", "true-icon")
-                .and("not.contain.html", "false-icon");
-            });
+            cy.publishLanguage(testLanguage);
+            // Check that the table updated
+            cy.get("#languages-grid")
+              .find("tbody")
+              .find("tr")
+              .eq(index)
+              .should("contain.html", "true-icon")
+              .and("not.contain.html", "false-icon");
           });
-        });
-    });
-
-    it("Unpublished languages no longer show in admin store dropdowns", () => {
-      cy.goToAdmin();
-      cy.unpublishLanguage();
-      cy.get("@languageName").then((languageName) => {
-        cy.get("#customerlanguage")
-          .find("option")
-          .each(($el, index, $list) => {
-            cy.wrap($el).should("not.have.text", languageName);
-          });
-        // Republish the language
-        cy.publishLanguage(languageName);
-        cy.get("#customerlanguage")
-          .find("option")
-          .should("contain.text", languageName);
       });
-    });
 
-    it("Unpublished languages no longer show in public store dropdowns", () => {
-      cy.unpublishLanguage();
-      cy.goToPublic();
-      cy.get("@languageName").then((languageName) => {
+      it("Unpublished languages no longer show in admin store dropdowns", () => {
+        var testLanguage = availableLanguages[Cypress._.random(0, availableLanguages.length - 1)];      
+        cy.goToLanguages();
+        cy.unpublishLanguage(testLanguage);
         cy.get("#customerlanguage")
           .find("option")
           .each(($el, index, $list) => {
-            cy.wrap($el).should("not.have.text", languageName);
+            cy.wrap($el).should("not.have.text", testLanguage);
           });
         // Republish the language
-        cy.publishLanguage(languageName);
+        cy.publishLanguage(testLanguage);
+        cy.get("#customerlanguage")
+          .find("option")
+          .should("contain.text", testLanguage);
+      });
+
+      it("Unpublished languages no longer show in public store dropdowns", () => {
+        var testLanguage = availableLanguages[Cypress._.random(0, availableLanguages.length - 1)];
+        cy.goToLanguages();
+        cy.unpublishLanguage(testLanguage);
         cy.goToPublic();
         cy.get("#customerlanguage")
           .find("option")
-          .should("contain.text", languageName);
+          .each(($el, index, $list) => {
+            cy.wrap($el).should("not.have.text", testLanguage);
+          });
+        // Republish the language
+        cy.goToLanguages();
+        cy.publishLanguage(testLanguage);
+        cy.goToPublic();
+        cy.get("#customerlanguage")
+          .find("option")
+          .should("contain.text", testLanguage);
       });
     });
   });
