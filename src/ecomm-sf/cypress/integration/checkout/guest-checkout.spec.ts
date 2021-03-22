@@ -5,6 +5,7 @@ describe("Ecommerce", function () {
   context("Guest Checkout", () => {
     beforeEach(() => {
       cy.visit("/");
+      cy.clearCart();
     });
 
     it("Clicking a category brings us to the appropriate page", () => {
@@ -27,7 +28,7 @@ describe("Ecommerce", function () {
       cy.goToProduct("Bald Cypress");
       cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
       cy.get(".add-to-cart-button").click();
-      cy.wait(1000);
+      cy.wait(10000);
       // Get current amount of shopping cart
       cy.get(".header-links")
         .find(".cart-qty")
@@ -55,6 +56,7 @@ describe("Ecommerce", function () {
       cy.get(".qty-input").clear();
       cy.get(".qty-input").type(count.toString());
       cy.get(".add-to-cart-button").click();
+      cy.wait(10000);
       cy.goToCart();
       cy.get(".cart > tbody").find("tr").eq(0).as("target");
       cy.get(".header-links")
@@ -71,10 +73,10 @@ describe("Ecommerce", function () {
               cy.get(".cart-total")
                 .find("tr")
                 .then(($rows) => {
-                  const orgCartSubtotal = $rows[0].cells[1].innerText
+                  const orgCartSubtotal = $rows.filter(".order-subtotal")[0].cells[1].innerText
                     .replace(",", "")
                     .replace("$", "");
-                  const orgCartTotal = $rows[3].cells[1].innerText
+                  const orgCartTotal = $rows.filter(".order-total")[0].cells[1].innerText
                     .replace(",", "")
                     .replace("$", "");
 
@@ -83,7 +85,7 @@ describe("Ecommerce", function () {
                     cy.get(".qty-input").type((count - 1).toString());
                   });
                   cy.get(".update-cart-button").click();
-                  cy.wait(500);
+                  cy.wait(15000);
                   cy.get("@target")
                     .find("td")
                     .then(($newTd) => {
@@ -94,10 +96,10 @@ describe("Ecommerce", function () {
                       cy.get(".cart-total")
                         .find("tr")
                         .then(($newRows) => {
-                          const cartSubtotal = $newRows[0].cells[1].innerText
+                          const cartSubtotal = $newRows.filter(".order-subtotal")[0].cells[1].innerText
                             .replace(",", "")
                             .replace("$", "");
-                          const cartTotal = $newRows[3].cells[1].innerText
+                          const cartTotal = $newRows.filter(".order-total")[0].cells[1].innerText
                             .replace(",", "")
                             .replace("$", "");
                           cy.get(".header-links")
@@ -208,7 +210,7 @@ describe("Ecommerce", function () {
       cy.get(".payment-method-next-step-button").click();
       cy.wait(200);
       cy.get(".payment-info-next-step-button").click();
-      cy.wait(500);
+      cy.wait(15000);
       cy.get(".message-error").find('ul').find('li').should('have.length', 4);
       cy.clearCart();
     });
@@ -353,7 +355,7 @@ describe("Ecommerce", function () {
         .should("exist")
         .and("be.visible");
       cy.get(".confirm-order-next-step-button").click();
-      cy.wait(2000);
+      cy.wait(15000);
 
       // Completed
       cy.get(".order-number").should("contain.text", "Order number");

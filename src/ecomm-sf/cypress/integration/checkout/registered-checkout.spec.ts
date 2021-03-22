@@ -6,6 +6,7 @@ describe("Ecommerce", function () {
     beforeEach(() => {
       cy.visit("/");
       cy.login();
+      cy.clearCart();
     });
 
     it("Clicking the Cypress trees category brings us to the appropriate page", () => {
@@ -28,17 +29,17 @@ describe("Ecommerce", function () {
       cy.goToProduct("Bald Cypress");
       cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
       cy.get(".add-to-cart-button").click();
-      cy.wait(500);
+      cy.wait(10000);
       // Get current amount of shopping cart
       cy.get(".header-links")
         .find(".cart-qty")
         .then(($amt) => {
           const quantity = $amt.text().replace("(", "").replace(")", "");
           cy.get(".header-links").find(".ico-cart").click();
-          cy.wait(500);
+          cy.wait(10000);
           cy.get(".remove-from-cart").find("input").check();
           cy.get(".update-cart-button").click();
-          cy.wait(500);
+          cy.wait(10000);
           cy.contains("Your Shopping Cart is empty!");
           cy.get(".header-links")
             .find(".cart-qty")
@@ -56,7 +57,7 @@ describe("Ecommerce", function () {
       cy.get(".qty-input").clear();
       cy.get(".qty-input").type(count.toString());
       cy.get(".add-to-cart-button").click();
-      cy.wait(500);
+      cy.wait(10000);
       cy.goToCart();
       cy.get(".cart > tbody").find("tr").eq(0).as("target");
       cy.get(".header-links")
@@ -73,10 +74,10 @@ describe("Ecommerce", function () {
               cy.get(".cart-total")
                 .find("tr")
                 .then(($rows) => {
-                  const orgCartSubtotal = $rows[0].cells[1].innerText
+                  const orgCartSubtotal = $rows.filter(".order-subtotal")[0].cells[1].innerText
                     .replace(",", "")
                     .replace("$", "");
-                  const orgCartTotal = $rows[3].cells[1].innerText
+                  const orgCartTotal = $rows.filter(".order-total")[0].cells[1].innerText
                     .replace(",", "")
                     .replace("$", "");
 
@@ -85,7 +86,7 @@ describe("Ecommerce", function () {
                     cy.get(".qty-input").type((count - 1).toString());
                   });
                   cy.get(".update-cart-button").click();
-                  cy.wait(1000);
+                  cy.wait(15000);
                   cy.get("@target")
                     .find("td")
                     .then(($newTd) => {
@@ -96,10 +97,10 @@ describe("Ecommerce", function () {
                       cy.get(".cart-total")
                         .find("tr")
                         .then(($newRows) => {
-                          const cartSubtotal = $newRows[0].cells[1].innerText
+                          const cartSubtotal = $newRows.filter(".order-subtotal")[0].cells[1].innerText
                             .replace(",", "")
                             .replace("$", "");
-                          const cartTotal = $newRows[3].cells[1].innerText
+                          const cartTotal = $newRows.filter(".order-total")[0].cells[1].innerText
                             .replace(",", "")
                             .replace("$", "");
                           cy.get(".header-links")
@@ -173,28 +174,44 @@ describe("Ecommerce", function () {
     });
 
     it("The billing information is already partially filled out when checking out", () => {
-      cy.addToCartAndCheckout();
-      cy.get("#co-billing-form").then(($el) => {
-        const select = $el.find(".select-billing-address");
-        if (select.length > 0) {
-          cy.wrap(select).find("select").select("New Address");
-          cy.wait(500);
-        }
-        // TODO: Set up something that will make this available to multiple testing accounts
-        // Configs in cypress.json? Pros: Low complication, tester-reliant. Cons: tedious to fill out everytime, tester-reliant
-        // Retrieve the data from the admin side? Pro: Tester doesn't need to do anything. Con: assumes user is admin. Possibly complicated.
-        cy.get("#BillingNewAddress_FirstName").should("have.value", "Cypress");
-        cy.get("#BillingNewAddress_LastName").should("have.value", "McTester");
-        cy.get("#BillingNewAddress_Email").should(
-          "have.value",
-          "cypress.tester@testenvironment.com"
-        );
-        cy.get("#BillingNewAddress_Company").should(
-          "have.value",
-          "Cypress Greenhouses"
-        );
+      cy.goToCustomers();
+      cy.allowLoad();
+      cy.get("#SearchEmail").type(Cypress.config("username"));
+      cy.get("#search-customers").click();
+      cy.allowLoad();
+      const customerSearchFilter = (index, item) => {
+        return item.cells[1].innerText === Cypress.config("username");
+      };
+      cy.findTableItem("#customers-grid", "#customers-grid_next", customerSearchFilter).then((row) => {
+        cy.wrap(row).find(".button-column").find("a").click();
+        cy.wait(5000);
+        cy.get("#FirstName").invoke("val").then((firstName) => {
+          cy.get("#LastName").invoke("val").then((lastName) => {
+            cy.get("#Company").invoke("val").then((company) => {
+              cy.goToPublic();
+              cy.addToCartAndCheckout();
+              cy.get("#co-billing-form").then(($el) => {
+                const select = $el.find(".select-billing-address");
+                if (select.length > 0) {
+                  cy.wrap(select).find("select").select("New Address");
+                  cy.wait(500);
+                }
+                cy.get("#BillingNewAddress_FirstName").should("have.value", firstName);
+                cy.get("#BillingNewAddress_LastName").should("have.value", lastName);
+                cy.get("#BillingNewAddress_Email").should(
+                  "have.value",
+                  Cypress.config("username")
+                );
+                cy.get("#BillingNewAddress_Company").should(
+                  "have.value",
+                  company
+                );
+              });
+              cy.clearCart();
+            });
+          });
+        });
       });
-      cy.clearCart();
     });
 
     it("Empty fields show errors during checkout", () => {
@@ -247,7 +264,7 @@ describe("Ecommerce", function () {
       cy.get(".payment-method-next-step-button").click();
       cy.wait(200);
       cy.get(".payment-info-next-step-button").click();
-      cy.wait(500);
+      cy.wait(10000);
       cy.get(".message-error").find('ul').find('li').should('have.length', 4);
       cy.clearCart();
     });

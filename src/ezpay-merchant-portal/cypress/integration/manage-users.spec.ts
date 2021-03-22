@@ -45,10 +45,10 @@ describe('Merchant portal', function() {
         .type('Doe')
         .should('have.value', 'Doe');
       cy.getInput('email')
-        .type('john.doe@aptean.com')
-        .should('have.value', 'john.doe@aptean.com');
+        .type('john.doetesting@aptean.com')
+        .should('have.value', 'john.doetesting@aptean.com');
       cy.getSelect('role')
-        .select('Editor')
+        .select('EDITOR')
         .should('have.value', 'EDITOR');
 
       // validate if last name is mandatory
@@ -67,8 +67,8 @@ describe('Merchant portal', function() {
 
       // save new user
       cy.getInput('email')
-        .type('john.doe@aptean.com')
-        .should('have.value', 'john.doe@aptean.com');
+        .type('john.doetesting@aptean.com')
+        .should('have.value', 'john.doetesting@aptean.com');
       cy.get('[data-cy=add-new-user-save]').should('be.enabled');
       cy.get('[data-cy=add-new-user-save]').click();
 
@@ -76,7 +76,7 @@ describe('Merchant portal', function() {
       cy.get('[data-cy=users-table]').within(() => {
         cy.contains('John');
         cy.contains('Doe');
-        cy.contains('john.doe@aptean.com');
+        cy.contains('john.doetesting@aptean.com');
         cy.contains('Editor');
       });
 
@@ -103,7 +103,7 @@ describe('Merchant portal', function() {
         .type('Doe 2')
         .should('have.value', 'Doe 2');
       cy.getSelect('role')
-        .select('Reader')
+        .select('READER')
         .should('have.value', 'READER');
       cy.get('[data-cy=add-new-user-save]').click();
 

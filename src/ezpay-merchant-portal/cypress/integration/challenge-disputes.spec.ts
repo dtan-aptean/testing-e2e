@@ -15,8 +15,8 @@ describe("Merchant Portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
       // Make sure that we have enough active disputes
-        cy.getTableBodyAfterLoad("[data-cy=dispute-table-body]", true)
-            .then(($el) => {
+      cy.getTableBodyAfterLoad("[data-cy=dispute-table-body]", true).then(
+        ($el) => {
           const originalLength = $el.length;
           if (originalLength === 0) {
             cy.createAndPay(2, "1.09", "challenge");
@@ -25,10 +25,11 @@ describe("Merchant Portal", function () {
             }).click();
             cy.get("[data-cy=refresh]").click();
             cy.wait(2000);
-              cy.getTableBodyAfterLoad("[data-cy=dispute-table-body]", true)
-                  .then(($children) => {
+            cy.getTableBodyAfterLoad("[data-cy=dispute-table-body]", true).then(
+              ($children) => {
                 expect($children.length).to.be.greaterThan(originalLength);
-              });
+              }
+            );
           } else {
             // Make sure there are active disputes available
             cy.get("[data-cy=dispute-table-body]").find("tr").as("currentRows");
@@ -52,7 +53,7 @@ describe("Merchant Portal", function () {
                   cy.get("[data-cy=payment-disputes-tab]", {
                     timeout: 20000,
                   }).click();
-                  cy.wait(7000);
+                  cy.wait(35000);
                   cy.get("[data-cy=refresh]").click();
                   cy.wait(3000);
                   cy.get("@currentRows").should("have.length.gte", 1);
@@ -105,7 +106,7 @@ describe("Merchant Portal", function () {
       cy.get("[data-cy=chargeback-review]").should("exist").and("be.visible");
     });
 
-    it.skip("Visiting the challenge page without selecting a challenge redirects back to the main page", () => {
+    it("Visiting the challenge page without selecting a challenge redirects back to the main page", () => {
       cy.visit("/challenge-dispute");
       cy.wait(500);
       cy.url().should("eq", `${Cypress.config("baseUrl")}/`);
@@ -218,9 +219,7 @@ describe("Merchant Portal", function () {
       cy.get("[data-cy=cancel-dialog]").should("exist").and("be.visible");
       cy.get("[data-cy=dialog-cancel-button]").click();
       cy.wait(500);
-      cy.get("[data-cy=cancel-dialog]")
-        .should("not.exist")
-        .and("not.be.visible");
+      cy.get("[data-cy=cancel-dialog]").should("not.exist");
       cy.get("[data-cy=challenge-dispute-box]")
         .should("exist")
         .and("be.visible");
@@ -241,9 +240,7 @@ describe("Merchant Portal", function () {
       cy.get("[data-cy=cancel-dialog]").should("exist").and("be.visible");
       cy.get("[data-cy=dialog-leave-button]").click();
       cy.wait(500);
-      cy.get("[data-cy=cancel-dialog]")
-        .should("not.exist")
-        .and("not.be.visible");
+      cy.get("[data-cy=cancel-dialog]").should("not.exist");
       cy.url().should("eq", `${Cypress.config("baseUrl")}/`);
     });
 
@@ -465,9 +462,9 @@ describe("Merchant Portal", function () {
         .find("button")
         .click();
       cy.wait(500);
-      cy.get(`[data-cy=${fileName.substring(0, fileName.length - 4)}-display]`)
-        .should("not.exist")
-        .and("not.be.visible");
+      cy.get(
+        `[data-cy=${fileName.substring(0, fileName.length - 4)}-display]`
+      ).should("not.exist");
     });
 
     it("Cannot upload more than 5 documents and an error is displayed if you try", () => {
@@ -602,13 +599,11 @@ describe("Merchant Portal", function () {
       );
     });
 
-    /* TODO: Review the beforeEach step - seems there is a timing issue where expect($children.length).to.be.greaterThan(originalLength) fails.
-     *  This may be a timing issue but is always an issue with this test. The row with "Action Needed" is not in the list, once you refresh is shows up and the check passes.
-     */
-    it.skip("After submitting a challenge, the row in the disputes table updates to the appropriate status", () => {
+    it("After submitting a challenge, the row in the disputes table updates to the appropriate status", () => {
       cy.get("@activeDispute").then(($el) => {
         const index = $el.prop("rowIndex") - 1;
         // Get to the challenge dispute page
+        cy.wait(5000);
         cy.get("[data-cy=challenge]").scrollIntoView().should("be.visible");
         cy.get("[data-cy=challenge]").click();
         cy.wait(500);
@@ -620,6 +615,9 @@ describe("Merchant Portal", function () {
         cy.get("[data-cy=hidden-file-input]")
           .find("input")
           .attachFile("disputeSample4.pdf");
+        cy.get("[data-cy=documentation-select]")
+          .find("select")
+          .select("invoice");
         cy.wait(500);
 
         // Add explanation

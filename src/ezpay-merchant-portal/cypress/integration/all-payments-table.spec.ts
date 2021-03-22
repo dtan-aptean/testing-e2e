@@ -20,7 +20,7 @@ describe("All Payments Table", function () {
 
     it("Creating a payment should add the new payment row in table", () => {
       cy.createAndPay(1, "10.00", "payment");
-      cy.wait(20000);
+      cy.wait(35000);
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
@@ -86,7 +86,7 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=payment-details-modal]")
         .should("exist")
         .should("be.visible");
-      cy.get('a[href="#"]').click();
+      cy.get('a[href="#"]').last().click();
       cy.get("[data-cy=payment-details-modal]").should("not.exist");
       cy.get("[data-cy=payment-request-details-modal]")
         .should("exist")
@@ -99,7 +99,7 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=refund-dialog-title]")
         .should("exist")
         .should("be.visible");
-      cy.get('a[href="#"]').click();
+      cy.get('a[href="#"]').last().click();
       cy.get("[data-cy=refund-dialog-title]").should("not.exist");
       cy.get("[data-cy=payment-details-modal]")
         .should("exist")
@@ -117,7 +117,7 @@ describe("All Payments Table", function () {
       cy.wait(5000);
       cy.get("[data-cy=refund-dialog-title]").should("not.exist");
       cy.get("@firstRow").click();
-      cy.get("[data-cy=refund]").should("not.exist");
+      cy.get("[data-cy=refund]").should("be.disabled");
     });
 
     it("Fully refunded payment should not have refund button in payment details modal", () => {
@@ -129,16 +129,65 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=payment-details-refund]").should("not.exist");
     });
 
+    it("Payment refund status should work as expected", () => {
+      //creating the payment
+      cy.createAndPay(1, "10.00", "payment");
+      cy.wait(35000);
+      cy.get("[data-cy=payment-tab]").click();
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(3000);
+
+      //making partial refund
+      cy.get("@firstRow").click();
+      cy.get("[data-cy=refund]").should("be.enabled").click();
+      cy.get("[data-cy=refund-dialog-title]")
+        .should("exist")
+        .should("be.visible");
+
+      cy.get("[data-cy=partial-refund]").find("input").check();
+      cy.get("[data-cy=refund-amount]").find("input").clear();
+      cy.get("[data-cy=refund-amount]").find("input").type("5");
+      cy.get("[data-cy=refund-reason]").find("input").type("test");
+      cy.get("[data-cy=process-refund]").click();
+      cy.wait(5000);
+      cy.get("[data-cy=refund-dialog-title]").should("not.exist");
+
+      //checking the status for partially refunded
+      cy.get("@firstRow").find("td").eq(1).contains("Refund Pending");
+      cy.wait(60000);
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(3000);
+      cy.get("@firstRow").find("td").eq(1).contains("Partially Refunded");
+
+      //making remaining amount refund
+      cy.get("@firstRow").click();
+      cy.get("[data-cy=refund]").should("be.enabled").click();
+      cy.get("[data-cy=refund-dialog-title]")
+        .should("exist")
+        .should("be.visible");
+      cy.get("[data-cy=refund-reason]").find("input").type("test");
+      cy.get("[data-cy=process-refund]").click();
+      cy.wait(5000);
+      cy.get("[data-cy=refund-dialog-title]").should("not.exist");
+
+      //checking the status for fully refunded
+      cy.get("@firstRow").find("td").eq(1).contains("Refund Pending");
+      cy.wait(60000);
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(3000);
+      cy.get("@firstRow").find("td").eq(1).contains("Fully Refunded");
+    });
+
     //To be tested once the payment starts failing for magic number
     it.skip("Failed payment should not have refund option", () => {
       cy.createAndPay(1, "6.61", "payment");
-      cy.wait(20000);
+      cy.wait(35000);
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
       cy.get("@firstRow").find("td").eq(1).should("contain", "Failed");
       cy.get("@firstRow").click();
-      cy.get("[data-cy=refund]").should("not.exist");
+      cy.get("[data-cy=refund]").should("be.disabled");
     });
 
     it.skip("Failed payment should not have refund button in payment details modal", () => {

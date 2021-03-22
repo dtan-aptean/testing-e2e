@@ -1,13 +1,11 @@
 /// <reference types="cypress" />
+
+import { mainCategory, secondCategory, mainProductOne, mainProductTwo, secondProduct } from "../support/setupCommands";
+
 // TEST COUNT: 22
 
 // Log of all created discounts; discount name pushed upon creation. Used to clear them
 const createdDiscounts: string[] = [];
-const nonCypressProduct = "Ibanez";
-const nonCypressCategory = "Guitars"; // Should be category that the above product is in
-const cypressProductOne = "Bald Cypress";
-const cypressProductTwo = "Montezuma Cypress";
-const cypressCategory = "Cypress Trees"; // Should be category that above two products are in
 // Returns the discount as a numerical percentage or a number
 const parseDiscountAmount = (discount) => {
   if (discount.usePercentage) {
@@ -15,64 +13,29 @@ const parseDiscountAmount = (discount) => {
   }
   return parseFloat(discount.amount);
 };
-// Searches a single page of the discounts table for the provided name and returns the row if found
-const runFilter = (name: string) => {
-  return cy
-    .get("#discounts-grid")
-    .find("tbody")
-    .find("tr")
-    .then(($rows) => {
-      if ($rows.length === 1 && $rows[0].innerText === "No data available in table") {
-        return null;
-      }
-      const row = $rows.filter((index, item) => {
-        return item.cells[0].innerText === name;
-      });
-      if (row.length === 1) {
-        return row;
-      } else {
-        return null;
-      }
-    });
+
+const getDiscountRow = (discountName: string) => {
+  const filter = (index, item) => {
+    return item.cells[0].innerText === discountName;
+  };
+  return cy.findTableItem("#discounts-grid", "discounts-grid_next", filter);
 };
-// Calls runFilter and pages through the pagination if runFilter doesn't find it
-const findInTable = (name: string) => {
-  return cy
-    .get(".pagination")
-    .find("li")
-    .then(($li) => {
-      if ($li.length === 2) {
-        return null;
-      }
-      for (var i = 0; i < $li.length - 2; i++) {
-        runFilter(name).then((el) => {
-          if (el) {
-            i = $li.length;
-            return el;
-          } else {
-            if ($li.length - 2 > 1) {
-              cy.get("#discounts-grid_next").find("a").click();
-              cy.wait(1000);
-            } else {
-              return null;
-            }
-          }
-        });
-      }
-    });
-};
+
 // Searches the table and clicks edit if it finds the discount
-const editDiscount = (discountName: string) => {
-  findInTable(discountName).then((row) => {
+const editDiscount = (discountName: string, allowNoResult?: boolean) => {
+  getDiscountRow(discountName).then((row) => {
     if (row) {
       cy.wrap(row).find("td").contains("Edit").click({ force: true });
-      cy.wait(500);
+      cy.wait(1000);
+      cy.location("pathname").should("include", "Edit");
+    } else if (!allowNoResult) {
+      assert.exists(row, `Discount Table should contain row with discount "${discountName}"`);
     }
   });
 };
 // Calls editDiscount and if it makes it to the edit page, deletes the discount
-const deleteDiscount = (discountName: string) => {
-  editDiscount(discountName);
+const deleteDiscount = (discountName: string, preTestCleanUp?: boolean) => {
+  editDiscount(discountName, preTestCleanUp);
   cy.location("pathname").then((loc) => {
     if (loc.includes("/Discount/Edit")) {
       cy.get("#discount-delete").click();
@@ -80,11 +43,13 @@ const deleteDiscount = (discountName: string) => {
         .find("button")
         .contains("Delete")
         .click();
-      cy.wait(200);
-      cy.get(".alert").should(
-        "contain.text",
-        "The discount has been deleted successfully."
-      );
+      cy.wait(500);
+      if (!preTestCleanUp) {
+        cy.get(".alert").should(
+          "contain.text",
+          "The discount has been deleted successfully."
+        );
+      }
     }
   });
 };
@@ -93,24 +58,33 @@ const addProductOrCategory = (
   prodCatName: string,
   productOrCategory: string
 ) => {
-  var buttonId;
-  var gridId;
-  var panelId
+  var buttonId = "";
+  var gridId = "";
+  var panelId = "";
+  var searchId  = "";
+  var searchButtonId = "";
+  var nextButtonId = "";
   if (productOrCategory === "product") {
     panelId = "#discount-applied-to-products";
     buttonId = "#btnAddNewProduct";
     gridId = "#products-grid";
+    searchId = "#SearchProductName";
+    searchButtonId = "#search-products";
+    nextButtonId = "#products-grid_next";
   } else if (productOrCategory === "category") {
     panelId = "#discount-applied-to-categories";
     buttonId = "#btnAddNewCategory";
     gridId = "#categories-grid";
+    searchId = "#SearchCategoryName";
+    searchButtonId = "#search-categories";
+    nextButtonId = "#categories-grid_next";
   }
-  cy.get(`${panelId}`).then((panel) => {
+  cy.get(panelId).then((panel) => {
     if (!panel[0].innerHTML.includes("opened")) {
       cy.wrap(panel).click();
-      cy.get(`${panelId}`).should("contain.html", "opened");
+      cy.get(panelId).should("contain.html", "opened");
     }
-    cy.get(`${buttonId}`).then((button) => {
+    cy.get(buttonId).then((button) => {
       const url = button.attr("onclick")?.split('"')[1];
       cy.location("pathname").then((loc) => {
         const current = loc;
@@ -121,16 +95,18 @@ const addProductOrCategory = (
             win.location.href = Cypress.config().baseUrl + url;
           }).as("popup"); // alias it with popup, so we can wait refer it with @popup
         });
-        cy.get(`${buttonId}`).click();
+        cy.get(buttonId).click();
         cy.get("@popup").should("be.called");
-        cy.get(`${gridId}`)
-          .find("tbody")
-          .find("tr")
-          .then(($rows) => {
-            const row = $rows.filter((index, item) => {
-              return item.cells[1].innerText === prodCatName;
-            });
-            cy.wrap(row).find("td").find("input").check();
+        cy.allowLoad();
+        cy.get(searchId).type(prodCatName);
+        cy.get(searchButtonId).click();
+        cy.allowLoad();
+        const rowFilter = (index, item) => {
+          return item.cells[1].innerText === prodCatName;
+        };
+        cy.findTableItem(gridId, nextButtonId, rowFilter).then(($row) => {
+          if ($row) {
+            cy.wrap($row).find("td").find("input").check();
             cy.get("button[name=save]").click();
             cy.wait(500);
             cy.visit(current);
@@ -140,7 +116,10 @@ const addProductOrCategory = (
               "contain.text",
               "The discount has been updated successfully."
             );
-          });
+          } else {
+            assert.exists($row, `Expected a row for ${prodCatName} in the ${productOrCategory} table`);
+          }
+        });
       });
     });
   });
@@ -160,16 +139,19 @@ const getOriginalPrice = () => {
 const addProductsToCart = () => {
   cy.goToPublic();
   cy.clearCart();
-  cy.goToProduct(nonCypressProduct, nonCypressCategory);
-  getOriginalPrice().then((guitarPrice) => {
+  cy.goToProduct(secondProduct, secondCategory);
+  getOriginalPrice().then((altProductPrice) => {
     cy.get(".add-to-cart-button").click();
-    cy.goToProduct(cypressProductOne, cypressCategory);
-    getOriginalPrice().then((baldPrice) => {
+    cy.allowLoad();
+    cy.goToProduct(mainProductOne, mainCategory);
+    getOriginalPrice().then((firstProductPrice) => {
       cy.get(".add-to-cart-button").click();
-      cy.goToProduct(cypressProductTwo, cypressCategory);
-      getOriginalPrice().then((montePrice) => {
+      cy.allowLoad();
+      cy.goToProduct(mainProductTwo, mainCategory);
+      getOriginalPrice().then((secondProductPrice) => {
         cy.get(".add-to-cart-button").click();
-        cy.wrap({ guitarPrice, baldPrice, montePrice }).as("productPrices");
+        cy.allowLoad();
+        cy.wrap({ altProductPrice, firstProductPrice, secondProductPrice }).as("productPrices");
         cy.goToCart();
       });
     });
@@ -177,7 +159,7 @@ const addProductsToCart = () => {
 };
 // Looks for a duplicate discount in the table and deletes it
 const checkForDuplicate = (name: string) => {
-  findInTable(name).then((row) => {
+  getDiscountRow(name).then((row) => {
     if (row) {
       cy.wrap(row).find("td").contains("Edit").click({ force: true });
       cy.wait(500);
@@ -208,9 +190,9 @@ const createDiscountAndAddProduct = (discount) => {
   createdDiscounts.push(discount.name);
   addProductsToCart();
   cy.get("@productPrices").then((prices) => {
-    const { guitarPrice, baldPrice, montePrice } = prices;
+    const { altProductPrice, firstProductPrice, secondProductPrice } = prices;
     const value = parseDiscountAmount(discount);
-    const returnValue = { guitarPrice, baldPrice, montePrice, value };
+    const returnValue = { altProductPrice, firstProductPrice, secondProductPrice, value };
     cy.wrap(returnValue).as("returnValue");
   });
 };
@@ -482,14 +464,14 @@ const checkUnitSubtotal = (
     .get('.product-quantity')
     .invoke("text")
     .then((value) => {
-      getValue(value);
+      return getValue(value);
     });
   } else {
     return cy
     .get(".qty-input")
     .invoke("val")
     .then((value) => {
-      getValue(value);
+      return getValue(value);
     });
   }
 };
@@ -500,15 +482,20 @@ const checkCartRow = (
   discount: number,
   fullPrice: boolean
 ) => {
+  var subtotal = 0;
   return cy.wrap(tr).within(($tr) => {
     const unitPrice = fullPrice ? price : price - discount;
     const inCheckout = $tr[0].innerHTML.includes("product-quantity");
     checkUnitPrice(unitPrice);
-    checkUnitSubtotal(price, discount, fullPrice, inCheckout);
+    checkUnitSubtotal(price, discount, fullPrice, inCheckout).then((sbValue: number) => {
+      subtotal = sbValue;
+    });
+  }).then(() => {
+    return subtotal;
   });
 };
 // Examines the cart to make sure discounts are applied correctly.
-// Assumes that the category assigned to cypressCategory variable is discounted unless you pass in a product name
+// Assumes that the mainCategory is discounted unless you pass in a product name
 // Adds up each item after it validates them, then validates the cart subtotal.
 const verifyCartAndSubtotal = (
   discount: number,
@@ -516,7 +503,7 @@ const verifyCartAndSubtotal = (
   options: { productName?: string; percent?: boolean }
 ) => {
   const { productName, percent } = options;
-  const cypressProducts = [cypressProductOne, cypressProductTwo];
+  const cypressProducts = [mainProductOne, mainProductTwo];
   cy.get(".cart").find("tbody").find("tr").should("have.length", 3);
   var cartSubtotal = 0;
   cy.get(".cart")
@@ -526,13 +513,13 @@ const verifyCartAndSubtotal = (
       const itemName = $tr.find(".product-name").text();
       var price = 0;
       switch (itemName) {
-        case nonCypressProduct:
+        case secondProduct:
           price = prices[0];
           break;
-        case cypressProductOne:
+        case mainProductOne:
           price = prices[1];
           break;
-        case cypressProductTwo:
+        case mainProductTwo:
           price = prices[2];
           break;
       }
@@ -559,13 +546,12 @@ const verifyCartAndSubtotal = (
         );
     });
 };
-// Clears cart and deletes the discount if it's found, then goes to eComm public store home.
-// Called in the beforeEach and the last test
+// Clears cart and deletes the discount if it's found, then goes to eComm public store home. Called in the beforeEach
 const resetCartAndDiscount = (discountName: string) => {
   if (discountName.length > 0) {
     cy.clearCart();
     cy.goToDiscounts();
-    deleteDiscount(discountName);
+    deleteDiscount(discountName, true);
     cy.visit("/");
   }
 };
@@ -574,25 +560,21 @@ const today = new Date();
 const twoDaysAhead = new Date(today.valueOf() + 172800000);
 const twoDaysBehind = new Date(today.valueOf() - 172800000);
 const fourDaysBehind = new Date(today.valueOf() - 345600000);
-// Discount for use between multiple tests
-const commonDiscount = {
-  name: "Cypress common discount",
-  discountType: "Assigned to order total",
-  amount: "333",
-  useCode: true,
-  code: "cypComDis",
-  date: {
-    startDate: `${twoDaysBehind.toLocaleDateString()} 12:00 AM`,
-    endDate: `${today.toLocaleDateString()} 11:59 PM`,
-  },
-  limitation: "Unlimited",
-};
+const monthDay = today.toLocaleString("en-US", {month: "2-digit", day: "2-digit"});
 
 describe("Ecommerce", function () {
+  before(() => {
+    cy.setupDiscounts();
+  });
   context("Discounts", () => {
+    after(() => {
+      cy.revertDiscounts();
+    });
+
     beforeEach(() => {
       cy.visit("/");
       cy.login();
+      cy.clearCart();
       if (createdDiscounts.length > 0) {
         resetCartAndDiscount(createdDiscounts[createdDiscounts.length - 1]);
       }
@@ -722,7 +704,20 @@ describe("Ecommerce", function () {
 
     it("Creating a new discount displays a success banner and updates the table", () => {
       cy.goToDiscounts();
-      cy.addNewDiscount(commonDiscount);
+      const createdDiscount = {
+        name: `Cypress created ${monthDay}`,
+        discountType: "Assigned to order total",
+        amount: "333",
+        useCode: true,
+        code: "cypCreDis",
+        date: {
+          startDate: `${twoDaysBehind.toLocaleDateString()} 12:00 AM`,
+          endDate: `${today.toLocaleDateString()} 11:59 PM`,
+        },
+        limitation: "Unlimited",
+      };
+      cy.addNewDiscount(createdDiscount);
+      createdDiscounts.push(createdDiscount.name);
       cy.get(".alert").should(
         "contain.text",
         "The new discount has been added successfully."
@@ -733,22 +728,22 @@ describe("Ecommerce", function () {
         .then(($rows) => {
           expect($rows.length).to.be.gte(1);
           const row = $rows.filter((index, item) => {
-            return item.cells[0].innerText === commonDiscount.name;
+            return item.cells[0].innerText === createdDiscount.name;
           });
-          expect(row.length).to.be.eq(1);
+          expect(row.length).to.be.eq(1, "Table should have a row with the expected discount");
           const cells = row[0].cells;
-          cy.wrap(cells[0]).should("have.text", commonDiscount.name);
+          cy.wrap(cells[0]).should("have.text", createdDiscount.name);
           cy.wrap(cells[1]).should(
             "have.text",
-            commonDiscount.discountType
+            createdDiscount.discountType
           );
           cy.wrap(cells[2]).should(
             "have.text",
-            `${commonDiscount.amount} USD`
+            `${createdDiscount.amount} USD`
           );
           cy.wrap(cells[3]).should(
             "have.text",
-            `${new Date(commonDiscount.date.startDate).toLocaleString(
+            `${new Date(createdDiscount.date.startDate).toLocaleString(
               undefined,
               {
                 month: "2-digit",
@@ -759,7 +754,7 @@ describe("Ecommerce", function () {
             );
           cy.wrap(cells[4]).should(
             "have.text",
-            `${new Date(commonDiscount.date.endDate).toLocaleString(
+            `${new Date(createdDiscount.date.endDate).toLocaleString(
               undefined,
               {
                 month: "2-digit",
@@ -774,47 +769,63 @@ describe("Ecommerce", function () {
 
     it("Deleting a discount display a success banner and updates the table", () => {
       cy.goToDiscounts();
-      findInTable(commonDiscount.name).then((el) => {
-        if (!el) {
-          cy.addNewDiscount(commonDiscount);
-        } else {
-          cy.wrap(el).should("exist").and("contain.text", commonDiscount.name);
-        }
-        createdDiscounts.push(commonDiscount.name);
-        findInTable(commonDiscount.name).then((row) => {
-          cy.wrap(row).find("td").contains("Edit").click();
-          cy.wait(500);
-          cy.get("#discount-delete").click();
-          cy.get("#discountmodel-Delete-delete-confirmation")
-            .find("button")
-            .contains("Delete")
-            .click();
-          cy.wait(200);
-          cy.get(".alert").should(
-            "contain.text",
-            "The discount has been deleted successfully."
-          );
-        });
+      const deletedDiscount = {
+        name: `Cypress deleting ${monthDay}`,
+        discountType: "Assigned to order total",
+        amount: "333",
+        useCode: true,
+        code: "cypDelDis",
+        date: {
+          startDate: `${twoDaysBehind.toLocaleDateString()} 12:00 AM`,
+          endDate: `${today.toLocaleDateString()} 11:59 PM`,
+        },
+        limitation: "Unlimited",
+      };
+      cy.addNewDiscount(deletedDiscount);
+      createdDiscounts.push(deletedDiscount.name);
+      getDiscountRow(deletedDiscount.name).then((row) => {
+        cy.wrap(row).find("td").contains("Edit").click();
+        cy.wait(500);
+        cy.get("#discount-delete").click();
+        cy.get("#discountmodel-Delete-delete-confirmation")
+          .find("button")
+          .contains("Delete")
+          .click();
+        cy.wait(200);
+        cy.get(".alert").should(
+          "contain.text",
+          "The discount has been deleted successfully."
+        );
       });
     });
 
     it("A deleted discount cannot be used in the store", () => {
       cy.goToDiscounts();
-      findInTable(commonDiscount.name).then((el) => {
-        if (el) {
-          deleteDiscount(commonDiscount.name);
-        }
-        cy.goToPublic();
-        cy.goToProduct(cypressProductOne);
-        cy.get(".add-to-cart-button").click();
-        cy.goToCart();
-        cy.get("#discountcouponcode").type(commonDiscount.code);
-        cy.get("#applydiscountcouponcode").click();
-        cy.get(".coupon-box").should("contain.html", "message-failure");
-        cy.get(".coupon-box")
-          .find(".message-failure")
-          .should("contain.text", "The coupon code cannot be found");
-      });
+      const deletedDiscount = {
+        name: `Cypress deleted ${monthDay}`,
+        discountType: "Assigned to order total",
+        amount: "333",
+        useCode: true,
+        code: "cypDeleted",
+        date: {
+          startDate: `${twoDaysBehind.toLocaleDateString()} 12:00 AM`,
+          endDate: `${today.toLocaleDateString()} 11:59 PM`,
+        },
+        limitation: "Unlimited",
+      };
+      cy.addNewDiscount(deletedDiscount);
+      createdDiscounts.push(deletedDiscount.name);
+      deleteDiscount(deletedDiscount.name);
+      cy.goToPublic();
+      cy.goToProduct(mainProductOne);
+      cy.get(".add-to-cart-button").click();
+      cy.goToCart();
+      cy.get("#discountcouponcode").type(deletedDiscount.code);
+      cy.get("#applydiscountcouponcode").click();
+      cy.get(".coupon-box").should("contain.html", "message-failure");
+      cy.get(".coupon-box")
+        .find(".message-failure")
+        .should("contain.text", "The coupon code cannot be found");
     });
 
     it("Editing a discount displays a success banner and updates the table", () => {
@@ -856,7 +867,7 @@ describe("Ecommerce", function () {
         "The discount has been updated successfully."
       );
       createdDiscounts.push(newName);
-      findInTable(newName).then((row) => {
+      getDiscountRow(newName).then((row) => {
         cy.wrap(row).should("exist");
         const cells = row[0].cells;
         cy.wrap(cells[0]).should("have.text", newName);
@@ -894,14 +905,14 @@ describe("Ecommerce", function () {
         limitation: "Unlimited",
       };
       createDiscountAndEdit(productDiscount);
-      addProductOrCategory(cypressProductOne, "product");
+      addProductOrCategory(mainProductOne, "product");
       editDiscount(productDiscount.name);
       cy.get("#products-grid")
         .find("tbody")
         .find("tr")
         .then(($rows) => {
           expect($rows).to.have.length(1);
-          cy.wrap($rows[0].cells[0]).should("have.text", cypressProductOne);
+          cy.wrap($rows[0].cells[0]).should("have.text", mainProductOne);
           cy.wrap($rows[0].cells[2]).click();
           cy.get("#products-grid").should(
             "contain.text",
@@ -932,14 +943,14 @@ describe("Ecommerce", function () {
         maxDiscountQty: "5",
       };
       createDiscountAndEdit(categoryDiscount);
-      addProductOrCategory(cypressCategory, "category");
+      addProductOrCategory(mainCategory, "category");
       editDiscount(categoryDiscount.name);
       cy.get("#categories-grid")
         .find("tbody")
         .find("tr")
         .then(($rows) => {
           expect($rows).to.have.length(1);
-          cy.wrap($rows[0].cells[0]).should("have.text", cypressCategory);
+          cy.wrap($rows[0].cells[0]).should("have.text", mainCategory);
           cy.wrap($rows[0].cells[2]).click();
           cy.get("#categories-grid").should(
             "contain.text",
@@ -1035,8 +1046,8 @@ describe("Ecommerce", function () {
       };
       createDiscountAndAddProduct(percentageDiscount);
       cy.get("@returnValue").then((returnValue) => {
-        const { value, guitarPrice, baldPrice, montePrice } = returnValue;
-        verifyCost(value, [guitarPrice, baldPrice, montePrice], "total");
+        const { value, altProductPrice, firstProductPrice, secondProductPrice } = returnValue;
+        verifyCost(value, [altProductPrice, firstProductPrice, secondProductPrice], "total");
       });
     });
 
@@ -1053,8 +1064,8 @@ describe("Ecommerce", function () {
       };
       createDiscountAndAddProduct(valueDiscount);
       cy.get("@returnValue").then((returnValue) => {
-        const { value, guitarPrice, baldPrice, montePrice } = returnValue;
-        verifyCost(value, [guitarPrice, baldPrice, montePrice], "total");
+        const { value, altProductPrice, firstProductPrice, secondProductPrice } = returnValue;
+        verifyCost(value, [altProductPrice, firstProductPrice, secondProductPrice], "total");
       });
     });
 
@@ -1073,7 +1084,7 @@ describe("Ecommerce", function () {
       };
       createDiscountAndAddProduct(inDateDiscount);
       cy.get("@returnValue").then((returnValue) => {
-        const { value, guitarPrice, baldPrice, montePrice } = returnValue;
+        const { value, altProductPrice, firstProductPrice, secondProductPrice } = returnValue;
         cy.goToCart();
         cy.get("#discountcouponcode").type(inDateDiscount.code);
         cy.get("#applydiscountcouponcode").click();
@@ -1081,7 +1092,7 @@ describe("Ecommerce", function () {
           "contain.text",
           "The coupon code was applied"
         );
-        verifyCost(value, [guitarPrice, baldPrice, montePrice], "total");
+        verifyCost(value, [altProductPrice, firstProductPrice, secondProductPrice], "total");
       });
     });
 
@@ -1100,7 +1111,7 @@ describe("Ecommerce", function () {
       };
       createDiscountAndAddProduct(expiredDiscount);
       cy.get("@returnValue").then((returnValue) => {
-        const { value, guitarPrice, baldPrice, montePrice } = returnValue;
+        const { value, altProductPrice, firstProductPrice, secondProductPrice } = returnValue;
         cy.goToCart();
         cy.get("#discountcouponcode").type(expiredDiscount.code);
         cy.get("#applydiscountcouponcode").click();
@@ -1108,7 +1119,7 @@ describe("Ecommerce", function () {
           "contain.text",
           "Sorry, this offer is expired"
         );
-        verifyFailure(value, [guitarPrice, baldPrice, montePrice], "total");
+        verifyFailure(value, [altProductPrice, firstProductPrice, secondProductPrice], "total");
       });
     });
 
@@ -1125,9 +1136,9 @@ describe("Ecommerce", function () {
       };
       createDiscountAndAddProduct(codelessExpiredDiscount);
       cy.get("@returnValue").then((returnValue) => {
-        const { value, guitarPrice, baldPrice, montePrice } = returnValue;
+        const { value, altProductPrice, firstProductPrice, secondProductPrice } = returnValue;
         cy.goToCart();
-        verifyFailure(value, [guitarPrice, baldPrice, montePrice], "total");
+        verifyFailure(value, [altProductPrice, firstProductPrice, secondProductPrice], "total");
       });
     });
 
@@ -1144,18 +1155,18 @@ describe("Ecommerce", function () {
         limitation: "Unlimited",
       };
       createDiscountAndEdit(baldCypressDisplay);
-      addProductOrCategory(cypressProductOne, "product");
+      addProductOrCategory(mainProductOne, "product");
       cy.goToPublic();
-      cy.goToCategory(nonCypressCategory);
+      cy.goToCategory(secondCategory);
       checkCategoryForDiscounts(false);
-      cy.goToCategory(cypressCategory);
+      cy.goToCategory(mainCategory);
       const discount = parseDiscountAmount(baldCypressDisplay);
-      checkProductInCategory(cypressProductOne, discount, true);
-      cy.goToProduct(cypressProductOne, cypressCategory);
+      checkProductInCategory(mainProductOne, discount, true);
+      cy.goToProduct(mainProductOne, mainCategory);
       checkProductForDiscount(true, discount, true);
-      cy.goToProduct(cypressProductTwo, cypressCategory);
+      cy.goToProduct(mainProductTwo, mainCategory);
       checkProductForDiscount(false);
-      cy.goToProduct(nonCypressProduct, nonCypressCategory);
+      cy.goToProduct(secondProduct, secondCategory);
       checkProductForDiscount(false);
     });
 
@@ -1174,18 +1185,18 @@ describe("Ecommerce", function () {
       };
       cy.goToDiscounts();
       createDiscountAndEdit(treesDiscount);
-      addProductOrCategory(cypressCategory, "category");
+      addProductOrCategory(mainCategory, "category");
       const discount = parseDiscountAmount(treesDiscount);
       cy.goToPublic();
-      cy.goToCategory(nonCypressCategory);
+      cy.goToCategory(secondCategory);
       checkCategoryForDiscounts(false);
-      cy.goToProduct(nonCypressProduct, nonCypressCategory);
+      cy.goToProduct(secondProduct, secondCategory);
       checkProductForDiscount(false);
-      cy.goToCategory(cypressCategory);
+      cy.goToCategory(mainCategory);
       checkCategoryForDiscounts(true, discount, true);
-      cy.goToProduct(cypressProductOne, cypressCategory);
+      cy.goToProduct(mainProductOne, mainCategory);
       checkProductForDiscount(true, discount, true);
-      cy.goToProduct(cypressProductTwo, cypressCategory);
+      cy.goToProduct(mainProductTwo, mainCategory);
       checkProductForDiscount(true, discount, true);
     });
 
@@ -1203,12 +1214,12 @@ describe("Ecommerce", function () {
         maxDiscountQty: "5",
       };
       createDiscountAndEdit(baldCypressDiscount);
-      addProductOrCategory(cypressProductOne, "product");
+      addProductOrCategory(mainProductOne, "product");
       const discount = parseDiscountAmount(baldCypressDiscount);
       addProductsToCart();
       cy.get("@productPrices").then((prices) => {
         verifyCartAndSubtotal(discount, Object.values(prices), {
-          productName: cypressProductOne,
+          productName: mainProductOne,
           percent: true,
         });
       });
@@ -1228,15 +1239,13 @@ describe("Ecommerce", function () {
         maxDiscountQty: "5",
       };
       createDiscountAndEdit(cypressTreesDiscount);
-      addProductOrCategory(cypressCategory, "category");
+      addProductOrCategory(mainCategory, "category");
       addProductsToCart();
       const discount = parseDiscountAmount(cypressTreesDiscount);
       cy.get("@productPrices").then((prices) => {
         verifyCartAndSubtotal(discount, Object.values(prices), {
           percent: true,
         });
-        // NOTE: needs to be called in the last test. Move this if a test is added!
-        resetCartAndDiscount(cypressTreesDiscount.name);
       });
     });
 
@@ -1254,7 +1263,7 @@ describe("Ecommerce", function () {
         maxDiscountQty: "5",
       };
       createDiscountAndEdit(checkoutDiscount);
-      addProductOrCategory(cypressProductOne, "product");
+      addProductOrCategory(mainProductOne, "product");
       const discount = parseDiscountAmount(checkoutDiscount);
       addProductsToCart();
       cy.get("@productPrices").then((prices) => {
@@ -1263,7 +1272,7 @@ describe("Ecommerce", function () {
         cy.wait(500);
         cy.getToConfirmOrder();
         verifyCartAndSubtotal(discount,  Object.values(prices), {
-          productName: cypressProductOne,
+          productName: mainProductOne,
           percent: true,
         });
         cy.server();
@@ -1271,7 +1280,7 @@ describe("Ecommerce", function () {
         cy.get(".confirm-order-next-step-button").click();
         cy.wait('@receivedResponse');
         cy.goToDiscounts();
-        findInTable(checkoutDiscount.name).then((row) => {
+        getDiscountRow(checkoutDiscount.name).then((row) => {
           // check that times used updates
           cy.wrap(row).should("exist");
           cy.wrap(row).find("td").eq(5).should("have.text", "1");
@@ -1293,7 +1302,7 @@ describe("Ecommerce", function () {
         maxDiscountQty: "5",
       };
       createDiscountAndEdit(cypressCategoryCheckout);
-      addProductOrCategory(cypressCategory, "category");
+      addProductOrCategory(mainCategory, "category");
       const discount = parseDiscountAmount(cypressCategoryCheckout);
       addProductsToCart();
       cy.get("@productPrices").then((prices) => {
@@ -1310,37 +1319,12 @@ describe("Ecommerce", function () {
         cy.get(".confirm-order-next-step-button").click();
         cy.wait('@receivedResponse');
         cy.goToDiscounts();
-        findInTable(cypressCategoryCheckout.name).then((row) => {
+        getDiscountRow(cypressCategoryCheckout.name).then((row) => {
           // check that times used updates
           cy.wrap(row).should("exist");
           cy.wrap(row).find("td").eq(5).should("have.text", "1");
         });
       });
-    });
-    
-    // Delete all the discounts afterwards
-    after(() => {
-      cy.visit("/");
-      cy.get(".header-links")
-        .find("ul")
-        .then(($ul) => {
-          if ($ul[0].innerHTML.includes("ico-login")) {
-            cy.login();
-          }
-          cy.wait(1000);
-          cy.clearCart();
-          cy.wait(1000);
-          cy.goToDiscounts();
-          // All but the last discount should have been deleted before each test
-          // But just in case, we'll run through the array of created discounts and make sure
-          createdDiscounts.forEach((discountName) => {
-            // TODO: If a test fails, this won't delete a discount, for some weird cypress reason.
-            // It insists it can't find the ul that it can find if the tests pass.
-            // Haven't managed to find a fix for that, added a failsafe to the last test, but keep working on it.
-            deleteDiscount(discountName);
-            cy.wait(1000);
-          });
-        });
     });
   });
 });
