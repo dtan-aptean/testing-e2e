@@ -7,6 +7,7 @@ describe('Mutation: createProductAttribute', () => {
     var id = '';
     const mutationName = 'createProductAttribute';
     const queryName = "productAttributes";
+	const deleteMutName = "deleteProductAttribute";
     const itemPath = 'productAttribute';
     const standardMutationBody = `
         code
@@ -21,9 +22,18 @@ describe('Mutation: createProductAttribute', () => {
         }
     `;
 
+	var deleteItemsAfter = undefined as boolean | undefined;
+	before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName);
+	});
+
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
-            cy.deleteItem("deleteProductAttribute", id).then(() => {
+            cy.deleteItem(deleteMutName, id).then(() => {
                 id = "";
             });
         }
