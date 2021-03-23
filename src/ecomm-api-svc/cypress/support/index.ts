@@ -27,7 +27,6 @@ import './setupCommands';
  */
 before(() => {
   var deleteConfig = Cypress.env("deleteItemsAfter");
-  Cypress.log({message: `${typeof deleteConfig}`});
   if (typeof deleteConfig !== "boolean") {
     var url = Cypress.config("baseUrl");
     if (url.includes("prf")) {
