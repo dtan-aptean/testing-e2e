@@ -138,14 +138,12 @@ Cypress.Commands.add("deleteCypressItems", (
                     return node.parent !== null;
                 });
                 if (childCats.length > 0) {
-                    Cypress.log({message: "Deleting CHILD categories"});
                     deleteItems(childCats, deleteName, searchBy, infoName)
                 }
                 const parentCats = nodes.filter((node) => {
                     return node.parent === null;
                 });
                 if (parentCats.length > 0) {
-                    Cypress.log({message: "Deleting PARENT categories"});
                     deleteItems(parentCats, deleteName, searchBy, infoName);
                 }
             } else {
