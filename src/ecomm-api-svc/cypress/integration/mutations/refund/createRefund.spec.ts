@@ -35,8 +35,10 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             ${responseBody}
         }
     `;
-    
+
+    var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.wait(1000);
         cy.visit("/");  // Go to the storefront and login
         cy.storefrontLogin();
@@ -50,6 +52,9 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
     });
 
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "" && refundCreated) {
             const deletionName = "deleteRefund";
             const removalMutation = `mutation {

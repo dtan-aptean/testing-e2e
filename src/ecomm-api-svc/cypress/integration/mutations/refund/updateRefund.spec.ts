@@ -10,6 +10,7 @@ describe('Mutation: updateRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
     var id = '';
     var orderTotal = 0;
     const mutationName = 'updateRefund';
+    const createName = 'createRefund';
     const queryName = "refunds";
     const itemPath = 'refund';
     const responseBody = `
@@ -34,9 +35,10 @@ describe('Mutation: updateRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             ${responseBody}
         }
     `;
-    const createName = 'createRefund';
 
+	var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.wait(1000);
         cy.visit("/");  // Go to the storefront and login
         cy.storefrontLogin();
@@ -56,6 +58,9 @@ describe('Mutation: updateRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
     });
 
     after(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
             const deletionName = "deleteRefund";
             const removalMutation = `mutation {
@@ -69,6 +74,7 @@ describe('Mutation: updateRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             cy.postAndConfirmDelete(removalMutation, deletionName, queryInformation, originalBaseUrl);
         }
     });
+
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
             const mutation = `mutation {

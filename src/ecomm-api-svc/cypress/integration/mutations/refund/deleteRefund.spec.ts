@@ -47,7 +47,9 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
         });
     };
 
+	var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.wait(1000);
         cy.visit("/");  // Go to the storefront and login
         cy.storefrontLogin();
@@ -61,6 +63,9 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
     });
 
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== '') {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
             cy.queryForDeletedById(false, id, "searchString", queryName, originalBaseUrl).then((itemPresent: boolean) => {
