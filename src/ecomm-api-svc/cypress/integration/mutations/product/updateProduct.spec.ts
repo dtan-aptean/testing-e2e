@@ -9,6 +9,7 @@ describe('Mutation: updateProduct', () => {
     var extraIds = [] as SupplementalItemRecord[];
     var deleteAfterProducts = [] as SupplementalItemRecord[]; // Items that can only be deleted after the attached product is deleted
     const mutationName = 'updateProduct';
+	const deleteMutName = "deleteProduct";
     const queryName = "products";
     const itemPath = 'product';
     const infoName = "productInfo";
@@ -38,7 +39,11 @@ describe('Mutation: updateProduct', () => {
         }
     };
 
+	var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName, infoName);
+        // TODO: Move this to a beforeEach so we're updating a new item each time
         const name = `Cypress ${mutationName} Test`;
         const input = `{${infoName}: [{name: "${name}", languageCode: "Standard"}]}`;
         cy.createAndGetId(createName, itemPath, input).then((returnedId: string) => {
@@ -48,11 +53,14 @@ describe('Mutation: updateProduct', () => {
     });
 
     after(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
             // Delete any supplemental items we created
             cy.deleteSupplementalItems(extraIds);
             // Delete the item we've been updating
-            cy.deleteItem("deleteProduct", id);
+            cy.deleteItem(deleteMutName, id);
             // Delete items that must be deleted after their product
             cy.deleteSupplementalItems(deleteAfterProducts);
         }
@@ -217,7 +225,7 @@ describe('Mutation: updateProduct', () => {
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteProduct", itemName: info[0].name, queryName: queryName});
+                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: info[0].name, queryName: queryName});
                 const newInfo = [{name: `Cypress ${mutationName} CD extra updated`, languageCode: "Standard"}];
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
                 const mutation = `mutation {
