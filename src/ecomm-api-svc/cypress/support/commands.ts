@@ -1082,6 +1082,7 @@ Cypress.Commands.add("deleteParentAndChildCat", (children: {name: string, id: st
         }
     };
 
+    // TODO: Put this in an if block so it only logs if it's passed real parent/child ids
     Cypress.log({
         name: "deleteParentAndChildCat",
         message: `Deleting ${Array.isArray(children) ? children.length + " child categories" : `child category "${children.id !== "" ? children.id : children.name}"`}, then parent "${parentId}"`,
