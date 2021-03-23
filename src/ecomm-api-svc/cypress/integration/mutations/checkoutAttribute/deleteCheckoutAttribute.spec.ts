@@ -24,6 +24,12 @@ describe('Mutation: deleteCheckoutAttribute', () => {
         queryInformation.itemName = providedName ? providedName : "";
     };
 
+    var deleteItemsAfter = undefined as boolean | undefined;
+    before(() => {
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems(queryName, mutationName);
+    });
+
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         const input = `{name: "${name}", values: [{name: "CA deletee value"}]}`;
@@ -33,6 +39,9 @@ describe('Mutation: deleteCheckoutAttribute', () => {
     });
 
     afterEach(() => {
+        if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== '') {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
             cy.safeDelete(queryName, mutationName, id, currentItemName).then(() => {

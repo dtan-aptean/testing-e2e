@@ -6,6 +6,7 @@ import { toFormattedString } from "../../../support/commands";
 describe('Mutation: createCheckoutAttribute', () => {
     var id = '';
     const mutationName = 'createCheckoutAttribute';
+    const deleteMutName = "deleteCheckoutAttribute";
     const queryName = "checkoutAttributes";
     const itemPath = 'checkoutAttribute';
     const standardMutationBody = `
@@ -22,9 +23,19 @@ describe('Mutation: createCheckoutAttribute', () => {
     `;
     var taxCategoryId = "";
 
+
+    var deleteItemsAfter = undefined as boolean | undefined;
+    before(() => {
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems(queryName, deleteMutName);
+    });
+
     afterEach(() => {
+        if (!deleteItemsAfter) {
+            return;
+        }
         if (id !== "") {
-            cy.deleteItem("deleteCheckoutAttribute", id).then(() => {
+            cy.deleteItem(deleteMutName, id).then(() => {
                 id = "";
             });
             cy.wait(1000);

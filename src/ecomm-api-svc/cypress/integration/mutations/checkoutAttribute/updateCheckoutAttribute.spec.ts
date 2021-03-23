@@ -10,6 +10,8 @@ describe('Mutation: updateCheckoutAttribute', () => {
     var values = '';
     const extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateCheckoutAttribute';
+    const createName = 'createCheckoutAttribute';
+    const deleteMutName = "deleteCheckoutAttribute";
     const queryName = "checkoutAttributes";
     const itemPath = 'checkoutAttribute';
     const additionalFields = `values {
@@ -26,9 +28,12 @@ describe('Mutation: updateCheckoutAttribute', () => {
             ${additionalFields}
         }
     `;
-    const createName = 'createCheckoutAttribute';
 
+	var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems(queryName, deleteMutName);
+        // TODO: Move this to a beforeEach so we're updating a new item each time
         // Create an item for the tests to update
         const name = `Cypress ${mutationName} Test`;
         const input = `{name: "${name}", values: [{name: "Cypress CA update test"}]}`;
@@ -41,11 +46,14 @@ describe('Mutation: updateCheckoutAttribute', () => {
     });
 
     after(() => {
+        if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
             // Delete any supplemental items we created
             cy.deleteSupplementalItems(extraIds);
             // Delete the item we've been updating
-            cy.deleteItem("deleteCheckoutAttribute", id);
+            cy.deleteItem(deleteMutName, id);
             cy.wait(1000);
         }
         if (taxCategoryId !== "") {
@@ -218,7 +226,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
             cy.createAndGetId(createName, itemPath, input, extraInput).then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteCheckoutAttribute", itemName: name, queryName: queryName});
+                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName});
                 const newName = `Cypress ${mutationName} CD extra updated`;
                 const newValues = createdItem.values;
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
