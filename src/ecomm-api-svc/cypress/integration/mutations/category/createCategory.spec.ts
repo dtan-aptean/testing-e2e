@@ -7,6 +7,7 @@ describe('Mutation: createCategory', () => {
     var id = '';
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'createCategory';
+    const deleteMutName = "deleteCategory";
     const queryName = "categories";
     const itemPath = 'category';
     const infoName = "categoryInfo";
@@ -35,7 +36,16 @@ describe('Mutation: createCategory', () => {
     var childCatId = "";
     var parentCatId = "";
 
+    var deleteItemsAfter = undefined as boolean | undefined;
+    before(() => {
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems(queryName, deleteMutName, infoName);
+    });
+
     afterEach(() => {
+        if (!deleteItemsAfter) {
+            return;
+        }
         if (originalBaseUrl !== "" && Cypress.config("baseUrl") !== originalBaseUrl) {
             Cypress.log({message: "Switching the baseUrl back to the original"});
             Cypress.config("baseUrl", originalBaseUrl);
@@ -55,7 +65,7 @@ describe('Mutation: createCategory', () => {
         });
 
         if (id !== "") {
-            cy.deleteItem("deleteCategory", id).then(() => {
+            cy.deleteItem(deleteMutName, id).then(() => {
                 id = "";
             });
         }
@@ -453,6 +463,7 @@ describe('Mutation: createCategory', () => {
         });
     });
 
+    // TODO: Move this to a category file in the misc folder
     context.skip("Testing in storefront", () => {
         // This cannot be run on its own without another test run before it.
         // The baseUrl changes too fast for us to save it as originalBaseUrl if it's run on its own. This prevents us from making API calls

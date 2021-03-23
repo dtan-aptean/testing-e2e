@@ -8,6 +8,7 @@ describe('Mutation: updateCategory', () => {
     var updateCount = 0;
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateCategory';
+    const deleteMutName = "deleteCategory";
     const queryName = "categories";
     const itemPath = 'category';
     const infoName = "categoryInfo";
@@ -39,7 +40,12 @@ describe('Mutation: updateCategory', () => {
         });
     };
 
+    var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems(queryName, deleteMutName, infoName);
+        
+        // TODO: Move this to a beforeEach so we're updating a new item each time
         // Create an item for the tests to update
         const name = `Cypress ${mutationName} Test`;
         const input = `{${infoName}: [{name: "${name}", description: "Cypress testing for ${mutationName}", languageCode: "Standard"}] }`;
@@ -51,6 +57,9 @@ describe('Mutation: updateCategory', () => {
     });
 
     after(() => {
+        if (!deleteItemsAfter) {
+            return;
+        }
         if (originalBaseUrl !== "" && Cypress.config("baseUrl") !== originalBaseUrl) {
             Cypress.log({message: "Switching the baseUrl back to the original"});
             Cypress.config("baseUrl", originalBaseUrl);
@@ -67,7 +76,7 @@ describe('Mutation: updateCategory', () => {
 
         if (id !== "") {
             // Delete the item we've been updating
-            cy.deleteItem("deleteCategory", id);
+            cy.deleteItem(deleteMutName, id);
         }
     });
 
@@ -225,7 +234,7 @@ describe('Mutation: updateCategory', () => {
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteCategory", itemName: info[0].name, queryName: queryName});
+                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: info[0].name, queryName: queryName});
                 const newInfo = [{name: `Cypress ${mutationName} CD extra updated`, description: `${mutationName} CD cypress test`, languageCode: "Standard"}];
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
                 const mutation = `mutation {
@@ -565,6 +574,7 @@ describe('Mutation: updateCategory', () => {
         });
     });
    
+    // TODO: Move this to a category file in the misc folder
     context.skip("Testing in storefront", () => {
         // This cannot be run on its own without another test run before it.
         // The baseUrl changes too fast for us to save it as originalBaseUrl if it's run on its own. This prevents us from making API calls
@@ -577,7 +587,7 @@ describe('Mutation: updateCategory', () => {
             const pageSize = 10;
             const input = {categoryInfo: [{name: name, languageCode: "Standard"}], published: published, displayOrder: displayOrder, pageSize: pageSize}
             cy.createAndGetId(createName, itemPath, toFormattedString(input), undefined, originalBaseUrl).then((returnedId: string) => {
-                extraIds.push({itemId: returnedId, deleteName: "deleteCategory", itemName: name, queryName: queryName});
+                extraIds.push({itemId: returnedId, deleteName: deleteMutName, itemName: name, queryName: queryName});
                 name = `Cypress TopMenu Update ${Cypress._.random(0, 999)}`;
                 const newInfo = [{name: name, languageCode: "Standard"}];
                 const showInTopMenu = true;
