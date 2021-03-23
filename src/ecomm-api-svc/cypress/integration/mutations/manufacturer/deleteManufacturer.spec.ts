@@ -31,6 +31,12 @@ describe('Mutation: deleteManufacturer', () => {
         queryInformation.itemName = providedName ? providedName : "";
     };
 
+	var deleteItemsAfter = undefined as boolean | undefined;
+	before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, mutationName, infoName);
+	});
+
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         const input = `{${infoName}: [{name: "${name}", description: "Cypress testing for ${mutationName}", languageCode: "Standard"}] }`;
@@ -40,6 +46,9 @@ describe('Mutation: deleteManufacturer', () => {
     });
 
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         // Delete any supplemental items we created
         cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];
