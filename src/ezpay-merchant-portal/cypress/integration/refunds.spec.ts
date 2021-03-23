@@ -47,7 +47,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentRequestCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Unpaid");
         })
@@ -87,7 +87,7 @@ describe("Merchant portal", function () {
       });
 
       cy.get("@firstPaymentCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -107,7 +107,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentRequestCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -129,7 +129,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -152,7 +152,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentRequestCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -177,7 +177,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -200,7 +200,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentRequestCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -225,7 +225,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -259,7 +259,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentRequestCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -295,7 +295,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -323,7 +323,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentRequestCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -353,7 +353,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -374,7 +374,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentRequestCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -397,7 +397,7 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
       cy.get("@firstPaymentRequestCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -422,7 +422,7 @@ describe("Merchant portal", function () {
         .and("be.visible");
 
       cy.get("@firstPaymentRequestCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Refund Pending");
         });
@@ -432,7 +432,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
 
       cy.get("@firstPaymentCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Refund Pending");
         });
@@ -463,7 +463,7 @@ describe("Merchant portal", function () {
 
       //making remaining amount refund
       cy.get("@firstPaymentCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -479,7 +479,7 @@ describe("Merchant portal", function () {
 
       //checking payment status
       cy.get("@firstPaymentCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Refund Pending");
         });
@@ -489,7 +489,7 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
       cy.get("@firstPaymentRequestCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Refund");
         });

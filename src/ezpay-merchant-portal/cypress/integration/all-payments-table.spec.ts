@@ -40,8 +40,8 @@ describe("All Payments Table", function () {
         }
       });
 
-      cy.get("@firstRow").find("td").eq(1).should("contain", "Completed");
-      cy.get("@firstRow").find("td").eq(3).should("contain", "10.00");
+      cy.get("@firstRow").find("td").eq(2).should("contain", "Completed");
+      cy.get("@firstRow").find("td").eq(4).should("contain", "10.00");
     });
 
     it("Selecting completed payment should enable view details and refund button", () => {
@@ -65,7 +65,7 @@ describe("All Payments Table", function () {
       //using payment id hyperlink
       cy.get("@firstRow")
         .get("td")
-        .eq(0)
+        .eq(1)
         .within(() => {
           cy.get('a[href="#"]').click({ force: true });
         });
@@ -198,11 +198,11 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=refund-dialog-title]").should("not.exist");
 
       //checking the status for partially refunded
-      cy.get("@firstRow").find("td").eq(1).contains("Refund Pending");
+      cy.get("@firstRow").find("td").eq(2).contains("Refund Pending");
       cy.wait(90000);
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
-      cy.get("@firstRow").find("td").eq(1).contains("Partially Refunded");
+      cy.get("@firstRow").find("td").eq(2).contains("Partially Refunded");
 
       //making remaining amount refund
       cy.get("@firstRow").click();
@@ -216,11 +216,11 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=refund-dialog-title]").should("not.exist");
 
       //checking the status for fully refunded
-      cy.get("@firstRow").find("td").eq(1).contains("Refund Pending");
+      cy.get("@firstRow").find("td").eq(2).contains("Refund Pending");
       cy.wait(90000);
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
-      cy.get("@firstRow").find("td").eq(1).contains("Fully Refunded");
+      cy.get("@firstRow").find("td").eq(2).contains("Fully Refunded");
     });
 
     //To be tested once the payment starts failing for magic number
@@ -230,7 +230,7 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
-      cy.get("@firstRow").find("td").eq(1).should("contain", "Failed");
+      cy.get("@firstRow").find("td").eq(2).should("contain", "Failed");
       cy.get("@firstRow").click();
       cy.get("[data-cy=refund]").should("be.disabled");
     });

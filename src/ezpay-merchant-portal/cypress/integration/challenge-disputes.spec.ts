@@ -39,7 +39,7 @@ describe("Merchant Portal", function () {
                 let status = undefined;
                 cy.wrap($row)
                   .find("td")
-                  .eq(1)
+                  .eq(2)
                   .then(($cell) => {
                     status = $cell.text();
                     if (status === "Action Needed") {
@@ -64,7 +64,7 @@ describe("Merchant Portal", function () {
                       let status = undefined;
                       cy.wrap($el)
                         .find("td")
-                        .eq(1)
+                        .eq(2)
                         .then(($cell) => {
                           status = $cell.text();
                           if (status === "Action Needed") {
@@ -89,13 +89,13 @@ describe("Merchant Portal", function () {
         .as("activeDispute");
       cy.get("@activeDispute")
         .find("td")
-        .eq(5)
+        .eq(6)
         .scrollIntoView()
         .should("be.visible");
       // Open the modal
       cy.get("@activeDispute")
         .find("td")
-        .eq(5)
+        .eq(6)
         .within(() => {
           cy.get("[data-cy=view-dispute]")
             .scrollIntoView()
@@ -638,7 +638,7 @@ describe("Merchant Portal", function () {
           .find("tr")
           .eq(index)
           .find("td")
-          .eq(1)
+          .eq(2)
           .should("have.text", "Challenged (Processing)");
       });
     });

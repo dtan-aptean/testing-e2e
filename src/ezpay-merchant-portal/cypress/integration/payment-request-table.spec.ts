@@ -89,7 +89,7 @@ describe("Payment Request Table", function () {
       cy.get("@rows")
         .eq(0)
         .get("td")
-        .eq(0)
+        .eq(1)
         .within(() => {
           cy.get('a[href="#"]').click({ force: true });
         });
@@ -104,8 +104,8 @@ describe("Payment Request Table", function () {
     it("should pass if it can successfully send a reminder when unpaid, failed, or canceled, and when the reminder button is disabled otherwise", () => {
       cy.wait(4000);
       cy.get("@rows").eq(0).as("firstRow");
-      cy.get("@firstRow").find("td").eq(1).as("firstCell").click();
-      cy.get("@firstCell").then(($first) => {
+      cy.get("@firstRow").find("td").eq(2).as("thirdCell").click();
+      cy.get("@thirdCell").then(($first) => {
         const status = $first.text();
         cy.get("[data-cy=view-details]")
           .scrollIntoView()
@@ -143,7 +143,7 @@ describe("Payment Request Table", function () {
     it("should pass if the modal refund button is disabled for anything other than completed, partially refunded, or failed refunded", () => {
       cy.wait(4000);
       cy.get("@rows").then(($el, index, $list) => {
-        cy.wrap($el).find("td").eq(1).as("statusCell");
+        cy.wrap($el).find("td").eq(2).as("statusCell");
         cy.get("@statusCell").click();
         let status = undefined;
         cy.get("@statusCell").then(($cell) => {
@@ -192,7 +192,7 @@ describe("Payment Request Table", function () {
 
       //Checking in case of Unpaid
       cy.get("@newCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Unpaid");
         })
@@ -223,7 +223,7 @@ describe("Payment Request Table", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(4000);
       cy.get("@newCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -246,7 +246,7 @@ describe("Payment Request Table", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(4000);
       cy.get("@newCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Partially Refunded");
         })
@@ -324,7 +324,7 @@ describe("Payment Request Table", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(2000);
       cy.get("@newCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Refund Failed");
         })
@@ -368,7 +368,7 @@ describe("Payment Request Table", function () {
 
       //Checking via refund button
       cy.get("@newCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Completed");
         })
@@ -421,30 +421,30 @@ describe("Payment Request Table", function () {
         .find("td")
         .as("newCells");
       cy.get("@newCells")
-        .eq(1)
+        .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Unpaid");
         });
       cy.get("@newCells")
-        .eq(3)
+        .eq(4)
         .should(($cell) => {
           const today = new Date().toLocaleDateString();
           expect($cell.eq(0)).to.contain(today);
         });
       cy.get("@newCells")
-        .eq(4)
+        .eq(5)
         .should(($cell) => {
           // TODO: Fix this to work with other currencies
           const amountFormatted = amount.toString();
           expect($cell.eq(0).text()).to.include(amountFormatted);
         });
       cy.get("@newCells")
-        .eq(2)
+        .eq(3)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain(email);
         });
       cy.get("@newCells")
-        .eq(0)
+        .eq(1)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain(referenceNumber);
         });
@@ -531,7 +531,7 @@ describe("Payment Request Table", function () {
       cy.get("@searchedRows").then(($list) => {
         cy.wrap($list[0])
           .find("td")
-          .eq(0)
+          .eq(1)
           .contains(referenceNumber.toString())
           .then((el) => {
             if (el.text() === referenceNumber.toString()) {
@@ -561,7 +561,7 @@ describe("Payment Request Table", function () {
       cy.get("@newRows").then(($newList) => {
         cy.wrap($newList[0])
           .find("td")
-          .eq(0)
+          .eq(1)
           .contains(referenceNumber.toString())
           .then((newEl) => {
             if (newEl.text() === referenceNumber.toString()) {
@@ -591,7 +591,7 @@ describe("Payment Request Table", function () {
       cy.get("@newRows").then(($phoneList) => {
         cy.wrap($phoneList[0])
           .find("td")
-          .eq(0)
+          .eq(1)
           .contains(referenceNumber.toString())
           .then((phoneEl) => {
             if (phoneEl.text() === referenceNumber.toString()) {

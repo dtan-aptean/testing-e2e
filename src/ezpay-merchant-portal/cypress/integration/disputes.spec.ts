@@ -75,7 +75,7 @@ describe("Merchant portal", function () {
               let status = undefined;
               cy.wrap($row)
                 .find("td")
-                .eq(1)
+                .eq(2)
                 .then(($cell) => {
                   status = $cell.text();
                   if (status === "Action Needed") {
@@ -100,7 +100,7 @@ describe("Merchant portal", function () {
                     let status = undefined;
                     cy.wrap($el)
                       .find("td")
-                      .eq(1)
+                      .eq(2)
                       .then(($cell) => {
                         status = $cell.text();
                         if (status === "Action Needed") {
@@ -143,7 +143,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(1)
+            .eq(2)
             .then(($cell) => {
               status = $cell.text();
               if (status !== "Action Needed") {
@@ -154,7 +154,7 @@ describe("Merchant portal", function () {
         .then(($list) => {
           //using details button
           // Find the cell that holds the button
-          cy.wrap(detailsArray[0]).find("td").eq(5).as("actionsCell");
+          cy.wrap(detailsArray[0]).find("td").eq(6).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           // Trigger the mouseover
           cy.wrap(detailsArray[0]).trigger("mouseover");
@@ -173,7 +173,7 @@ describe("Merchant portal", function () {
           //using dispute id link
           cy.wrap(detailsArray[0])
             .find("td")
-            .eq(0)
+            .eq(1)
             .within(() => {
               cy.get('a[href="#"]').click({ force: true });
             });
@@ -196,7 +196,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(1)
+            .eq(2)
             .then(($cell) => {
               status = $cell.text();
               if (status !== "Action Needed") {
@@ -206,7 +206,7 @@ describe("Merchant portal", function () {
         })
         .then(($list) => {
           // Find the cell that holds the button
-          cy.wrap(detailsArray[0]).find("td").eq(5).as("actionsCell");
+          cy.wrap(detailsArray[0]).find("td").eq(6).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           // Trigger the mouseover
           cy.wrap(detailsArray[0]).trigger("mouseover");
@@ -243,7 +243,7 @@ describe("Merchant portal", function () {
       cy.get("@rows").should("have.length.gte", 1);
       cy.get("@rows").eq(0).as("firstRow");
       // Just get the first row, there's an invoice regardless of status
-      cy.get("@firstRow").find("td").eq(5).as("actionsCell");
+      cy.get("@firstRow").find("td").eq(6).as("actionsCell");
       cy.get("@actionsCell").scrollIntoView().should("be.visible");
       cy.get("@firstRow").trigger("mouseover");
       cy.get("@actionsCell").within(() => {
@@ -272,14 +272,14 @@ describe("Merchant portal", function () {
       cy.get("@rows")
         .eq(0)
         .find("td")
-        .eq(3)
+        .eq(4)
         .then((el) => {
           const originalDate = el.text();
 
           // Change the date ordering
           cy.get("[data-cy=payment-disputes-panel]")
             .find("table>thead>tr>th")
-            .eq(3)
+            .eq(4)
             .as("date");
           cy.get("@date").click();
           cy.wait(5000);
@@ -289,7 +289,7 @@ describe("Merchant portal", function () {
             .find("tr")
             .eq(0)
             .find("td")
-            .eq(3)
+            .eq(4)
             .then((newEl) => {
               // Confirm that the new value is different than the previous value
               cy.expect(newEl.text()).to.not.equal(originalDate);
@@ -301,7 +301,7 @@ describe("Merchant portal", function () {
                 .find("tr")
                 .eq(0)
                 .find("td")
-                .eq(3)
+                .eq(4)
                 .then((finalEl) => {
                   cy.expect(finalEl.text()).to.equal(originalDate);
                 });
@@ -323,7 +323,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(1)
+            .eq(2)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -332,7 +332,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(6).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           cy.get("@actionsCell").within(() => {
@@ -353,7 +353,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(1)
+            .eq(2)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -362,7 +362,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(6).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Click the review button
@@ -392,7 +392,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(1)
+            .eq(2)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -401,7 +401,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(6).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Open the modal
@@ -433,7 +433,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(1)
+            .eq(2)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -442,7 +442,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(6).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Open the chargeback modal
@@ -482,7 +482,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(1)
+            .eq(2)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -491,7 +491,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(6).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Open the chargeback modal
@@ -531,7 +531,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(1)
+            .eq(2)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -540,7 +540,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(6).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Open chargeback review modal
@@ -581,7 +581,7 @@ describe("Merchant portal", function () {
           let status = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(1)
+            .eq(2)
             .then(($cell) => {
               status = $cell.text();
               if (status === "Action Needed") {
@@ -593,7 +593,7 @@ describe("Merchant portal", function () {
             });
         })
         .then(($list) => {
-          cy.wrap(activeArray[0]).find("td").eq(5).as("actionsCell");
+          cy.wrap(activeArray[0]).find("td").eq(6).as("actionsCell");
           cy.get("@actionsCell").scrollIntoView().should("be.visible");
           cy.get("@actionsCell").should("not.be.empty");
           // Open chargeback review modal
@@ -631,7 +631,7 @@ describe("Merchant portal", function () {
           cy.get("@updatedRows").then(($rowList) => {
             cy.wrap($rowList[relevantIndex])
               .find("td")
-              .eq(1)
+              .eq(2)
               .should("have.text", "Conceded (Processing)");
           });
         });
