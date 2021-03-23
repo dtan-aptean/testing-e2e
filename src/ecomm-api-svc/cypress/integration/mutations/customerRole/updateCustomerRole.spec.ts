@@ -8,6 +8,8 @@ describe('Mutation: updateCustomerRole', () => {
     var updateCount = 0;
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateCustomerRole';
+    const createName = "createCustomerRole";
+    const deleteMutName = "deleteCustomerRole";
     const queryName = "customerRoles";
     const itemPath = 'customerRole';
     const standardMutationBody = `
@@ -19,9 +21,12 @@ describe('Mutation: updateCustomerRole', () => {
             name
         }
     `;
-    const createName = 'createCustomerRole';
 
+	var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName);
+        // TODO: Move this to a beforeEach so we're updating a new item each time
         // Create an item for the tests to update
         const name = `Cypress ${mutationName} Test`;
         const input = `{name: "${name}"}`;
@@ -32,11 +37,14 @@ describe('Mutation: updateCustomerRole', () => {
     });
 
     after(() => {
+        if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
             // Delete any supplemental items we created
             cy.deleteSupplementalItems(extraIds);
             // Delete the item we've been updating
-            cy.deleteItem("deleteCustomerRole", id);
+            cy.deleteItem(deleteMutName, id);
         }
     });
 
@@ -159,7 +167,7 @@ describe('Mutation: updateCustomerRole', () => {
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteCustomerRole", itemName: name, queryName: queryName});
+                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName});
                 const newName = `Cypress ${mutationName} CD extra updated`;
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
                 const mutation = `mutation {
