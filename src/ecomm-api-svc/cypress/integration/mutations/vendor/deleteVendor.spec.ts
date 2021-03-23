@@ -31,6 +31,14 @@ describe('Mutation: deleteVendor', () => {
         queryInformation.itemName = providedName ? providedName : "";
     };
 
+	var deleteItemsAfter = undefined as boolean | undefined;
+    before(() => {
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems("products", "deleteProduct", "productInfo", `Cypress ${mutationName}`).then(() => {
+            cy.deleteCypressItems(queryName, mutationName, infoName);
+        });
+    })
+
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         const input = `{${infoName}: [{name: "${name}", description: "Cypress testing for ${mutationName}", languageCode: "Standard"}] }`;
@@ -40,6 +48,9 @@ describe('Mutation: deleteVendor', () => {
     });
 
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         // Delete any supplemental items we created
         cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];
