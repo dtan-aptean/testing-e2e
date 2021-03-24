@@ -255,6 +255,7 @@ describe('Query: paymentRequests', () => {
     cy.postGQL(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
+      console.log(res);
 
       // no errors
       assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);

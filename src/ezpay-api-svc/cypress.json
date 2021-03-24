@@ -13,7 +13,8 @@
     "wepay-app-id": "#{WEPAY_APP_ID}#",
     "wepay-app-secret": "#{WEPAY_APP_SECRET}#",
     "wepay-api-version": "#{WEPAY_API_VERSION}#",
-    "wepay-account-id": "#{WEPAY_ACCOUNT_ID}#"
+    "wepay-account-id": "#{WEPAY_ACCOUNT_ID}#",
+    "currency": "#{CURRENCY}#"
   },
   "supportFile": "cypress/support/index.ts"
 }
