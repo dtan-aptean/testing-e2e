@@ -338,7 +338,7 @@ describe("Ecommerce", function () {
       });
     });
 
-    context.only("Subsection: Language publicity", () => {
+    context("Subsection: Language publicity", () => {
       // Make sure that the languages are publishe before these tests run
       // Makes sure that if one of these fails, it doesn't affect the others
       beforeEach(() => {
