@@ -5,7 +5,8 @@ import { confirmStorefrontEnvValues, createInfoDummy, SupplementalItemRecord, to
 // TEST COUNT: 16
 describe('Mutation: updateCategory', () => {
     var id = '';
-    var updateCount = 0;
+    var updateCount = 0;    // TODO: Appraise whether this is really useful or not
+    var itemCount = 1;
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateCategory';
     const deleteMutName = "deleteCategory";
@@ -44,19 +45,21 @@ describe('Mutation: updateCategory', () => {
     before(() => {
         deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.deleteCypressItems(queryName, deleteMutName, infoName);
-        
-        // TODO: Move this to a beforeEach so we're updating a new item each time
+    });
+
+    beforeEach(() => {
         // Create an item for the tests to update
-        const name = `Cypress ${mutationName} Test`;
+        const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{${infoName}: [{name: "${name}", description: "Cypress testing for ${mutationName}", languageCode: "Standard"}] }`;
         cy.createAndGetId(createName, itemPath, input).then((returnedId: string) => {
             assert.exists(returnedId);
             id = returnedId;
+            itemCount++;
             parentCatName = name; // Only going to use this in one test, but we still need it.
         });
-    });
+    })
 
-    after(() => {
+    afterEach(() => {
         if (!deleteItemsAfter) {
             return;
         }
@@ -66,7 +69,9 @@ describe('Mutation: updateCategory', () => {
             cy.wait(1000);
         }
         // Delete any supplemental items we created
-        cy.deleteSupplementalItems(extraIds);
+        cy.deleteSupplementalItems(extraIds).then(() => {
+            extraIds = [];
+        });
 
         // Delete the child and parent category
         cy.deleteParentAndChildCat({name: childCatName, id: childCatId}, parentCatName, parentCatId);

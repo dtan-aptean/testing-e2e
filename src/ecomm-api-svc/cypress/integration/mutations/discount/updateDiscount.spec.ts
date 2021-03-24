@@ -5,7 +5,8 @@ import { createInfoDummy, SupplementalItemRecord, toFormattedString } from "../.
 // TEST COUNT: 31
 describe('Mutation: updateDiscount', () => {
     var id = '';
-    var updateCount = 0;
+    var updateCount = 0;	// TODO: Appraise whether this is really useful or not
+    var itemCount = 1;
     var extraIds = [] as SupplementalItemRecord[];
     var discountAmount = {} as {amount: number, currency: string};
     const mutationName = 'updateDiscount';
@@ -38,24 +39,29 @@ describe('Mutation: updateDiscount', () => {
     before(() => {
 		deleteItemsAfter = Cypress.env("deleteItemsAfter");
 		cy.deleteCypressItems(queryName, deleteMutName);
-        // TODO: Move this to a beforeEach so we're updating a new item each time
-        const name = `Cypress ${mutationName} Test`;
+    });
+
+	beforeEach(() => {
+        const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{name: "${name}", discountAmount: {amount: 15, currency: "USD"}}`;
         cy.createAndGetId(createName, itemPath, input, additionalFields).then((createdItem) => {
             assert.exists(createdItem.id);
             assert.exists(createdItem.discountAmount);
             id = createdItem.id;
+            itemCount++;
             discountAmount = createdItem.discountAmount;
         });
-    });
+	});
 
-    after(() => {
+    afterEach(() => {
 		if (!deleteItemsAfter) {
 			return;
 		}
         if (id !== "") {
             // Delete any supplemental items we created
-            cy.deleteSupplementalItems(extraIds);
+            cy.deleteSupplementalItems(extraIds).then(() => {
+                extraIds = [];
+            });
             // Delete the item we've been updating
             cy.deleteItem(deleteMutName, id);
         }

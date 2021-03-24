@@ -5,7 +5,8 @@ import { SupplementalItemRecord, toFormattedString } from "../../../support/comm
 // TEST COUNT: 12
 describe('Mutation: updateProductAttribute', () => {
     var id = '';
-    var updateCount = 0;
+    var updateCount = 0;	// TODO: Appraise whether this is really useful or not
+    var itemCount = 1;
     var values = '';
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateProductAttribute';
@@ -32,24 +33,29 @@ describe('Mutation: updateProductAttribute', () => {
     before(() => {
 		deleteItemsAfter = Cypress.env("deleteItemsAfter");
 		cy.deleteCypressItems(queryName, deleteMutName);
-        // TODO: Move this to a beforeEach so we're updating a new item each time
-        const name = `Cypress ${mutationName} Test`;
+    });
+
+	beforeEach(() => {
+        const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{name: "${name}", values: [{name: "Cypress PA update test"}]}`;
         cy.createAndGetId(createName, itemPath, input, additionalFields).then((createdItem) => {
             assert.exists(createdItem.id);
             assert.exists(createdItem.values);
             id = createdItem.id;
+            itemCount++;
             values = createdItem.values;
         });
-    });
+	});
 
-    after(() => {
+    afterEach(() => {
 		if (!deleteItemsAfter) {
 			return;
 		}
         if (id !== "") {
             // Delete any supplemental items we created
-            cy.deleteSupplementalItems(extraIds);
+            cy.deleteSupplementalItems(extraIds).then(() => {
+                extraIds = [];
+            });
             // Delete the item we've been updating
             cy.deleteItem(deleteMutName, id);
         }

@@ -5,7 +5,8 @@ import { SupplementalItemRecord, toFormattedString } from "../../../support/comm
 // TEST COUNT: 13
 describe('Mutation: updateCheckoutAttribute', () => {
     var id = '';
-    var updateCount = 0;
+    var updateCount = 0;	// TODO: Appraise whether this is really useful or not
+    var itemCount = 1;
     var taxCategoryId = '';
     var values = '';
     const extraIds = [] as SupplementalItemRecord[];
@@ -33,31 +34,38 @@ describe('Mutation: updateCheckoutAttribute', () => {
     before(() => {
         deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.deleteCypressItems(queryName, deleteMutName);
-        // TODO: Move this to a beforeEach so we're updating a new item each time
+    });
+
+	beforeEach(() => {
         // Create an item for the tests to update
-        const name = `Cypress ${mutationName} Test`;
+        const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{name: "${name}", values: [{name: "Cypress CA update test"}]}`;
         cy.createAndGetId(createName, itemPath, input, additionalFields).then((createdItem) => {
             assert.exists(createdItem.id);
             assert.exists(createdItem.values);
             id = createdItem.id;
+            itemCount++;
             values = createdItem.values;
         });
-    });
+	});
 
-    after(() => {
+    afterEach(() => {
         if (!deleteItemsAfter) {
 			return;
 		}
         if (id !== "") {
             // Delete any supplemental items we created
-            cy.deleteSupplementalItems(extraIds);
+            cy.deleteSupplementalItems(extraIds).then(() => {
+                extraIds = [];
+            });
             // Delete the item we've been updating
             cy.deleteItem(deleteMutName, id);
             cy.wait(1000);
         }
         if (taxCategoryId !== "") {
-            cy.deleteItem("deleteTaxCategory", taxCategoryId);
+            cy.deleteItem("deleteTaxCategory", taxCategoryId).then(() => {
+                taxCategoryId = "";
+            });
         }
     });
 

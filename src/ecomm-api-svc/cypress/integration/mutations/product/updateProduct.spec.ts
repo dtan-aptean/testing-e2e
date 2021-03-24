@@ -5,7 +5,8 @@ import { SupplementalItemRecord, toFormattedString } from "../../../support/comm
 // TEST COUNT: 24
 describe('Mutation: updateProduct', () => {
     var id = '';
-    var updateCount = 0;
+    var updateCount = 0;	// TODO: Appraise whether this is really useful or not
+    var itemCount = 1;
     var extraIds = [] as SupplementalItemRecord[];
     var deleteAfterProducts = [] as SupplementalItemRecord[]; // Items that can only be deleted after the attached product is deleted
     const mutationName = 'updateProduct';
@@ -43,26 +44,33 @@ describe('Mutation: updateProduct', () => {
     before(() => {
 		deleteItemsAfter = Cypress.env("deleteItemsAfter");
 		cy.deleteCypressItems(queryName, deleteMutName, infoName);
-        // TODO: Move this to a beforeEach so we're updating a new item each time
-        const name = `Cypress ${mutationName} Test`;
+    });
+
+	beforeEach(() => {
+        const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{${infoName}: [{name: "${name}", languageCode: "Standard"}]}`;
         cy.createAndGetId(createName, itemPath, input).then((returnedId: string) => {
             assert.exists(returnedId);
+            itemCount++;
             id = returnedId;
         });
-    });
+	});
 
-    after(() => {
+    afterEach(() => {
 		if (!deleteItemsAfter) {
 			return;
 		}
         if (id !== "") {
             // Delete any supplemental items we created
-            cy.deleteSupplementalItems(extraIds);
+            cy.deleteSupplementalItems(extraIds).then(() => {
+                extraIds = [];
+            });
             // Delete the item we've been updating
             cy.deleteItem(deleteMutName, id);
             // Delete items that must be deleted after their product
-            cy.deleteSupplementalItems(deleteAfterProducts);
+            cy.deleteSupplementalItems(deleteAfterProducts).then(() => {
+                deleteAfterProducts = [];
+            });
         }
     });
 
