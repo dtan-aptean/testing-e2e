@@ -1018,6 +1018,16 @@ Cypress.Commands.add("deleteSupplementalItems", (extraItems: SupplementalItemRec
  * If no parentName, it will delete all categories with a matching child name.
  */
 Cypress.Commands.add("deleteParentAndChildCat", (children: {name: string, id: string} | {name: string, id: string}[], parentName: string, parentId: string) => {
+    // Return if arguments are invalid
+    if (Array.isArray(children)) {
+        if (children.length === 0) {
+            return;
+        } else if (children.length === 1 && (children[0].id === "" && children[0].name === "")) {
+            return;
+        }
+    } else if ((children.id === "" && children.name === "") && parentId === "") {
+        return;
+    }
     const queryName = "categories";
     const deleteName = "deleteCategory";
     const infoName = "categoryInfo";
@@ -1082,7 +1092,6 @@ Cypress.Commands.add("deleteParentAndChildCat", (children: {name: string, id: st
         }
     };
 
-    // TODO: Put this in an if block so it only logs if it's passed real parent/child ids
     Cypress.log({
         name: "deleteParentAndChildCat",
         message: `Deleting ${Array.isArray(children) ? children.length + " child categories" : `child category "${children.id !== "" ? children.id : children.name}"`}, then parent "${parentId}"`,

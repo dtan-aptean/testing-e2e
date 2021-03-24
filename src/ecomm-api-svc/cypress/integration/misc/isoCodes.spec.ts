@@ -123,8 +123,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
         var deleteItemsAfter = undefined as boolean | undefined;
         before(() => {
             deleteItemsAfter = Cypress.env("deleteItemsAfter");
-            // TODO: adapt deleteCypressItems to take an alternate URL
-            cy.deleteCypressItems(queryName, deleteMutName, infoName);
+            cy.deleteCypressItems(queryName, deleteMutName, infoName, undefined, originalBaseUrl);
         });
 
         context("Vendors Query: Testing response of country field", () => {

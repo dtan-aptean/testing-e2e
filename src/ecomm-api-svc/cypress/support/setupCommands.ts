@@ -7,7 +7,7 @@
 
 // Call the mutation to delete an item. Will not fail if the item isn't successfully deleted.
 // Will log success or failure and include errors in the log
-const performDelete = (deleteName: string, id: string) => {
+const performDelete = (deleteName: string, id: string, altUrl?: string) => {
     cy.wait(2000);
     var mutation = `mutation {
         ${deleteName}(input: {id: "${id}"}){
@@ -16,7 +16,7 @@ const performDelete = (deleteName: string, id: string) => {
             error
         }
     }`;
-    cy.postGQL(mutation).then((res) => {
+    cy.postGQL(mutation, altUrl).then((res) => {
         if (res.isOkStatusCode) {
             if (res.body.data) {
                 var code = res.body.data[deleteName].code;
@@ -41,7 +41,7 @@ const performDelete = (deleteName: string, id: string) => {
 };
 
 // Make sure each item is a Cypress item, and if it is, call command to delete it
-const deleteItems = (nodes, deleteName: string, searchBy: string, infoName?: string) => {
+const deleteItems = (nodes, deleteName: string, searchBy: string, infoName?: string, altUrl?: string) => {
     nodes.forEach((item) => {
         var id = item.id;
         if (infoName) {
@@ -49,12 +49,12 @@ const deleteItems = (nodes, deleteName: string, searchBy: string, infoName?: str
 				return nameItem.name.includes(searchBy) && nameItem.languageCode === "Standard";
             });
             if (nameArray.length > 0) {
-                performDelete(deleteName, id);
+                performDelete(deleteName, id, altUrl);
             }
         } else {
             var name = item.name;
             if (name.includes(searchBy)) {
-                performDelete(deleteName, id);
+                performDelete(deleteName, id, altUrl);
             }
         }
     });
@@ -77,7 +77,8 @@ const getNodes = (
     queryName: string, 
     searchBy: string,
     infoName?: string,
-    additionalFields?: string
+    additionalFields?: string,
+    altUrl?: string
 ) => {
     const nameField = getNameField(infoName);
     const queryBody = `searchString: "${searchBy}", orderBy: {direction: ASC, field: NAME}) {
@@ -91,14 +92,14 @@ const getNodes = (
     const query = `{
 		${queryName}(${queryBody}
     }`;
-    return cy.postNoFail(query, queryName).then((res) => {
+    return cy.postNoFail(query, queryName, altUrl).then((res) => {
         if (res) {
             const totalCount = res.body.data[queryName].totalCount;
             if (totalCount > 25) {
                 const newQuery = `{
                     ${queryName}(first: ${totalCount}, ${queryBody}
                 }`;
-                return cy.postNoFail(newQuery, queryName).then((resp) => {
+                return cy.postNoFail(newQuery, queryName, altUrl).then((resp) => {
                     if (resp) {
                         const nodes = resp.body.data[queryName].nodes;
                         return cy.wrap(nodes);
@@ -123,14 +124,15 @@ Cypress.Commands.add("deleteCypressItems", (
     queryName: string, 
     deleteName: string, 
     infoName?: string, 
-    searchString?: string
+    searchString?: string,
+    altUrl?: string
 ) => {
     const searchBy = searchString ? searchString : "Cypress";
     const extraField = queryName === "categories" ? `parent {
         id
     }` : undefined;
     Cypress.log({name: "deleteCypressItems", message: `Using ${queryName} to search for "${searchBy}"`});
-    getNodes(queryName, searchBy, infoName, extraField).then((nodes) => {
+    getNodes(queryName, searchBy, infoName, extraField, altUrl).then((nodes) => {
         if (nodes) {
             // If deleting categories, make sure to delete child categories before parents.
             if (queryName === "categories") {
@@ -138,23 +140,23 @@ Cypress.Commands.add("deleteCypressItems", (
                     return node.parent !== null;
                 });
                 if (childCats.length > 0) {
-                    deleteItems(childCats, deleteName, searchBy, infoName)
+                    deleteItems(childCats, deleteName, searchBy, infoName, altUrl)
                 }
                 const parentCats = nodes.filter((node) => {
                     return node.parent === null;
                 });
                 if (parentCats.length > 0) {
-                    deleteItems(parentCats, deleteName, searchBy, infoName);
+                    deleteItems(parentCats, deleteName, searchBy, infoName, altUrl);
                 }
             } else {
-                deleteItems(nodes, deleteName, searchBy, infoName);
+                deleteItems(nodes, deleteName, searchBy, infoName, altUrl);
             }
         }
     });
 });
 
 // Posts a query but does not fail if it's not successful, unlike postAndValidate
-Cypress.Commands.add("postNoFail", (gqlQuery: string, queryName: string) => {
+Cypress.Commands.add("postNoFail", (gqlQuery: string, queryName: string, altUrl?: string) => {
     Cypress.log({
         name: "postNoFail",
         message: queryName,
@@ -165,7 +167,7 @@ Cypress.Commands.add("postNoFail", (gqlQuery: string, queryName: string) => {
             };
         },
     });
-    return cy.postGQL(gqlQuery).then((res) => {
+    return cy.postGQL(gqlQuery, altUrl).then((res) => {
         Cypress.log({name: "postNoFail", message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
         if (res.isOkStatusCode) {
             if (!res.body.errors) {
