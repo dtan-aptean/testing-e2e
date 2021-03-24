@@ -6,6 +6,7 @@ import { toFormattedString } from "../../../support/commands";
 describe('Mutation: createVendor', () => {
     var id = '';
     const mutationName = 'createVendor';
+	const deleteMutName = "deleteVendor";
     const queryName = "vendors";
     const itemPath = 'vendor';
     const infoName = "vendorInfo";
@@ -21,10 +22,19 @@ describe('Mutation: createVendor', () => {
             }
         }
     `;
+
+	var deleteItemsAfter = undefined as boolean | undefined;
+	before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName, infoName);
+	});
     
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
-            cy.deleteItem("deleteVendor", id).then(() => {
+            cy.deleteItem(deleteMutName, id).then(() => {
                 id = "";
             });
         }

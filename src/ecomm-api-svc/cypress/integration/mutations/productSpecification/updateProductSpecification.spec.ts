@@ -5,10 +5,13 @@ import { SupplementalItemRecord, toFormattedString } from "../../../support/comm
 // TEST COUNT: 12
 describe('Mutation: updateProductSpecification', () => {
     var id = '';
-    var updateCount = 0;
+    var updateCount = 0;	// TODO: Appraise whether this is really useful or not
+    var itemCount = 1;
     var options = '';
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateProductSpecification';
+    const createName = 'createProductSpecification';
+	const deleteMutName = "deleteProductSpecification";
     const queryName = "productSpecifications";
     const itemPath = 'productSpecification';
     const additionalFields = `options {
@@ -26,25 +29,36 @@ describe('Mutation: updateProductSpecification', () => {
             ${additionalFields}
         }
     `;
-    const createName = 'createProductSpecification';
 
+	var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
-        const name = `Cypress ${mutationName} Test`;
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName);
+    });
+
+	beforeEach(() => {
+        const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{name: "${name}", options: [{displayOrder: ${Cypress._.random(0, 10)}, name: "Cypress PS update tests"}]}`;
         cy.createAndGetId(createName, itemPath, input, additionalFields).then((createdItem) => {
             assert.exists(createdItem.id);
             assert.exists(createdItem.options);
             id = createdItem.id;
+            itemCount++;
             options = createdItem.options;
         });
-    });
+	});
 
-    after(() => {
+    afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
             // Delete any supplemental items we created
-            cy.deleteSupplementalItems(extraIds);
+            cy.deleteSupplementalItems(extraIds).then(() => {
+                extraIds = [];
+            });
             // Delete the item we've been updating
-            cy.deleteItem("deleteProductSpecification", id);
+            cy.deleteItem(deleteMutName, id);
         }
     });
 
@@ -213,7 +227,7 @@ describe('Mutation: updateProductSpecification', () => {
             cy.createAndGetId(createName, itemPath, input, extraInput).then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteProductSpecification", itemName: name, queryName: queryName});
+                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName});
                 const newName = `Cypress ${mutationName} CD extra updated`;
                 const newOptions = createdItem.options;
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};

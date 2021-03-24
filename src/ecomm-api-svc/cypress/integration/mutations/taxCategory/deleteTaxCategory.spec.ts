@@ -29,6 +29,16 @@ describe('Mutation: deleteTaxCategory', () => {
         queryInformation.itemName = providedName ? providedName : "";
     };
 
+    var deleteItemsAfter = undefined as boolean | undefined;
+	before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems("checkoutAttributes", "deleteCheckoutAttribute", undefined, `Cypress ${mutationName}`).then(() => {
+            cy.deleteCypressItems("products", "deleteProduct", "productInfo", `Cypress ${mutationName}`).then(() => {
+                cy.deleteCypressItems(queryName, mutationName);
+            });
+        });
+	});
+
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         const input = `{name: "${name}"}`;
@@ -38,6 +48,9 @@ describe('Mutation: deleteTaxCategory', () => {
     });
 
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         // Delete any supplemental items we created
         cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];

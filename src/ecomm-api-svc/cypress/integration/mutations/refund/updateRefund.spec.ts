@@ -3,11 +3,14 @@
 import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 10
+var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
+confirmStorefrontEnvValues();
 
-describe('Mutation: updateRefund', () => {
+describe('Mutation: updateRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` }, () => {
     var id = '';
     var orderTotal = 0;
     const mutationName = 'updateRefund';
+    const createName = 'createRefund';
     const queryName = "refunds";
     const itemPath = 'refund';
     const responseBody = `
@@ -32,12 +35,10 @@ describe('Mutation: updateRefund', () => {
             ${responseBody}
         }
     `;
-    const createName = 'createRefund';
-    var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
 
+	var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
-        confirmStorefrontEnvValues();
-        Cypress.config("baseUrl", Cypress.env("storefrontUrl"));
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.wait(1000);
         cy.visit("/");  // Go to the storefront and login
         cy.storefrontLogin();
@@ -57,6 +58,9 @@ describe('Mutation: updateRefund', () => {
     });
 
     after(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
             const deletionName = "deleteRefund";
             const removalMutation = `mutation {
@@ -70,6 +74,7 @@ describe('Mutation: updateRefund', () => {
             cy.postAndConfirmDelete(removalMutation, deletionName, queryInformation, originalBaseUrl);
         }
     });
+
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
             const mutation = `mutation {

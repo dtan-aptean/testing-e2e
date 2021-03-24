@@ -8,6 +8,7 @@ describe('Mutation: createProduct', () => {
     var extraIds = [] as SupplementalItemRecord[];
     var deleteAfterProducts = [] as SupplementalItemRecord[];   // Items that can only be deleted after the attached product is deleted
     const mutationName = 'createProduct';
+    const deleteMutName = "deleteProduct";
     const queryName = "products";
     const itemPath = 'product';
     const infoName = "productInfo";
@@ -36,13 +37,22 @@ describe('Mutation: createProduct', () => {
         }
     };
 
+    var deleteItemsAfter = undefined as boolean | undefined;
+	before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName, infoName);
+	});
+
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         // Delete any supplemental items we created
         cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];
         });
         if (id !== "") {
-            cy.deleteItem("deleteProduct", id).then(() => {
+            cy.deleteItem(deleteMutName, id).then(() => {
                 id = "";
             });
         }
@@ -609,7 +619,7 @@ describe('Mutation: createProduct', () => {
                                     currency
                                 }
                                 isTaxExempt
-                                availableForPreorder
+                                availableForPreOrder
                                 preOrderAvailabilityStartDate
                             }
                             published
@@ -677,7 +687,7 @@ describe('Mutation: createProduct', () => {
                                             currency
                                         }
                                         isTaxExempt
-                                        availableForPreorder
+                                        availableForPreOrder
                                         preOrderAvailabilityStartDate
                                     }
                                     published

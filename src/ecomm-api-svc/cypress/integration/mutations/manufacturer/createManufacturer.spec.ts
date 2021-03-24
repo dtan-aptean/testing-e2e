@@ -7,6 +7,7 @@ describe('Mutation: createManufacturer', () => {
     var id = '';
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'createManufacturer';
+	const deleteMutName = "deleteManufacturer";
     const queryName = "manufacturers";
     const itemPath = 'manufacturer';
     const infoName = "manufacturerInfo";
@@ -29,14 +30,23 @@ describe('Mutation: createManufacturer', () => {
         });
     };
 
+    var deleteItemsAfter = undefined as boolean | undefined;
+	before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName, infoName);
+	});
+
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
             // Delete any supplemental items we created
             cy.deleteSupplementalItems(extraIds).then(() => {
                 extraIds = [];
             });
 
-            cy.deleteItem("deleteManufacturer", id).then(() => {
+            cy.deleteItem(deleteMutName, id).then(() => {
                 id = "";
             });
         }

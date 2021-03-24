@@ -118,6 +118,13 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
         const queryName = "vendors";
         const itemPath = "vendor";
         const infoName = "vendorInfo";
+        const deleteMutName = "deleteVendor";
+
+        var deleteItemsAfter = undefined as boolean | undefined;
+        before(() => {
+            deleteItemsAfter = Cypress.env("deleteItemsAfter");
+            cy.deleteCypressItems(queryName, deleteMutName, infoName, undefined, originalBaseUrl);
+        });
 
         context("Vendors Query: Testing response of country field", () => {
             var trueTotalInput = "";
@@ -179,8 +186,11 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
             const mutationName = "createVendor";
 
             afterEach(() => {
+                if (!deleteItemsAfter) {
+                    return;
+                }
                 if (id !== "") {
-                    cy.deleteItem("deleteVendor", id, originalBaseUrl).then(() => {
+                    cy.deleteItem(deleteMutName, id, originalBaseUrl).then(() => {
                         id = "";
                     });
                 }
@@ -339,21 +349,26 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
 
         context("updateVendor Mutation: Testing country codes on address", () => {
             var id = "";
+            var itemCount = 1;
             const mutationName = "updateVendor";
 
-            before(() => {
-                const name = `Cypress ${mutationName} Test`;
+            beforeEach(() => {
+                const name = `Cypress ${mutationName} Test #${itemCount}`;
                 const input = `{${infoName}: [{name: "${name}", description: "Cypress testing for ${mutationName}", languageCode: "Standard"}] }`;
                 cy.createAndGetId("createVendor", itemPath, input, undefined, originalBaseUrl).then((returnedId: string) => {
                     assert.exists(returnedId);
                     id = returnedId;
+                    itemCount++;
                 });
             });
 
-            after(() => {
+            afterEach(() => {
+                if (!deleteItemsAfter) {
+                    return;
+                }
                 if (id !== "") {
                     // Delete the item we've been updating
-                    cy.deleteItem("deleteVendor", id, originalBaseUrl);
+                    cy.deleteItem(deleteMutName, id, originalBaseUrl);
                 }
             });
     

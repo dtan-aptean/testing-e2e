@@ -5,9 +5,12 @@ import { SupplementalItemRecord, toFormattedString } from "../../../support/comm
 // TEST COUNT: 12
 describe('Mutation: updateVendor', () => {
     var id = '';
-    var updateCount = 0;
+    var updateCount = 0;	// TODO: Appraise whether this is really useful or not
+    var itemCount = 1;
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateVendor';
+    const createName = 'createVendor';
+	const deleteMutName = "deleteVendor";
     const queryName = "vendors";
     const itemPath = 'vendor';
     const infoName = "vendorInfo";
@@ -24,23 +27,34 @@ describe('Mutation: updateVendor', () => {
             }
         }
     `;
-    const createName = 'createVendor';
 
+	var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
-        const name = `Cypress ${mutationName} Test`;
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName, infoName);
+    });
+
+	beforeEach(() => {
+        const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{${infoName}: [{name: "${name}", description: "Cypress testing for ${mutationName}", languageCode: "Standard"}] }`;
         cy.createAndGetId(createName, itemPath, input).then((returnedId: string) => {
             assert.exists(returnedId);
             id = returnedId;
+            itemCount++;
         });
-    });
+	});
 
-    after(() => {
+    afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
             // Delete any supplemental items we created
-            cy.deleteSupplementalItems(extraIds);
+            cy.deleteSupplementalItems(extraIds).then(() => {
+                extraIds = [];
+            });
             // Delete the item we've been updating
-            cy.deleteItem("deleteVendor", id);
+            cy.deleteItem(deleteMutName, id);
         }
     });
 
@@ -198,7 +212,7 @@ describe('Mutation: updateVendor', () => {
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteVendor", itemName: info[0].name, queryName: queryName});
+                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: info[0].name, queryName: queryName});
                 const newInfo = [{name: `Cypress ${mutationName} CD extra updated`, description: `${mutationName} CD cypress test`, languageCode: "Standard"}];
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
                 const mutation = `mutation {

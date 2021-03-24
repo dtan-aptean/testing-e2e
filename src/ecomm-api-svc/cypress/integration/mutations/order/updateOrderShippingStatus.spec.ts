@@ -3,6 +3,7 @@
 import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/commands";
 
 var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
+confirmStorefrontEnvValues();
 const orderStatuses = ["PENDING", "PROCESSING", "COMPLETE", "CANCELLED"];
 const shippingStatuses = ["NOT_YET_SHIPPED", "SHIPPING_NOT_REQUIRED", "PARTIALLY_SHIPPED", "SHIPPED", "DELIVERED"];
 const shippingMethods = ["Ground", "Next Day Air", "2nd Day Air"];
@@ -109,7 +110,7 @@ const getDiffShippingMethod = (i: number): string => {
 
 // TEST COUNT: 13
 
-describe('Mutation: updateOrderShippingStatus', () => {
+describe('Mutation: updateOrderShippingStatus', { baseUrl: `${Cypress.env("storefrontUrl")}` }, () => {
     const mutationName = 'updateOrderShippingStatus';
     const queryName = 'orders';
     const dataPath = 'orderShippingStatus';
@@ -146,8 +147,6 @@ describe('Mutation: updateOrderShippingStatus', () => {
     `;
 
     before(() => {
-        confirmStorefrontEnvValues();
-        Cypress.config("baseUrl", Cypress.env("storefrontUrl"));
         cy.wait(1000);
         cy.visit("/");
     });

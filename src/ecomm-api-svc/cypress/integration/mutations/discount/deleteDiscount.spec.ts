@@ -29,6 +29,12 @@ describe('Mutation: deleteDiscount', () => {
         queryInformation.itemName = providedName ? providedName : "";
     };
 
+	var deleteItemsAfter = undefined as boolean | undefined;
+    before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, mutationName);
+	});
+
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         const input = `{name: "${name}", discountAmount: {amount: 15, currency: "USD"}}`;
@@ -38,6 +44,9 @@ describe('Mutation: deleteDiscount', () => {
     });
 
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         // Delete any supplemental items we created
         cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];

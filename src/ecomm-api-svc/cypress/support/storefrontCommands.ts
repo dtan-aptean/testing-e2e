@@ -410,6 +410,8 @@ Cypress.Commands.add("getCountries", () => {
     Cypress.log({
         name: "getCountries"
     });
+    cy.server();
+    cy.route("POST", "/Admin/Country/CountryList").as('countryTableLoaded');
     const pullFromTable = () => {
         const countryFilter = (index, item) => {
             return item.cells[10].innerHTML.includes("true-icon") && item.cells[8].innerText !== "0";
@@ -438,7 +440,8 @@ Cypress.Commands.add("getCountries", () => {
                 var currentPage = Number($item[0].innerText);
                 if (currentPage < total) {
                     cy.get("#countries-grid_next").find("a").click({ force: true });
-                    cy.wait(2000);
+                    cy.wait('@countryTableLoaded');
+                    cy.wait(10000);
                     pageThrough(total, names, isoCodes);
                 } else {
                     expect(names.length).to.eql(isoCodes.length, "Should be same number of items");
@@ -509,7 +512,7 @@ Cypress.Commands.add("getRegions", (countryNames: string[]) => {
                 var currentPage = Number($item[0].innerText);
                 if (currentPage < totalPages) {
                     cy.get("#states-grid_next").find("a").click();
-                    cy.wait(2000);
+                    cy.wait(10000);
                     pullStates(totalPages, regionNames);
                 } else {
                     return cy.wrap(regionNames);
@@ -528,11 +531,19 @@ Cypress.Commands.add("getRegions", (countryNames: string[]) => {
                 findCountry(total, newIndex, regions);
             }
         };
+        const openStatePanel = () => {
+            cy.get("#country-states").find(".panel-heading").then(($el) => {
+                    if (!$el.hasClass("opened")) {
+                        cy.wrap($el).click({force: true});
+                    }
+                });
+        };
         return runFilter(countryNames[countryIndex]).then((row) => {
             if (row) {
                 // If we encounter the country, we open it and retrieve the regions
-                cy.wrap(row).find("td").contains("Edit").click({ force: true });
+                cy.wrap(row).find(".button-column").find('a').click({ force: true });
                 cy.wait(1000);
+                openStatePanel();
                 return cy.get("#states-grid_paginate").find(".pagination").invoke('children').then(($li) => {
                     return pullStates(Number($li[$li.length - 2].innerText), []).then((regionNames) => {
                         regions.push(regionNames);
@@ -546,7 +557,7 @@ Cypress.Commands.add("getRegions", (countryNames: string[]) => {
                     var currentPage = Number($item[0].innerText);
                     if (currentPage < total) {
                         cy.get("#countries-grid_next").find("a").click();
-                        cy.wait(2000);
+                        cy.wait(10000);
                         findCountry(total, countryIndex, regions);
                     } else {
                         // Call function to either return the collected regions or start looking for the next country

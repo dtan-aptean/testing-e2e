@@ -3,6 +3,7 @@
 describe('Mutation: createReturnReason', () => {
     var id = '';
     const mutationName = 'createReturnReason';
+	const deleteMutName = "deleteReturnReason";
     const queryName = "returnReasons";
     const itemPath = 'returnReason';
     const standardMutationBody = `
@@ -15,9 +16,18 @@ describe('Mutation: createReturnReason', () => {
         }
     `;
 
+	var deleteItemsAfter = undefined as boolean | undefined;
+	before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName);
+	});
+
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
-            cy.deleteItem("deleteReturnReason", id).then(() => {
+            cy.deleteItem(deleteMutName, id).then(() => {
                 id = "";
             });
         }

@@ -159,8 +159,19 @@ describe('Query: productSpecifications', () => {
             return ids;
         };
 
+        var deleteItemsAfter = undefined as boolean | undefined;
+        before(() => {
+            deleteItemsAfter = Cypress.env("deleteItemsAfter");
+            cy.deleteCypressItems(queryName, deleteName).then(() => {
+                cy.deleteCypressItems(productQuery, productDelete, "productInfo", `Cypress ${queryName}`);
+            });
+        });
+
         // Ensure deletion of the items we created for the productId test
         after(() => {
+            if (!deleteItemsAfter) {
+                return;
+            }
             cy.deleteSupplementalItems(createdProducts);
             cy.deleteSupplementalItems(createdItems);
         });

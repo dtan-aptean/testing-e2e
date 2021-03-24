@@ -29,6 +29,12 @@ describe('Mutation: deleteCustomerRole', () => {
         queryInformation.itemName = providedName ? providedName : "";
     };
 
+    var deleteItemsAfter = undefined as boolean | undefined;
+	before(() => {
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems(queryName, mutationName);
+	});
+
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee`;
         const input = `{name: "${name}"}`;
@@ -38,6 +44,9 @@ describe('Mutation: deleteCustomerRole', () => {
     });
 
     afterEach(() => {
+        if (!deleteItemsAfter) {
+			return;
+		}
         // Delete any supplemental items we created
         cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];

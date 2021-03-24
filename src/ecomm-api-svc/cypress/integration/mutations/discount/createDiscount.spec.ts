@@ -7,6 +7,7 @@ describe('Mutation: createDiscount', () => {
     var id = '';
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'createDiscount';
+    const deleteMutName = "deleteDiscount";
     const queryName = "discounts";
     const itemPath = 'discount';
     const standardMutationBody = `
@@ -29,13 +30,22 @@ describe('Mutation: createDiscount', () => {
         });
     };
 
+	var deleteItemsAfter = undefined as boolean | undefined;
+	before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName);
+	});
+
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         // Delete any supplemental items we created
         cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];
         });
         if (id !== "") {
-            cy.deleteItem("deleteDiscount", id).then(() => {
+            cy.deleteItem(deleteMutName, id).then(() => {
                 id = "";
             });
         }
@@ -716,6 +726,9 @@ describe('Mutation: createDiscount', () => {
         var childCatId = "";
 
         after(() => {
+            if (!deleteItemsAfter) {
+                return;
+            }
             cy.deleteParentAndChildCat({name: childCatName, id: childCatId}, parentCatName, parentCatId);
         });
 

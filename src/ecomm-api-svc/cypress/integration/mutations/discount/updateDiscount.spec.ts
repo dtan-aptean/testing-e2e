@@ -5,10 +5,13 @@ import { createInfoDummy, SupplementalItemRecord, toFormattedString } from "../.
 // TEST COUNT: 31
 describe('Mutation: updateDiscount', () => {
     var id = '';
-    var updateCount = 0;
+    var updateCount = 0;	// TODO: Appraise whether this is really useful or not
+    var itemCount = 1;
     var extraIds = [] as SupplementalItemRecord[];
     var discountAmount = {} as {amount: number, currency: string};
     const mutationName = 'updateDiscount';
+    const createName = "createDiscount";   
+	const deleteMutName = "deleteDiscount";
     const queryName = "discounts";
     const itemPath = 'discount';
     const additionalFields = `discountAmount {
@@ -25,7 +28,6 @@ describe('Mutation: updateDiscount', () => {
             ${additionalFields}
         }
     `;
-    const createName = 'createDiscount';
 
     const addExtraItemIds = (extIds: SupplementalItemRecord[]) => {
         extIds.forEach((id) => {
@@ -33,23 +35,35 @@ describe('Mutation: updateDiscount', () => {
         });
     };
 
+	var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
-        const name = `Cypress ${mutationName} Test`;
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName);
+    });
+
+	beforeEach(() => {
+        const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{name: "${name}", discountAmount: {amount: 15, currency: "USD"}}`;
         cy.createAndGetId(createName, itemPath, input, additionalFields).then((createdItem) => {
             assert.exists(createdItem.id);
             assert.exists(createdItem.discountAmount);
             id = createdItem.id;
+            itemCount++;
             discountAmount = createdItem.discountAmount;
         });
-    });
+	});
 
-    after(() => {
+    afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
             // Delete any supplemental items we created
-            cy.deleteSupplementalItems(extraIds);
+            cy.deleteSupplementalItems(extraIds).then(() => {
+                extraIds = [];
+            });
             // Delete the item we've been updating
-            cy.deleteItem("deleteDiscount", id);
+            cy.deleteItem(deleteMutName, id);
         }
     });
 
@@ -225,7 +239,7 @@ describe('Mutation: updateDiscount', () => {
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteDiscount", itemName: name, queryName: queryName});
+                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName});
                 const newName = `Cypress ${mutationName} CD extra updated`;
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
                 const newDiscountAmount = {
@@ -816,6 +830,9 @@ describe('Mutation: updateDiscount', () => {
         var childCatId = "";
 
         after(() => {
+            if (!deleteItemsAfter) {
+                return;
+            }
             cy.deleteParentAndChildCat({name: childCatName, id: childCatId}, parentCatName, parentCatId);
         });
 

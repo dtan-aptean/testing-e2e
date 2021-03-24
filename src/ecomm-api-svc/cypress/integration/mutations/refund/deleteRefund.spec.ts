@@ -3,7 +3,10 @@
 import { confirmStorefrontEnvValues } from "../../../support/commands";
 
 // TEST COUNT: 6
-describe('Mutation: deleteRefund', () => {
+var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
+confirmStorefrontEnvValues();
+
+describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` }, () => {
     var id = '';
     var orderInUse = '';
     var refund = 0;
@@ -27,7 +30,6 @@ describe('Mutation: deleteRefund', () => {
         queryInformation.itemId = providedId ? providedId : "";
     };
 
-    var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
     
     const refundOrder = () => {
         const mutation = `mutation {
@@ -45,9 +47,9 @@ describe('Mutation: deleteRefund', () => {
         });
     };
 
+	var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
-        confirmStorefrontEnvValues();
-        Cypress.config("baseUrl", Cypress.env("storefrontUrl"));
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.wait(1000);
         cy.visit("/");  // Go to the storefront and login
         cy.storefrontLogin();
@@ -61,6 +63,9 @@ describe('Mutation: deleteRefund', () => {
     });
 
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== '') {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
             cy.queryForDeletedById(false, id, "searchString", queryName, originalBaseUrl).then((itemPresent: boolean) => {

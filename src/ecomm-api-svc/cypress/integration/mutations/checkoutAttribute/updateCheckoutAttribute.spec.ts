@@ -5,11 +5,14 @@ import { SupplementalItemRecord, toFormattedString } from "../../../support/comm
 // TEST COUNT: 13
 describe('Mutation: updateCheckoutAttribute', () => {
     var id = '';
-    var updateCount = 0;
+    var updateCount = 0;	// TODO: Appraise whether this is really useful or not
+    var itemCount = 1;
     var taxCategoryId = '';
     var values = '';
     const extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateCheckoutAttribute';
+    const createName = 'createCheckoutAttribute';
+    const deleteMutName = "deleteCheckoutAttribute";
     const queryName = "checkoutAttributes";
     const itemPath = 'checkoutAttribute';
     const additionalFields = `values {
@@ -26,30 +29,43 @@ describe('Mutation: updateCheckoutAttribute', () => {
             ${additionalFields}
         }
     `;
-    const createName = 'createCheckoutAttribute';
 
+	var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems(queryName, deleteMutName);
+    });
+
+	beforeEach(() => {
         // Create an item for the tests to update
-        const name = `Cypress ${mutationName} Test`;
+        const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{name: "${name}", values: [{name: "Cypress CA update test"}]}`;
         cy.createAndGetId(createName, itemPath, input, additionalFields).then((createdItem) => {
             assert.exists(createdItem.id);
             assert.exists(createdItem.values);
             id = createdItem.id;
+            itemCount++;
             values = createdItem.values;
         });
-    });
+	});
 
-    after(() => {
+    afterEach(() => {
+        if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
             // Delete any supplemental items we created
-            cy.deleteSupplementalItems(extraIds);
+            cy.deleteSupplementalItems(extraIds).then(() => {
+                extraIds = [];
+            });
             // Delete the item we've been updating
-            cy.deleteItem("deleteCheckoutAttribute", id);
+            cy.deleteItem(deleteMutName, id);
             cy.wait(1000);
         }
         if (taxCategoryId !== "") {
-            cy.deleteItem("deleteTaxCategory", taxCategoryId);
+            cy.deleteItem("deleteTaxCategory", taxCategoryId).then(() => {
+                taxCategoryId = "";
+            });
         }
     });
 
@@ -218,7 +234,7 @@ describe('Mutation: updateCheckoutAttribute', () => {
             cy.createAndGetId(createName, itemPath, input, extraInput).then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: "deleteCheckoutAttribute", itemName: name, queryName: queryName});
+                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName});
                 const newName = `Cypress ${mutationName} CD extra updated`;
                 const newValues = createdItem.values;
                 const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};

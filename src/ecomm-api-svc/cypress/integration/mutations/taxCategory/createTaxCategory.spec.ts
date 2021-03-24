@@ -3,6 +3,7 @@
 describe('Mutation: createTaxCategory', () => {
     var id = '';
     const mutationName = 'createTaxCategory';
+	const deleteMutName = "deleteTaxCategory";
     const queryName = "taxCategories";
     const itemPath = 'taxCategory';
     const standardMutationBody = `
@@ -15,9 +16,18 @@ describe('Mutation: createTaxCategory', () => {
         }
     `;
 
+    var deleteItemsAfter = undefined as boolean | undefined;
+	before(() => {
+		deleteItemsAfter = Cypress.env("deleteItemsAfter");
+		cy.deleteCypressItems(queryName, deleteMutName);
+	});
+
     afterEach(() => {
+		if (!deleteItemsAfter) {
+			return;
+		}
         if (id !== "") {
-            cy.deleteItem("deleteTaxCategory", id).then(() => {
+            cy.deleteItem(deleteMutName, id).then(() => {
                 id = "";
             });
         }
