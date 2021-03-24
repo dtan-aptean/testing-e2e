@@ -237,13 +237,16 @@ describe('Query: paymentRequests', () => {
   });
 
   it('should pass if the query returns the latest completed order', () => {
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 1);
+
     const gqlQuery = `{
 			paymentRequests(
         orderBy: { direction: DESC, field: TIMESTAMP }
         first: 1
         dateRangeType: PAYMENT_COMPLETED
         startDate: "1/1/2001"
-        endDate: "${new Date().toLocaleDateString()}"
+        endDate: "${endDate.toLocaleDateString()}"
         status: FULLY_REFUNDED
       ) {
         nodes {
