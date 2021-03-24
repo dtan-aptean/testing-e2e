@@ -4,7 +4,7 @@ describe("Mutation: cancelPayment", () => {
   it("should pass if the mutation cancels a payment with all arguments", () => {
     cy.generatePaymentRequestAndPay(0, false).then((res) => {
       const paymentId = res.id;
-      cy.wait(120000); // Wait for the payment to be completed...
+      cy.wait(45000); // Wait for the payment to be completed...
 
       const gqlQuery = `mutation {
           cancelPayment(
