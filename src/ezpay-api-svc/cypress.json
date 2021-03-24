@@ -1,20 +1,28 @@
 {
-  "baseUrl": "#{EZPAY_API_URL}#",
+  "baseUrl": "https://dev.api.apteanpay.com/",
   "chromeWebSecurity": false,
-  "defaultCommandTimeout": 10000,
+  "defaultCommandTimeout": 900000,
   "env": {
-    "api-svc-url": "#{EZPAY_API_URL}#",
-    "authorization": "bearer --BEARER_TOKEN---",
-    "email-of-bearer-token-user": "#{EMAIL_OF_BEARER_TOKEN_USER}#",
-    "x-aptean-apim": "#{X_APTEAN_APIM}#",
-    "x-aptean-tenant": "#{X_APTEAN_TENANT}#",
-    "x-aptean-tenant-secret": "#{X_APTEAN_TENANT_SECRET}#",
-    "wepay-base-url": "#{WEPAY_API_URL}#",
-    "wepay-app-id": "#{WEPAY_APP_ID}#",
-    "wepay-app-secret": "#{WEPAY_APP_SECRET}#",
-    "wepay-api-version": "#{WEPAY_API_VERSION}#",
-    "wepay-account-id": "#{WEPAY_ACCOUNT_ID}#",
-    "currency": "#{CURRENCY}#"
+    "api-svc-url": "https://dev.api.apteanpay.com",
+    "x-aptean-apim": "7c9b3eea-ae36-4ca0-b18c-cd4c11d07596",
+    "x-aptean-tenant-secret": "SuperSecretPassword123!",
+    "wepay-base-url": "https://stage-api.wepay.com/tokens",
+    "wepay-app-id": "596464",
+    "wepay-app-secret": "stage_MzI0NV81MDhjMWZmMC1mYjMyLTQxMDEtOWFjZi00ZThkZmYyYzlmNGE",
+    "wepay-api-version": "3.0",
+
+    "xcurrency": "USD",
+    "xauthorization": "bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ilg1ZVhrNHh5b2pORnVtMWtsMll0djhkbE5QNC1jNTdkTzZRR1RWQndhTmsifQ.eyJpc3MiOiJodHRwczovL2FwdGVhbmlkZGV2LmIyY2xvZ2luLmNvbS9hMTAyYjZjOS0zYjFkLTQ4NmMtYWU2OS0wODE0N2E5ZDc2ZTUvdjIuMC8iLCJleHAiOjE2MTY1OTQ1MjcsIm5iZiI6MTYxNjUwODEyNywiYXVkIjoiOWE5NjYzYWYtOGE0Mi00ZDk2LWJhMDgtYTNiM2E0NGQ0NDgzIiwib2lkIjoiYjZlOWExYjktMzFjMy00MWY3LThlZjQtMjg5ZmM1ZGYwNTMxIiwic3ViIjoiYjZlOWExYjktMzFjMy00MWY3LThlZjQtMjg5ZmM1ZGYwNTMxIiwiZ2l2ZW5fbmFtZSI6IkZlcnJ5IiwiZmFtaWx5X25hbWUiOiJKb25nbWFucyIsImNvdW50cnkiOiJVbml0ZWQgU3RhdGVzIiwibmFtZSI6IkZlcnJ5IEpvbmdtYW5zIiwiZW1haWxzIjpbImZlcnJ5am9uZ21hbnNAZ21haWwuY29tIl0sInRmcCI6IkIyQ18xX3N1X3NpXzJfMSIsIm5vbmNlIjoiZGVmYXVsdE5vbmNlIiwic2NwIjoicmVhZCB3cml0ZSIsImF6cCI6ImEzNmI4MDNkLWI1ZDktNDk5My04ZjNjLTFmYzYxOGU0Y2MxMyIsInZlciI6IjEuMCIsImlhdCI6MTYxNjUwODEyN30.P6IRrD0A6EOGLLK3TjNChPgABQPGsQoosgbdMwFDI-Q0ZciL1JOJ0SKKRiGTXQeaInmuWpvg9CW_hAA5Af6ppx2QpmEUd0WLza9XkI8HgBNAEegyVOQ7VN-g2ihU4l3nAz6if-rLqYrJKOA-WyrG445ZI4rq3O1XnabezV6aZWZ6bduMUUjeTyKl7C6kgSDbQdpdBp258ovf-edWg550yv4itV5iHbXCuQrXwYtTxtTyHYrvKVG87nlbqOaRBIEBXHor3wEdFeQFzrGqiDlZi74HZM3mmUCtvRuA9DxRu2bNRtg6kbBDPjnVbbMXte7-a5KQByqvcmW8DAb6nO4cdQ",
+    "xwepay-account-id": "5eb64875-fab2-4606-8887-82c6b2900e14",
+    "xx-aptean-tenant": "ec643798-4d79-4113-927a-0c9780363cf8",
+    "xemail-of-bearer-token-user": "ferryjongmans@gmail.com",
+    
+    "currency": "CAD",
+    "authorization": "bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ilg1ZVhrNHh5b2pORnVtMWtsMll0djhkbE5QNC1jNTdkTzZRR1RWQndhTmsifQ.eyJpc3MiOiJodHRwczovL2FwdGVhbmlkZGV2LmIyY2xvZ2luLmNvbS9hMTAyYjZjOS0zYjFkLTQ4NmMtYWU2OS0wODE0N2E5ZDc2ZTUvdjIuMC8iLCJleHAiOjE2MTY2NzEyMDksIm5iZiI6MTYxNjU4NDgwOSwiYXVkIjoiOWE5NjYzYWYtOGE0Mi00ZDk2LWJhMDgtYTNiM2E0NGQ0NDgzIiwib2lkIjoiODViNzUxZjMtOTQ1NS00ZDFkLWEwODktYjM1MmRjMDVhZjdhIiwic3ViIjoiODViNzUxZjMtOTQ1NS00ZDFkLWEwODktYjM1MmRjMDVhZjdhIiwiZ2l2ZW5fbmFtZSI6IkZlcnJ5IiwiZmFtaWx5X25hbWUiOiJKb25nbWFucyIsImNvdW50cnkiOiJVbml0ZWQgU3RhdGVzIiwibmFtZSI6IkZlcnJ5IEpvbmdtYW5zIiwiZW1haWxzIjpbImZlcnJ5am9uZ21hbnMrY2FuYWRhQGdtYWlsLmNvbSJdLCJ0ZnAiOiJCMkNfMV9zdV9zaV8yXzEiLCJub25jZSI6ImRlZmF1bHROb25jZSIsInNjcCI6InJlYWQgd3JpdGUiLCJhenAiOiJhMzZiODAzZC1iNWQ5LTQ5OTMtOGYzYy0xZmM2MThlNGNjMTMiLCJ2ZXIiOiIxLjAiLCJpYXQiOjE2MTY1ODQ4MDl9.FGWSQvXtP8aqm-zJ_XxS0InJapi72ICULsTFcmXJRr7dyCDrTcaXuWsNgJr1OQWdcuNeKIHZX1XoHWf7LP9039QvCXnb14fyr3VcDGidrdrZ6kFAPrv8to3aj2TSHPuPJyOtJwE_PChDyC3rKaQGjS1_PLhZcYy2lCu2cyo625l7TsLA3VyYuginqexT6hdUWtA7xSahAGWZi2_jArC6T6XzT6uyRsbXWGYEXgMY6ODdwDY24wpUIGPL1hXcYFO5WGmFkuU3U6WnjgyY49_6UCJFbaVFy-li2QXnta8s8L3K1Q9z-AwOqULT3isC8uXz1XdbO9jXMfXy2sjcpi3FxA",
+    "wepay-account-id": "bf7a7d23-0855-4fff-beeb-ab7f7212350a",
+    "x-aptean-tenant": "ab81723e-415d-4683-b261-c930e5e64e49",
+    "email-of-bearer-token-user": "ferryjongmans+canada@gmail.com"
   },
-  "supportFile": "cypress/support/index.ts"
+  "supportFile": "cypress/support/index.ts",
+  "projectId": "cth8aa"
 }
