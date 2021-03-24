@@ -4,12 +4,14 @@
 describe("Query: AccountBalance", () => {
   it("should pass if the wepay balance is the same as in our tenant account", () => {
     cy.getWePayAccount(Cypress.env("wepay-account-id")).then((res) => {
+      const balanceObject =
+        res.balances.currencies.USD ?? res.balances.currencies.CAD;
       const {
         balance,
         incoming_pending,
         outgoing_pending,
         reserve,
-      } = res.balances.currencies.USD;
+      } = balanceObject;
 
       const gqlQuery = `
       query {

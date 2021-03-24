@@ -11,7 +11,7 @@ describe("Mutation: capturePayment", () => {
           paymentId: "${paymentId}"
           amounts: {
             amount: ${amount}
-            currency: USD
+            currency: ${Cypress.env("currency")}
           }
         })
         {
@@ -57,7 +57,7 @@ describe("Mutation: capturePayment", () => {
               paymentId: "19455a21-94ef-48ee-9e97-6f27d99c470b"
               amounts: {
                 amount: 424
-                currency: USD
+                currency: ${Cypress.env("currency")}
               }
             })
           }

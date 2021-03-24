@@ -21,14 +21,14 @@ describe("Mutation: createPayment", () => {
                 paymentRequestId: "${paymentRequest.paymentRequestId}"
                 amount: ${paymentRequest.amount}
                 immediateCapture: true
-                currency: USD
+                currency: ${Cypress.env("currency")}
                 riskMetadata: {
                   address: { postalCode: "12222", country: "US" }
                   phone: { countryCode: "1", number: "222111445" }
                   lineItems: {
                     description: "TestLine"
                     price: ${paymentRequest.amount}
-                    currency: USD
+                    currency: ${Cypress.env("currency")}
                     quantity: 1
                   }
                 }
@@ -84,14 +84,14 @@ describe("Mutation: createPayment", () => {
             paymentRequestId: "001"
             amount: 199
             immediateCapture: true
-            currency: USD
+            currency: ${Cypress.env("currency")}
             riskMetadata: {
               address: { postalCode: "12222", country: "US" }
               phone: { countryCode: "1", number: "222111445" }
               lineItems: {
                 description: "TestLine"
                 price: 199
-                currency: USD
+                currency: ${Cypress.env("currency")}
                 quantity: 1
               }
             }
@@ -132,14 +132,14 @@ describe("Mutation: createPayment", () => {
             amount: ${paymentRequest.amount}
             immediateCapture: false
             failOnReview: true
-            currency: USD
+            currency: ${Cypress.env("currency")}
             riskMetadata: {
               address: { postalCode: "12222", country: "US" }
               phone: { countryCode: "1", number: "222111445" }
               lineItems: {
                 description: "TestLine"
                 price: ${paymentRequest.amount}
-                currency: USD
+                currency: ${Cypress.env("currency")}
                 quantity: 1
               }
             }

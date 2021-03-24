@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 // @ts-check
 
-describe("Mutation: update dispute", () => {
+describe("Mutation: concede dispute", () => {
   it("should pass if the query returns valid return type", () => {
     let paymentId = "";
     cy.generatePaymentRequestAndPay(961).then((res) => {

@@ -237,13 +237,16 @@ describe('Query: paymentRequests', () => {
   });
 
   it('should pass if the query returns the latest completed order', () => {
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 1);
+
     const gqlQuery = `{
 			paymentRequests(
         orderBy: { direction: DESC, field: TIMESTAMP }
         first: 1
         dateRangeType: PAYMENT_COMPLETED
         startDate: "1/1/2001"
-        endDate: "${new Date().toLocaleDateString()}"
+        endDate: "${endDate.toLocaleDateString()}"
         status: FULLY_REFUNDED
       ) {
         nodes {
@@ -255,6 +258,7 @@ describe('Query: paymentRequests', () => {
     cy.postGQL(gqlQuery).then(res => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
+      console.log(res);
 
       // no errors
       assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
