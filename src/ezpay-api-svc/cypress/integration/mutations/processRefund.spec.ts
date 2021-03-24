@@ -38,7 +38,7 @@ describe("Mutation: processRefund", () => {
         }
       }`;
 
-      cy.wait(120000); // Wait for the payment to be completed...
+      cy.wait(60000); // Wait for the payment to be completed...
       cy.postGQL(gqlQuery).then((res) => {
         // should be 200 ok
         cy.expect(res.isOkStatusCode).to.be.equal(true);
@@ -137,7 +137,7 @@ describe("Mutation: processRefund", () => {
       paymentId = res.id;
       amount = res.amount;
       refundReason = "Item not as requested";
-      cy.wait(120000); // Wait for the payment to be completed...
+      cy.wait(60000); // Wait for the payment to be completed...
 
       const gqlQuery = `mutation {
         processRefund(

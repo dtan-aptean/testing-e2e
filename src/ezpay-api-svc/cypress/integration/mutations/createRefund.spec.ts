@@ -41,7 +41,7 @@ describe("Mutation: createRefund", () => {
         paymentId = res.id;
         amount = res.amount;
 
-        cy.wait(120000);
+        cy.wait(45000);
         const gqlQuery = `mutation createRefund {
           createRefund(
             input: {
@@ -115,7 +115,7 @@ describe("Mutation: createRefund", () => {
       let partialAmount1 = originalAmount - 100;
       let partialAmount2 = originalAmount - partialAmount1;
 
-      cy.wait(120000);
+      cy.wait(45000);
 
       let gqlQuery = `mutation createRefund {
         createRefund(
@@ -172,7 +172,7 @@ describe("Mutation: createRefund", () => {
       }
       `;
 
-      cy.wait(120000);
+      cy.wait(45000);
 
       // Second partial refund
       cy.postGQLWithIdempotencyKey(gqlQuery, paymentId + "1").then((res) => {
