@@ -351,6 +351,8 @@ Cypress.Commands.add("makePayment", (count) => {
       setTimeout((x) => {
         // Log in - taken from payer portal login command
         cy.get("body").then(($body) => {
+          //Waiting so in case the user is already logged in dom won't show signin button
+          cy.wait(3000);
           if ($body.find("[data-cy=sign-in]").length) {
             cy.get("[data-cy=sign-in]").click();
             cy.wait(10000);

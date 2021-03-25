@@ -198,8 +198,18 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=refund-dialog-title]").should("not.exist");
 
       //checking the status for partially refunded
-      cy.get("@firstRow").find("td").eq(2).contains("Refund Pending");
-      cy.wait(90000);
+      cy.get("body").then(($body) => {
+        if (
+          !$body
+            .find("[data-cy=payments-table-body]")
+            .find("tr")
+            .eq(0)
+            .find("td:contains(Partially Refunded)").length
+        ) {
+          cy.get("@firstRow").find("td").eq(2).contains("Refund Pending");
+          cy.wait(90000);
+        }
+      });
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
       cy.get("@firstRow").find("td").eq(2).contains("Partially Refunded");
@@ -216,8 +226,18 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=refund-dialog-title]").should("not.exist");
 
       //checking the status for fully refunded
-      cy.get("@firstRow").find("td").eq(2).contains("Refund Pending");
-      cy.wait(90000);
+      cy.get("body").then(($body) => {
+        if (
+          !$body
+            .find("[data-cy=payments-table-body]")
+            .find("tr")
+            .eq(0)
+            .find("td:contains(Fully Refunded)").length
+        ) {
+          cy.get("@firstRow").find("td").eq(2).contains("Refund Pending");
+          cy.wait(90000);
+        }
+      });
       cy.get("[data-cy=refresh]").click();
       cy.wait(3000);
       cy.get("@firstRow").find("td").eq(2).contains("Fully Refunded");
