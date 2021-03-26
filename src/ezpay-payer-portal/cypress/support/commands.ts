@@ -235,22 +235,14 @@ Cypress.Commands.add("makePayment", () => {
     cy.wait(5000);
     cy.get("body").then(($makePaymentBody) => {
       if (!$makePaymentBody.find("[data-cy=submit-payment-button]").length) {
-        cy.get(".MuiFormGroup-root")
-          .children()
-          .contains("Card ending in")
-          .last()
-          .click({ force: true });
+        $makePaymentBody.find("div:contains(Card ending in)").last().click();
       } else if (
         $makePaymentBody.find("div:contains(Account ending in)").length
       ) {
         cy.get(".MuiIconButton-label > .MuiSvgIcon-root").click({
           force: true,
         });
-        cy.get(".MuiFormGroup-root")
-          .children()
-          .contains("Card ending in")
-          .last()
-          .click({ force: true });
+        $makePaymentBody.find("div:contains(Card ending in)").last().click();
       }
     });
     cy.get("[data-cy=submit-payment-button]").click();
