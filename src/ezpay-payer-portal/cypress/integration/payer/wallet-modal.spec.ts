@@ -244,7 +244,7 @@ describe("Payer Portal - Wallet Modal", () => {
     });
 
     it("Delete option should work", () => {
-      cy.get("[data-cy=menu-options")
+      cy.get("[data-cy=menu-options]")
         .its("length")
         .then((length) => {
           cy.get("[data-cy=menu-options]").last().click({ force: true });
@@ -301,7 +301,7 @@ describe("Payer Portal - Wallet Modal", () => {
     });
 
     it("Can delete bank account", () => {
-      cy.get("[data-cy=menu-options")
+      cy.get("[data-cy=menu-options]")
         .its("length")
         .then((length) => {
           cy.get("[data-cy=menu-options]").last().click({ force: true });
