@@ -13,11 +13,25 @@ Cypress.Commands.add("allowLoad", () => {
       return;
     }
   }
+  // No need to wait 10 seconds if the symbol isn't there
+  if (Cypress.$(`${loadId}:visible`).length === 0) {
+    return;
+  }
+
   var totalTime = 10000;
   Cypress.log({displayName: "allowLoad"});
   const checkLoadSymbol = () => {
-    const loadingSymbol = Cypress.$(loadId);
-    if (loadingSymbol.attr("style") !== undefined) {
+    const loadingSymbol = Cypress.$(`${loadId}:visible`);
+    if (loadingSymbol.length > 0) {
+      cy.wait(3000).then(() => {
+        totalTime+=3000;
+        checkLoadSymbol();
+      });
+    } else {
+      Cypress.log({displayName: "allowLoad", message: `Waited ${totalTime / 1000}s for the page to load`});
+      return;
+    }
+    /* if (loadingSymbol.attr("style") !== undefined) {
       if (!loadingSymbol.attr("style").includes("display: none")) {
         // If the loading symbol is still visible, wait another 3 seconds, then call the function again
         cy.wait(3000).then(() => {
@@ -31,7 +45,7 @@ Cypress.Commands.add("allowLoad", () => {
       }
     } else {
       return;
-    }
+    } */
   };
   // Wait a base 10 seconds, then check if it's still loading
   cy.wait(10000).then(() => {
@@ -127,6 +141,46 @@ Cypress.Commands.add("getIframeBody", (iFrameName) => {
       // https://on.cypress.io/wrap
       .then(cy.wrap)
   );
+});
+
+// Will check or uncheck a checkbox depending on its current state. Chained off a parent command
+Cypress.Commands.add("toggle", { prevSubject: true }, (subject) => {
+  const toggleOn = subject.prop("checked") === false;
+  const log = Cypress.log({
+    $el: subject,
+    name: "toggle", 
+    consoleProps: () => {
+      return {
+        "Command": "toggle (custom)",
+        "Applied to": subject[0]
+      };
+    },
+  });
+  if (toggleOn) {
+    return cy.wrap(subject, { log: false }).check({ log: false });
+  } else {
+    return cy.wrap(subject, { log: false }).uncheck({ log: false });
+  }
+});
+
+// Will clear a text input and replace it with the given value
+Cypress.Commands.add("replaceText", { prevSubject: true }, (subject, text) => {
+  const log = Cypress.log({
+    $el: subject,
+    name: "replaceText", 
+    displayName: "repText",
+    consoleProps: () => {
+      return {
+        "Command": "replaceText (custom)",
+        "Applied to": subject[0],
+        "Old text input": subject.val(),
+        "New text input": text
+      };
+    },
+  });
+
+  cy.wrap(subject, { log: false }).clear({ log: false });
+  return cy.wrap(subject, { log: false }).type(text, { log: false });
 });
 
 // Logs in with the configured username/password
@@ -564,6 +618,31 @@ Cypress.Commands.add("goToGeneralSettings", () => {
       .click({force: true});
     cy.wait(500);
   });
+});
+
+// Goes to shipping provider page. Can be done from public or admin
+Cypress.Commands.add("goToShippingProviders", () => {
+  Cypress.log({ name: "goToShippingProviders" });
+
+  cy.location("pathname").then((loc) => {
+    cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+    if (!loc.includes("/Shipping/Providers")) {
+      if (!loc.includes("Admin")) {
+        cy.goToAdmin();
+        cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+      }
+      cy.get(".sidebar-menu.tree").find("li").contains("Configuration").click({force: true});
+    }
+  });
+  cy.intercept("POST", "/Admin/Shipping/Providers").as("shippingProviders");
+  cy.get(".sidebar-menu.tree")
+    .find("li")
+    .find(".treeview-menu")
+    .find("li")
+    .contains("Shipping providers")
+    .click({force: true});
+  cy.wait("@shippingProviders", {timeout: 100000});
+  cy.allowLoad();
 });
 
 // Find an item in the table. Pass in table id, id for pagination next button, and function to filter with
@@ -1022,6 +1101,62 @@ Cypress.Commands.add("getToConfirmOrder", () => {
   cy.get(".payment-info-next-step-button").click();
   cy.wait(1000);
   cy.get('.cart').should("exist").and("be.visible");
+});
+
+// COMMANDS FOR CHANGING SHIPPING PROVIDER PROPERTIES
+Cypress.Commands.add("findShippingProvider", (providerName: string) => {
+  const shipFilter = (index, item) => {
+    return item.cells[0].innerText === providerName;
+  };
+  return cy.findTableItem("#shippingproviders-grid", "#shippingproviders-grid_next", shipFilter);
+});
+
+// Updates just provider activity
+Cypress.Commands.add("changeProviderActivity", (providerName: string) => {
+  Cypress.log({name: "changeProviderActivity", message: `Activating or deactivating ${providerName}`});
+  cy.findShippingProvider(providerName).then((row) => {
+    cy.wrap(row).find("a").contains("Edit").click();
+    cy.wait(500);
+    cy.wrap(row).find("td[data-columnname=IsActive]").find("input").toggle();
+    cy.wrap(row).find("a").contains("Update").click();
+    cy.allowLoad();
+  });
+});
+
+// Updates just provider display order
+Cypress.Commands.add("changeProviderDisplay", (providerName: string, newOrder: string) => {
+  Cypress.log({name: "changeProviderDisplay", message: `Setting display order of "${providerName}" to ${newOrder}`});
+  cy.findShippingProvider(providerName).then((row) => {
+    cy.wrap(row).find("a").contains("Edit").click();
+    cy.wait(500);
+    cy.wrap(row).find("td[data-columnname=DisplayOrder]").find("input").replaceText(newOrder);
+    cy.wrap(row).find("a").contains("Update").click();
+    cy.allowLoad();
+  });
+});
+
+// Updated provider activity and display order, but only if the provider's values aren't the same as the provided arguments
+Cypress.Commands.add("changeProviderProps", (providerName: string, activate: boolean, newOrder: string) => {
+  Cypress.log({name: "changeProviderProps", message: `Setting "${providerName}" to ${activate ? "active" : "inactive"} and display order to ${newOrder}`});
+  cy.findShippingProvider(providerName).then((row) => {
+    cy.wrap(row).find("td[data-columnname=DisplayOrder]").invoke("text").then((curDisOrder: string) => {
+      cy.wrap(row).find("td[data-columnname=IsActive]").find("i").invoke("hasClass", "true-icon").then((isActive: boolean) => {
+        if (curDisOrder !== newOrder || isActive !== activate) {
+          cy.wrap(row).find("a").contains("Edit").click();
+          cy.wait(300);
+          if (isActive !== activate) {
+            cy.wrap(row).find("td[data-columnname=IsActive]").find("input").toggle();
+          }
+          if (curDisOrder !== newOrder) {
+            cy.wrap(row).find("td[data-columnname=DisplayOrder]").find("input").replaceText(newOrder);
+          }
+          // TODO: Could probably wait on an intercept here
+          cy.wrap(row).find("a").contains("Update").click();
+          cy.allowLoad();
+        }
+      });
+    });
+  });
 });
 
 // COMMANDS FOR TESTS THAT ARE THE SAME BETWEEN REGISTERED USERS AND GUESTS

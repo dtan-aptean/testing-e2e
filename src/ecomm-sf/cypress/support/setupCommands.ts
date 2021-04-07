@@ -438,6 +438,86 @@ Cypress.Commands.add("storeLanguageProperties", (languageNames: string[]) => {
   });
 });
 
+// Checks that there are shipping providers
+Cypress.Commands.add("checkAvailableShippers", () => {
+  Cypress.log({
+    displayName: "checkAvailableShippers",
+    message: "Checking # of shipping providers"
+  });
+  const fetchProviderNames = (tableRows) => {
+    if (tableRows.length > 0) {
+      const provNames = [] as string[];
+      tableRows.each((index, row) => {
+        provNames.push(row.cells[0].innerText);
+      });
+      return provNames;
+    } else {
+      return [];
+    }
+  };
+
+  cy.visit("/");
+  cy.login();
+  cy.goToShippingProviders().then(() => {
+    const existingRecord = Cypress.env("shipProperties");
+    if (existingRecord) {
+      const providerNames = [] as string[];
+      existingRecord.forEach((item) => {
+        providerNames.push(item.name);
+      });
+      return providerNames;
+    } else {
+      return cy.get("#shippingproviders-grid")
+        .find("tbody")
+        .find("tr")
+        .then(($rows) => {
+          if ($rows.length === 1 || $rows.length === 0) {
+            expect($rows.length).to.be.greaterThan(1, "No additional shipping providers available. Cannot run shipping tests.");
+          } else {
+            const nonManual = $rows.filter((index, item) => {
+              return !item.cells[0].innerText.includes("Manual");
+            });
+            if (nonManual.length < 1) {
+              expect(nonManual.length).to.be.greaterThan(1, "Not enough additional shipping providers available. Cannot run shipping tests.");
+            } else {
+              const names = fetchProviderNames(nonManual);
+              return cy.storeShipperProperties(names).then(() => {
+                return names;
+              });
+            }
+          }
+        });
+    }
+  });
+
+  // TODO: Feel like I shouldn't have to fetch names twice in two files
+  /*  */
+
+  
+});
+
+// Stores original shipping provider properties
+Cypress.Commands.add("storeShipperProperties", (providerNames: string[]) => {
+  const shipperProperties = [] as {name: string, displayOrder: string, isActive: boolean}[];
+  cy.wrap(providerNames).each((prov: string, index, provNames) => {
+    const shipFilter = (index, item) => {
+      return item.cells[0].innerText === prov;
+    };
+    cy.findTableItem("#shippingproviders-grid", "#shippingproviders-grid_next", shipFilter).then((row) => {
+      var shipObject = {name: prov, displayOrder: "", isActive: false};
+      cy.wrap(row).find("td[data-columnname=DisplayOrder]").invoke("text").then((text) => {
+        shipObject.displayOrder = text;
+        cy.wrap(row).find("td[data-columnname=IsActive]").find("i").invoke("hasClass", "true-icon").then((htmlVal) => {
+          shipObject.isActive = htmlVal;
+          shipperProperties.push(shipObject);
+        });
+      });
+    });
+  }).then(() => {
+    Cypress.env("shipProperties", shipperProperties);
+  });
+});
+
 // Resets languages to the publicity and properties they had before the tests ran
 Cypress.Commands.add("resetLanguages", () => {
   Cypress.log({
@@ -498,6 +578,31 @@ Cypress.Commands.add("resetLanguages", () => {
         }
       });
     });
+  }
+});
+
+// Resets shipping providers to the properties they had before the tests ran
+Cypress.Commands.add("resetShippingProviders", () => {
+  Cypress.log({
+    displayName: "resetShippingProviders",
+    message: "Resetting provider properties"
+  });
+  const checkTableRows = (providers: {name: string, displayOrder: string, isActive: boolean}[]) => {
+    if (providers.length > 0) {
+      providers.forEach((prov) => {
+        cy.changeProviderProps(prov.name, prov.isActive, prov.displayOrder);
+      });
+    }
+  };
+  cy.visit("/");
+  cy.login();
+  /* cy.visit("/Admin/Shipping/Providers"); */
+  cy.goToShippingProviders();
+  cy.allowLoad();
+  const originalProviderProperties = Cypress.env("shipProperties");
+  debugger;
+  if (originalProviderProperties) {
+    checkTableRows(originalProviderProperties)
   }
 });
 
