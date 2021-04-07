@@ -57,8 +57,9 @@ describe("Merchant portal", function () {
       cy.get("@rows").then(($el) => {
         const originalLength = $el.length;
         if (originalLength === 0) {
-          cy.createAndPay(1, "1.09", "disputes");
+          cy.createAndPay(1, "9.61", "disputes");
           cy.get("[data-cy=payment-disputes-tab]", { timeout: 20000 }).click();
+          cy.wait(800000);
           cy.get("[data-cy=refresh]").click();
           cy.wait(2000);
           cy.get("[data-cy=dispute-table-body]")
@@ -73,23 +74,27 @@ describe("Merchant portal", function () {
           cy.get("@currentRows")
             .each(($row, index, $list) => {
               let status = undefined;
+              let daysRemaining = undefined;
               cy.wrap($row)
                 .find("td")
-                .eq(2)
-                .then(($cell) => {
-                  status = $cell.text();
-                  if (status === "Action Needed") {
+                .then(($cells) => {
+                  status = $cells.text();
+                  daysRemaining = $cells.eq(4).text();
+                  if (
+                    status === "Action Needed" &&
+                    daysRemaining !== "0 days left"
+                  ) {
                     activeArray.push($row);
                   }
                 });
             })
             .then(() => {
               if (activeArray.length === 0) {
-                cy.createAndPay(1, "1.09", "disputes");
+                cy.createAndPay(1, "9.61", "disputes");
                 cy.get("[data-cy=payment-disputes-tab]", {
                   timeout: 20000,
                 }).click();
-                cy.wait(35000);
+                cy.wait(800000);
                 cy.get("[data-cy=refresh]").click();
                 cy.wait(3000);
                 cy.get("@rows").should("have.length.gte", 1);
@@ -98,12 +103,16 @@ describe("Merchant portal", function () {
                 cy.get("@rows")
                   .each(($el, index, $list) => {
                     let status = undefined;
+                    let daysRemaining = undefined;
                     cy.wrap($el)
                       .find("td")
-                      .eq(2)
-                      .then(($cell) => {
-                        status = $cell.text();
-                        if (status === "Action Needed") {
+                      .then(($cells) => {
+                        status = $cells.eq(2).text();
+                        daysRemaining = $cells.eq(4).text();
+                        if (
+                          status === "Action Needed" &&
+                          daysRemaining !== "0 days left"
+                        ) {
                           hasActiveDispute = true;
                         }
                       });
@@ -321,12 +330,16 @@ describe("Merchant portal", function () {
       cy.get("@rows")
         .each(($el, index, $list) => {
           let status = undefined;
+          let daysRemaining = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(2)
-            .then(($cell) => {
-              status = $cell.text();
-              if (status === "Action Needed") {
+            .then(($cells) => {
+              status = $cells.eq(2).text();
+              daysRemaining = $cells.eq(4).text();
+              if (
+                status === "Action Needed" &&
+                daysRemaining !== "0 days left"
+              ) {
                 activeArray.push($el);
               }
             });
@@ -351,12 +364,16 @@ describe("Merchant portal", function () {
       cy.get("@rows")
         .each(($el, index, $list) => {
           let status = undefined;
+          let daysRemaining = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(2)
-            .then(($cell) => {
-              status = $cell.text();
-              if (status === "Action Needed") {
+            .then(($cells) => {
+              status = $cells.eq(2).text();
+              daysRemaining = $cells.eq(4).text();
+              if (
+                status === "Action Needed" &&
+                daysRemaining !== "0 days left"
+              ) {
                 activeArray.push($el);
               }
             });
@@ -390,12 +407,16 @@ describe("Merchant portal", function () {
       cy.get("@rows")
         .each(($el, index, $list) => {
           let status = undefined;
+          let daysRemaining = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(2)
-            .then(($cell) => {
-              status = $cell.text();
-              if (status === "Action Needed") {
+            .then(($cells) => {
+              status = $cells.eq(2).text();
+              daysRemaining = $cells.eq(4).text();
+              if (
+                status === "Action Needed" &&
+                daysRemaining !== "0 days left"
+              ) {
                 activeArray.push($el);
               }
             });
@@ -431,12 +452,16 @@ describe("Merchant portal", function () {
       cy.get("@rows")
         .each(($el, index, $list) => {
           let status = undefined;
+          let daysRemaining = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(2)
-            .then(($cell) => {
-              status = $cell.text();
-              if (status === "Action Needed") {
+            .then(($cells) => {
+              status = $cells.eq(2).text();
+              daysRemaining = $cells.eq(4).text();
+              if (
+                status === "Action Needed" &&
+                daysRemaining !== "0 days left"
+              ) {
                 activeArray.push($el);
               }
             });
@@ -480,12 +505,16 @@ describe("Merchant portal", function () {
       cy.get("@rows")
         .each(($el, index, $list) => {
           let status = undefined;
+          let daysRemaining = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(2)
-            .then(($cell) => {
-              status = $cell.text();
-              if (status === "Action Needed") {
+            .then(($cells) => {
+              status = $cells.eq(2).text();
+              daysRemaining = $cells.eq(4).text();
+              if (
+                status === "Action Needed" &&
+                daysRemaining !== "0 days left"
+              ) {
                 activeArray.push($el);
               }
             });
@@ -529,12 +558,16 @@ describe("Merchant portal", function () {
       cy.get("@rows")
         .each(($el, index, $list) => {
           let status = undefined;
+          let daysRemaining = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(2)
-            .then(($cell) => {
-              status = $cell.text();
-              if (status === "Action Needed") {
+            .then(($cells) => {
+              status = $cells.eq(2).text();
+              daysRemaining = $cells.eq(4).text();
+              if (
+                status === "Action Needed" &&
+                daysRemaining !== "0 days left"
+              ) {
                 activeArray.push($el);
               }
             });
@@ -579,12 +612,16 @@ describe("Merchant portal", function () {
       cy.get("@rows")
         .each(($el, index, $list) => {
           let status = undefined;
+          let daysRemaining = undefined;
           cy.wrap($el)
             .find("td")
-            .eq(2)
-            .then(($cell) => {
-              status = $cell.text();
-              if (status === "Action Needed") {
+            .then(($cells) => {
+              status = $cells.eq(2).text();
+              daysRemaining = $cells.eq(4).text();
+              if (
+                status === "Action Needed" &&
+                daysRemaining !== "0 days left"
+              ) {
                 if (activeArray.length === 0) {
                   relevantIndex = index;
                 }
