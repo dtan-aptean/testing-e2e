@@ -1,20 +1,18 @@
 {
-  "baseUrl": "https://dev.payer.apteanpay.com",
-  "notNeeded": {
-    "clientId": "#{MSAL_CLIENTID_PAYER_PORTAL}#",
-    "authority": "#{MSAL_AUTHORITY}#",
-    "scopes": "#{READ_SCOPE}# #{WRITE_SCOPE}#",
-    "homeAccountIdentifier": "#{HOME_ACCOUNT_IDENTIFIER}#"
-  },
-  "username": "ferryjongmans@gmail.com",
-  "password": "JhVB#vYxhZj5A8NQ#zg34DNL8kism^YU",
+  "baseUrl": "#{MERCHANT_PORTAL_BASE_URL}#",
+  "clientId": "#{MSAL_CLIENTID_MERCHANT_PORTAL}#",
+  "username": "#{EZPAY_TOKEN_USER}#",
+  "password": "#{EZPAY_TOKEN_PASS}#",
+  "authority": "#{MSAL_AUTHORITY}#",
+  "scopes": "#{READ_SCOPE}# #{WRITE_SCOPE}#",
+  "homeAccountIdentifier": "#{HOME_ACCOUNT_IDENTIFIER}#",
   "env": {
-    "api-svc-url": "https://dev.api.apteanpay.com/", 
-    "authorization": "bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ilg1ZVhrNHh5b2pORnVtMWtsMll0djhkbE5QNC1jNTdkTzZRR1RWQndhTmsifQ.eyJpc3MiOiJodHRwczovL2FwdGVhbmlkZGV2LmIyY2xvZ2luLmNvbS9hMTAyYjZjOS0zYjFkLTQ4NmMtYWU2OS0wODE0N2E5ZDc2ZTUvdjIuMC8iLCJleHAiOjE2MTY1OTQ1MjcsIm5iZiI6MTYxNjUwODEyNywiYXVkIjoiOWE5NjYzYWYtOGE0Mi00ZDk2LWJhMDgtYTNiM2E0NGQ0NDgzIiwib2lkIjoiYjZlOWExYjktMzFjMy00MWY3LThlZjQtMjg5ZmM1ZGYwNTMxIiwic3ViIjoiYjZlOWExYjktMzFjMy00MWY3LThlZjQtMjg5ZmM1ZGYwNTMxIiwiZ2l2ZW5fbmFtZSI6IkZlcnJ5IiwiZmFtaWx5X25hbWUiOiJKb25nbWFucyIsImNvdW50cnkiOiJVbml0ZWQgU3RhdGVzIiwibmFtZSI6IkZlcnJ5IEpvbmdtYW5zIiwiZW1haWxzIjpbImZlcnJ5am9uZ21hbnNAZ21haWwuY29tIl0sInRmcCI6IkIyQ18xX3N1X3NpXzJfMSIsIm5vbmNlIjoiZGVmYXVsdE5vbmNlIiwic2NwIjoicmVhZCB3cml0ZSIsImF6cCI6ImEzNmI4MDNkLWI1ZDktNDk5My04ZjNjLTFmYzYxOGU0Y2MxMyIsInZlciI6IjEuMCIsImlhdCI6MTYxNjUwODEyN30.P6IRrD0A6EOGLLK3TjNChPgABQPGsQoosgbdMwFDI-Q0ZciL1JOJ0SKKRiGTXQeaInmuWpvg9CW_hAA5Af6ppx2QpmEUd0WLza9XkI8HgBNAEegyVOQ7VN-g2ihU4l3nAz6if-rLqYrJKOA-WyrG445ZI4rq3O1XnabezV6aZWZ6bduMUUjeTyKl7C6kgSDbQdpdBp258ovf-edWg550yv4itV5iHbXCuQrXwYtTxtTyHYrvKVG87nlbqOaRBIEBXHor3wEdFeQFzrGqiDlZi74HZM3mmUCtvRuA9DxRu2bNRtg6kbBDPjnVbbMXte7-a5KQByqvcmW8DAb6nO4cdQ",
-    "x-aptean-apim": "19c2f139fd684536ab021820d54d8888",
-    "x-aptean-tenant": "ec643798-4d79-4113-927a-0c9780363cf8",
-    "x-ezpay": "eyJzdWJzY3JpcHRpb25JZCI6IjE5YzJmMTM5ZmQ2ODQ1MzZhYjAyMTgyMGQ1NGQ4ODg4IiwidGVuYW50SWQiOiI4YmI1Mjc0My04ODA4LTQwZDYtOTFkYS05OTQ2YWVlODFlYmIifQ==",
-    "x-ezpay-pmt": "1"
+    "api-svc-url": "#{EZPAY_API_URL}#", 
+    "authorization": "bearer --BEARER_TOKEN--", 
+    "x-aptean-apim": "#{X_APTEAN_APIM}#", 
+    "x-aptean-tenant": "#{X_APTEAN_TENANT}#", 
+    "x-ezpay": "#{X_EZPAY}#",
+    "x-ezpay-pmt": "#{X_EZPAY_PMT}#"
   },
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,

@@ -1,27 +1,20 @@
 {
-  "baseUrl": "https://dev.api.apteanpay.com/",
+  "baseUrl": "#{EZPAY_API_URL}#",
   "chromeWebSecurity": false,
-  "defaultCommandTimeout": 900000,
+  "defaultCommandTimeout": 10000,
   "env": {
-    "api-svc-url": "https://dev.api.apteanpay.com",
-    "x-aptean-apim": "7c9b3eea-ae36-4ca0-b18c-cd4c11d07596",
-    "x-aptean-tenant-secret": "SuperSecretPassword123!",
-    "wepay-base-url": "https://stage-api.wepay.com/tokens",
-    "wepay-app-id": "596464",
-    "wepay-app-secret": "stage_MzI0NV81MDhjMWZmMC1mYjMyLTQxMDEtOWFjZi00ZThkZmYyYzlmNGE",
-    "wepay-api-version": "3.0",
-
-    "currency": "USD",
-    "authorization": "bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ilg1ZVhrNHh5b2pORnVtMWtsMll0djhkbE5QNC1jNTdkTzZRR1RWQndhTmsifQ.eyJpc3MiOiJodHRwczovL2FwdGVhbmlkZGV2LmIyY2xvZ2luLmNvbS9hMTAyYjZjOS0zYjFkLTQ4NmMtYWU2OS0wODE0N2E5ZDc2ZTUvdjIuMC8iLCJleHAiOjE2MTc5NzIxODcsIm5iZiI6MTYxNzg4NTc4NywiYXVkIjoiOWE5NjYzYWYtOGE0Mi00ZDk2LWJhMDgtYTNiM2E0NGQ0NDgzIiwib2lkIjoiYjZlOWExYjktMzFjMy00MWY3LThlZjQtMjg5ZmM1ZGYwNTMxIiwic3ViIjoiYjZlOWExYjktMzFjMy00MWY3LThlZjQtMjg5ZmM1ZGYwNTMxIiwiZ2l2ZW5fbmFtZSI6IkZlcnJ5IiwiZmFtaWx5X25hbWUiOiJKb25nbWFucyIsImNvdW50cnkiOiJVbml0ZWQgU3RhdGVzIiwibmFtZSI6IkZlcnJ5IEpvbmdtYW5zIiwiZW1haWxzIjpbImZlcnJ5am9uZ21hbnNAZ21haWwuY29tIl0sInRmcCI6IkIyQ18xX3N1X3NpXzJfMSIsIm5vbmNlIjoiZGVmYXVsdE5vbmNlIiwic2NwIjoicmVhZCB3cml0ZSIsImF6cCI6ImEzNmI4MDNkLWI1ZDktNDk5My04ZjNjLTFmYzYxOGU0Y2MxMyIsInZlciI6IjEuMCIsImlhdCI6MTYxNzg4NTc4N30.EOw6UOglmV6COkyAabIghMUoDpl7mwEUO4RDCIhgCLVHhi6OCUcmQ1x9-ltkBzfuEn_DITaEMaruJoAFj7C1LTMng9-58RKf9jVbpvMRAblUkuiM8vAceUYjVLV33anvYnX-H_0grCvAi_e_1XBlCC6rCBXg7EFTvpSdyiDiW-kB15zshIdvwfXPgRLnx4BX4oNihaRLHukMY3Tq6EP32J0qLkZKKMsFYjGJyCP8W7XKIOLs_1IMhhvZmo2FKbVRNI_nTqQ6oMikdjJhlD-YDr0Q2-aAN0k5pQyEvzXwXqR26BfHrVw5nmMOxXxbZZabLXqjb5QBRPlSvYTdm9SM6Q",
-    "wepay-account-id": "5eb64875-fab2-4606-8887-82c6b2900e14",
-    "x-aptean-tenant": "ec643798-4d79-4113-927a-0c9780363cf8",
-    "email-of-bearer-token-user": "ferryjongmans@gmail.com",
-    
-    "xcurrency": "CAD",
-    "xauthorization": "bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ilg1ZVhrNHh5b2pORnVtMWtsMll0djhkbE5QNC1jNTdkTzZRR1RWQndhTmsifQ.eyJpc3MiOiJodHRwczovL2FwdGVhbmlkZGV2LmIyY2xvZ2luLmNvbS9hMTAyYjZjOS0zYjFkLTQ4NmMtYWU2OS0wODE0N2E5ZDc2ZTUvdjIuMC8iLCJleHAiOjE2MTc5NTg4NDUsIm5iZiI6MTYxNzg3MjQ0NSwiYXVkIjoiOWE5NjYzYWYtOGE0Mi00ZDk2LWJhMDgtYTNiM2E0NGQ0NDgzIiwib2lkIjoiODViNzUxZjMtOTQ1NS00ZDFkLWEwODktYjM1MmRjMDVhZjdhIiwic3ViIjoiODViNzUxZjMtOTQ1NS00ZDFkLWEwODktYjM1MmRjMDVhZjdhIiwiZ2l2ZW5fbmFtZSI6IkZlcnJ5IiwiZmFtaWx5X25hbWUiOiJKb25nbWFucyIsImNvdW50cnkiOiJVbml0ZWQgU3RhdGVzIiwibmFtZSI6IkZlcnJ5IEpvbmdtYW5zIiwiZW1haWxzIjpbImZlcnJ5am9uZ21hbnMrY2FuYWRhQGdtYWlsLmNvbSJdLCJ0ZnAiOiJCMkNfMV9zdV9zaV8yXzEiLCJub25jZSI6ImRlZmF1bHROb25jZSIsInNjcCI6InJlYWQgd3JpdGUiLCJhenAiOiJhMzZiODAzZC1iNWQ5LTQ5OTMtOGYzYy0xZmM2MThlNGNjMTMiLCJ2ZXIiOiIxLjAiLCJpYXQiOjE2MTc4NzI0NDV9.ehBnUhmXBgX6C6asldNWcH2fzNvVxTnliu4CUYWGbjJTGBa2CQsSyEOoAKgvFdZ8uJ2itTX8Y9b91-HtGRWEFplzm5NWIQCWtwrLlmxQniWYXHk0maM32frnv8y914r3MHH5p71GRS8gSFxOHTqrlIW1hsxHXVTQWdftbzKAAz5U-XZbd71JUHOmiQgsBh67a_U1Jav-1CQpV8JvWTmZ2Vwvn90hI-uBtwIKsbjAnxgP6HlDDwB3Xazlo4FMcqeoQsleZBuO9RyBBjax0sRsoH0YKAla4ZBhpkiRvKH37CeiYpbo2kqmEXkGyHeyzfYKWSO6zdODfrdD8W-FHexG0w",
-    "xwepay-account-id": "bf7a7d23-0855-4fff-beeb-ab7f7212350a",
-    "xx-aptean-tenant": "ab81723e-415d-4683-b261-c930e5e64e49",
-    "xemail-of-bearer-token-user": "ferryjongmans+canada@gmail.com"
+    "api-svc-url": "#{EZPAY_API_URL}#",
+    "authorization": "bearer --BEARER_TOKEN---",
+    "email-of-bearer-token-user": "#{EMAIL_OF_BEARER_TOKEN_USER}#",
+    "x-aptean-apim": "#{X_APTEAN_APIM}#",
+    "x-aptean-tenant": "#{X_APTEAN_TENANT}#",
+    "x-aptean-tenant-secret": "#{X_APTEAN_TENANT_SECRET}#",
+    "wepay-base-url": "#{WEPAY_API_URL}#",
+    "wepay-app-id": "#{WEPAY_APP_ID}#",
+    "wepay-app-secret": "#{WEPAY_APP_SECRET}#",
+    "wepay-api-version": "#{WEPAY_API_VERSION}#",
+    "wepay-account-id": "#{WEPAY_ACCOUNT_ID}#",
+    "currency": "#{CURRENCY}#"
   },
   "supportFile": "cypress/support/index.ts"
 }
