@@ -19,10 +19,11 @@ describe("Merchant Portal", function () {
         ($el) => {
           const originalLength = $el.length;
           if (originalLength === 0) {
-            cy.createAndPay(2, "1.09", "challenge");
+            cy.createAndPay(2, "9.61", "challenge");
             cy.get("[data-cy=payment-disputes-tab]", {
               timeout: 20000,
             }).click();
+            cy.wait(800000);
             cy.get("[data-cy=refresh]").click();
             cy.wait(2000);
             cy.getTableBodyAfterLoad("[data-cy=dispute-table-body]", true).then(
@@ -37,23 +38,27 @@ describe("Merchant Portal", function () {
             cy.get("@currentRows")
               .each(($row, index, $list) => {
                 let status = undefined;
+                let daysRemaining = undefined;
                 cy.wrap($row)
                   .find("td")
-                  .eq(2)
-                  .then(($cell) => {
-                    status = $cell.text();
-                    if (status === "Action Needed") {
+                  .then(($cells) => {
+                    status = $cells.eq(2).text();
+                    daysRemaining = $cells.eq(4).text();
+                    if (
+                      status === "Action Needed" &&
+                      daysRemaining !== "0 days left"
+                    ) {
                       activeArray.push($row);
                     }
                   });
               })
               .then(() => {
                 if (activeArray.length === 0) {
-                  cy.createAndPay(1, "1.09", "challenge");
+                  cy.createAndPay(1, "9.61", "challenge");
                   cy.get("[data-cy=payment-disputes-tab]", {
                     timeout: 20000,
                   }).click();
-                  cy.wait(35000);
+                  cy.wait(800000);
                   cy.get("[data-cy=refresh]").click();
                   cy.wait(3000);
                   cy.get("@currentRows").should("have.length.gte", 1);
@@ -62,12 +67,16 @@ describe("Merchant Portal", function () {
                   cy.get("@currentRows")
                     .each(($el, index, $list) => {
                       let status = undefined;
+                      let daysRemaining = undefined;
                       cy.wrap($el)
                         .find("td")
-                        .eq(2)
-                        .then(($cell) => {
-                          status = $cell.text();
-                          if (status === "Action Needed") {
+                        .then(($cells) => {
+                          status = $cells.eq(2).text();
+                          daysRemaining = $cells.eq(4).text();
+                          if (
+                            status === "Action Needed" &&
+                            daysRemaining !== "0 days left"
+                          ) {
                             hasActiveDispute = true;
                           }
                         });
@@ -489,8 +498,24 @@ describe("Merchant Portal", function () {
       cy.get("[data-cy=documentation-upload]").click();
       cy.get("[data-cy=hidden-file-input]")
         .find("input")
-        .attachFile(fileNames[0])
-        .attachFile(fileNames[1])
+        .attachFile(fileNames[0]);
+      cy.wait(3000);
+
+      cy.get("[data-cy=documentation-select]")
+        .find("select")
+        .select(`${docTypes[1]}`);
+      cy.get("[data-cy=documentation-upload]").click();
+      cy.get("[data-cy=hidden-file-input]")
+        .find("input")
+        .attachFile(fileNames[1]);
+      cy.wait(3000);
+
+      cy.get("[data-cy=documentation-select]")
+        .find("select")
+        .select(`${docTypes[0]}`);
+      cy.get("[data-cy=documentation-upload]").click();
+      cy.get("[data-cy=hidden-file-input]")
+        .find("input")
         .attachFile(fileNames[2]);
       cy.wait(5000);
 
@@ -505,7 +530,14 @@ describe("Merchant Portal", function () {
             .find("select")
             .select(`${docTypes[1]}`);
           cy.get("[data-cy=documentation-upload]").click();
-          cy.wrap($el).attachFile(fileNames[3]).attachFile(fileNames[4]);
+          cy.wrap($el).attachFile(fileNames[3]);
+          cy.wait(3000);
+
+          cy.get("[data-cy=documentation-select]")
+            .find("select")
+            .select(`${docTypes[0]}`);
+          cy.get("[data-cy=documentation-upload]").click();
+          cy.wrap($el).attachFile(fileNames[4]);
           cy.wait(3000);
 
           // Try and upload the 6th file
@@ -534,7 +566,7 @@ describe("Merchant Portal", function () {
         });
     });
 
-    it("Cannot upload the same document twice and an error is displayed if you try", () => {
+    it.skip("Cannot upload the same document twice and an error is displayed if you try", () => {
       // Get to the challenge dispute page
       cy.get("[data-cy=challenge]").scrollIntoView().should("be.visible");
       cy.get("[data-cy=challenge]").click();
@@ -576,7 +608,7 @@ describe("Merchant Portal", function () {
       cy.get("[data-cy=hidden-file-input]")
         .find("input")
         .attachFile("disputeSample1.pdf");
-      cy.wait(500);
+      cy.wait(5000);
 
       // Add explanation
       cy.get("[data-cy=challenge-explanation]")

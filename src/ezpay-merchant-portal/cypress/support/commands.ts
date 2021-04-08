@@ -349,10 +349,10 @@ Cypress.Commands.add("makePayment", (count) => {
     appWindow.location = "https://tst.payer.apteanpay.com/";
     return new Promise((resolve) => {
       setTimeout((x) => {
+        //Waiting so in case the user is already logged in dom won't show signin button
+        cy.wait(3000);
         // Log in - taken from payer portal login command
         cy.get("body").then(($body) => {
-          //Waiting so in case the user is already logged in dom won't show signin button
-          cy.wait(3000);
           if ($body.find("[data-cy=sign-in]").length) {
             cy.get("[data-cy=sign-in]").click();
             cy.wait(10000);
@@ -371,6 +371,15 @@ Cypress.Commands.add("makePayment", (count) => {
         });
         // Wait to finish logging in, or to finish loading
         cy.wait(10000);
+        cy.get("body").then(($loadingBody) => {
+          if (
+            $loadingBody.find("[data-cy=sign-in]").length > 0 ||
+            $loadingBody.find("div:contains(Loading!)").length > 0
+          ) {
+            cy.wait(7000);
+          }
+        });
+
         cy.get("div").then(($boday) => {
           //function to get cc iframe
           const getIframeBody = () => {

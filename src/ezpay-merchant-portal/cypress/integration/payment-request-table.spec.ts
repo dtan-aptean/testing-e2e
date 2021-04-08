@@ -153,13 +153,12 @@ describe("Payment Request Table", function () {
             .should("be.visible")
             .should("be.enabled");
           cy.get("[data-cy=view-details]").click({ force: true });
-          cy.get("[data-cy=pr-details-refund]").should("exist");
           if (
             status === "Completed" ||
             status === "Partially Refunded" ||
             status === "Refund Failed"
           ) {
-            cy.get("[data-cy=pr-details-refund]").should("not.be.disabled");
+            cy.get("[data-cy=pr-details-refund]").should("exist");
           } else {
             cy.get("[data-cy=pr-details-refund]").should("not.exist");
           }
@@ -624,6 +623,139 @@ describe("Payment Request Table", function () {
         );
         cy.expect(correctLocation).to.equal(true);
       });
+    });
+
+    it("Unpaid payment request should have edit amount option and should work as expected", () => {
+      const amount = 10;
+      const invoicePath = "sample.pdf";
+      const referenceNumber = `${Date.now()
+        .toString()
+        .slice(-4)}-${Cypress._.random(0, 1e12)}`;
+      const email = Cypress.config("username");
+      const phone = "5555555555";
+      cy.getInput("recipient-email").type(email);
+      cy.getInput("recipient-phone").type(phone);
+      cy.getInput("amount").type(amount);
+      cy.getInput("reference-number").type(referenceNumber);
+      cy.getInput("invoice").attachFile(invoicePath);
+      cy.get("[data-cy=send-payment]").should("not.be.disabled").click();
+      cy.wait(3000);
+
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(2000);
+
+      cy.get("[data-cy=payment-request-table-body]")
+        .get("tr")
+        .eq(0)
+        .get("td")
+        .eq(1)
+        .within(() => {
+          cy.get('a[href="#"]').click({ force: true });
+        });
+
+      cy.get("[data-cy=payment-request-details-modal]")
+        .should("exist")
+        .should("be.visible");
+
+      //edit button should exist
+      cy.get("[data-cy=edit-amount]").should("be.visible").should("be.enabled");
+
+      //clicking edit button should enable amount to be editable
+      cy.get("[data-cy=edit-amount]").click();
+      cy.get("[data-cy=amount-edit]").should("exist");
+      cy.get("[data-cy=cancel-edit]").should("exist").should("be.enabled");
+      cy.get("[data-cy=save-edit]").should("exist").should("be.disabled");
+
+      //clicking cancel button should make text field disapear
+      cy.get("[data-cy=cancel-edit]").click();
+      cy.get("[data-cy=amount-edit]").should("not.exist");
+      cy.get("[data-cy=cancel-edit]").should("not.exist");
+      cy.get("[data-cy=save-edit]").should("not.exist");
+
+      //save button should chnge the amount
+      cy.get("[data-cy=edit-amount]").click();
+      cy.get("[data-cy=amount-edit]").find("input").clear();
+      cy.get("[data-cy=amount-edit]").find("input").type("5");
+      cy.get("[data-cy=save-edit]").should("be.enabled").click({ force: true });
+
+      cy.wait(5000);
+      cy.get("div:contains(5.00)");
+    });
+
+    it("Unpaid payment request should have close request option and should work as expected", () => {
+      cy.wait(2000);
+      cy.get("[data-cy=payment-request-table-body]")
+        .get("tr")
+        .eq(1)
+        .click({ force: true });
+      //close request option should be enabled
+      cy.get("[data-cy=close]").should("be.visible").should("be.enabled");
+
+      //clicking close request should open the close request modal
+      cy.get("[data-cy=close]").click();
+      cy.get("[data-cy=payment-request-details-modal]")
+        .should("exist")
+        .should("be.visible");
+
+      //should be able to close modal using close button
+      cy.get("[data-cy=pr-details-close]")
+        .should("be.enabled")
+        .click({ force: true });
+      cy.get("[data-cy=payment-request-details-modal]").should("not.exist");
+
+      //Close request button should exist in payment request modal
+      cy.get("[data-cy=payment-request-table-body]")
+        .get("tr")
+        .eq(0)
+        .get("td")
+        .eq(1)
+        .within(() => {
+          cy.get('a[href="#"]').click({ force: true });
+        });
+
+      cy.get("[data-cy=payment-request-details-modal]")
+        .should("exist")
+        .should("be.visible");
+
+      // close request button should open close request modal
+      cy.get("[data-cy=pr-details-closeRequest]").should("be.enabled").click();
+      cy.get("[data-cy=payment-request-details-modal]")
+        .should("exist")
+        .should("be.visible");
+
+      // close request button should be disabled without reason
+      cy.get("button:contains(CANCEL)").last().should("be.enabled");
+      cy.get("button:contains(CLOSE REQUEST)").last().should("be.disabled");
+
+      //cancel button should close the close request modal;
+      cy.get("button:contains(CANCEL)").last().click({ force: true });
+      cy.get("[data-cy=payment-request-details-modal]").should("not.exist");
+
+      //entering the reason should enable the close request button in close request modal
+      cy.get("[data-cy=payment-request-table-body]")
+        .get("tr")
+        .eq(1)
+        .click({ force: true });
+      cy.get("[data-cy=close]").should("be.visible").should("be.enabled");
+      cy.get("[data-cy=close]").click();
+      cy.get("[data-cy=payment-request-details-modal]")
+        .should("exist")
+        .should("be.visible");
+
+      cy.get('input[placeholder="Reason"]').type("Testing the close reason");
+      cy.get("button:contains(CLOSE REQUEST)").last().should("be.enabled");
+
+      //close request should change payment request status to closed
+      cy.get("button:contains(CLOSE REQUEST)").last().click({ force: true });
+
+      cy.wait(7000);
+      cy.get("[data-cy=payment-request-details-modal]").should("not.exist");
+      cy.get("[data-cy=payment-request-table-body]")
+        .get("tr")
+        .eq(1)
+        .get("td")
+        .eq(2)
+        .should("contain", "Closed");
     });
   });
 });
