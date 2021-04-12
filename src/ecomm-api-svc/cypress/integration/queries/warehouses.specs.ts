@@ -2,44 +2,40 @@
 
 import { SupplementalItemRecord } from "../../support/commands";
 
-// TEST COUNT: 47
-describe('Query: categories', () => {
+describe('Query: warehouses', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
-    const queryName = "categories";
+    const queryName = "warehouses";
     // Standard query body to use when we don't need special data but do need special input arguments
-    const standardQueryBody = `edges {
-                cursor
-                node {
-                    id
-                    categoryInfo {
-                        name
-                        languageCode
-                    }
-                }
-            }
-            nodes {
+    const standardQueryBody =
+        `edges {
+            cursor
+            node {
                 id
-                customData
-                categoryInfo {
-                    name
-                    languageCode
-                }
+                name
             }
-            pageInfo {
-                endCursor
-                hasNextPage
-                hasPreviousPage
-                startCursor
-            }
-            totalCount`;
+        }
+        nodes {
+            id
+            name
+            customData
+            address
+        }
+        pageInfo {
+            endCursor
+            hasNextPage
+            hasPreviousPage
+            startCursor
+        }
+        totalCount`;
     // Standard query to use when we don't need any specialized data or input arguments
     const standardQuery = `{
-        ${queryName}(orderBy: {direction: ASC, field: NAME}) {
+        ${queryName} (orderBy: {direction: ASC, field: NAME}) {
             ${standardQueryBody}
         }
     }`;
+
     // Name of the info field
-    const infoName = "customData";
+    const infoName = "address";
     var trueTotalInput = "";
 
     before(() => {
@@ -49,13 +45,180 @@ describe('Query: categories', () => {
             if (totalCount > nodes.length) {
                 trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", " : "";
             }
-        });
+        })
     });
+
+    // context("Testing 'orderBy' input", () => {
+    //     it('Query will fail if no return type is provided', () => {
+    //         const gqlQuery = `{
+    //             ${queryName}(orderBy: {direction: ASC, field: NAME}) {
+
+    //             }
+    //         }`;
+    //         cy.postAndConfirmError(gqlQuery);
+    //     });
+
+    //     it("Query with valid 'orderBy' input argument returns valid data types", () => {
+    //         cy.postAndValidate(standardQuery, queryName);
+    //     });
+
+    //     it("Query will fail without 'orderBy' input argument", () => {
+    //         const gqlQuery = `{
+    //             ${queryName} {
+    //                 ${standardQueryBody}
+    //             }
+    //         }`;
+    //         cy.postGQL(gqlQuery).then((res) => {
+    //             cy.confirmOrderByError(res);
+    //         });
+    //     });
+
+    //     it("Query fails if the 'orderBy' input argument is null", () => {
+    //         const gqlQuery = `{
+    //             ${queryName}(orderBy: null) {
+    //                 totalCount
+    //             }
+    //         }`;
+    //         cy.postAndConfirmError(gqlQuery);
+    //     });
+
+    //     it("Query fails if 'orderBy' input argument only has field", () => {
+    //         const fieldQuery = `{
+    //             ${queryName}(orderBy: {field: NAME}) {
+    //                 totalCount
+    //             }
+    //         }`;
+    //         cy.postAndConfirmError(fieldQuery);
+    //     });
+
+    //     it("Query fails if 'orderBy' input argument only has direction", () => {
+    //         const directionQuery = `{
+    //             ${queryName}(orderBy: {direction: ASC}) {
+    //                 totalCount
+    //             }
+    //         }`;
+    //         cy.postAndConfirmError(directionQuery);
+    //     });
+
+    //     it("Query will succeed with a valid 'orderBy' input argument and one return type", () => {
+    //         const gqlQuery = `{
+    //             ${queryName}(orderBy: {direction: ASC, field: NAME}) {
+    //                 totalCount
+    //             }
+    //         }`;
+    //         cy.postAndValidate(gqlQuery, queryName);
+    //     });
+
+    //     it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
+    //         const trueTotalQuery = `{
+    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+    //                 ${standardQueryBody}
+    //             }
+    //         }`;
+    //         cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
+    //             const descQuery = `{
+    //                 ${queryName}(${trueTotalInput}orderBy: {direction: DESC, field: NAME}) {
+    //                     ${standardQueryBody}
+    //                 }
+    //             }`;
+    //             cy.postAndValidate(descQuery, queryName).then((descRes) => {
+    //                 cy.verifyReverseOrder(queryName, ascRes, descRes);
+    //             });
+    //         });
+    //     });
+    // });
+
+    // context("Testing 'first' and 'last' inputs", () => {
+    //     it("Query without 'first' or 'last' input arguments will return up to 25 items", () => {
+    //         cy.postAndValidate(standardQuery, queryName).then((res) => {
+    //             cy.confirmCount(res, queryName).then((hitUpperLimit: boolean) => {
+    //                 cy.verifyPageInfo(res, queryName, hitUpperLimit, false);
+    //             });
+    //         });
+    //     });
+
+    //     it("Query with valid 'first' input argument will return only that amount of items", () => {
+    //         cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
+    //             // If there's only one item, we can't do any pagination
+    //             expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
+    //             // Get half the items, rounding down
+    //             const first = Math.floor(totalCount / 2);
+    //             const gqlQuery = `{
+    //                 ${queryName}(first: ${first}, orderBy: {direction: ASC, field: NAME}) {
+    //                     ${standardQueryBody}
+    //                 }
+    //             }`;
+    //             cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+    //                 // Verify that the pageInfo's cursors match up with the edges array's cursors
+    //                 cy.verifyPageInfo(resp, queryName, true, false);
+    //                 cy.verifyFirstOrLast(resp, queryName, first, "first");
+    //             });
+    //         });
+    //     });
+
+    //     it("Query with valid 'last' input argument will return only that amount of items", () => {
+    //         const trueTotalQuery = `{
+    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+    //                 ${standardQueryBody}
+    //             }
+    //         }`;
+    //         cy.returnCount(trueTotalQuery, queryName).then((totalCount: number) => {
+    //             // If there's only one item, we can't do any pagination
+    //             expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
+    //             // Get half the items, rounding down
+    //             const last = Math.floor(totalCount / 2);
+    //             const gqlQuery = `{
+    //                 ${queryName}(last: ${last}, orderBy: {direction: ASC, field: NAME}) {
+    //                     ${standardQueryBody}
+    //                 }
+    //             }`;
+    //             cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+    //                 // Verify that the pageInfo's cursors match up with the edges array's cursors
+    //                 cy.verifyPageInfo(resp, queryName, true, false);
+    //                 cy.verifyFirstOrLast(resp, queryName, last, "last");
+    //             });
+    //         });
+    //     });
+
+    //     it("Query with invalid 'first' input argument will fail", () => {
+    //         const gqlQuery = `{
+    //             ${queryName}(first: "4", orderBy: {direction: ASC, field: NAME}) {
+    //                 ${standardQueryBody}
+    //             }
+    //         }`;
+    //         cy.postAndConfirmError(gqlQuery).then((res) => {
+    //             expect(res.body.errors[0].message).to.have.string('Int cannot represent non-integer value: "4"');
+    //             expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+    //         });
+    //     });
+
+    //     it("Query with invalid 'last' input argument will fail", () => {
+    //         const gqlQuery = `{
+    //             ${queryName}(last: "5", orderBy: {direction: ASC, field: NAME}) {
+    //                 ${standardQueryBody}
+    //             }
+    //         }`;
+    //         cy.postAndConfirmError(gqlQuery).then((res) => {
+    //             expect(res.body.errors[0].message).to.have.string('Int cannot represent non-integer value: "5"');
+    //             expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+    //         });
+    //     });
+
+    //     it("Query with both 'first' and 'last' input arguments will fail", () => {
+    //         const gqlQuery = `{
+    //             ${queryName}(first: 7, last: 3, orderBy: {direction: ASC, field: NAME}) {
+    //                 ${standardQueryBody}
+    //             }
+    //         }`;
+    //         cy.postAndConfirmError(gqlQuery, true);
+    //     });
+    // });
 
     context("Testing 'searchString' input", () => {
         it.only("Query with a valid 'searchString' input argument will return the specific item", () => {
             debugger;
             cy.returnRandomInfoName(standardQuery, queryName, infoName).then((name: string) => {
+                debugger;
                 const searchQuery = `{
                     ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
                         ${standardQueryBody}

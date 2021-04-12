@@ -1,15 +1,15 @@
 {
-  "baseUrl": "https://dev.ecomm-graph.apteansharedservices.com/",
+  "baseUrl": "https://tst.ecomm-graph.apteansharedservices.com/",
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
   "env": {
-    "x-aptean-apim": "fdc68ba5-5ede-4a5f-8561-80ad78e690c5",
-    "x-aptean-tenant": "22f283e6-99ca-4727-8682-224550418792",
-    "x-aptean-tenant-secret": "ecomm-dev-secret",
-    "gqlTimeout": 5000,
-    "storefrontUrl": "https://dev.apteanecommerce.com/",
-    "storefrontLogin": "cypress.tester@devenvironment.com",
-    "storefrontPassword": "CypressTester2"
+    "x-aptean-apim": "99f3052d-b177-45a1-8e2b-3f6113067478",
+    "x-aptean-tenant": "b78b2eb9-8f0b-461a-91b2-61229fb8b1dd",
+    "x-aptean-tenant-secret": "ecomm-tst-secret",
+    "gqlTimeout": 20000,
+    "storefrontUrl": "https://tst.apteanecommerce.com/",
+    "storefrontLogin": "cypress.tester@testenvironment.com",
+    "storefrontPassword": "CypressJoshua"
   },
   "supportFile": "cypress/support/index.ts"
 }
