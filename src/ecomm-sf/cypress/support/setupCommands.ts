@@ -58,6 +58,27 @@ Cypress.Commands.add("revertDiscounts", () => {
   }
 });
 
+const goToCategories =() => {
+  cy.location("pathname").then((loc) => {
+    cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+    if (!loc.includes("Category/List")) {
+      if (!loc.includes("Admin")) {
+        cy.goToAdmin();
+        cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+      }
+      cy.get(".sidebar-menu.tree").find("li").contains("Catalog").click();
+    }
+    cy.get(".sidebar-menu.tree")
+      .find("li")
+      .find(".treeview-menu")
+      .find("li")
+      .contains("Categories")
+      .click();
+    cy.wait(2000);
+    cy.allowLoad();
+  });
+};
+
 // Delete any Cypress discounts, products, and categories
 Cypress.Commands.add("cleanupEnvironment", () => {
   const cleanupCatalog = (isCategory: boolean) => {
@@ -114,8 +135,9 @@ Cypress.Commands.add("cleanupEnvironment", () => {
     cy.allowLoad();
     searchCatalog(false).then(() => {
       Cypress.log({displayName: "cleanupCategories", message: "Deleting Cypress categories"});
-      cy.visit("/Admin/Category/List");
-      cy.allowLoad();
+      //cy.visit("/Admin/Category/List");
+      //cy.allowLoad();
+      goToCategories();
       searchCatalog(true);
     });
   });

@@ -183,6 +183,24 @@ Cypress.Commands.add("replaceText", { prevSubject: true }, (subject, text) => {
   return cy.wrap(subject, { log: false }).type(text, { log: false });
 });
 
+// Finds and clicks a button inside the table row. Provide it with the text of the button
+Cypress.Commands.add("clickRowBtn", { prevSubject: true }, (subject, buttonText) => {
+  const log = Cypress.log({
+    $el: subject,
+    name: "clickRowBtn", 
+    displayName: "clkRwBtn",
+    consoleProps: () => {
+      return {
+        "Command": "clickEdit (custom)",
+        "Applied to": subject[0],
+        "Provided Text": buttonText
+      };
+    },
+  });
+
+  return cy.wrap(subject, { log: false }).find("a", { log: false }).contains(buttonText, { log: false }).click({ log: false });
+});
+
 // Logs in with the configured username/password
 Cypress.Commands.add("login", () => {
   Cypress.log({
@@ -208,7 +226,7 @@ Cypress.Commands.add("goToCart", () => {
     name: "goToCart",
   });
   cy.get(".header-links").find(".ico-cart").click({ force: true });
-  cy.wait(15000);
+  //cy.wait(15000);
 });
 
 // Empty the cart and remove applied discounts
@@ -272,7 +290,7 @@ Cypress.Commands.add("goToCategory", (categoryName) => {
  * Assumes that the product is under the default category,
  * unless a category name is specified
  */
-Cypress.Commands.add("goToProduct", (productName, categoryName) => {
+Cypress.Commands.add("goToProduct", (productName, categoryName?) => {
   Cypress.log({
     name: "goToProduct",
     message: `${categoryName ? categoryName + ", " : ""}${productName}`,
@@ -307,6 +325,7 @@ Cypress.Commands.add("addToCartAndCheckout", () => {
   cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
   cy.get(".add-to-cart-button").click();
   cy.wait(1000);
+  cy.allowLoad();
   cy.goToCart();
   cy.get("#termsofservice").click();
   cy.get(".checkout-button").click();
@@ -1103,7 +1122,7 @@ Cypress.Commands.add("getToConfirmOrder", () => {
   cy.get('.cart').should("exist").and("be.visible");
 });
 
-// COMMANDS FOR CHANGING SHIPPING PROVIDER PROPERTIES
+// COMMANDS FOR CHANGING SHIPPING PROVIDERS
 Cypress.Commands.add("findShippingProvider", (providerName: string) => {
   const shipFilter = (index, item) => {
     return item.cells[0].innerText === providerName;
