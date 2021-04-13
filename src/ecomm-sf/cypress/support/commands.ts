@@ -13,28 +13,27 @@ Cypress.Commands.add("allowLoad", () => {
       return;
     }
   }
-  var totalTime = 10000;
+  // No need to wait 10 seconds if the symbol isn't there
+  if (Cypress.$(`${loadId}:visible`).length === 0) {
+    return;
+  }
+
+  var totalTime = 5000;
   Cypress.log({displayName: "allowLoad"});
   const checkLoadSymbol = () => {
-    const loadingSymbol = Cypress.$(loadId);
-    if (loadingSymbol.attr("style") !== undefined) {
-      if (!loadingSymbol.attr("style").includes("display: none")) {
-        // If the loading symbol is still visible, wait another 3 seconds, then call the function again
-        cy.wait(3000).then(() => {
-          totalTime+=3000;
-          checkLoadSymbol();
-        });
-      } else {
-        // If it's not visible, end the recursive function.
-        Cypress.log({displayName: "allowLoad", message: `Waited ${totalTime / 1000}s for the page to load`});
-        return;
-      }
+    const loadingSymbol = Cypress.$(`${loadId}:visible`);
+    if (loadingSymbol.length > 0) {
+      cy.wait(3000).then(() => {
+        totalTime+=3000;
+        checkLoadSymbol();
+      });
     } else {
+      Cypress.log({displayName: "allowLoad", message: `Waited ${totalTime / 1000}s for the page to load`});
       return;
     }
   };
-  // Wait a base 10 seconds, then check if it's still loading
-  cy.wait(10000).then(() => {
+  // Wait a base 5 seconds, then check if it's still loading
+  cy.wait(5000).then(() => {
     checkLoadSymbol();
   });
 });

@@ -293,22 +293,12 @@ const enableAdvancedSettings = () => {
 };
   
 const openPanel = (panelId: string) => {
-  var panel = Cypress.$(panelId);
-  if (panel.hasClass("card")) {
-    return cy.get(panelId).then(($el) => {
-      if ($el.hasClass("collapsed-card")) {
-        cy.wrap($el).find(".card-header").find("button").click({force: true});
-        cy.wait(500);
-      }
-    });
-  } else {
-    return cy.get(panelId).find(".panel-heading").eq(0).then(($el) => {
-      if (!$el.hasClass("opened")) {
-        cy.wrap($el).click({force: true});
-        cy.wait(500);
-      }
-    });
-	}
+  return cy.get(panelId).then(($el) => {
+    if ($el.hasClass("collapsed-card")) {
+      cy.wrap($el).find(".card-header").find("button").click({force: true});
+      cy.wait(500);
+    }
+  });
 };
 
 Cypress.Commands.add("switchEnabledDiscounts", (disableDiscounts: boolean) => {
