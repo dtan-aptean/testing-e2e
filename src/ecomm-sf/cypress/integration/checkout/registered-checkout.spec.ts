@@ -36,20 +36,28 @@ describe("Ecommerce", function () {
         .then(($amt) => {
           const quantity = $amt.text().replace("(", "").replace(")", "");
           cy.get(".header-links").find(".ico-cart").click();
-          cy.wait(10000);
-          cy.get(".remove-from-cart").find("input").check();
-          cy.get(".update-cart-button").click();
-          cy.wait(10000);
-          cy.contains("Your Shopping Cart is empty!");
-          cy.get(".header-links")
-            .find(".cart-qty")
-            .then(($qty) => {
-              const newQty = $qty.text().replace("(", "").replace(")", "");
-              expect(parseInt(newQty)).to.be.lessThan(parseFloat(quantity));
+          cy.wait(10000).then(() => {
+            cy.getCartBtn().then(($el) => {
+              if ($el[0].innerHTML.includes("input")) {
+                cy.wrap($el).check();
+                cy.get(".update-cart-button").click();
+              } else {
+                cy.wrap($el).click();
+              }
+              cy.wait(10000);
+              cy.contains("Your Shopping Cart is empty!");
+              cy.get(".header-links")
+                .find(".cart-qty")
+                .then(($qty) => {
+                  const newQty = $qty.text().replace("(", "").replace(")", "");
+                  expect(parseInt(newQty)).to.be.lessThan(parseFloat(quantity));
+                });
             });
+          });  
         });
     });
 
+    // TODO: Set this up to handle when cart total is "Calculatd during checkout"
     it("Updating the quantity succesfully updates the price and amount", () => {
       cy.goToProduct("Bald Cypress");
       const count = Cypress._.random(2, 5);
@@ -67,8 +75,8 @@ describe("Ecommerce", function () {
           cy.get("@target")
             .find("td")
             .then(($td) => {
-              const orgQty = $td[5].children[1].value;
-              const orgSubtotal = $td[6].children[1].innerText
+              const orgQty = $td.find(".qty-input").val();
+              const orgSubtotal = $td.find(".product-subtotal").text()
                 .replace(",", "")
                 .replace("$", "");
               cy.get(".cart-total")
@@ -90,8 +98,8 @@ describe("Ecommerce", function () {
                   cy.get("@target")
                     .find("td")
                     .then(($newTd) => {
-                      const qty = $newTd[5].children[1].value;
-                      const subtotal = $newTd[6].children[1].innerText
+                      const qty = $newTd.find(".qty-input").val();
+                      const subtotal = $newTd.find(".product-subtotal").text()
                         .replace(",", "")
                         .replace("$", "");
                       cy.get(".cart-total")
@@ -111,20 +119,29 @@ describe("Ecommerce", function () {
                                 .replace("(", "")
                                 .replace(")", "");
                               expect(parseInt(quantity)).to.be.greaterThan(
-                                parseInt(newQuantity)
+                                parseInt(newQuantity),
+                                "Cart quantity in header should have decreased"
                               );
                               expect(parseInt(orgQty)).to.be.greaterThan(
-                                parseInt(qty)
+                                parseInt(qty),
+                                "Cart item quantity should have decreased"
                               );
                               expect(parseFloat(orgSubtotal)).to.be.greaterThan(
-                                parseFloat(subtotal)
+                                parseFloat(subtotal),           
+                                "Cart item subtotal should have decreased"
                               );
                               expect(
                                 parseFloat(orgCartSubtotal)
-                              ).to.be.greaterThan(parseFloat(cartSubtotal));
+                              ).to.be.greaterThan(
+                                parseFloat(cartSubtotal),
+                                "Cart subtotal should have decreased"
+                              );
                               expect(
                                 parseFloat(orgCartTotal)
-                              ).to.be.greaterThan(parseFloat(cartTotal));
+                              ).to.be.greaterThan(
+                                parseFloat(cartTotal),
+                                "Cart total should have decreased"
+                              );
 
                               cy.clearCart();
                             });
@@ -135,6 +152,7 @@ describe("Ecommerce", function () {
         });
     });
 
+    // TODO: Set this up to handle when cart total is "Calculatd during checkout"
     it("User should receive points equal to total cost of cart", () => {
       cy.goToProduct("Bald Cypress");
       const count = Cypress._.random(1, 5);
@@ -226,8 +244,11 @@ describe("Ecommerce", function () {
       });
       // Test Billing Validation, should get errors
       cy.get(".new-address-next-step-button").eq(0).click();
-      cy.get(".field-validation-error").should("have.length", 5);
+      cy.get(".field-validation-error").should("have.length", 8);
       // Input billing info, using Aptean's Alpharetta address
+      cy.get("#BillingNewAddress_FirstName").type("Cypress");
+      cy.get("#BillingNewAddress_LastName").type("Error-Validator");
+      cy.get("#BillingNewAddress_Email").type(`${Cypress.config("username")}`);
       cy.get("#BillingNewAddress_CountryId").select("United States");
       cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
       cy.get("#BillingNewAddress_City").type("Alpharetta");

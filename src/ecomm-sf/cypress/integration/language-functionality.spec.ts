@@ -63,11 +63,12 @@ describe("Ecommerce", function () {
     it("Standard shows when a language doesn't have a translation", () => {
       cy.goToAdminCategory(secondCategory);
       cy.wait(2000);
-      cy.get("#selected-tab-name-category-name-localized")
-          .siblings("ul")
-          .find("a")
-          .contains(availableLanguages[1])
-          .click();
+      cy.get("a[data-tab-name=category-name-localized-standard-tab]")
+        .parent()
+        .siblings()
+        .find("a")
+        .contains(availableLanguages[1])
+        .click();
       cy.wait(2000)
       cy.get("#category-name-localized")
           .find(".tab-pane.active")

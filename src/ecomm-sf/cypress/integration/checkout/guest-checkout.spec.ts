@@ -35,20 +35,28 @@ describe("Ecommerce", function () {
         .then(($amt) => {
           const quantity = $amt.text().replace("(", "").replace(")", "");
           cy.get(".header-links").find(".ico-cart").click();
-          cy.wait(1000);
-          cy.get(".remove-from-cart").find("input").check();
-          cy.get(".update-cart-button").click();
-          cy.wait(1000);
-          cy.contains("Your Shopping Cart is empty!");
-          cy.get(".header-links")
-            .find(".cart-qty")
-            .then(($qty) => {
-              const newQty = $qty.text().replace("(", "").replace(")", "");
-              expect(parseInt(newQty)).to.be.lessThan(parseFloat(quantity));
+          cy.wait(1000).then(() => {
+            cy.getCartBtn().then(($el) => {
+              if ($el[0].innerHTML.includes("input")) {
+                cy.wrap($el).check();
+                cy.get(".update-cart-button").click();
+              } else {
+                cy.wrap($el).click();
+              }
+              cy.wait(1000);
+              cy.contains("Your Shopping Cart is empty!");
+              cy.get(".header-links")
+                .find(".cart-qty")
+                .then(($qty) => {
+                  const newQty = $qty.text().replace("(", "").replace(")", "");
+                  expect(parseInt(newQty)).to.be.lessThan(parseFloat(quantity));
+                });
             });
+          });  
         });
     });
 
+    // TODO: Set this up to handle when cart total is "Calculatd during checkout"
     it("Updating the quantity succesfully updates the price and amount", () => {
       cy.goToProduct("Bald Cypress");
       const count = Cypress._.random(2, 5);
@@ -66,8 +74,8 @@ describe("Ecommerce", function () {
           cy.get("@target")
             .find("td")
             .then(($td) => {
-              const orgQty = $td[5].children[1].value;
-              const orgSubtotal = $td[6].children[1].innerText
+              const orgQty = $td.find(".qty-input").val();
+              const orgSubtotal = $td.find(".product-subtotal").text()
                 .replace(",", "")
                 .replace("$", "");
               cy.get(".cart-total")
@@ -79,7 +87,6 @@ describe("Ecommerce", function () {
                   const orgCartTotal = $rows.filter(".order-total")[0].cells[1].innerText
                     .replace(",", "")
                     .replace("$", "");
-
                   cy.get("@target").within(() => {
                     cy.get(".qty-input").clear();
                     cy.get(".qty-input").type((count - 1).toString());
@@ -89,8 +96,8 @@ describe("Ecommerce", function () {
                   cy.get("@target")
                     .find("td")
                     .then(($newTd) => {
-                      const qty = $newTd[5].children[1].value;
-                      const subtotal = $newTd[6].children[1].innerText
+                      const qty = $newTd.find(".qty-input").val();
+                      const subtotal = $newTd.find(".product-subtotal").text()
                         .replace(",", "")
                         .replace("$", "");
                       cy.get(".cart-total")
@@ -110,20 +117,29 @@ describe("Ecommerce", function () {
                                 .replace("(", "")
                                 .replace(")", "");
                               expect(parseInt(quantity)).to.be.greaterThan(
-                                parseInt(newQuantity)
+                                parseInt(newQuantity),
+                                "Cart quantity in header should have decreased"
                               );
                               expect(parseInt(orgQty)).to.be.greaterThan(
-                                parseInt(qty)
+                                parseInt(qty),
+                                "Cart item quantity should have decreased"
                               );
                               expect(parseFloat(orgSubtotal)).to.be.greaterThan(
-                                parseFloat(subtotal)
+                                parseFloat(subtotal),           
+                                "Cart item subtotal should have decreased"
                               );
                               expect(
                                 parseFloat(orgCartSubtotal)
-                              ).to.be.greaterThan(parseFloat(cartSubtotal));
+                              ).to.be.greaterThan(
+                                parseFloat(cartSubtotal),
+                                "Cart subtotal should have decreased"
+                              );
                               expect(
                                 parseFloat(orgCartTotal)
-                              ).to.be.greaterThan(parseFloat(cartTotal));
+                              ).to.be.greaterThan(
+                                parseFloat(cartTotal),
+                                "Cart total should have decreased"
+                              );
 
                               cy.clearCart();
                             });

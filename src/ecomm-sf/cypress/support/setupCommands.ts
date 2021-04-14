@@ -81,7 +81,9 @@ Cypress.Commands.add("cleanupEnvironment", () => {
             }
           }).then(() => {
             cy.get("#delete-selected").click({force: true})
+            cy.wait(500);
             cy.get("#delete-selected-action-confirmation-submit-button").click({force: true});
+            cy.wait(1000);
             cy.allowLoad();
             cleanupCatalog(isCategory);
           });
@@ -291,9 +293,9 @@ const enableAdvancedSettings = () => {
 };
   
 const openPanel = (panelId: string) => {
-  return cy.get(panelId).find(".panel-heading").eq(0).then(($el) => {
-    if (!$el.hasClass("opened")) {
-      cy.wrap($el).click({force: true});
+  return cy.get(panelId).then(($el) => {
+    if ($el.hasClass("collapsed-card")) {
+      cy.wrap($el).find(".card-header").find("button").click({force: true});
       cy.wait(500);
     }
   });
@@ -456,6 +458,7 @@ Cypress.Commands.add("resetLanguages", () => {
     }
   };
   cy.visit("/");
+  cy.correctLanguage();
   cy.login();
   cy.wait(5000);
   cy.visit("/Admin/Language/List");
@@ -501,6 +504,39 @@ Cypress.Commands.add("resetLanguages", () => {
   }
 });
 
+// Do not use as an actual command. Created as a command instead of a function so that the .then() would work properly
+Cypress.Commands.add("fillInNames", ($tab, name: string) => {
+  if ($tab && $tab.length > 0) {
+    return cy.wrap($tab)
+      .parent()
+      .siblings()
+      .then(($li) => {
+        const eligibleTabs = $li.filter((index, item) => {
+          return !item.innerText.includes("Standard") && !item.innerText.includes("English");
+        });
+        var tabCount = eligibleTabs.length;
+        if (tabCount > 0) {
+          var currentTab = $li.index(eligibleTabs[0]);
+          const fillInTab = (tabIndex: number) => {
+            var language = $li[tabIndex].innerText;
+            cy.wrap($li[tabIndex]).find("a").click({force: true});
+            cy.wait(500);
+            cy.get("#category-name-localized-standard-tab")
+              .siblings()
+              .eq(tabIndex)
+              .find("input")
+              .eq(0)
+              .type(name + ` (${language})`, {force: true});
+            if (tabIndex !== tabCount) {
+              fillInTab(tabIndex + 1);
+            }
+          };
+          fillInTab(currentTab);
+        }
+      });
+  }
+});
+
 // Set up categories that tests depend on
 Cypress.Commands.add("setupCategories", () => {
   Cypress.log({displayName: "setupCategories", message: "Creating 2 Cypress categories"});
@@ -512,67 +548,39 @@ Cypress.Commands.add("setupCategories", () => {
         cy.wait(2000);
         // Fill in name and description
         openPanel("#category-info").then(() => {
-          cy.get("#category-info")
-            .find("#category-name-localized-standard-tab")
-            .find("#Name")
-            .type(name, {force: true});
-          cy.getIframeBody("#Description_ifr").find("p").type(desc, {force: true});
-          
-          cy.get("#selected-tab-name-category-name-localized")
-            .siblings("ul")
-            .invoke("children")
-            .then(($li) => {
-              const eligibleTabs = $li.filter((index, item) => {
-                return !item.innerText.includes("Standard") && !item.innerText.includes("English");
-              });
-              var tabCount = eligibleTabs.length;
-              if (tabCount > 0) {
-                var currentTab = $li.index(eligibleTabs[0]);
-                 const fillInTab = (tabIndex: number) => {
-                  var language = $li[tabIndex].innerText;
-                  cy.wrap($li[tabIndex]).find("a").click({force: true});
-                  cy.wait(500);
-                  cy.get("#category-name-localized-standard-tab")
-                    .siblings()
-                    .eq(tabIndex - 1)
-                    .find("input")
-                    .eq(0)
-                    .type(name + ` (${language})`, {force: true});
-                  if (tabIndex !== tabCount + 1) {
-                    fillInTab(tabIndex + 1);
-                  }
-                };
-                fillInTab(currentTab);
-              }
+          cy.get("#Name").type(name, {force: true});
+          cy.getIframeBody("#Description_ifr").find("p").type(desc, {force: true}).then(() => {
+            var standardTab = Cypress.$("a[data-tab-name=category-name-localized-standard-tab]");
+            cy.fillInNames(standardTab, name).then(() => {
+              // Publish, menu, and display order
+              openPanel("#category-display").then(() => {
+                if (Cypress.$("#Published").prop("checked") !== true) {
+                  cy.get("#Published").check({force: true});
+                }
+                if (Cypress.$("#IncludeInTopMenu").prop("checked") !== true) {
+                  cy.get("#IncludeInTopMenu").check({force: true});
+                }
+                cy.get("#DisplayOrder").clear({force: true}).type(displayOrder, {force: true});
 
-            // Publish, menu, and display order
-            openPanel("#category-display").then(() => {
-              if (Cypress.$("#Published").prop("checked") !== true) {
-                cy.get("#Published").check({force: true});
-              }
-              if (Cypress.$("#IncludeInTopMenu").prop("checked") !== true) {
-                cy.get("#IncludeInTopMenu").check({force: true});
-              }
-              cy.get("#DisplayOrder").clear({force: true}).type(displayOrder, {force: true});
-
-              // seo codes
-              openPanel("#category-seo").then(() => {
-                cy.get("#SeName").type(seoName, {force: true});
-                cy.get("#MetaTitle").type(seoName, {force: true});
-                if (getTrueSeo) {
-                  cy.get("button[name=save-continue]").click({force: true});
-                  cy.wait(5000);
-                  cy.get("#SeName").invoke("val").then((value: string) => {
-                    mainCategorySeo = value;
-                    cy.visit("/Admin/Category/List");
+                // seo codes
+                openPanel("#category-seo").then(() => {
+                  cy.get("#SeName").type(seoName, {force: true});
+                  cy.get("#MetaTitle").type(seoName, {force: true});
+                  if (getTrueSeo) {
+                    cy.get("button[name=save-continue]").click({force: true});
+                    cy.wait(5000);
+                    cy.get("#SeName").invoke("val").then((value: string) => {
+                      mainCategorySeo = value;
+                      cy.visit("/Admin/Category/List");
+                      cy.wait(5000);
+                      cy.location("pathname").should("eql", "/Admin/Category/List");
+                    });
+                  } else {
+                    cy.get("button[name=save]").click({force: true});
                     cy.wait(5000);
                     cy.location("pathname").should("eql", "/Admin/Category/List");
-                  });
-                } else {
-                  cy.get("button[name=save]").click({force: true});
-                  cy.wait(5000);
-                  cy.location("pathname").should("eql", "/Admin/Category/List");
-                }
+                  }
+                });
               });
             });
           });
@@ -612,11 +620,9 @@ Cypress.Commands.add("setupProducts", () => {
         // Fill in name and description
         openPanel("#product-info").then(() => {
           cy.get("#product-info")
-            .find("#product-info-localized-standard-tab")
             .find("#Name")
             .type(name, {force: true});
           cy.get("#product-info")
-            .find("#product-info-localized-standard-tab")
             .find("#ShortDescription")
             .type(desc, {force: true});
           cy.getIframeBody("#FullDescription_ifr").find("p").type(fullDesc, {force: true});
@@ -632,11 +638,9 @@ Cypress.Commands.add("setupProducts", () => {
             // seo Codes
             openPanel("#product-seo").then(() => {
               cy.get("#product-seo")
-                .find("#product-seo-localized-standard-tab")
                 .find("#SeName")
                 .type(seoName, {force: true});
               cy.get("#product-seo")
-                .find("#product-seo-localized-standard-tab")
                 .find("#MetaTitle")
                 .type(seoName, {force: true});
               // Save and continute editing

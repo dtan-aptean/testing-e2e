@@ -13,28 +13,27 @@ Cypress.Commands.add("allowLoad", () => {
       return;
     }
   }
-  var totalTime = 10000;
+  // No need to wait 10 seconds if the symbol isn't there
+  if (Cypress.$(`${loadId}:visible`).length === 0) {
+    return;
+  }
+
+  var totalTime = 5000;
   Cypress.log({displayName: "allowLoad"});
   const checkLoadSymbol = () => {
-    const loadingSymbol = Cypress.$(loadId);
-    if (loadingSymbol.attr("style") !== undefined) {
-      if (!loadingSymbol.attr("style").includes("display: none")) {
-        // If the loading symbol is still visible, wait another 3 seconds, then call the function again
-        cy.wait(3000).then(() => {
-          totalTime+=3000;
-          checkLoadSymbol();
-        });
-      } else {
-        // If it's not visible, end the recursive function.
-        Cypress.log({displayName: "allowLoad", message: `Waited ${totalTime / 1000}s for the page to load`});
-        return;
-      }
+    const loadingSymbol = Cypress.$(`${loadId}:visible`);
+    if (loadingSymbol.length > 0) {
+      cy.wait(3000).then(() => {
+        totalTime+=3000;
+        checkLoadSymbol();
+      });
     } else {
+      Cypress.log({displayName: "allowLoad", message: `Waited ${totalTime / 1000}s for the page to load`});
       return;
     }
   };
-  // Wait a base 10 seconds, then check if it's still loading
-  cy.wait(10000).then(() => {
+  // Wait a base 5 seconds, then check if it's still loading
+  cy.wait(5000).then(() => {
     checkLoadSymbol();
   });
 });
@@ -154,7 +153,7 @@ Cypress.Commands.add("goToCart", () => {
     name: "goToCart",
   });
   cy.get(".header-links").find(".ico-cart").click({ force: true });
-  cy.wait(15000);
+  cy.wait(5000);
 });
 
 // Empty the cart and remove applied discounts
@@ -171,15 +170,34 @@ Cypress.Commands.add("clearCart", () => {
           cy.get(".remove-discount-button").click();
           cy.wait(200);
         }
-        cy.get(".cart > tbody")
-          .find("tr")
-          .each(($tr, $i, $all) => {
-            cy.wrap($tr).find("td").eq(0).find("input").check();
-          })
-          .then(() => {
-            cy.get(".update-cart-button").click();
-            cy.wait(500);
-          });
+        cy.get(".cart").find("tbody").then((tbody) => {
+          var needToClickUpdate = tbody.find("input[name=removefromcart]:visible").length > 0;
+          if (needToClickUpdate) {
+            cy.wrap(tbody)
+              .find("tr")
+              .each(($tr, $i, $all) => {
+                cy.wrap($tr).find("input[name=removefromcart]:visible").check();
+              }).then(() => {
+                cy.get(".update-cart-button").click();
+                cy.wait(500);
+              });
+          } else {
+            const clickRemoveBtn = () => {
+              cy.get(".cart")
+                .find("tbody")
+                .find("tr")
+                .eq(0)
+                .find(".remove-btn")
+                .click();
+              return cy.wait(500).then(() => {
+                if (Cypress.$(".remove-btn:visible").length > 0) {
+                  clickRemoveBtn();
+                }
+              });
+            };
+            clickRemoveBtn();
+          }
+        });
       });
     }
   });
@@ -194,6 +212,15 @@ Cypress.Commands.add("getVisibleMenu", () => {
     return cy.get(".top-menu.mobile").then(cy.wrap);
   }
 });
+
+// Gets the visible element to remove an item from the cart. Cypress may display the button or checkbox depending on screen size.
+Cypress.Commands.add("getCartBtn", () => {
+  if (Cypress.$("input[name=removefromcart]:visible").length > 0) {
+    return cy.get("input[name=removefromcart]:visible").eq(0).then(cy.wrap);
+  } else if (Cypress.$(".remove-btn:visible").length > 0) {
+    return cy.get(".remove-btn:visible").eq(0).then(cy.wrap);
+  }
+})
 
 // Go to a catgory page. Will go to the default category page unless another category is specified
 Cypress.Commands.add("goToCategory", (categoryName) => {
@@ -303,7 +330,7 @@ Cypress.Commands.add("goToPublic", () => {
   Cypress.log({
     name: "goToPublic",
   });
-  cy.get(".navbar-nav").find("li").eq(4).find("a").click();
+  cy.get(".navbar-nav").eq(1).find("li").eq(4).find("a").click();
   cy.wait(1000);
   cy.location("pathname").should("not.contain", "Admin");
 });
@@ -332,11 +359,11 @@ Cypress.Commands.add("goToLanguages", () => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("Configuration").click();
+      cy.get(".nav-sidebar").find("li").contains("Configuration").click();
     }
-    cy.get(".sidebar-menu.tree")
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
       .contains("Languages")
       .click();
@@ -367,11 +394,11 @@ Cypress.Commands.add("goToAdminProduct", (productName) => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("Catalog").click();
+      cy.get(".nav-sidebar").find("li").contains("Catalog").click();
     }
-    cy.get(".sidebar-menu.tree")
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
       .contains("Products")
       .click();
@@ -416,11 +443,11 @@ Cypress.Commands.add("goToAdminCategory", (categoryName) => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("Catalog").click();
+      cy.get(".nav-sidebar").find("li").contains("Catalog").click();
     }
-    cy.get(".sidebar-menu.tree")
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
       .contains("Categories")
       .click();
@@ -454,11 +481,11 @@ Cypress.Commands.add("goToCampaigns", () => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("Promotions").click({force: true});
+      cy.get(".nav-sidebar").find("li").contains("Promotions").click({force: true});
     }
-    cy.get(".sidebar-menu.tree")
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
       .contains("Campaigns")
       .click({force: true});
@@ -477,11 +504,11 @@ Cypress.Commands.add("goToCustomers", () => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("Customers").click();
+      cy.get(".nav-sidebar").find("li").contains("Customers").click();
     }
-    cy.get(".sidebar-menu.tree")
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
       .contains("Customers")
       .click();
@@ -500,11 +527,11 @@ Cypress.Commands.add("goToSubscribers", () => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("Promotions").click({force: true});
+      cy.get(".nav-sidebar").find("li").contains("Promotions").click({force: true});
     }
-    cy.get(".sidebar-menu.tree")
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
       .contains("Newsletter subscribers")
       .click({force: true});
@@ -523,11 +550,11 @@ Cypress.Commands.add("goToMessageQueue", () => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("System").click({force: true});
+      cy.get(".nav-sidebar").find("li").contains("System").click({force: true});
     }
-    cy.get(".sidebar-menu.tree")
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
       .contains("Message queue")
       .click({force: true});
@@ -546,20 +573,20 @@ Cypress.Commands.add("goToGeneralSettings", () => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("Configuration").click({force: true});
+      cy.get(".nav-sidebar").find("li").contains("Configuration").click({force: true});
     }
-    cy.get(".sidebar-menu.tree")
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
       .contains("Settings")
       .click({force: true});
     cy.wait(200);
-    cy.get(".sidebar-menu.tree")
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .contains("General settings")
       .click({force: true});
     cy.wait(500);
@@ -880,14 +907,14 @@ Cypress.Commands.add("goToDiscounts", () => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree")
+      cy.get(".nav-sidebar")
         .find("li")
         .contains("Promotions")
         .click({ force: true });
     }
-    cy.get(".sidebar-menu.tree")
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
       .contains("Discounts")
       .click({ force: true });

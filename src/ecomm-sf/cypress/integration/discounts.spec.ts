@@ -80,9 +80,9 @@ const addProductOrCategory = (
     nextButtonId = "#categories-grid_next";
   }
   cy.get(panelId).then((panel) => {
-    if (!panel[0].innerHTML.includes("opened")) {
-      cy.wrap(panel).click();
-      cy.get(panelId).should("contain.html", "opened");
+    if (panel[0].innerHTML.includes("collapsed-card")) {
+      cy.wrap(panel).find(".toggle-icon").parent().click();
+      cy.get(panelId).should("not.contain.html", "collapsed-card");
     }
     cy.get(buttonId).then((button) => {
       const url = button.attr("onclick")?.split('"')[1];
@@ -749,9 +749,16 @@ describe("Ecommerce", function () {
                 month: "2-digit",
                 day: "2-digit",
                 year: "numeric",
-                }
-              )} 00:00:00`
-            );
+              }
+            )} ${new Date(createdDiscount.date.startDate).toLocaleString(
+              undefined,
+              {
+                hour: "2-digit", 
+                minute: "2-digit", 
+                second: "2-digit"
+              }
+            )}`
+          );
           cy.wrap(cells[4]).should(
             "have.text",
             `${new Date(createdDiscount.date.endDate).toLocaleString(
@@ -761,7 +768,14 @@ describe("Ecommerce", function () {
                 day: "2-digit",
                 year: "numeric",
               }
-            )} 23:59:00`
+            )} ${new Date(createdDiscount.date.endDate).toLocaleString(
+              undefined,
+              {
+                hour: "2-digit", 
+                minute: "2-digit", 
+                second: "2-digit"
+              }
+            )}`
           );
           cy.wrap(cells[5]).should("have.text", "0");
         });
@@ -875,19 +889,25 @@ describe("Ecommerce", function () {
         cy.wrap(cells[2]).should("have.text", `${newAmount}%`);
         cy.wrap(cells[3]).should(
           "have.text",
-          `${today.toLocaleString(undefined, {
-            month: "2-digit",
-            day: "2-digit",
-            year: "numeric",
-          })} 00:00:00`
+          `${today.toLocaleString(
+            undefined,
+            {
+              month: "2-digit",
+              day: "2-digit",
+              year: "numeric",
+            }
+          )} 12:00:00 AM`
         );
         cy.wrap(cells[4]).should(
           "have.text",
-          `${twoDaysAhead.toLocaleString(undefined, {
-            month: "2-digit",
-            day: "2-digit",
-            year: "numeric",
-          })} 23:59:00`
+          `${twoDaysAhead.toLocaleString(
+            undefined,
+            {
+              month: "2-digit",
+              day: "2-digit",
+              year: "numeric",
+            }
+          )} 11:59:00 PM`
         );
       });
     });
@@ -1032,6 +1052,7 @@ describe("Ecommerce", function () {
       });
     });
     
+    // TODO: Issue with order total on cart page being "Calculated during checkout". Effects the first 5 tests below
     it("Percentage discount is applied correctly", () => {
       const percentageDiscount = {
         name: "Cypress Percentage Discount",
