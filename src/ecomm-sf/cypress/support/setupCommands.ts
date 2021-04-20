@@ -22,7 +22,10 @@ Cypress.Commands.add("prepareEnvironment", () => {
     // Create the categories we need.
     cy.setupCategories().then(() => {
       // Create the products we need.
-      cy.setupProducts();
+      cy.setupProducts().then(() => {
+        // Fetch and store the user's first and last name
+        cy.fetchUserDetails();
+      })
     });
   });
 });
@@ -66,14 +69,14 @@ const goToCategories =() => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("Catalog").click();
+      cy.get(".nav-sidebar").find("li").contains("Catalog").click({force: true});
     }
-    cy.get(".sidebar-menu.tree")
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
       .contains("Categories")
-      .click();
+      .click({force: true});
     cy.wait(2000);
     cy.allowLoad();
   });
@@ -462,6 +465,38 @@ Cypress.Commands.add("storeLanguageProperties", (languageNames: string[]) => {
   });
 });
 
+Cypress.Commands.add("setShippingOrigin", () => {
+  cy.visit("/Admin/Setting/Shipping");  // TODO: Set up user navigation for this?
+  cy.allowLoad();
+  return cy.get("#product-shipping-origin").scrollIntoView().then(() => {
+    var saveNeeded = false;
+    // Set shipping address to a public park in Atlanta
+    if (Cypress.$("#ShippingOriginAddress_CountryId > option:selected").text() !== "United States") {
+      cy.get("#ShippingOriginAddress_CountryId").select("United States", {force: true});
+      saveNeeded = true;
+    }
+    if (Cypress.$("#ShippingOriginAddress_StateProvinceId > option:selected").text() !== "Georgia") {
+      cy.get("#ShippingOriginAddress_StateProvinceId").select("United States", {force: true});
+      saveNeeded = true;
+    }
+    if (Cypress.$("#ShippingOriginAddress_City").val() !== "Atlanta") {
+      cy.get("#ShippingOriginAddress_City").clear({force: true}).type("Atlanta", {force: true});
+      saveNeeded = true;
+    }
+    if (Cypress.$("#ShippingOriginAddress_Address1").val() !== "180 Central Ave SW") {
+      cy.get("#ShippingOriginAddress_Address1").clear({force: true}).type("180 Central Ave SW", {force: true});
+      saveNeeded = true;
+    }
+    if (Cypress.$("#ShippingOriginAddress_ZipPostalCode").val() !== "30303") {
+      cy.get("#ShippingOriginAddress_ZipPostalCode").clear({force: true}).type("30303", {force: true});
+      saveNeeded = true;
+    }
+    if (saveNeeded) {
+      cy.get("button[name=save]").click();
+    }
+  });
+});
+
 // Checks that there are shipping providers
 Cypress.Commands.add("checkAvailableShippers", () => {
   Cypress.log({
@@ -514,10 +549,6 @@ Cypress.Commands.add("checkAvailableShippers", () => {
     }
   });
 
-  // TODO: Feel like I shouldn't have to fetch names twice in two files
-  /*  */
-
-  
 });
 
 // Stores original shipping provider properties
@@ -539,6 +570,56 @@ Cypress.Commands.add("storeShipperProperties", (providerNames: string[]) => {
     });
   }).then(() => {
     Cypress.env("shipProperties", shipperProperties);
+  });
+});
+
+// Creates an array of the original config values for a single provider and returns that array.
+Cypress.Commands.add("saveProviderConfiguration", (providerName) => {
+  Cypress.log({name: "saveProviderConfiguration", message: providerName});
+  return cy.goToShippingProviders().then(() => {
+    var providerConfig = [];
+    cy.allowLoad();
+    cy.findShippingProvider(providerName).clickRowBtn("Configure");
+    cy.allowLoad();
+    cy.get(".card-body").get(".form-group:visible").then(($els) => {
+      const inputRows = $els.filter((index, el) => {
+        return !el.innerHTML.includes('name="save"');
+      });
+      const getTypeAndValue = (input) => {
+        var type = input.prop("type");
+        var value;
+        if (type === "checkbox") {
+          value = input.prop("checked")
+        } else if (type === "text") {
+          value = input.val();
+        }
+        return {inputType: type, inputValue: value};
+      };
+      inputRows.each((index, row) => {
+        if (row.innerHTML.includes("k-widget")) {
+          var numericalInput = Cypress.$(row).find("input[id]");
+          var intendedResult = getTypeAndValue(numericalInput);
+          providerConfig.push(intendedResult);
+        } else {
+          var inputs = Cypress.$(row).find("input");
+          if (inputs.length === 0) {
+            var select = Cypress.$(row).find("select");
+            providerConfig.push({inputType: "select", inputValue: select.val()});
+          } else if (inputs.length === 1) {
+            providerConfig.push(getTypeAndValue(inputs));
+          } else {
+            var configGroup = [];
+            inputs.each((index, input) => {
+              configGroup.push(getTypeAndValue(Cypress.$(input)));
+            });
+            providerConfig.push({inputType: "group", inputValue: configGroup});
+          }
+        }
+      });
+    }).then(() => {
+      cy.clickBack();
+      return cy.wrap(providerConfig);
+    })
   });
 });
 
@@ -621,14 +702,70 @@ Cypress.Commands.add("resetShippingProviders", () => {
   };
   cy.visit("/");
   cy.login();
-  /* cy.visit("/Admin/Shipping/Providers"); */
   cy.goToShippingProviders();
   cy.allowLoad();
   const originalProviderProperties = Cypress.env("shipProperties");
-  debugger;
   if (originalProviderProperties) {
     checkTableRows(originalProviderProperties)
   }
+});
+
+// Sets a single shipping provider back to its original configuration with the provided array
+Cypress.Commands.add("resetProviderConfig", (providerName: string, providerConfig) => {
+  Cypress.log({name: "resetProviderConfig", message: providerName});
+  cy.goToShippingProviders();
+  cy.wait(1000);
+  cy.allowLoad().then(() => {
+    cy.wait(2000);
+    cy.findShippingProvider(providerName).clickRowBtn("Configure", { force: true });
+    cy.allowLoad();
+    var valueChanged = false;
+    const checkAndCorrect = (input, configType, configValue) => {
+      if (configType === "text") {
+        if (input.val() !== configValue) {
+          cy.wrap(input).clear({force: true}).type(configValue, {force: true});
+          valueChanged = true;
+        }
+      } else if (configType === "checkbox") {
+        if (input.prop("checked") !== configValue) {
+          cy.wrap(input).toggle();
+          valueChanged = true;
+        }
+      } else if (configType === "select") {
+        if (input.val() !== configValue) {
+          cy.wrap(input).select(configValue);
+        }
+      }
+    };
+    cy.wrap(providerConfig).each((config, index) => {
+      cy.wait(1000);
+      cy.get(".card-body").get(".form-group:visible").eq(index).then((formRow) => {
+        if (config.inputType !== "group") {
+          if (formRow[0].innerHTML.includes("k-widget")) {
+            const input = formRow.find("input[id]");
+            checkAndCorrect(input, config.inputType, config.inputValue);
+          } else if (config.inputType === "select") {
+            const input = formRow.find("select");
+            checkAndCorrect(input, config.inputType, config.inputValue);
+          } else {
+            const input = formRow.find("input");
+            checkAndCorrect(input, config.inputType, config.inputValue);
+          }
+        } else {
+          const inputs = formRow.find("input");
+          config.inputValue.forEach((groupConfig, ind) => {
+            checkAndCorrect(Cypress.$(inputs[ind]), groupConfig.inputType, groupConfig.inputValue);
+          });
+        }
+      });
+    }).then(() => {
+      if (valueChanged) {
+        cy.get("input[name=save]").click({force: true});
+        cy.allowLoad();
+        cy.get(".content-header").find("small").find("a").click({force: true});
+      }
+    });
+  });
 });
 
 // Do not use as an actual command. Created as a command instead of a function so that the .then() would work properly
@@ -683,6 +820,9 @@ Cypress.Commands.add("setupCategories", () => {
               openPanel("#category-display").then(() => {
                 if (Cypress.$("#Published").prop("checked") !== true) {
                   cy.get("#Published").check({force: true});
+                }
+                if (Cypress.$("#ShowOnHomepage").prop("checked") !== true) {
+                  cy.get("#ShowOnHomepage").check({force: true});
                 }
                 if (Cypress.$("#IncludeInTopMenu").prop("checked") !== true) {
                   cy.get("#IncludeInTopMenu").check({force: true});
@@ -914,5 +1054,24 @@ Cypress.Commands.add("setupDiscounts", () => {
   // Check to make sure that discounts are enabled. If they aren't, enable them and save an env variable so we can disable them again later
   cy.switchEnabledDiscounts().then(() => {
     cy.cleanupDiscounts();
+  });
+});
+
+Cypress.Commands.add("fetchUserDetails", () => {
+  const log = Cypress.log({
+    name: "fetchUserDetails", 
+    message: "Fetching and storing user's first name, last name, and company"
+  });
+
+  cy.visit("/");
+  cy.login();
+  cy.wait(1000);
+  cy.get(".ico-account").click();
+  cy.get("#FirstName").invoke("val").then((userFirstName) => {
+    cy.get("#LastName").invoke("val").then((userLastName) => {
+      cy.get("#Company").invoke("val").then((userCompany) => {
+        Cypress.env("userDetails", { first: userFirstName, last: userLastName, company: userCompany });
+      });
+    });
   });
 });

@@ -17,7 +17,7 @@
 import 'cypress-file-upload';
 import './commands';
 import './setupCommands';
-
+import './shippingCommands';
 
 /**
  * These hooks will prepare the environment with required products and categories before the tests run
@@ -29,12 +29,17 @@ import './setupCommands';
  * Similarly, set doNotClearEnv to true in cypress.json if you don't want the categories and products to be cleared after the tests
  */
 
-if (!Cypress.config("doNotPrepEnv")) {
-    before(() => {
+before(() => {
+    if (!Cypress.config("doNotPrepEnv")) {
         Cypress.log({displayName: "Index.ts", message: "Preparing enviornment"});
         cy.prepareEnvironment();
-    });
-}
+    } else if (!Cypress.env("userDetails")) {
+        // User details contains user first/last name and company, retrieved from public store account details
+        // Used for several different tests that work with checkout
+        cy.fetchUserDetails();
+    }
+});
+
 if (!Cypress.config("doNotResetEnv")) {
     after(() => {
         Cypress.log({displayName: "Index.ts", message: "Resetting enviornment"});

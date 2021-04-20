@@ -169,21 +169,28 @@ Cypress.Commands.add("replaceText", { prevSubject: true }, (subject, text) => {
 });
 
 // Finds and clicks a button inside the table row. Provide it with the text of the button
-Cypress.Commands.add("clickRowBtn", { prevSubject: true }, (subject, buttonText) => {
+Cypress.Commands.add("clickRowBtn", { prevSubject: 'element' }, (subject, buttonText, optionObject) => {
   const log = Cypress.log({
     $el: subject,
     name: "clickRowBtn", 
     displayName: "clkRwBtn",
     consoleProps: () => {
       return {
-        "Command": "clickEdit (custom)",
-        "Applied to": subject[0],
-        "Provided Text": buttonText
+        "Command": "clickRowBtn (custom)",
+        "Applied to": subject,
+        "Provided Text": buttonText,
+        "Options": optionObject
       };
     },
   });
-
-  return cy.wrap(subject, { log: false }).find("a", { log: false }).contains(buttonText, { log: false }).click({ log: false });
+  var clickOptions;
+  if (optionObject) {
+    clickOptions = optionObject;
+    clickOptions.log = false;
+  } else {
+    clickOptions = { log: false };
+  }
+  return cy.wrap(subject, { log: false }).find("a", { log: false }).contains(buttonText, { log: false }).click(clickOptions);
 });
 
 // Logs in with the configured username/password
@@ -246,8 +253,8 @@ Cypress.Commands.add("clearCart", () => {
                 .find("tr")
                 .eq(0)
                 .find(".remove-btn")
-                .click();
-              return cy.wait(500).then(() => {
+                .click({force: true});
+              return cy.wait(1000).then(() => {
                 if (Cypress.$(".remove-btn:visible").length > 0) {
                   clickRemoveBtn();
                 }
@@ -278,7 +285,7 @@ Cypress.Commands.add("getCartBtn", () => {
   } else if (Cypress.$(".remove-btn:visible").length > 0) {
     return cy.get(".remove-btn:visible").eq(0).then(cy.wrap);
   }
-})
+});
 
 // Go to a catgory page. Will go to the default category page unless another category is specified
 Cypress.Commands.add("goToCategory", (categoryName) => {
@@ -291,10 +298,11 @@ Cypress.Commands.add("goToCategory", (categoryName) => {
       };
     },
   });
-  cy.getVisibleMenu()
+  cy.contains(categoryName || mainCategory).eq(0).click({force: true});
+  /* cy.getVisibleMenu()
     .find("li")
     .contains(categoryName || mainCategory)
-    .click();
+    .click(); */
   cy.wait(500);
 });
 
@@ -334,10 +342,8 @@ Cypress.Commands.add("addToCartAndCheckout", () => {
   Cypress.log({
     name: "addToCartAndCheckout",
   });
-  cy.goToProduct("Bald Cypress");
-  cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
-  cy.get(".add-to-cart-button").click();
-  cy.wait(1000);
+  cy.goToCategory("Cypress Trees");
+  cy.contains("Bald Cypress").parentsUntil(".product-item").find(".product-box-add-to-cart-button").click();
   cy.allowLoad();
   cy.goToCart();
   cy.get("#termsofservice").click();
@@ -663,13 +669,13 @@ Cypress.Commands.add("goToShippingProviders", () => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".sidebar-menu.tree").find("li").contains("Configuration").click({force: true});
+      cy.get(".nav-sidebar").find("li").contains("Configuration").click({force: true});
     }
   });
   cy.intercept("POST", "/Admin/Shipping/Providers").as("shippingProviders");
-  cy.get(".sidebar-menu.tree")
+  cy.get(".nav-sidebar")
     .find("li")
-    .find(".treeview-menu")
+    .find(".nav-treeview")
     .find("li")
     .contains("Shipping providers")
     .click({force: true});
@@ -1088,6 +1094,49 @@ Cypress.Commands.add("addNewDiscount", (options) => {
   );
 });
 
+// Fills out billing information
+Cypress.Commands.add("fillOutBilling", () => {
+  Cypress.log({
+    name: "fillOutBilling"
+  });
+  cy.intercept("/checkout/OpcSaveBilling/").as("billingSaved");
+  cy.get("#co-billing-form").then(($el) => {
+    const select = $el.find(".select-billing-address");
+    const userDetails = Cypress.env("userDetails");
+    var alphaAddress = `${userDetails.first} ${userDetails.last}, 4325 Alexander Dr #100, Alpharetta, Georgia 30022, United States`;
+    if (select.length === 0) {
+      // Inputting Aptean's address
+      cy.get("#BillingNewAddress_CountryId").select("United States");
+      cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
+      cy.get("#BillingNewAddress_City").type("Alpharetta");
+      cy.get("#BillingNewAddress_Address1").type("4321 Alexander Dr #100");
+      cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
+      cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
+      cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
+      cy.get(".field-validation-error").should("have.length", 0);
+    } else if (!Cypress.$("#billing-address-select").text().includes(alphaAddress)) {
+      cy.get("#billing-address-select").select("New Address");
+      // Inputting Aptean's address
+      cy.get("#BillingNewAddress_FirstName").clear().type(userDetails.first);
+      cy.get("#BillingNewAddress_LastName").clear().type(userDetails.last);
+      cy.get("#BillingNewAddress_Email").clear().type(Cypress.config("username"));
+      cy.get("#BillingNewAddress_Company").clear().type(userDetails.company);
+      cy.get("#BillingNewAddress_CountryId").select("United States");
+      cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
+      cy.get("#BillingNewAddress_City").type("Alpharetta");
+      cy.get("#BillingNewAddress_Address1").type("4325 Alexander Dr #100");
+      cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
+      cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
+      cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
+      cy.get(".field-validation-error").should("have.length", 0);
+    } else if (!Cypress.$("#billing-address-select > option:selected").text().includes(alphaAddress)) {
+      cy.get("#billing-address-select").select(alphaAddress);
+    }
+  });
+  cy.get(".new-address-next-step-button").eq(0).click();
+  return cy.wait("@billingSaved");
+})
+
 // Progresses through checkout to get to confirm order.
 Cypress.Commands.add("getToConfirmOrder", () => {
   Cypress.log({
@@ -1137,10 +1186,32 @@ Cypress.Commands.add("getToConfirmOrder", () => {
 
 // COMMANDS FOR CHANGING SHIPPING PROVIDERS
 Cypress.Commands.add("findShippingProvider", (providerName: string) => {
-  const shipFilter = (index, item) => {
-    return item.cells[0].innerText === providerName;
-  };
-  return cy.findTableItem("#shippingproviders-grid", "#shippingproviders-grid_next", shipFilter);
+  var id = "";
+  switch (providerName) {
+    case "UPS (United Parcel Service)":
+      id = "#row_shippingups";
+      break;
+    case "FedEx":
+      id = "#row_shippingfedex";
+      break;
+    case "USPS (US Postal Service)":
+      id = "#row_shippingusps";
+      break;
+    case "Manual": 
+      id = "#row_shippingfixedbyweightbytotal";
+      break;
+    default:
+      id = "";
+      break;
+  }
+  if (id !== "") {
+    return cy.get(id);
+  } else {
+    const shipFilter = (index, item) => {
+      return item.cells[0].innerText === providerName;
+    };
+    return cy.findTableItem("#shippingproviders-grid", "#shippingproviders-grid_next", shipFilter);
+  }
 });
 
 // Updates just provider activity

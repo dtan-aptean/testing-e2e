@@ -1,9 +1,5 @@
 /// <reference types="cypress" />
 
-const clickEdit = (row) => {
-  return cy.wrap(row).find("a").contains("Edit").click();
-};
-
 // Check that everything is displaying normally in default state
 const checkDisplayState = (row) => {
   // Inputs are not present
@@ -29,13 +25,12 @@ const checkEditState = (row) => {
 };
 
 // Verify that expected changes were saved
-// TODO: Rename goodValue & badValue
-const verifyDisplayOrder = (row, goodValue: string, badValue: string) => {
+const verifyDisplayOrder = (row, correctValue: string, incorrectValue: string) => {
   cy.wrap(row)
     .find("td[data-columnname=DisplayOrder]")
     .invoke("text")
-    .should("eq", goodValue)
-    .and("not.eq", badValue);
+    .should("eq", correctValue)
+    .and("not.eq", incorrectValue);
 };
 
 const verifyActiveStatus = (row, isActive: boolean) => {
@@ -61,7 +56,7 @@ const getRowIndex = (name: string) => {
   return cy.findShippingProvider(name).invoke("prop", "rowIndex");
 };
 
-describe.only("Ecommerce", function () {
+describe("Ecommerce", function () {
   context("Shipping Provider Table", () => {
     var providerNames = [] as string[];
     before(() => {
@@ -85,7 +80,7 @@ describe.only("Ecommerce", function () {
       providerNames.forEach((prov) => {
         cy.findShippingProvider(prov).then((row) => {
           checkDisplayState(row);
-          clickEdit(row).then(() => {
+          cy.wrap(row).find("a").contains("Edit").click().then(() => {
             cy.wait(100);
             checkEditState(row);
           });
@@ -96,19 +91,17 @@ describe.only("Ecommerce", function () {
     it("Clicking the 'Cancel' button hides inputs and buttons and new values are not saved", () => {
       providerNames.forEach((prov: string) => {
         getOriginalProps(prov).then((orgProps: {active: boolean, order: string}) => {
-          cy.findShippingProvider(prov).then((row) => {
-            clickEdit(row).then(() => {
+          cy.findShippingProvider(prov).clickRowBtn("Edit").then(() => {
               const tempOrder = orgProps.order + "1";
-              cy.wrap(row).find("td[data-columnname=DisplayOrder]").find("input").replaceText(tempOrder);
-              cy.wrap(row).find("td[data-columnname=IsActive]").find("input").toggle();
-              cy.wrap(row).find("a").contains("Cancel").click();
-              // Verify inputs and buttons are gone
-              cy.findShippingProvider(prov).then((rowTwo) => {
-                checkDisplayState(rowTwo);
-                // Verify values of display order and is active
-                verifyDisplayOrder(rowTwo, orgProps.order, tempOrder);
-                verifyActiveStatus(rowTwo, orgProps.active);
-              });
+            cy.wrap(row).find("td[data-columnname=DisplayOrder]").find("input").replaceText(tempOrder);
+            cy.wrap(row).find("td[data-columnname=IsActive]").find("input").toggle();
+            cy.wrap(row).find("a").contains("Cancel").click();
+            // Verify inputs and buttons are gone
+            cy.findShippingProvider(prov).then((rowTwo) => {
+              checkDisplayState(rowTwo);
+              // Verify values of display order and is active
+              verifyDisplayOrder(rowTwo, orgProps.order, tempOrder);
+              verifyActiveStatus(rowTwo, orgProps.active);
             });
           });
         });
@@ -164,10 +157,6 @@ describe.only("Ecommerce", function () {
       });
     });
 
-    // TODO: setting provider to inactive updates the table. Possibly redundant?
-    
-    // TODO: setting provider to active updates the table. Possible redundant?
-
     it("Updating display order changes the order of items in the table", () => {
       const lastProvider = providerNames[providerNames.length - 1];
       const firstProvider = providerNames[0];
@@ -189,5 +178,9 @@ describe.only("Ecommerce", function () {
         });
       });
     });
+
+    // TODO: Updating display order changes the order of items in checkout/product page? Belongs here or shipping-provider-configuration?
+
+    // TODO: Updating Active status changes items shown in checkout/product page? Belongs here or shipping-provider-configuration?
   });
 });
