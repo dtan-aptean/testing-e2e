@@ -738,7 +738,7 @@ Cypress.Commands.add("resetProviderConfig", (providerName: string, providerConfi
       }
     };
     cy.wrap(providerConfig).each((config, index) => {
-      cy.wait(1000);
+      cy.wait(100);
       cy.get(".card-body").get(".form-group:visible").eq(index).then((formRow) => {
         if (config.inputType !== "group") {
           if (formRow[0].innerHTML.includes("k-widget")) {

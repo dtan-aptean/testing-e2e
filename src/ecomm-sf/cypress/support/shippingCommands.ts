@@ -99,6 +99,78 @@ Cypress.Commands.add("providerChargeProduct", (providerName: string, domesticMet
   });
 });
 
+Cypress.Commands.add("allMethodsCheckout", (providerName: string) => {
+  const provDisName = getAcronym(providerName);
+  cy.providerSetup(providerName, undefined, true).then(() => {
+    cy.addToCartAndCheckout().then(() => {
+      handleBillingAndShipping(true);
+      cy.wait(1000);
+      cy.get("#shipping-methods-form").find(".message-error").should("not.exist");
+      cy.get(".method-list").find("li").should("exist").and("not.be.empty");
+      cy.get(".method-list").should("contain.text", provDisName);
+      cy.get(".method-list").find("li").each((el, index) => {
+        // The only methods present belong to the provider
+        expect(el.text()).to.include(provDisName);
+        // All of these providers are domestic
+        checkServiceLocation(el.text(), providerName, true);
+      }).then(() => {
+        cy.get(".back-link:visible").find("a").click();
+        cy.wait(500);
+        handleBillingAndShipping(false);
+        cy.wait(1000);
+        cy.get("#shipping-methods-form").find(".message-error").should("not.exist");
+        cy.get(".method-list").find("li").should("exist").and("not.be.empty");
+        cy.get(".method-list").should("contain.text", provDisName);
+        cy.get(".method-list").find("li").each((el, index) => {
+          // The only methods present belong to the provider
+          expect(el.text()).to.include(provDisName);
+          // All of these providers are international
+          checkServiceLocation(el.text(), providerName, false);
+        });
+      });
+    });
+  });
+});
+
+Cypress.Commands.add("allMethodsProduct", (providerName: string) => {
+  const provDisName = getAcronym(providerName);
+  cy.providerSetup(providerName, undefined, true).then(() => {
+    cy.openShippingPopup(true).then(() => {
+      cy.get(".no-shipping-options").should("not.exist");
+      cy.get(".shipping-options-body")
+        .find(".shipping-option")
+        .should("exist")
+        .and("not.be.empty");
+      cy.get(".shipping-options-body").should("contain.text", provDisName);
+      cy.get(".shipping-options-body")
+        .find(".shipping-option")
+        .each((el, index) => {
+          // The only methods present belong to the provider
+          expect(el.text()).to.include(provDisName);
+          // All of these providers are domestic
+          checkServiceLocation(el.text(), providerName, true);
+        }).then(() => {
+          cy.checkPopupAddress(false).then(() => {
+            cy.get(".no-shipping-options").should("not.exist");
+            cy.get(".shipping-options-body")
+              .find(".shipping-option")
+              .should("exist")
+              .and("not.be.empty");
+            cy.get(".shipping-options-body").should("contain.text", provDisName);
+            cy.get(".shipping-options-body")
+              .find(".shipping-option")
+              .each((el, index) => {
+                // The only methods present belong to the provider
+                expect(el.text()).to.include(provDisName);
+                // All of these providers are international
+                checkServiceLocation(el.text(), providerName, false);
+              });
+          });
+        });
+    });
+  });
+});
+
 // COMMANDS AND FUNCTIONS TO BE USED IN THE TESTS
 
 // Gets the acronym used by UPS and USPS
@@ -205,12 +277,12 @@ Cypress.Commands.add("clickBack", () => {
   return cy.get(".content-header").find("small").find("a").click();
 });
 
-Cypress.Commands.add("providerSetup", (providerName: string, domesticMethods: boolean) => {
+Cypress.Commands.add("providerSetup", (providerName: string, domesticMethods?: boolean, allMethods?: boolean) => {
   return cy.findShippingProvider(providerName).clickRowBtn("Configure").then(() => {
     cy.wait(1000);
     cy.location("pathname").should("contain", "Configure");
     cy.verifyRequiredConfigs(providerName).then(() => {
-      cy.enableCarrierServices(providerName, domesticMethods).then(() => {
+      cy.enableCarrierServices(providerName, domesticMethods, allMethods).then(() => {
         cy.postConfigChange(providerName).then(() => {
           return cy.goToPublic();
         });
@@ -317,9 +389,8 @@ Cypress.Commands.add("verifyRequiredConfigs", (providerName: string) => {
   }
 });
 
-// Enabled the provider's domestic or international shipping methods
-// TODO: enable all carrier services
-Cypress.Commands.add("enableCarrierServices", (providerName: string, domestic: boolean) => {
+// Enabled the provider's domestic or international shipping methods, or both
+Cypress.Commands.add("enableCarrierServices", (providerName: string, domestic?: boolean, all?: boolean) => {
   var valueChanged = false;
   return cy.get(".content").find("input[type=checkbox]").then(($ins) => {
     const domesticInputs = $ins.filter((index, item) => {
@@ -343,21 +414,31 @@ Cypress.Commands.add("enableCarrierServices", (providerName: string, domestic: b
     });
 
     return cy.wrap(domesticInputs).each((item, index) => {
-      if (domestic && !item.prop("checked")) {
+      if (all && !item.prop("checked")) {
         valueChanged = true;
         cy.wrap(item).check();
-      } else if(!domestic && item.prop("checked")) {
-        valueChanged = true;
-        cy.wrap(item).uncheck();
+      } else if (!all) {
+        if (domestic && !item.prop("checked")) {
+          valueChanged = true;
+          cy.wrap(item).check();
+        } else if(!domestic && item.prop("checked")) {
+          valueChanged = true;
+          cy.wrap(item).uncheck();
+        }
       }
     }).then(() => {
       return cy.wrap(internationalInputs).each((item, index) => {
-        if (domestic && item.prop("checked")) {
-          valueChanged = true;
-          cy.wrap(item).uncheck();
-        } else if (!domestic && !item.prop("checked")) {
+        if (all && !item.prop("checked")) {
           valueChanged = true;
           cy.wrap(item).check();
+        } else if (!all) {
+          if (domestic && item.prop("checked")) {
+            valueChanged = true;
+            cy.wrap(item).uncheck();
+          } else if (!domestic && !item.prop("checked")) {
+            valueChanged = true;
+            cy.wrap(item).check();
+          }
         }
       }).then(() => {
         if (valueChanged) {

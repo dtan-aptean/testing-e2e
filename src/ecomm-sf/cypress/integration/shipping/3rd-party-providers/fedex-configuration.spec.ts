@@ -29,9 +29,15 @@ describe("Ecommerce", function () {
       cy.resetProviderConfig(provider, originalConfiguration);
     });
 
-    // TODO: Test for enabling all methods and expecting checkout to only show some of them, based on shipping location
+    context("Subsection: All FedEx Methods", () => {
+      it("FedEx methods will show in checkout according to shipping location when properly configured with all carrier services", () => {
+        cy.allMethodsCheckout(provider);
+      });
 
-    // TODO: Test for enabling all methods and expecting product page to only show some of them, based on shipping location
+      it("FedEx methods will show on product page according to shipping location when properly configured with all carrier services", () => {
+        cy.allMethodsProduct(provider);
+      });
+    });
 
     context("Subsection: Domestic FedEx methods", () => {
       it("FedEx methods will show in checkout when properly configured with domestic carrier services", () => {

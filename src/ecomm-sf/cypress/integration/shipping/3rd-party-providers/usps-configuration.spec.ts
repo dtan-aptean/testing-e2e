@@ -29,9 +29,15 @@ describe("Ecommerce", function () {
       cy.resetProviderConfig(provider, originalConfiguration);
     });
 
-    // TODO: Test for enabling all methods and expecting checkout to only show some of them, based on shipping location
+    context("Subsection: All USPS Methods", () => {
+      it("USPS methods will show in checkout according to shipping location when properly configured with all carrier services", () => {
+        cy.allMethodsCheckout(provider);
+      });
 
-    // TODO: Test for enabling all methods and expecting product page to only show some of them, based on shipping location
+      it("USPS methods will show on product page according to shipping location when properly configured with all carrier services", () => {
+        cy.allMethodsProduct(provider);
+      });
+    });
 
     context("Subsection: Domestic USPS methods", () => {
       it("USPS methods will show in checkout when properly configured with domestic carrier services", () => {
