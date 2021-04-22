@@ -1,15 +1,31 @@
 /// <reference types="cypress" />
 
 describe("Payer Portal - Recent Payments Table", function () {
+  let merchantIndex = 0;
+  let merchantLength = 0;
   before(() => {
     cy.login();
-    cy.wait(5000);
+    cy.wait(10000);
+    cy.getMerchantIndex().then((resp) => {
+      merchantIndex = resp.merchantIndex;
+      merchantLength = resp.merchantLength;
+    });
   });
 
   context("Logged In", () => {
     beforeEach(() => {
       cy.visit("/");
       cy.wait(5000);
+      if (merchantLength > 1) {
+        cy.get("h6:contains(Balance Due)")
+          .eq(merchantIndex)
+          .parent()
+          .parent()
+          .within(() => {
+            cy.get("button").click({ force: true });
+          });
+        cy.wait(12000);
+      }
     });
 
     it("clicks on the recent transactions tab and shows the recent transactions list", () => {
@@ -20,7 +36,17 @@ describe("Payer Portal - Recent Payments Table", function () {
     it("Creating and paying the payment request add the data in recent payments table", () => {
       cy.createPaymentRequest(1000).then((response) => {
         // Creating the recent payment
-        cy.makePayment();
+        cy.makePayment(merchantIndex, merchantLength);
+        if (merchantLength > 1) {
+          cy.get("h6:contains(Balance Due)")
+            .eq(merchantIndex)
+            .parent()
+            .parent()
+            .within(() => {
+              cy.get("button").click({ force: true });
+            });
+          cy.wait(18000);
+        }
         cy.get("[id=disputes-tab]").should("be.visible").click();
         cy.get("[data-cy=recent-transactions-list]").should("be.visible");
         cy.wait(3000);

@@ -1,15 +1,31 @@
 /// <reference types="cypress" />
 
 describe("Payer Portal - Payments Due Table", function () {
+  let merchantIndex = 0;
+  let merchantLength = 0;
   before(() => {
     cy.login();
-    cy.wait(5000);
+    cy.wait(10000);
+    cy.getMerchantIndex().then((resp) => {
+      merchantIndex = resp.merchantIndex;
+      merchantLength = resp.merchantLength;
+    });
   });
 
   context("Logged In", () => {
     beforeEach(() => {
       cy.visit("/");
       cy.wait(5000);
+      if (merchantLength > 1) {
+        cy.get("h6:contains(Balance Due)")
+          .eq(merchantIndex)
+          .parent()
+          .parent()
+          .within(() => {
+            cy.get("button").click({ force: true });
+          });
+        cy.wait(12000);
+      }
     });
 
     it("shows the payments due list", () => {
@@ -21,6 +37,16 @@ describe("Payer Portal - Payments Due Table", function () {
       cy.createPaymentRequest(661).then((response) => {
         cy.visit("/");
         cy.wait(5000);
+        if (merchantLength > 1) {
+          cy.get("h6:contains(Balance Due)")
+            .eq(merchantIndex)
+            .parent()
+            .parent()
+            .within(() => {
+              cy.get("button").click({ force: true });
+            });
+          cy.wait(12000);
+        }
         cy.get("[data-cy=payments-due-list").should("be.visible");
         cy.wait(3000);
         //confirming the payment request has been created
@@ -133,9 +159,20 @@ describe("Payer Portal - Payments Due Table", function () {
     });
 
     // Test only if your account is failing 6.61 as payment amount
-    it.skip("Failed Payment should have status as failed and button as retry payment", () => {
-      cy.makePayment();
+    it("Failed Payment should have status as failed and button as retry payment", () => {
+      cy.makePayment(merchantIndex, merchantLength);
       cy.visit("/");
+      cy.wait(5000);
+      if (merchantLength > 1) {
+        cy.get("h6:contains(Balance Due)")
+          .eq(merchantIndex)
+          .parent()
+          .parent()
+          .within(() => {
+            cy.get("button").click({ force: true });
+          });
+        cy.wait(12000);
+      }
       cy.get("[data-cy=payments-due-list").should("be.visible");
       cy.wait(10000);
       //checking status as failed
@@ -155,7 +192,7 @@ describe("Payer Portal - Payments Due Table", function () {
         .should("contain", "RETRY PAYMENT");
     });
 
-    it.skip("Failed Payment deatils dialog should contain payment history", () => {
+    it("Failed Payment deatils dialog should contain payment history", () => {
       cy.get("[data-cy=payments-due-list").should("be.visible");
       cy.wait(5000);
       //opening the payment details modal
@@ -172,7 +209,7 @@ describe("Payer Portal - Payments Due Table", function () {
         .should("contain", "Payment History");
     });
 
-    it.skip("Failed payment deatils dialog should have retry payment button", () => {
+    it("Failed payment deatils dialog should have retry payment button", () => {
       cy.get("[data-cy=payments-due-list").should("be.visible");
       cy.wait(5000);
       //opening the payment details modal

@@ -60,43 +60,13 @@ describe('Payer Portal - Guest User', function() {
         .and('contain', paymentRequest.refundPolicy);
     });  
 
-    it('should prevent saving billing information if first/last name is not entered', () => {
-      cy.reload();
-
-      cy.get('[data-cy=checkout-as-guest]').click();
-      cy.get('[data-cy=continue-to-payment]').should('be.disabled');
-
-      cy.getInput('email')
-        .type('Bob.Bob@test.com')
-        .should('have.value', 'Bob.Bob@test.com');
-      cy.getInput('street-address')
-        .type('1234 Street Road')
-        .should('have.value', '1234 Street Road');
-      cy.getSelect('country')
-        .select('United States')
-        .should('have.value', 'US');
-      cy.getInput('zipcode')
-        .type('12345')
-        .should('have.value', '12345');
-      cy.getInput('country-code')
-        .type('1')
-        .should('have.value', '1');
-      cy.getInput('phone-number')
-        .type('1231231234')
-        .should('have.value', '(123) 123-1234');    
-        
-      cy.get('[data-cy=continue-to-payment]').should('be.disabled');
-    });
-
     it('should prevent saving billing information if email is not entered', () => {
       cy.reload();
+      cy.wait(5000);
 
       cy.get('[data-cy=checkout-as-guest]').click();
       cy.get('[data-cy=continue-to-payment]').should('be.disabled');
 
-      cy.getInput('holder-name')
-        .type('Bobo Obob')
-        .should('have.value', 'Bobo Obob');
       cy.getInput('street-address')
         .type('1234 Street Road')
         .should('have.value', '1234 Street Road');
@@ -107,8 +77,7 @@ describe('Payer Portal - Guest User', function() {
         .type('12345')
         .should('have.value', '12345');
       cy.getInput('country-code')
-        .type('1')
-        .should('have.value', '1');
+        .should('have.value', '+1');
       cy.getInput('phone-number')
         .type('1231231234')
         .should('have.value', '(123) 123-1234');    
@@ -118,13 +87,11 @@ describe('Payer Portal - Guest User', function() {
 
     it('should prevent saving billing information if address is not entered', () => {
       cy.reload();
+      cy.wait(5000);
 
       cy.get('[data-cy=checkout-as-guest]').click();
       cy.get('[data-cy=continue-to-payment]').should('be.disabled');
 
-      cy.getInput('holder-name')
-        .type('Bobo Obob')
-        .should('have.value', 'Bobo Obob');
       cy.getInput('email')
         .type('Bob.Bob@test.com')
         .should('have.value', 'Bob.Bob@test.com');
@@ -135,8 +102,7 @@ describe('Payer Portal - Guest User', function() {
         .type('12345')
         .should('have.value', '12345');
       cy.getInput('country-code')
-        .type('1')
-        .should('have.value', '1');
+        .should('have.value', '+1');
       cy.getInput('phone-number')
         .type('1231231234')
         .should('have.value', '(123) 123-1234');    
@@ -146,13 +112,11 @@ describe('Payer Portal - Guest User', function() {
 
     it('should prevent saving billing information if postal code is not entered', () => {
       cy.reload();
+      cy.wait(5000);
 
       cy.get('[data-cy=checkout-as-guest]').click();
       cy.get('[data-cy=continue-to-payment]').should('be.disabled');
 
-      cy.getInput('holder-name')
-        .type('Bobo Obob')
-        .should('have.value', 'Bobo Obob');
       cy.getInput('email')
         .type('Bob.Bob@test.com')
         .should('have.value', 'Bob.Bob@test.com');
@@ -160,8 +124,7 @@ describe('Payer Portal - Guest User', function() {
         .type('1234 Street Road')
         .should('have.value', '1234 Street Road');
       cy.getInput('country-code')
-        .type('1')
-        .should('have.value', '1');
+        .should('have.value', '+1');
       cy.getInput('phone-number')
         .type('1231231234')
         .should('have.value', '(123) 123-1234');    
@@ -171,13 +134,11 @@ describe('Payer Portal - Guest User', function() {
 
     it('should prevent saving billing information if phone number is not entered', () => {
       cy.reload();
+      cy.wait(5000);
 
       cy.get('[data-cy=checkout-as-guest]').click();
       cy.get('[data-cy=continue-to-payment]').should('be.disabled');
 
-      cy.getInput('holder-name')
-        .type('Bobo Obob')
-        .should('have.value', 'Bobo Obob');
       cy.getInput('email')
         .type('Bob.Bob@test.com')
         .should('have.value', 'Bob.Bob@test.com');
@@ -196,13 +157,11 @@ describe('Payer Portal - Guest User', function() {
 
     it('should be able to fill in all mandatory values and continue to credit card info', () => {
       cy.reload();
+      cy.wait(5000);
 
       cy.get('[data-cy=checkout-as-guest]').click();
       cy.get('[data-cy=continue-to-payment]').should('be.disabled');
 
-      cy.getInput('holder-name')
-        .type('Bobo Obob')
-        .should('have.value', 'Bobo Obob');
       cy.getInput('email')
         .type('Bob.Bob@test.com')
         .should('have.value', 'Bob.Bob@test.com');
@@ -216,8 +175,7 @@ describe('Payer Portal - Guest User', function() {
         .type('12345')
         .should('have.value', '12345');
       cy.getInput('country-code')
-        .type('1')
-        .should('have.value', '1');
+        .should('have.value', '+1');
       cy.getInput('phone-number')
         .type('1231231234')
         .should('have.value', '(123) 123-1234');
@@ -230,8 +188,8 @@ describe('Payer Portal - Guest User', function() {
     it('should be able to go back to billing and then continue back to the credit card info', () => {
       cy.get('[data-cy=back-to-billing]').click();
 
-      cy.getInput('holder-name')
-        .should('have.value', 'Bobo Obob');
+      cy.getInput('email')
+        .should('have.value', 'Bob.Bob@test.com');
 
       cy.get('[data-cy=continue-to-payment]').click();
     })
@@ -241,7 +199,8 @@ describe('Payer Portal - Guest User', function() {
       cy.get('[data-cy=pay-now').should('not.exist');
     })
 
-    it('should be able to make the payment with valid credit card details', () => {
+    it('should not be able to make the payment without holder name', () => {
+      cy.wait(5000);
       getIframeBody()
         .find('#text-input-cc-number')
         .type('4003830171874018');
@@ -253,6 +212,32 @@ describe('Payer Portal - Guest User', function() {
         .type('30');
       getIframeBody()
         .find('#text-input-cvv-number')
+        .type('123');
+      
+      cy.get('[data-cy=make-payment]').click();
+      cy.get('[data-cy=pay-now').should('not.exist');
+    });
+
+    it('should be able to make the payment with valid credit card details', () => {
+      cy.getInput('holder-name')
+      .type('Bobo Obob')
+      .should('have.value', 'Bobo Obob');
+      cy.wait(5000);
+      getIframeBody()
+        .find('#text-input-cc-number')
+        .clear()
+        .type('4003830171874018');
+      getIframeBody()
+        .find('#text-input-expiration-month')
+        .clear()
+        .type('12');
+      getIframeBody()
+        .find('#text-input-expiration-year')
+        .clear()
+        .type('30');
+      getIframeBody()
+        .find('#text-input-cvv-number')
+        .clear()
         .type('123');
       cy.get('[data-cy=make-payment]').click();
       cy.get('[data-cy=pay-now').click();

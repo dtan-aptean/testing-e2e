@@ -321,6 +321,41 @@ Cypress.Commands.add("getViewerUser", (email) => {
   });
 });
 
+//This is to get the index and length of merchant summary
+Cypress.Commands.add("getMerchantIndex", (amount) => {
+  const gqlQuery = `query {
+        payerTransactionSummaryByMerchant{
+          merchantSummary{
+            merchantInfo{
+              owner{
+                tenantId
+              }
+            }
+          }
+        }
+      }`;
+  cy.postGQL(gqlQuery).then((resp) => {
+    // should be 200 ok
+    cy.expect(resp.isOkStatusCode).to.be.equal(true);
+    let merchantIndex = 0;
+    const userTenant = Cypress.env("x-aptean-tenant");
+    const merchantSummary =
+      resp.body.data.payerTransactionSummaryByMerchant.merchantSummary;
+
+    merchantSummary.forEach((element, index) => {
+      if (element.merchantInfo.owner.tenantId === userTenant) {
+        merchantIndex = index;
+      }
+    });
+
+    const response = {
+      merchantIndex: merchantIndex,
+      merchantLength: merchantSummary.length,
+    };
+    return response;
+  });
+});
+
 // -- This will log into payer portal and pay a set number of payments
 /**
  * count - the number of payment requests that should be paid
@@ -354,7 +389,7 @@ Cypress.Commands.add("makePayment", (count) => {
         // Log in - taken from payer portal login command
         cy.get("body").then(($body) => {
           if ($body.find("[data-cy=sign-in]").length) {
-            cy.get("[data-cy=sign-in]").click();
+            cy.get("[data-cy=sign-in]").click({ force: true });
             cy.wait(10000);
 
             // check if clicking sign in automatically logs you in, else enter credentials on B2C page
@@ -407,17 +442,17 @@ Cypress.Commands.add("makePayment", (count) => {
             cy.get("[data-cy=add-address]").click();
             cy.get("[data-cy=billing-address-modal]").should("be.visible");
             // Entering the address details
-            cy.get("[data-cy=holder-name]").type("Test User");
             cy.get("[data-cy=email]").type("testuser@testusers.com");
             cy.get("[data-cy=street-address]").type("4324 somewhere st");
             cy.get("[data-cy=country]").find("select").select("US");
             cy.get("[data-cy=zipcode]").type("30022");
-            cy.get("[data-cy=country-code]").type("1");
             cy.get("[data-cy=phone-number]").type("6784324574");
             cy.get("[data-cy=continue-to-payment]")
               .last()
               .should("be.enabled")
               .click({ force: true });
+            cy.wait(2000);
+            cy.get("[data-cy=holder-name]").type("Test User");
             cy.wait(2000);
             //Entering card details
             getIframeBody()
@@ -441,52 +476,71 @@ Cypress.Commands.add("makePayment", (count) => {
           } else if (!$boday.find("[data-cy=menu-options]").length) {
             addCreditCard(0);
           }
-          // Complete assigned payments
-          for (var i = 0; i < count; i++) {
-            // Let table load
-            cy.wait(5000);
-            // Grab the first payment from the table and pay by credit card
-            cy.get("table")
-              .find("tr")
-              .eq(1)
-              .find("td")
-              .eq(5)
-              .find("button")
-              .click({ force: true });
-            // Wait for page to load
-            cy.wait(5000);
-            // TODO: Set up command to deal when payer has no payment method or doesn't have default payment method, etc
-            cy.get("body").then(($makePaymentBody) => {
-              if (
-                !$makePaymentBody.find("[data-cy=submit-payment-button]").length
-              ) {
-                $makePaymentBody
-                  .find("div:contains(Card ending in)")
-                  .last()
-                  .click();
-              } else if (
-                $makePaymentBody.find("div:contains(Account ending in)").length
-              ) {
-                cy.get(".MuiIconButton-label > .MuiSvgIcon-root").click({
-                  force: true,
-                });
-                $makePaymentBody
-                  .find("div:contains(Card ending in)")
-                  .last()
-                  .click();
+
+          cy.getMerchantIndex().then((resp) => {
+            const merchantIndex = resp.merchantIndex;
+            const merchantLength = resp.merchantLength;
+
+            // Complete assigned payments
+            for (var i = 0; i < count; i++) {
+              //select the merchant to pay
+              if (merchantLength > 1) {
+                cy.get("h6:contains(Balance Due)")
+                  .eq(merchantIndex)
+                  .parent()
+                  .parent()
+                  .within(() => {
+                    cy.get("button").click({ force: true });
+                  });
+                cy.wait(18000);
               }
-            });
-            cy.get("[data-cy=submit-payment-button]").click();
-            cy.wait(500);
-            cy.get("[data-cy=pay-now]").click();
-            cy.wait(5000).then(() => {
-              // If we need to make more than one payment, send us back to the home page
-              if (count > 1) {
-                cy.wait(5000);
-                appWindow.location = "https://tst.payer.apteanpay.com/";
-              }
-            });
-          }
+              // Let table load
+              // Grab the first payment from the table and pay by credit card
+              cy.get("table")
+                .find("tr")
+                .eq(1)
+                .find("td")
+                .eq(5)
+                .find("button")
+                .click({ force: true });
+              // Wait for page to load
+              cy.wait(5000);
+              // TODO: Set up command to deal when payer has no payment method or doesn't have default payment method, etc
+              cy.get("body").then(($makePaymentBody) => {
+                if (
+                  $makePaymentBody
+                    .find("[data-cy=submit-payment-button]")
+                    .is(":disabled")
+                ) {
+                  $makePaymentBody
+                    .find("div:contains(Card ending in)")
+                    .last()
+                    .click();
+                } else if (
+                  $makePaymentBody.find("div:contains(Account ending in)")
+                    .length
+                ) {
+                  cy.get(".MuiIconButton-label > .MuiSvgIcon-root").click({
+                    force: true,
+                  });
+                  $makePaymentBody
+                    .find("div:contains(Card ending in)")
+                    .last()
+                    .click();
+                }
+              });
+              cy.get("[data-cy=submit-payment-button]").click();
+              cy.wait(500);
+              cy.get("[data-cy=pay-now]").click();
+              cy.wait(5000).then(() => {
+                // If we need to make more than one payment, send us back to the home page
+                if (count > 1) {
+                  cy.wait(5000);
+                  appWindow.location = "https://tst.payer.apteanpay.com/";
+                }
+              });
+            }
+          });
         });
         resolve();
       }, 2000);
@@ -538,6 +592,7 @@ Cypress.Commands.add(
       cy.getInput("amount").type(money);
       cy.getInput("reference-number").type(referenceNumber);
       cy.getInput("invoice").attachFile(invoicePath);
+      cy.wait(3000);
       cy.get("[data-cy=send-payment]").should("not.be.disabled").click();
       cy.wait(5000);
     }

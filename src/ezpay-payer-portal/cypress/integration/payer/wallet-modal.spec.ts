@@ -28,12 +28,10 @@ describe("Payer Portal - Wallet Modal", () => {
     cy.get("[data-cy=billing-address-modal]").should("be.visible");
 
     // Entering the address details
-    cy.get("[data-cy=holder-name]").type("Test User");
     cy.get("[data-cy=email]").type("testuser@testusers.com");
     cy.get("[data-cy=street-address]").type("4324 somewhere st");
     cy.get("[data-cy=country]").find("select").select("US");
     cy.get("[data-cy=zipcode]").type(zipcode);
-    cy.get("[data-cy=country-code]").type("1");
     cy.get("[data-cy=phone-number]").type("6784324574");
     cy.get("[data-cy=continue-to-payment]")
       .last()
@@ -43,6 +41,8 @@ describe("Payer Portal - Wallet Modal", () => {
     cy.wait(2000);
 
     //Entering card details
+    cy.get("[data-cy=holder-name]").type("Test User");
+    cy.wait(2000);
     getIframeBody().find("#text-input-cc-number").type("4111111111111111");
     getIframeBody().find("#text-input-expiration-month").type("12");
     getIframeBody().find("#text-input-expiration-year").type("30");
@@ -66,12 +66,10 @@ describe("Payer Portal - Wallet Modal", () => {
         cy.get("[data-cy=billing-address-modal]").should("be.visible");
 
         // Entering the address details
-        cy.get("[data-cy=holder-name]").type("Test User");
         cy.get("[data-cy=email]").type("testuser@testusers.com");
         cy.get("[data-cy=street-address]").type("4324 somewhere st");
         cy.get("[data-cy=country]").find("select").select("US");
         cy.get("[data-cy=zipcode]").type("30022");
-        cy.get("[data-cy=country-code]").type("1");
         cy.get("[data-cy=phone-number]").type("6784324574");
         cy.get("[data-cy=continue-to-payment]")
           .last()
@@ -81,6 +79,7 @@ describe("Payer Portal - Wallet Modal", () => {
         cy.wait(2000);
       }
     });
+    cy.get("[data-cy=account-holder-name]").type("Test User");
     cy.get("[data-cy=payment-routing]").type("021000021");
     cy.get("[data-cy=payment-account]").type("1234567");
     cy.get("[data-cy=continue-to-payment]").first().click({ force: true });
@@ -90,7 +89,7 @@ describe("Payer Portal - Wallet Modal", () => {
 
   before(() => {
     cy.login();
-    cy.wait(5000);
+    cy.wait(10000);
   });
 
   context("Logged in", () => {
@@ -176,12 +175,10 @@ describe("Payer Portal - Wallet Modal", () => {
       cy.get("[data-cy=billing-address-modal]").should("be.visible");
 
       //Entering the address details
-      cy.get("[data-cy=holder-name]").type("Test User");
       cy.get("[data-cy=email]").type("testuser@testusers.com");
       cy.get("[data-cy=street-address]").type("4324 somewhere st");
       cy.get("[data-cy=country]").find("select").select("US");
       cy.get("[data-cy=zipcode]").type("30022");
-      cy.get("[data-cy=country-code]").type("1");
       cy.get("[data-cy=phone-number]").type("6784324574");
       cy.get("[data-cy=continue-to-payment]")
         .last()
@@ -221,11 +218,16 @@ describe("Payer Portal - Wallet Modal", () => {
     });
 
     it("Make default option should work", () => {
-      cy.get("[data-cy=menu-options]").last().click({ force: true });
-      cy.get("[data-cy=make-default]").last().click({ force: true });
-      cy.wait(5000);
-      cy.get("[data-cy=menu-options]").last().click({ force: true });
-      cy.get("[data-cy=make-default]").should("not.exist");
+      cy.get("body").then(($body) => {
+        const length = $body.find("[data-cy=menu-options]").length;
+        if (length > 1) {
+          cy.get("[data-cy=menu-options]").last().click({ force: true });
+          cy.get("[data-cy=make-default]").last().click({ force: true });
+        }
+        cy.wait(5000);
+        cy.get("[data-cy=menu-options]").last().click({ force: true });
+        cy.get("[data-cy=make-default]").should("not.exist");
+      });
     });
 
     it("When a payment method is set to default then add address list should be collapsed", () => {

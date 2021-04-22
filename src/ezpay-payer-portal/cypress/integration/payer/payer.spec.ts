@@ -35,7 +35,7 @@ describe('Payer Portal - Logged in user', function() {
         .should('be.visible')
         .click();
 
-      cy.wait(2000);
+      cy.wait(5000);
       cy.get('body').then(($body) => {
         assert.isNotOk($body.find('[data-cy=account-button]').length, "expect account button not to exist in DOM")
       })
