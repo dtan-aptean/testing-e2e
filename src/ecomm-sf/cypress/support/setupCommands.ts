@@ -317,20 +317,20 @@ const enableAdvancedSettings = () => {
   });
 };
   
-const openPanel = (panelId: string) => {
+Cypress.Commands.add("openPanel", (panelId: string) => {
   return cy.get(panelId).then(($el) => {
     if ($el.hasClass("collapsed-card")) {
       cy.wrap($el).find(".card-header").find("button").click({force: true});
       cy.wait(500);
     }
   });
-};
+});
 
 Cypress.Commands.add("switchEnabledDiscounts", (disableDiscounts: boolean) => {
   Cypress.log({displayName: "switchEnabledDiscounts", message: "Verifying that discounts are enabled"});
   cy.visit("/Admin/Setting/Catalog");
   enableAdvancedSettings().then(() => {
-    openPanel("#catalogsettings-performance").then(() => {
+    cy.openPanel("#catalogsettings-performance").then(() => {
       if (disableDiscounts) {
         Cypress.log({displayName: "switchEnabledDiscounts", message: "Disabling discounts"});
         // Disable the discounts, as part of post-test clean up.
@@ -811,13 +811,13 @@ Cypress.Commands.add("setupCategories", () => {
       enableAdvancedSettings().then(() => {
         cy.wait(2000);
         // Fill in name and description
-        openPanel("#category-info").then(() => {
+        cy.openPanel("#category-info").then(() => {
           cy.get("#Name").type(name, {force: true});
           cy.getIframeBody("#Description_ifr").find("p").type(desc, {force: true}).then(() => {
             var standardTab = Cypress.$("a[data-tab-name=category-name-localized-standard-tab]");
             cy.fillInNames(standardTab, name).then(() => {
               // Publish, menu, and display order
-              openPanel("#category-display").then(() => {
+              cy.openPanel("#category-display").then(() => {
                 if (Cypress.$("#Published").prop("checked") !== true) {
                   cy.get("#Published").check({force: true});
                 }
@@ -830,7 +830,7 @@ Cypress.Commands.add("setupCategories", () => {
                 cy.get("#DisplayOrder").clear({force: true}).type(displayOrder, {force: true});
 
                 // seo codes
-                openPanel("#category-seo").then(() => {
+                cy.openPanel("#category-seo").then(() => {
                   cy.get("#SeName").type(seoName, {force: true});
                   cy.get("#MetaTitle").type(seoName, {force: true});
                   if (getTrueSeo) {
@@ -885,7 +885,7 @@ Cypress.Commands.add("setupProducts", () => {
       enableAdvancedSettings().then(() => {
         cy.wait(2000);
         // Fill in name and description
-        openPanel("#product-info").then(() => {
+        cy.openPanel("#product-info").then(() => {
           cy.get("#product-info")
             .find("#Name")
             .type(name, {force: true});
@@ -900,10 +900,10 @@ Cypress.Commands.add("setupProducts", () => {
             cy.get("#Published").check({force: true});
           }
           // Price
-          openPanel("#product-price").then(() => {
+          cy.openPanel("#product-price").then(() => {
             cy.get("#Price").clear({force: true}).type(price, {force: true});
             // seo Codes
-            openPanel("#product-seo").then(() => {
+            cy.openPanel("#product-seo").then(() => {
               cy.get("#product-seo")
                 .find("#SeName")
                 .type(seoName, {force: true});
@@ -914,7 +914,7 @@ Cypress.Commands.add("setupProducts", () => {
               cy.get("button[name=save-continue]").click({force: true});
               cy.wait(5000);
               // Add picture
-              openPanel("#product-pictures").then(() => {
+              cy.openPanel("#product-pictures").then(() => {
                 cy.get("#product-pictures").find("input[name=qqfile]").attachFile(pictureFile);
                 cy.get("#AddPictureModel_OverrideAltAttribute").type(pictureAlt, {force: true});
                 cy.get("#AddPictureModel_OverrideTitleAttribute").type(pictureAlt, {force: true});

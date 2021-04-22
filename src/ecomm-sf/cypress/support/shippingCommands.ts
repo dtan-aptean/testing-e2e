@@ -270,7 +270,7 @@ const compareMethodCosts = (newCosts: {name: string, cost: number}[], originalCo
   
 
 Cypress.Commands.add("clickSave", () => {
-  return cy.get("input[name=save]").click();
+  return cy.get("[name=save]").click();
 });
 
 Cypress.Commands.add("clickBack", () => {
@@ -313,12 +313,10 @@ Cypress.Commands.add("verifyRequiredConfigs", (providerName: string) => {
   };
 
   if (providerName === "UPS (United Parcel Service)") {
-    // DO NOT YET HAVE THESE VALUES
-    // TODO: FILL IN VALUES ONCE ACQUIRED
-    const upsAccNo = "";
-    const upsAccessKey = "";
-    const upsUsername = "";
-    const upsPassword = "";
+    const upsAccNo = "F1580R";
+    const upsAccessKey = "9D92935D91012952";
+    const upsUsername = "ngrass@aptean.com";
+    const upsPassword = "a2rEQBiwyjZQ!HNs";
     return verifyInput("#AccountNumber", upsAccNo).then(() => {
       verifyInput("#AccessKey" , upsAccessKey).then(() => {
         verifyInput("#Username", upsUsername).then(() => {
@@ -397,7 +395,7 @@ Cypress.Commands.add("enableCarrierServices", (providerName: string, domestic?: 
       if (providerName === "USPS (US Postal Service)") {
         return item.getAttribute("name").includes("CarrierServicesDomestic") && !item.value.includes("NONE");
       } else if (providerName === "UPS (United Parcel Service)") {
-        return item.getAttribute("name").includes("CarrierServices") && !item.value.includes("Worldwide") ;
+        return item.getAttribute("name").includes("CarrierServices") && !item.parentElement.innerText.includes("Worldwide") ;
       } else if (providerName === "FedEx") {
         return item.getAttribute("name").includes("CarrierServices") && !item.value.includes("International");
       }
@@ -407,7 +405,7 @@ Cypress.Commands.add("enableCarrierServices", (providerName: string, domestic?: 
       if (providerName === "USPS (US Postal Service)") {
         return item.getAttribute("name").includes("CarrierServicesInternational") && !item.value.includes("NONE");
       } else if (providerName === "UPS (United Parcel Service)") {
-        return item.getAttribute("name").includes("CarrierServices") && item.value.includes("Worldwide");
+        return item.getAttribute("name").includes("CarrierServices") && item.parentElement.innerText.includes("Worldwide");
       } else if (providerName === "FedEx") {
         return item.getAttribute("name").includes("CarrierServices") && item.value.includes("International");
       }
@@ -578,5 +576,105 @@ Cypress.Commands.add("shipInternationally", () => {
       cy.get(".new-address-next-step-button").eq(1).click();
       return cy.wait("@shippingSaved");
     });
+  });
+});
+
+Cypress.Commands.add("clearProductShipping", (productName: string) => {
+  var valueChanged = false;
+  const verifyCheckbox = (boxId: string, checkedState: boolean) => {
+    return cy.get(boxId).invoke("prop", "checked").then((shippingEnabled: boolean) => {
+      if (shippingEnabled !== checkedState) {
+        cy.get(boxId).toggle();
+        valueChanged = true;
+      }
+    });
+  };
+  const verifyTextInput = (textId: string) => {
+    return cy.get(textId).invoke("val").then((textValue) => {
+      if (textValue !== "0") {
+        cy.get(textId).clear({ force: true }).type("0", { force: true });
+        valueChanged = true;
+      }
+    });
+  };
+  const saveChanges = () => {
+    // For now, save and continue
+    if (valueChanged) {
+      cy.get("[name=save-continue]").click();
+    }
+  };
+  cy.goToAdminProduct(productName);
+  cy.wait(10);
+  cy.allowLoad();
+  cy.openPanel("#product-shipping").then(() => {
+    verifyCheckbox("#IsShipEnabled", true).then(() => {
+      if (valueChanged) {
+        cy.wait(100);
+      }
+      verifyTextInput("#Weight").then(() => {
+        verifyTextInput("#Length").then(() => {
+          verifyTextInput("#Width").then(() => {
+            verifyTextInput("#Height").then(() => {
+              verifyCheckbox("#IsFreeShipping", false).then(() => {
+                verifyCheckbox("#ShipSeparately", false).then(() => {
+                  verifyTextInput("#AdditionalShippingCharge").then(() => {
+                    cy.get("#DeliveryDateId > option:selected").invoke("text").then((selectedText) => {
+                      if (selectedText !== "None") {
+                        cy.get("#DeliveryDateId").select("None");
+                        valueChanged = true;
+                        saveChanges();
+                      } else {
+                        saveChanges();
+                      }
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+Cypress.Commands.add("setProductShippingCharge", (productName: string, newCharge: string) => {
+  cy.goToAdminProduct(productName);
+  cy.wait(10);
+  cy.allowLoad();
+  cy.openPanel("#product-shipping").then(() => {
+    cy.get("#AdditionalShippingCharge").clear({ force: true }).type(newCharge, { force: true });
+    cy.clickSave();
+  });
+});
+
+Cypress.Commands.add("setProductShippingSizes", (
+  productName: string, 
+  sizeObject: {
+    weight?: string, 
+    length?: string, 
+    width?: string, 
+    height?: string
+  }
+) => {
+  assert.isNotEmpty(sizeObject, "Author may not pass in an empty object");
+  
+  const setSize = (inputId: string, size: string) => {
+    return cy.get(inputId).clear({ force: true }).type(size, { force: true });
+  };
+
+  cy.goToAdminProduct(productName);
+  cy.wait(10);
+  cy.allowLoad();
+  cy.openPanel("#product-shipping").then(() => {
+    var x;
+    for (x in sizeObject) {
+      var letter = x.charAt(0);
+      assert.isString(sizeObject[x], "Author must give a string as size measurement");
+      assert.isNotEmpty(sizeObject[x], "Author may not use an empty string as a size measurement");
+      setSize(`#${x.replace(letter, letter.toUpperCase())}`, sizeObject[x]);
+    }
+    cy.wait(1000);
+    cy.clickSave();
   });
 });

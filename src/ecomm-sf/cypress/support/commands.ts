@@ -278,6 +278,21 @@ Cypress.Commands.add("getVisibleMenu", () => {
   }
 });
 
+Cypress.Commands.add("openAdminSidebar", () => {
+  return cy.get("body").invoke("hasClass", "sidebar-collapse").then((menuIsCollapsed: boolean) => {
+    return cy.get("#nopSideBarPusher").click({ force: true});
+  });
+});
+
+Cypress.Commands.add("openParentTree", (parentName) => {
+  return cy.get(".nav-sidebar").find(`li:contains('${parentName}')`).eq(0).then(($el) => {
+    var openChildTree = $el.find(".nav-treeview:visible");
+    if (openChildTree.length === 0) {
+      return cy.get(".nav-sidebar").find("li").contains(parentName).click();
+    }
+  });
+})
+
 // Gets the visible element to remove an item from the cart. Cypress may display the button or checkbox depending on screen size.
 Cypress.Commands.add("getCartBtn", () => {
   if (Cypress.$("input[name=removefromcart]:visible").length > 0) {
@@ -343,7 +358,7 @@ Cypress.Commands.add("addToCartAndCheckout", () => {
     name: "addToCartAndCheckout",
   });
   cy.goToCategory("Cypress Trees");
-  cy.contains("Bald Cypress").parentsUntil(".product-item").find(".product-box-add-to-cart-button").click();
+  cy.contains("Bald Cypress").parents(".product-item").find(".product-box-add-to-cart-button").click();
   cy.allowLoad();
   cy.goToCart();
   cy.get("#termsofservice").click();
@@ -459,7 +474,8 @@ Cypress.Commands.add("goToAdminProduct", (productName) => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".nav-sidebar").find("li").contains("Catalog").click();
+      cy.openAdminSidebar();
+      cy.openParentTree("Catalog");
     }
     cy.get(".nav-sidebar")
       .find("li")
