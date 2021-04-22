@@ -476,7 +476,7 @@ Cypress.Commands.add("setShippingOrigin", () => {
       saveNeeded = true;
     }
     if (Cypress.$("#ShippingOriginAddress_StateProvinceId > option:selected").text() !== "Georgia") {
-      cy.get("#ShippingOriginAddress_StateProvinceId").select("United States", {force: true});
+      cy.get("#ShippingOriginAddress_StateProvinceId").select("Georgia", {force: true});
       saveNeeded = true;
     }
     if (Cypress.$("#ShippingOriginAddress_City").val() !== "Atlanta") {
