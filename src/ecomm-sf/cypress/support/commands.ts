@@ -128,6 +128,71 @@ Cypress.Commands.add("getIframeBody", (iFrameName) => {
   );
 });
 
+// Will check or uncheck a checkbox depending on its current state. Chained off a parent command
+Cypress.Commands.add("toggle", { prevSubject: true }, (subject) => {
+  const toggleOn = subject.prop("checked") === false;
+  const log = Cypress.log({
+    $el: subject,
+    name: "toggle", 
+    consoleProps: () => {
+      return {
+        "Command": "toggle (custom)",
+        "Applied to": subject[0]
+      };
+    },
+  });
+  if (toggleOn) {
+    return cy.wrap(subject, { log: false }).check({ log: false });
+  } else {
+    return cy.wrap(subject, { log: false }).uncheck({ log: false });
+  }
+});
+
+// Will clear a text input and replace it with the given value
+Cypress.Commands.add("replaceText", { prevSubject: true }, (subject, text) => {
+  const log = Cypress.log({
+    $el: subject,
+    name: "replaceText", 
+    displayName: "repText",
+    consoleProps: () => {
+      return {
+        "Command": "replaceText (custom)",
+        "Applied to": subject[0],
+        "Old text input": subject.val(),
+        "New text input": text
+      };
+    },
+  });
+
+  cy.wrap(subject, { log: false }).clear({ log: false });
+  return cy.wrap(subject, { log: false }).type(text, { log: false });
+});
+
+// Finds and clicks a button inside the table row. Provide it with the text of the button
+Cypress.Commands.add("clickRowBtn", { prevSubject: 'element' }, (subject, buttonText, optionObject) => {
+  const log = Cypress.log({
+    $el: subject,
+    name: "clickRowBtn", 
+    displayName: "clkRwBtn",
+    consoleProps: () => {
+      return {
+        "Command": "clickRowBtn (custom)",
+        "Applied to": subject,
+        "Provided Text": buttonText,
+        "Options": optionObject
+      };
+    },
+  });
+  var clickOptions;
+  if (optionObject) {
+    clickOptions = optionObject;
+    clickOptions.log = false;
+  } else {
+    clickOptions = { log: false };
+  }
+  return cy.wrap(subject, { log: false }).find("a", { log: false }).contains(buttonText, { log: false }).click(clickOptions);
+});
+
 // Logs in with the configured username/password
 Cypress.Commands.add("login", () => {
   Cypress.log({
@@ -188,8 +253,8 @@ Cypress.Commands.add("clearCart", () => {
                 .find("tr")
                 .eq(0)
                 .find(".remove-btn")
-                .click();
-              return cy.wait(500).then(() => {
+                .click({force: true});
+              return cy.wait(1000).then(() => {
                 if (Cypress.$(".remove-btn:visible").length > 0) {
                   clickRemoveBtn();
                 }
@@ -213,6 +278,21 @@ Cypress.Commands.add("getVisibleMenu", () => {
   }
 });
 
+Cypress.Commands.add("openAdminSidebar", () => {
+  return cy.get("body").invoke("hasClass", "sidebar-collapse").then((menuIsCollapsed: boolean) => {
+    return cy.get("#nopSideBarPusher").click({ force: true});
+  });
+});
+
+Cypress.Commands.add("openParentTree", (parentName) => {
+  return cy.get(".nav-sidebar").find(`li:contains('${parentName}')`).eq(0).then(($el) => {
+    var openChildTree = $el.find(".nav-treeview:visible");
+    if (openChildTree.length === 0) {
+      return cy.get(".nav-sidebar").find("li").contains(parentName).click();
+    }
+  });
+})
+
 // Gets the visible element to remove an item from the cart. Cypress may display the button or checkbox depending on screen size.
 Cypress.Commands.add("getCartBtn", () => {
   if (Cypress.$("input[name=removefromcart]:visible").length > 0) {
@@ -220,7 +300,7 @@ Cypress.Commands.add("getCartBtn", () => {
   } else if (Cypress.$(".remove-btn:visible").length > 0) {
     return cy.get(".remove-btn:visible").eq(0).then(cy.wrap);
   }
-})
+});
 
 // Go to a catgory page. Will go to the default category page unless another category is specified
 Cypress.Commands.add("goToCategory", (categoryName) => {
@@ -233,10 +313,11 @@ Cypress.Commands.add("goToCategory", (categoryName) => {
       };
     },
   });
-  cy.getVisibleMenu()
+  cy.contains(categoryName || mainCategory).eq(0).click({force: true});
+  /* cy.getVisibleMenu()
     .find("li")
     .contains(categoryName || mainCategory)
-    .click();
+    .click(); */
   cy.wait(500);
 });
 
@@ -245,7 +326,7 @@ Cypress.Commands.add("goToCategory", (categoryName) => {
  * Assumes that the product is under the default category,
  * unless a category name is specified
  */
-Cypress.Commands.add("goToProduct", (productName, categoryName) => {
+Cypress.Commands.add("goToProduct", (productName, categoryName?) => {
   Cypress.log({
     name: "goToProduct",
     message: `${categoryName ? categoryName + ", " : ""}${productName}`,
@@ -276,10 +357,9 @@ Cypress.Commands.add("addToCartAndCheckout", () => {
   Cypress.log({
     name: "addToCartAndCheckout",
   });
-  cy.goToProduct("Bald Cypress");
-  cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
-  cy.get(".add-to-cart-button").click();
-  cy.wait(1000);
+  cy.goToCategory("Cypress Trees");
+  cy.contains("Bald Cypress").parents(".product-item").find(".product-box-add-to-cart-button").click();
+  cy.allowLoad();
   cy.goToCart();
   cy.get("#termsofservice").click();
   cy.get(".checkout-button").click();
@@ -394,7 +474,8 @@ Cypress.Commands.add("goToAdminProduct", (productName) => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".nav-sidebar").find("li").contains("Catalog").click();
+      cy.openAdminSidebar();
+      cy.openParentTree("Catalog");
     }
     cy.get(".nav-sidebar")
       .find("li")
@@ -591,6 +672,31 @@ Cypress.Commands.add("goToGeneralSettings", () => {
       .click({force: true});
     cy.wait(500);
   });
+});
+
+// Goes to shipping provider page. Can be done from public or admin
+Cypress.Commands.add("goToShippingProviders", () => {
+  Cypress.log({ name: "goToShippingProviders" });
+
+  cy.location("pathname").then((loc) => {
+    cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+    if (!loc.includes("/Shipping/Providers")) {
+      if (!loc.includes("Admin")) {
+        cy.goToAdmin();
+        cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
+      }
+      cy.get(".nav-sidebar").find("li").contains("Configuration").click({force: true});
+    }
+  });
+  cy.intercept("POST", "/Admin/Shipping/Providers").as("shippingProviders");
+  cy.get(".nav-sidebar")
+    .find("li")
+    .find(".nav-treeview")
+    .find("li")
+    .contains("Shipping providers")
+    .click({force: true});
+  cy.wait("@shippingProviders", {timeout: 100000});
+  cy.allowLoad();
 });
 
 // Find an item in the table. Pass in table id, id for pagination next button, and function to filter with
@@ -1004,6 +1110,49 @@ Cypress.Commands.add("addNewDiscount", (options) => {
   );
 });
 
+// Fills out billing information
+Cypress.Commands.add("fillOutBilling", () => {
+  Cypress.log({
+    name: "fillOutBilling"
+  });
+  cy.intercept("/checkout/OpcSaveBilling/").as("billingSaved");
+  cy.get("#co-billing-form").then(($el) => {
+    const select = $el.find(".select-billing-address");
+    const userDetails = Cypress.env("userDetails");
+    var alphaAddress = `${userDetails.first} ${userDetails.last}, 4325 Alexander Dr #100, Alpharetta, Georgia 30022, United States`;
+    if (select.length === 0) {
+      // Inputting Aptean's address
+      cy.get("#BillingNewAddress_CountryId").select("United States");
+      cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
+      cy.get("#BillingNewAddress_City").type("Alpharetta");
+      cy.get("#BillingNewAddress_Address1").type("4321 Alexander Dr #100");
+      cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
+      cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
+      cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
+      cy.get(".field-validation-error").should("have.length", 0);
+    } else if (!Cypress.$("#billing-address-select").text().includes(alphaAddress)) {
+      cy.get("#billing-address-select").select("New Address");
+      // Inputting Aptean's address
+      cy.get("#BillingNewAddress_FirstName").clear().type(userDetails.first);
+      cy.get("#BillingNewAddress_LastName").clear().type(userDetails.last);
+      cy.get("#BillingNewAddress_Email").clear().type(Cypress.config("username"));
+      cy.get("#BillingNewAddress_Company").clear().type(userDetails.company);
+      cy.get("#BillingNewAddress_CountryId").select("United States");
+      cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
+      cy.get("#BillingNewAddress_City").type("Alpharetta");
+      cy.get("#BillingNewAddress_Address1").type("4325 Alexander Dr #100");
+      cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
+      cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
+      cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
+      cy.get(".field-validation-error").should("have.length", 0);
+    } else if (!Cypress.$("#billing-address-select > option:selected").text().includes(alphaAddress)) {
+      cy.get("#billing-address-select").select(alphaAddress);
+    }
+  });
+  cy.get(".new-address-next-step-button").eq(0).click();
+  return cy.wait("@billingSaved");
+})
+
 // Progresses through checkout to get to confirm order.
 Cypress.Commands.add("getToConfirmOrder", () => {
   Cypress.log({
@@ -1049,6 +1198,84 @@ Cypress.Commands.add("getToConfirmOrder", () => {
   cy.get(".payment-info-next-step-button").click();
   cy.wait(1000);
   cy.get('.cart').should("exist").and("be.visible");
+});
+
+// COMMANDS FOR CHANGING SHIPPING PROVIDERS
+Cypress.Commands.add("findShippingProvider", (providerName: string) => {
+  var id = "";
+  switch (providerName) {
+    case "UPS (United Parcel Service)":
+      id = "#row_shippingups";
+      break;
+    case "FedEx":
+      id = "#row_shippingfedex";
+      break;
+    case "USPS (US Postal Service)":
+      id = "#row_shippingusps";
+      break;
+    case "Manual": 
+      id = "#row_shippingfixedbyweightbytotal";
+      break;
+    default:
+      id = "";
+      break;
+  }
+  if (id !== "") {
+    return cy.get(id);
+  } else {
+    const shipFilter = (index, item) => {
+      return item.cells[0].innerText === providerName;
+    };
+    return cy.findTableItem("#shippingproviders-grid", "#shippingproviders-grid_next", shipFilter);
+  }
+});
+
+// Updates just provider activity
+Cypress.Commands.add("changeProviderActivity", (providerName: string) => {
+  Cypress.log({name: "changeProviderActivity", message: `Activating or deactivating ${providerName}`});
+  cy.findShippingProvider(providerName).then((row) => {
+    cy.wrap(row).find("a").contains("Edit").click();
+    cy.wait(500);
+    cy.wrap(row).find("td[data-columnname=IsActive]").find("input").toggle();
+    cy.wrap(row).find("a").contains("Update").click();
+    cy.allowLoad();
+  });
+});
+
+// Updates just provider display order
+Cypress.Commands.add("changeProviderDisplay", (providerName: string, newOrder: string) => {
+  Cypress.log({name: "changeProviderDisplay", message: `Setting display order of "${providerName}" to ${newOrder}`});
+  cy.findShippingProvider(providerName).then((row) => {
+    cy.wrap(row).find("a").contains("Edit").click();
+    cy.wait(500);
+    cy.wrap(row).find("td[data-columnname=DisplayOrder]").find("input").replaceText(newOrder);
+    cy.wrap(row).find("a").contains("Update").click();
+    cy.allowLoad();
+  });
+});
+
+// Updated provider activity and display order, but only if the provider's values aren't the same as the provided arguments
+Cypress.Commands.add("changeProviderProps", (providerName: string, activate: boolean, newOrder: string) => {
+  Cypress.log({name: "changeProviderProps", message: `Setting "${providerName}" to ${activate ? "active" : "inactive"} and display order to ${newOrder}`});
+  cy.findShippingProvider(providerName).then((row) => {
+    cy.wrap(row).find("td[data-columnname=DisplayOrder]").invoke("text").then((curDisOrder: string) => {
+      cy.wrap(row).find("td[data-columnname=IsActive]").find("i").invoke("hasClass", "true-icon").then((isActive: boolean) => {
+        if (curDisOrder !== newOrder || isActive !== activate) {
+          cy.wrap(row).find("a").contains("Edit").click();
+          cy.wait(300);
+          if (isActive !== activate) {
+            cy.wrap(row).find("td[data-columnname=IsActive]").find("input").toggle();
+          }
+          if (curDisOrder !== newOrder) {
+            cy.wrap(row).find("td[data-columnname=DisplayOrder]").find("input").replaceText(newOrder);
+          }
+          // TODO: Could probably wait on an intercept here
+          cy.wrap(row).find("a").contains("Update").click();
+          cy.allowLoad();
+        }
+      });
+    });
+  });
 });
 
 // COMMANDS FOR TESTS THAT ARE THE SAME BETWEEN REGISTERED USERS AND GUESTS

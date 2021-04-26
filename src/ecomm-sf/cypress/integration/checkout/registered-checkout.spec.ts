@@ -192,44 +192,30 @@ describe("Ecommerce", function () {
     });
 
     it("The billing information is already partially filled out when checking out", () => {
-      cy.goToCustomers();
-      cy.allowLoad();
-      cy.get("#SearchEmail").type(Cypress.config("username"));
-      cy.get("#search-customers").click();
-      cy.allowLoad();
-      const customerSearchFilter = (index, item) => {
-        return item.cells[1].innerText === Cypress.config("username");
-      };
-      cy.findTableItem("#customers-grid", "#customers-grid_next", customerSearchFilter).then((row) => {
-        cy.wrap(row).find(".button-column").find("a").click();
-        cy.wait(5000);
-        cy.get("#FirstName").invoke("val").then((firstName) => {
-          cy.get("#LastName").invoke("val").then((lastName) => {
-            cy.get("#Company").invoke("val").then((company) => {
-              cy.goToPublic();
-              cy.addToCartAndCheckout();
-              cy.get("#co-billing-form").then(($el) => {
-                const select = $el.find(".select-billing-address");
-                if (select.length > 0) {
-                  cy.wrap(select).find("select").select("New Address");
-                  cy.wait(500);
-                }
-                cy.get("#BillingNewAddress_FirstName").should("have.value", firstName);
-                cy.get("#BillingNewAddress_LastName").should("have.value", lastName);
-                cy.get("#BillingNewAddress_Email").should(
-                  "have.value",
-                  Cypress.config("username")
-                );
-                cy.get("#BillingNewAddress_Company").should(
-                  "have.value",
-                  company
-                );
-              });
-              cy.clearCart();
-            });
-          });
-        });
+      // User Details should have been picked up in the before hook of index.ts
+      const userDetails = Cypress.env("userDetails");
+      const firstName = userDetails.first;
+      const lastName = userDetails.last;
+      const company = userDetails.company;
+      cy.addToCartAndCheckout();
+      cy.get("#co-billing-form").then(($el) => {
+        const select = $el.find(".select-billing-address");
+        if (select.length > 0) {
+          cy.wrap(select).find("select").select("New Address");
+          cy.wait(500);
+        }
+        cy.get("#BillingNewAddress_FirstName").should("have.value", firstName);
+        cy.get("#BillingNewAddress_LastName").should("have.value", lastName);
+        cy.get("#BillingNewAddress_Email").should(
+          "have.value",
+          Cypress.config("username")
+        );
+        cy.get("#BillingNewAddress_Company").should(
+          "have.value",
+          company
+        );
       });
+      cy.clearCart();
     });
 
     it("Empty fields show errors during checkout", () => {
