@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+// TEST COUNT: 6
 
 // Check that everything is displaying normally in default state
 const checkDisplayState = (row) => {

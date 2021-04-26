@@ -738,6 +738,7 @@ Cypress.Commands.add("resetProviderConfig", (providerName: string, providerConfi
       }
     };
     cy.wrap(providerConfig).each((config, index) => {
+      Cypress.log({displayName: " ", message: config.inputValue});
       cy.wait(100);
       cy.get(".card-body").get(".form-group:visible").eq(index).then((formRow) => {
         if (config.inputType !== "group") {

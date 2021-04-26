@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+// TEST COUNT: 4
 
 describe("Ecommerce", function () {
   context("Shipping Provider Configuration", () => {
