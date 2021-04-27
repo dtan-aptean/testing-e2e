@@ -1,4 +1,7 @@
 /// <reference types="cypress" />
+// TEST COUNT: 18
+
+import { mainProductTwo } from "../../../support/setupCommands";
 
 describe("Ecommerce", function () {
   context("USPS Shipping Provider Configuration", () => {
@@ -72,6 +75,54 @@ describe("Ecommerce", function () {
 
       it("USPS international shipping prices on product page will increase when an additional shipping charge is configured", () => {
         cy.providerChargeProduct(provider, false);
+      });
+    });
+
+    context("Subsection: Domestic USPS methods with a product's additional shipping cost", () => {
+      beforeEach(() => {
+        cy.clearProductShipping(mainProductTwo).then(() => {
+          cy.goToShippingProviders();
+        });
+      });
+
+      it("USPS domestic shipping prices in checkout will include an product's additional shipping cost", () => {
+        cy.productChargeCheckout(provider, true);
+      });
+
+      it("USPS domestic shipping prices on product page will include an product's additional shipping cost", () => {
+        cy.productChargeProductPage(provider, true);
+      });
+
+      it("USPS domestic shipping prices in checkout will include an product's additional shipping cost and the provider's additional cost", () => {
+        cy.productProviderChargeCheckout(provider, true);
+      });
+
+      it("USPS domestic shipping prices on product page will include an product's additional shipping cost and the provider's additional cost", () => {
+        cy.productProviderChargeProductPage(provider, true);
+      });
+    });
+
+    context("Subsection: International USPS methods with a product's additional shipping cost", () => {
+      beforeEach(() => {
+        cy.clearProductShipping(mainProductTwo).then(() => {
+          cy.goToShippingProviders();
+        });
+      });
+
+      it("USPS international shipping prices in checkout will include an product's additional shipping cost", () => {
+        cy.productChargeCheckout(provider, false);
+      });
+
+      it("USPS international shipping prices on product page will include an product's additional shipping cost", () => {
+        cy.productChargeProductPage(provider, false);
+      });
+
+      it("USPS international shipping prices in checkout will include an product's additional shipping cost and the provider's additional cost", () => {
+        cy.productProviderChargeCheckout(provider, false);
+      });
+
+      it("USPS international shipping prices on product page will include an product's additional shipping cost and the provider's additional cost", () => {
+        cy.productProviderChargeProductPage(provider, false);
       });
     });
   });

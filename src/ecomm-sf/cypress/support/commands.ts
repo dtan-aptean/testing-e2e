@@ -1,4 +1,4 @@
-import { mainCategory, mainCategorySeo } from "./setupCommands";
+import { mainCategory, mainCategorySeo, mainProductOne, secondCategory, secondProduct } from "./setupCommands";
 
 // Waits for tables and pages to finish loading by checking if the loading spinner is visible.
 // Often the page finishes loading before the table finishes, so cy.server and cy.route are not helpful
@@ -280,15 +280,18 @@ Cypress.Commands.add("getVisibleMenu", () => {
 
 Cypress.Commands.add("openAdminSidebar", () => {
   return cy.get("body").invoke("hasClass", "sidebar-collapse").then((menuIsCollapsed: boolean) => {
-    return cy.get("#nopSideBarPusher").click({ force: true});
+    if (menuIsCollapsed) {
+      return cy.get("#nopSideBarPusher").click({ force: true});
+    }
   });
 });
 
-Cypress.Commands.add("openParentTree", (parentName) => {
+Cypress.Commands.add("openParentTree", (parentName, force?: boolean) => {
   return cy.get(".nav-sidebar").find(`li:contains('${parentName}')`).eq(0).then(($el) => {
     var openChildTree = $el.find(".nav-treeview:visible");
     if (openChildTree.length === 0) {
-      return cy.get(".nav-sidebar").find("li").contains(parentName).click();
+      var clickOptions = force ? { force: true } : undefined;
+      return cy.get(".nav-sidebar").find("li").contains(parentName).click(clickOptions);
     }
   });
 })
@@ -353,12 +356,14 @@ Cypress.Commands.add("goToProduct", (productName, categoryName?) => {
 });
 
 // Adds a product to the cart, go to cart, agree with TOS, and click checkout
-Cypress.Commands.add("addToCartAndCheckout", () => {
+Cypress.Commands.add("addToCartAndCheckout", (productName?: string) => {
   Cypress.log({
     name: "addToCartAndCheckout",
   });
-  cy.goToCategory("Cypress Trees");
-  cy.contains("Bald Cypress").parents(".product-item").find(".product-box-add-to-cart-button").click();
+  var category = productName === secondProduct ? secondCategory : mainCategory;
+  var product = productName ? productName : mainProductOne;
+  cy.goToCategory(category);
+  cy.contains(product).parents(".product-item").find(".product-box-add-to-cart-button").click();
   cy.allowLoad();
   cy.goToCart();
   cy.get("#termsofservice").click();
@@ -475,18 +480,18 @@ Cypress.Commands.add("goToAdminProduct", (productName) => {
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
       cy.openAdminSidebar();
-      cy.openParentTree("Catalog");
+      cy.openParentTree("Catalog", {force: true});
     }
     cy.get(".nav-sidebar")
       .find("li")
       .find(".nav-treeview")
       .find("li")
       .contains("Products")
-      .click();
+      .click({force: true});
     cy.wait(2000);
     cy.allowLoad();
-    cy.get("#SearchProductName").type(productName);
-    cy.get("#search-products").click();
+    cy.get("#SearchProductName").type(productName, {force: true});
+    cy.get("#search-products").click({force: true});
     cy.allowLoad();
     cy.intercept(/\/Admin\/Product\/Edit\//g).as("productOpened");
     cy.get("#products-grid")
@@ -685,7 +690,8 @@ Cypress.Commands.add("goToShippingProviders", () => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".nav-sidebar").find("li").contains("Configuration").click({force: true});
+      cy.openAdminSidebar();
+      cy.openAdminSidebar("Configuration", true);
     }
   });
   cy.intercept("POST", "/Admin/Shipping/Providers").as("shippingProviders");

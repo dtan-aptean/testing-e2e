@@ -3,6 +3,8 @@
  * Some commands take the place of tests, due to the tests being mostly identical between providers
  */
 
+import { mainProductOne, mainProductTwo } from "./setupCommands";
+
 // TEST COMMANDS
 // Tests that a provider's shipping methods are present in checkout
 Cypress.Commands.add("methodsPresentCheckout", (providerName: string, domesticMethods: boolean) => {
@@ -171,6 +173,122 @@ Cypress.Commands.add("allMethodsProduct", (providerName: string) => {
   });
 });
 
+Cypress.Commands.add("productChargeCheckout", (providerName: string, domesticMethods: boolean) => {
+  cy.providerSetup(providerName, domesticMethods).then(() => {
+    cy.addToCartAndCheckout(mainProductTwo).then(() => {
+      handleBillingAndShipping(domesticMethods);
+      cy.get("#shipping-methods-form").find(".message-error").should("not.exist");
+      getCheckoutMethodCosts().then((defaultMethods) => {
+        var productCharge = Cypress._.random(5, 15);
+        cy.setProductShippingCharge(mainProductTwo, productCharge).then(() => {
+          cy.goToPublic();
+          cy.goToCart();
+          cy.get("#termsofservice").click();
+          cy.get(".checkout-button").click();
+          cy.wait(500).then(() => {
+            handleBillingAndShipping(domesticMethods);
+            cy.get("#shipping-methods-form").find(".message-error").should("not.exist");
+            getCheckoutMethodCosts().then((newMethods) => {
+              compareMethodCosts(newMethods, defaultMethods, productCharge);
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+Cypress.Commands.add("productChargeProductPage", (providerName: string, domesticMethods: boolean) => {
+  cy.providerSetup(providerName, domesticMethods).then(() => {
+    cy.openShippingPopup(domesticMethods, mainProductTwo).then(() => {
+      cy.get(".no-shipping-options").should("not.exist");
+      cy.get(".shipping-options-body")
+        .find(".shipping-option")
+        .should("exist")
+        .and("not.be.empty");
+      getProductMethodCosts().then((defaultMethods) => {
+        cy.get(".mfp-close").click();
+        cy.wait(100);
+        var productCharge = Cypress._.random(5, 15);
+        cy.setProductShippingCharge(mainProductTwo, productCharge).then(() => {
+          cy.goToPublic();
+          cy.openShippingPopup(domesticMethods, mainProductTwo).then(() => {
+            cy.get(".no-shipping-options").should("not.exist");
+            cy.get(".shipping-options-body")
+              .find(".shipping-option")
+              .should("exist")
+              .and("not.be.empty");
+            getProductMethodCosts().then((newMethods) => {
+              cy.get(".mfp-close").click();
+              compareMethodCosts(newMethods, defaultMethods, productCharge);
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+Cypress.Commands.add("productProviderChargeCheckout", (providerName: string, domesticMethods: boolean) => {
+  cy.providerSetup(providerName, domesticMethods).then(() => {
+    cy.addToCartAndCheckout(mainProductTwo).then(() => {
+      handleBillingAndShipping(domesticMethods);
+      cy.get("#shipping-methods-form").find(".message-error").should("not.exist");
+      getCheckoutMethodCosts().then((defaultMethods) => {
+        var productCharge = Cypress._.random(5, 15);
+        cy.setProductShippingCharge(mainProductTwo, productCharge).then(() => {
+          var additionalCharge = Cypress._.random(1, 10);
+          addHandlingCharge(providerName, `${additionalCharge}`).then(() => {
+            cy.goToCart();
+            cy.get("#termsofservice").click();
+            cy.get(".checkout-button").click();
+            cy.wait(500).then(() => {
+              handleBillingAndShipping(domesticMethods);
+              cy.get("#shipping-methods-form").find(".message-error").should("not.exist");
+              getCheckoutMethodCosts().then((newMethods) => {
+                compareMethodCosts(newMethods, defaultMethods, additionalCharge, productCharge);
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+Cypress.Commands.add("productProviderChargeProductPage", (providerName: string, domesticMethods: boolean) => {
+  cy.providerSetup(providerName, domesticMethods).then(() => {
+    cy.openShippingPopup(domesticMethods, mainProductTwo).then(() => {
+      cy.get(".no-shipping-options").should("not.exist");
+      cy.get(".shipping-options-body")
+        .find(".shipping-option")
+        .should("exist")
+        .and("not.be.empty");
+      getProductMethodCosts().then((defaultMethods) => {
+        cy.get(".mfp-close").click();
+        cy.wait(100);
+        var productCharge = Cypress._.random(5, 15);
+        cy.setProductShippingCharge(mainProductTwo, productCharge).then(() => {
+          var additionalCharge = Cypress._.random(1, 10);
+          addHandlingCharge(providerName, `${additionalCharge}`).then(() => {
+            cy.openShippingPopup(domesticMethods, mainProductTwo).then(() => {
+              cy.get(".no-shipping-options").should("not.exist");
+              cy.get(".shipping-options-body")
+                .find(".shipping-option")
+                .should("exist")
+                .and("not.be.empty");
+              getProductMethodCosts().then((newMethods) => {
+                cy.get(".mfp-close").click();
+                compareMethodCosts(newMethods, defaultMethods, additionalCharge, productCharge);
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
 // COMMANDS AND FUNCTIONS TO BE USED IN THE TESTS
 
 // Gets the acronym used by UPS and USPS
@@ -256,15 +374,17 @@ const getProductMethodCosts = () => {
 };
 
 // Compares the cost of shipping methods
-const compareMethodCosts = (newCosts: {name: string, cost: number}[], originalCosts: {name: string, cost: number}[], charge: number) => {
+const compareMethodCosts = (newCosts: {name: string, cost: number}[], originalCosts: {name: string, cost: number}[], charge: number, productCharge?: number) => {
   expect(newCosts.length).to.eql(originalCosts.length, "There is the same amount of shipping methods available");
   newCosts.forEach((val) => {
     var orgMethod = originalCosts.find((org) => {
       return org.name === val.name;
     });
     assert.exists(orgMethod, `The "${val.name}" method is present before and after adding a charge`);
-    var expectedCost = Number((orgMethod.cost + charge).toFixed(2));
-    expect(val.cost).to.eql(expectedCost, `Original price $${orgMethod.cost} should have increased by ${charge}`);
+    var thirdCost = productCharge ? productCharge : 0;
+    var expectedCost = Number((orgMethod.cost + charge + thirdCost).toFixed(2));
+    var errorMessage = productCharge ? `Original price $${orgMethod.cost} should have increased by $${charge + productCharge}($${productCharge} product + $${charge} provider)` : `Original price $${orgMethod.cost} should have increased by $${charge}`;
+    expect(val.cost).to.eql(expectedCost, errorMessage);
   });
 };
   
@@ -488,8 +608,9 @@ Cypress.Commands.add("postConfigChange", (providerName: string) => {
 });
 
 // Opens the shipping popup on the product page.
-Cypress.Commands.add("openShippingPopup", (domesticMethods: boolean) => {
-  cy.goToProduct("Bald Cypress");
+Cypress.Commands.add("openShippingPopup", (domesticMethods: boolean, product?: string) => {
+  var targetProduct = product ? product : mainProductOne;
+  cy.goToProduct(targetProduct);
   return cy.get(".product-estimate-shipping").scrollIntoView().then(() => {
     return cy.allowShippingLoad().then(() => {
       cy.get(".open-estimate-shipping-popup").click();
@@ -645,6 +766,7 @@ Cypress.Commands.add("setProductShippingCharge", (productName: string, newCharge
   cy.openPanel("#product-shipping").then(() => {
     cy.get("#AdditionalShippingCharge").clear({ force: true }).type(newCharge, { force: true });
     cy.clickSave();
+    cy.allowLoad();
   });
 });
 
