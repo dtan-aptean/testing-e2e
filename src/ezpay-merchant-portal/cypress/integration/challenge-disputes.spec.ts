@@ -566,7 +566,7 @@ describe("Merchant Portal", function () {
         });
     });
 
-    it.skip("Cannot upload the same document twice and an error is displayed if you try", () => {
+    it("Cannot upload the same document twice and an error is displayed if you try", () => {
       // Get to the challenge dispute page
       cy.get("[data-cy=challenge]").scrollIntoView().should("be.visible");
       cy.get("[data-cy=challenge]").click();

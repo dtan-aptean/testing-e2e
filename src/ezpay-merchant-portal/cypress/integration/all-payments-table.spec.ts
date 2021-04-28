@@ -211,7 +211,7 @@ describe("All Payments Table", function () {
         }
       });
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
       cy.get("@firstRow").find("td").eq(2).contains("Partially Refunded");
 
       //making remaining amount refund
@@ -239,23 +239,22 @@ describe("All Payments Table", function () {
         }
       });
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
       cy.get("@firstRow").find("td").eq(2).contains("Fully Refunded");
     });
 
-    //To be tested once the payment starts failing for magic number
-    it.skip("Failed payment should not have refund option", () => {
+    it("Failed payment should not have refund option", () => {
       cy.createAndPay(1, "6.61", "payment");
       cy.wait(20000);
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
       cy.get("@firstRow").find("td").eq(2).should("contain", "Failed");
       cy.get("@firstRow").click();
       cy.get("[data-cy=refund]").should("be.disabled");
     });
 
-    it.skip("Failed payment should not have refund button in payment details modal", () => {
+    it("Failed payment should not have refund button in payment details modal", () => {
       cy.get("@firstRow").click();
       cy.get("[data-cy=view-details]").should("be.enabled").click();
       cy.get("[data-cy=payment-details-modal]")
