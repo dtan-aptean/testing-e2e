@@ -47,12 +47,12 @@ Cypress.Commands.add("postGQLWithoutTenantSecret", (query) => {
     headers: {
       "x-aptean-apim": Cypress.env("x-aptean-apim"),
       "x-aptean-tenant": Cypress.env("x-aptean-tenant"),
+      "x-aptean-account": Cypress.env("x-aptean-account"),
     },
     body: { query },
     failOnStatusCode: false,
   });
 });
-
 
 //-- This will post GQL query with bearer token --
 Cypress.Commands.add("postGQLBearer", (query) => {
