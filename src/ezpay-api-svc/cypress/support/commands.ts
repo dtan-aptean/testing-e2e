@@ -39,6 +39,21 @@ Cypress.Commands.add("postGQL", (query) => {
   });
 });
 
+// -- This will post GQL query without tenant secret --
+Cypress.Commands.add("postGQLWithoutTenantSecret", (query) => {
+  return cy.request({
+    method: "POST",
+    url: "/graphql",
+    headers: {
+      "x-aptean-apim": Cypress.env("x-aptean-apim"),
+      "x-aptean-tenant": Cypress.env("x-aptean-tenant"),
+      "x-aptean-account": Cypress.env("x-aptean-account"),
+    },
+    body: { query },
+    failOnStatusCode: false,
+  });
+});
+
 //-- This will post GQL query with bearer token --
 Cypress.Commands.add("postGQLBearer", (query) => {
   return cy.request({
