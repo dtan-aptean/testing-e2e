@@ -89,7 +89,7 @@ Cypress.Commands.add("getInvoiceRef", () => {
   return Cypress.$.ajax(settings);
 });
 
-// -- This will generate a payment request url --
+// -- This will generate a payment request --
 Cypress.Commands.add("generatePaymentRequest", (requestAmount: Number = 0) => {
   cy.getInvoiceRef()
     .then((uploadResponse) => {
@@ -130,6 +130,59 @@ Cypress.Commands.add("generatePaymentRequest", (requestAmount: Number = 0) => {
       });
     });
 });
+
+// -- This will generate a payment request with discount --
+Cypress.Commands.add(
+  "generatePaymentRequestWithDiscount",
+  (requestAmount: Number = 0, discount: Number = 0, discountEndDate: Date) => {
+    cy.getInvoiceRef()
+      .then((uploadResponse) => {
+        return uploadResponse.data.upload.uniqueId;
+      })
+      .then((uniqueId) => {
+        let amount = requestAmount;
+        if (amount === 0) {
+          amount = Cypress._.random(1000, 1e4);
+        }
+        if (discount === 0) {
+          amount = Cypress._.random(100, 1e3);
+        }
+        const referenceNumber = Cypress._.random(0, 1e20);
+        const gqlQuery = `mutation {
+        upsertPaymentRequest(
+          input: {
+            referenceNumber: "${referenceNumber}"
+            type: NONE
+            amount: ${amount}
+            invoiceRef: "${uniqueId}"
+            discountAmount: ${discount}
+            discountEndDate: "${discountEndDate.toISOString()}"
+          }
+        ) {
+          paymentUrl
+          paymentRequestId
+        }
+      }`;
+        cy.postGQL(gqlQuery).then((paymentRequest) => {
+          // should be 200 ok
+          cy.expect(paymentRequest.isOkStatusCode).to.be.equal(true);
+
+          const response = {
+            amount,
+            discount,
+            discountEndDate,
+            invoiceRef: uniqueId,
+            paymentRequestId:
+              paymentRequest.body.data.upsertPaymentRequest.paymentRequestId,
+            paymentUrl:
+              paymentRequest.body.data.upsertPaymentRequest.paymentUrl,
+            referenceNumber,
+          };
+          return response;
+        });
+      });
+  }
+);
 
 // -- This will make an api request as an api consumer --
 Cypress.Commands.add("postGQLWithIdempotencyKey", (query, idempotencyKey) => {
