@@ -637,21 +637,6 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Document link in menu item 'Currencies' should properly redirect ", () => {
-        cy.get('@data').then(data => {
-          var node = 'Currencies';
-          var parentNode = data.parentNode;
-          var urlHead = data.urlHead;
-          cy.get('li').contains(node).click();
-          cy.get('.documentation-reference a').invoke('removeAttr', 'target').click();
-          cy.url().should('contain', urlHead);
-          cy.url().should('contain', parentNode.toLowerCase() + '/' + node.toLowerCase().replace(/ /g, '-'));
-          cy.get('h1').then(div => {
-            expect(div).to.have.text(node);
-          });
-        });
-      });
-
       it("Document link in menu item 'Payment restrictions' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Payment method restrictions';
@@ -908,21 +893,6 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Document link in menu item 'Message queue' should properly redirect ", () => {
-        cy.get('@data').then(data => {
-          var node = 'Message queue';
-          var parentNode = data.parentNode;
-          var urlHead = data.urlHead;
-          cy.get('li').contains(node, { matchCase: false }).click();
-          cy.get('.documentation-reference a').invoke('removeAttr', 'target').click();
-          cy.url().should('contain', urlHead);
-          cy.url().should('contain', parentNode.toLowerCase() + '/' + node.toLowerCase().replace(/ /g, '-'));
-          cy.get('h1').then(div => {
-            expect(div).to.have.text(node);
-          });
-        });
-      });
-
       it("Document link in menu item 'Templates' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Templates';
@@ -964,7 +934,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Document link in menu item 'Low Stock' should properly redirect ", () => {
+      it("Document link in menu item 'Low stock' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Reports';
           var parentNode = data.parentNode;
@@ -985,21 +955,6 @@ describe("Ecommerce", function () {
           var parentNode = data.parentNode;
           var urlHead = data.urlHead;
           cy.get('li').contains('Bestsellers', { matchCase: false }).click();
-          cy.get('.documentation-reference a').invoke('removeAttr', 'target').click();
-          cy.url().should('contain', urlHead);
-          cy.url().should('contain', parentNode.toLowerCase() + '/' + node.toLowerCase().replace(/ /g, '-'));
-          cy.get('h1').first().then(div => {
-            expect(div).to.have.text('Reports');
-          });
-        });
-      });
-
-      it("Document link in menu item 'Products never purchased' should properly redirect ", () => {
-        cy.get('@data').then(data => {
-          var node = 'Reports';
-          var parentNode = data.parentNode;
-          var urlHead = data.urlHead;
-          cy.get('li').contains('Products never purchased', { matchCase: false }).click();
           cy.get('.documentation-reference a').invoke('removeAttr', 'target').click();
           cy.url().should('contain', urlHead);
           cy.url().should('contain', parentNode.toLowerCase() + '/' + node.toLowerCase().replace(/ /g, '-'));
