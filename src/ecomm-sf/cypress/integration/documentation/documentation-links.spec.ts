@@ -1,13 +1,13 @@
 /// <reference types="cypress" />
 describe("Ecommerce", function () {
-  context("Guest Checkout", () => {
+  context("Documentation Links", () => {
     beforeEach(() => {
       cy.visit('/');
       cy.login();
       cy.get('.administration').click();
     });
 
-    describe('Catalog', () => {
+    context('Catalog', () => {
       beforeEach(() => {
         var data = {
           parentNode: 'Catalog',
@@ -92,7 +92,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      describe('Attributes', () => {
+      context('Attributes', () => {
         beforeEach(() => {
           cy.get('@data').then(data => {
             cy.wrap(data).as('data');
@@ -147,7 +147,7 @@ describe("Ecommerce", function () {
       });
     });
 
-    describe('Sales', () => {
+    context('Sales', () => {
       beforeEach(() => {
         var data = {
           parentNode: 'order-management',
@@ -263,7 +263,7 @@ describe("Ecommerce", function () {
         });
       });
     });
-    describe('Customers', () => {
+    context('Customers', () => {
       beforeEach(() => {
         var data = {
           parentNode: 'customer-management',
@@ -364,7 +364,7 @@ describe("Ecommerce", function () {
       });
     });
 
-    describe('Promotions', () => {
+    context('Promotions', () => {
       beforeEach(() => {
         var data = {
           parentNode: 'promotional-tools',
@@ -435,7 +435,7 @@ describe("Ecommerce", function () {
       });
     });
 
-    describe('Content management', () => {
+    context('Content management', () => {
       beforeEach(() => {
         var data = {
           parentNode: 'content-management',
@@ -566,7 +566,7 @@ describe("Ecommerce", function () {
       });
     });
 
-    describe('Configuration', () => {
+    context('Configuration', () => {
       beforeEach(() => {
         var data = {
           parentNode: 'advanced-configuration',
@@ -696,7 +696,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      describe('Shipping', () => {
+      context('Shipping', () => {
         beforeEach(() => {
           cy.get('@data').then(data => {
             data.parentNode = 'configure-shipping';
@@ -811,7 +811,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      describe('Authentication', () => {
+      context('Authentication', () => {
         beforeEach(() => {
           cy.get('@data').then(data => {
             data.parentNode = 'advanced-configuration';
@@ -837,7 +837,7 @@ describe("Ecommerce", function () {
       });
     });
 
-    describe('System', () => {
+    context('System', () => {
       beforeEach(() => {
         var data = {
           parentNode: 'system-administration',
@@ -953,7 +953,7 @@ describe("Ecommerce", function () {
       });
     });
 
-    describe('Reports', () => {
+    context('Reports', () => {
       beforeEach(() => {
         var data = {
           parentNode: 'running-your-store',
@@ -1053,7 +1053,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      describe('Customer reports', () => {
+      context('Customer reports', () => {
         beforeEach(() => {
           cy.get('@data').then(data => {
             cy.wrap(data).as('data');
@@ -1108,7 +1108,7 @@ describe("Ecommerce", function () {
       });
     });
 
-    describe('Customers', () => {
+    context('Customers', () => {
       it("Link to 'Help topics' should properly redirect ", () => {
         cy.get('li').contains('Help').click();
         cy.get('li').contains('Help topics', { matchCase: false }).invoke('removeAttr', 'target').click();
