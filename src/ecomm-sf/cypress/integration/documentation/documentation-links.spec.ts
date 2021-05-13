@@ -17,7 +17,7 @@ describe("Ecommerce", function () {
         cy.get('li').contains(data.parentNode).click();
       });
 
-      it("Link to 'Products' doc should properly redirect ", () => {
+      it("Document link in menu item 'Products' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Products';
           var parentNode = data.parentNode;
@@ -32,7 +32,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Categories' doc should properly redirect ", () => {
+      it("Document link in menu item 'Categories' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Categories';
           var parentNode = data.parentNode;
@@ -47,7 +47,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Manufacturers' should properly redirect ", () => {
+      it("Document link in menu item 'Manufacturers' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Manufacturers';
           var parentNode = data.parentNode;
@@ -62,7 +62,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Product Reviews' should properly redirect ", () => {
+      it("Document link in menu item 'Product reviews' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Product reviews';
           var parentNode = data.parentNode + '/products';
@@ -77,7 +77,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Product Tags' should properly redirect ", () => {
+      it("Document link in menu item 'Product tags' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Product tags';
           var parentNode = data.parentNode + '/products';
@@ -100,7 +100,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'Product attributes' should properly redirect ", () => {
+        it("Document link in menu item 'Product attributes' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'Product attributes';
             var parentNode = data.parentNode + '/products';
@@ -115,7 +115,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'Specification attributes' should properly redirect ", () => {
+        it("Document link in menu item 'Specification attributes' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'Specification attributes';
             var parentNode = data.parentNode + '/products';
@@ -130,7 +130,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'Checkout attributes' should properly redirect ", () => {
+        it("Document link in menu item 'Checkout attributes' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'Checkout attributes';
             var parentNode = 'order-management';
@@ -157,7 +157,7 @@ describe("Ecommerce", function () {
         cy.get('li').contains('Sales').click();
       });
 
-      it("Link to 'Orders' doc should properly redirect ", () => {
+      it("Document link in menu item 'Orders' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Orders';
           var parentNode = data.parentNode;
@@ -172,7 +172,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Shipments' doc should properly redirect ", () => {
+      it("Document link in menu item 'Shipments' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Shipping management';
           var parentNode = data.parentNode;
@@ -187,7 +187,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Return requests' doc should properly redirect ", () => {
+      it("Document link in menu item 'Return requests' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Return requests';
           var parentNode = data.parentNode;
@@ -202,22 +202,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Shipping management' doc should properly redirect ", () => {
-        cy.get('@data').then(data => {
-          var node = 'Shipping management';
-          var parentNode = data.parentNode;
-          var urlHead = data.urlHead;
-          cy.get('li').contains('Shipments').click();
-          cy.get('.documentation-reference a').invoke('removeAttr', 'target').click();
-          cy.url().should('contain', urlHead);
-          cy.url().should('contain', parentNode.toLowerCase() + '/' + node.toLowerCase().replace(/ /g, '-'));
-          cy.get('h1').then(div => {
-            expect(div).to.have.text(node);
-          });
-        });
-      });
-
-      it("Link to 'Recurring products' doc should properly redirect ", () => {
+      it("Document link in menu item 'Recurring payments' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Recurring products';
           var parentNode = 'catalog/products';
@@ -232,7 +217,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Gift cards' doc should properly redirect ", () => {
+      it("Document link in menu item 'Gift cards' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Gift cards';
           var parentNode = 'promotional-tools';
@@ -247,7 +232,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Shopping carts and wishlists' doc should properly redirect ", () => {
+      it("Document link in menu item 'Shopping carts and wishlists' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Shopping carts and wishlists';
           var nodeUrl = node.toLowerCase().replace(/ /g, '-');
@@ -263,6 +248,7 @@ describe("Ecommerce", function () {
         });
       });
     });
+
     context('Customers', () => {
       beforeEach(() => {
         var data = {
@@ -273,7 +259,7 @@ describe("Ecommerce", function () {
         cy.get('li').contains('Customers').click();
       });
 
-      it("Link to 'Customers' doc should properly redirect ", () => {
+      it("Document link in menu item 'Customers' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Managing customers';
           var parentNode = data.parentNode;
@@ -288,7 +274,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Customer roles' doc should properly redirect ", () => {
+      it("Document link in menu item 'Customer roles' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Customer roles';
           var parentNode = data.parentNode;
@@ -303,7 +289,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Online customers' doc should properly redirect ", () => {
+      it("Document link in menu item 'Online customers' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Online customers';
           var parentNode = data.parentNode;
@@ -318,7 +304,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Vendor management' doc should properly redirect ", () => {
+      it("Document link in menu item 'Vendors' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Vendor management';
           var parentNode = '';
@@ -333,7 +319,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Activity log' doc should properly redirect ", () => {
+      it("Document link in menu item 'Activity log' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Activity log';
           var parentNode = data.parentNode;
@@ -348,7 +334,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Activity Types' doc should properly redirect ", () => {
+      it("Document link in menu item 'Activity Types' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Activity log';
           var parentNode = data.parentNode;
@@ -374,7 +360,7 @@ describe("Ecommerce", function () {
         cy.get('li').contains('Promotions').click();
       });
 
-      it("Link to 'Discounts' doc should properly redirect ", () => {
+      it("Document link in menu item 'Discounts' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Discounts';
           var parentNode = data.parentNode;
@@ -389,7 +375,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Affiliates' doc should properly redirect ", () => {
+      it("Document link in menu item 'Affiliates' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Affiliates';
           var parentNode = data.parentNode;
@@ -404,7 +390,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Newsletter subscribers' doc should properly redirect ", () => {
+      it("Document link in menu item 'Newsletter subscribers' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Email campaigns';
           var parentNode = data.parentNode;
@@ -419,7 +405,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Campaigns' doc should properly redirect ", () => {
+      it("Document link in menu item 'Campaigns' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Email campaigns';
           var parentNode = data.parentNode;
@@ -445,7 +431,7 @@ describe("Ecommerce", function () {
         cy.get('li').contains('Content management').click();
       });
 
-      it("Link to 'Topics (pages)' doc should properly redirect ", () => {
+      it("Document link in menu item 'Topics (pages)' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Topics (pages)';
           var parentNode = data.parentNode;
@@ -460,7 +446,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Message templates' doc should properly redirect ", () => {
+      it("Document link in menu item 'Message templates' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Message templates';
           var parentNode = data.parentNode;
@@ -475,7 +461,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'News items' doc should properly redirect ", () => {
+      it("Document link in menu item 'News items' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'News';
           var parentNode = data.parentNode;
@@ -490,7 +476,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'News comments' doc should properly redirect ", () => {
+      it("Document link in menu item 'News comments' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'News';
           var parentNode = data.parentNode;
@@ -505,7 +491,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Blog posts' doc should properly redirect ", () => {
+      it("Document link in menu item 'Blog posts' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Blog';
           var parentNode = data.parentNode;
@@ -520,7 +506,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Blog comments' doc should properly redirect ", () => {
+      it("Document link in menu item 'Blog comments' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Blog';
           var parentNode = data.parentNode;
@@ -535,7 +521,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Polls' doc should properly redirect ", () => {
+      it("Document link in menu item 'Polls' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Polls';
           var parentNode = data.parentNode;
@@ -550,7 +536,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Forums' doc should properly redirect ", () => {
+      it("Document link in menu item 'Forums' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Forums';
           var parentNode = data.parentNode;
@@ -576,7 +562,7 @@ describe("Ecommerce", function () {
         cy.get('li').contains('Configuration').click();
       });
 
-      it("Link to 'Email accounts' doc should properly redirect ", () => {
+      it("Document link in menu item 'Email accounts' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Email accounts';
           var parentNode = 'getting-started';
@@ -591,7 +577,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Countries' doc should properly redirect ", () => {
+      it("Document link in menu item 'Countries' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Countries';
           var parentNode = data.parentNode;
@@ -606,7 +592,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Languages' doc should properly redirect ", () => {
+      it("Document link in menu item 'Languages' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Localization';
           var parentNode = data.parentNode;
@@ -621,7 +607,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Currencies' doc should properly redirect ", () => {
+      it("Document link in menu item 'Currencies' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Currencies';
           var parentNode = data.parentNode;
@@ -636,7 +622,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Payment methods' doc should properly redirect ", () => {
+      it("Document link in menu item 'Payment methods' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Payment methods';
           var parentNode = 'configure-payments';
@@ -651,7 +637,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Currencies' doc should properly redirect ", () => {
+      it("Document link in menu item 'Currencies' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Currencies';
           var parentNode = data.parentNode;
@@ -666,7 +652,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Payment restrictions' doc should properly redirect ", () => {
+      it("Document link in menu item 'Payment restrictions' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Payment method restrictions';
           var parentNode = data.parentNode;
@@ -681,7 +667,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Tax providers' doc should properly redirect ", () => {
+      it("Document link in menu item 'Tax providers' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Tax providers';
           var parentNode = 'configure-taxes';
@@ -705,7 +691,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'Shipping providers' should properly redirect ", () => {
+        it("Document link in menu item 'Shipping providers' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'Shipping providers';
             var parentNode = data.parentNode;
@@ -720,7 +706,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'Warehouses' should properly redirect ", () => {
+        it("Document link in menu item 'Warehouses' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'Warehouses';
             var parentNode = data.parentNode + '/advanced-configuration';
@@ -735,7 +721,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'Pickup point providers' should properly redirect ", () => {
+        it("Document link in menu item 'Pickup point providers' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'Pickup Points';
             var parentNode = data.parentNode + '/advanced-configuration';
@@ -750,7 +736,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'Dates and ranges' should properly redirect ", () => {
+        it("Document link in menu item 'Dates and ranges' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'Dates and ranges';
             var parentNode = data.parentNode + '/advanced-configuration';
@@ -765,7 +751,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'Measures' should properly redirect ", () => {
+        it("Document link in menu item 'Measures' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'Measures';
             var parentNode = data.parentNode + '/advanced-configuration';
@@ -781,7 +767,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Access control list' should properly redirect ", () => {
+      it("Document link in menu item 'Access control list' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Access control list';
           var parentNode = 'customer-management';
@@ -796,7 +782,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Widgets' should properly redirect ", () => {
+      it("Document link in menu item 'Widgets' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'plugins in nopCommerce';
           var parentNode = data.parentNode;
@@ -820,7 +806,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'External authentication' should properly redirect ", () => {
+        it("Document link in menu item 'External authentication' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'External authentication';
             var parentNode = data.parentNode;
@@ -847,7 +833,7 @@ describe("Ecommerce", function () {
         cy.get('li').contains('System').parent().click();
       });
 
-      it("Link to 'Log' should properly redirect ", () => {
+      it("Document link in menu item 'Log' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Log';
           var parentNode = data.parentNode;
@@ -862,7 +848,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Maintenance' should properly redirect ", () => {
+      it("Document link in menu item 'Maintenance' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Maintenance';
           var parentNode = data.parentNode;
@@ -877,7 +863,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Message queue' should properly redirect ", () => {
+      it("Document link in menu item 'Message queue' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Message queue';
           var parentNode = data.parentNode;
@@ -892,7 +878,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Schedule tasks' should properly redirect ", () => {
+      it("Document link in menu item 'Schedule tasks' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Schedule tasks';
           var parentNode = data.parentNode;
@@ -907,7 +893,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Search engine friendly page names' should properly redirect ", () => {
+      it("Document link in menu item 'Search engine friendly page names' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Search engine friendly page names';
           var parentNode = 'running-your-store';
@@ -922,7 +908,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Message queue' should properly redirect ", () => {
+      it("Document link in menu item 'Message queue' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Message queue';
           var parentNode = data.parentNode;
@@ -937,7 +923,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Templates' should properly redirect ", () => {
+      it("Document link in menu item 'Templates' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Templates';
           var parentNode = data.parentNode;
@@ -963,7 +949,7 @@ describe("Ecommerce", function () {
         cy.get('li').contains('Reports').parent().click();
       });
 
-      it("Link to 'Sales summary' should properly redirect ", () => {
+      it("Document link in menu item 'Sales summary' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Reports';
           var parentNode = data.parentNode;
@@ -978,7 +964,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Low Stock' should properly redirect ", () => {
+      it("Document link in menu item 'Low Stock' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Reports';
           var parentNode = data.parentNode;
@@ -993,7 +979,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Bestsellers' should properly redirect ", () => {
+      it("Document link in menu item 'Bestsellers' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Reports';
           var parentNode = data.parentNode;
@@ -1008,7 +994,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Products never purchased' should properly redirect ", () => {
+      it("Document link in menu item 'Products never purchased' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Reports';
           var parentNode = data.parentNode;
@@ -1023,7 +1009,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Products never purchased' should properly redirect ", () => {
+      it("Document link in menu item 'Products never purchased' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Reports';
           var parentNode = data.parentNode;
@@ -1038,7 +1024,7 @@ describe("Ecommerce", function () {
         });
       });
 
-      it("Link to 'Country sales' should properly redirect ", () => {
+      it("Document link in menu item 'Country sales' should properly redirect ", () => {
         cy.get('@data').then(data => {
           var node = 'Reports';
           var parentNode = data.parentNode;
@@ -1061,7 +1047,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'Registered customer' should properly redirect ", () => {
+        it("Document link in menu item 'Registered customer' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'Reports';
             var parentNode = data.parentNode;
@@ -1076,7 +1062,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'Customers by order total' should properly redirect ", () => {
+        it("Document link in menu item 'Customers by order total' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'Reports';
             var parentNode = data.parentNode;
@@ -1091,7 +1077,7 @@ describe("Ecommerce", function () {
           });
         });
 
-        it("Link to 'Customers by number of orders' should properly redirect ", () => {
+        it("Document link in menu item 'Customers by number of orders' should properly redirect ", () => {
           cy.get('@data').then(data => {
             var node = 'Reports';
             var parentNode = data.parentNode;
@@ -1109,7 +1095,7 @@ describe("Ecommerce", function () {
     });
 
     context('Customers', () => {
-      it("Link to 'Help topics' should properly redirect ", () => {
+      it("Document link in menu item 'Help topics' should properly redirect ", () => {
         cy.get('li').contains('Help').click();
         cy.get('li').contains('Help topics', { matchCase: false }).invoke('removeAttr', 'target').click();
         cy.url().should('contain', 'tst.docs.apteanecommerce.com');
