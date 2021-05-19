@@ -514,3 +514,124 @@ Cypress.Commands.add("getWePayAccount", (accountId) => {
   };
   return Cypress.$.ajax(settings);
 });
+
+export enum CommandType {
+  PostGQL,
+  PostGQLBearer,
+  PostGQLWithIdempotencyKey,
+  postGQLWithoutTenantSecret,
+}
+
+Cypress.Commands.add(
+  "while",
+  (
+    gqlQuery: string,
+    commandType: CommandType,
+    predicate: Function,
+    delayBetweenCalls: number = 2500,
+    timeout: number = 120000,
+    options: { idempotencyKey: string; debug: boolean },
+    currentElapsed: number = 0
+  ) => {
+    const { idempotencyKey = "", debug = false } = options || {};
+    if (currentElapsed > timeout) {
+      throw new Error(
+        `Timeout limit reached for the while command. Timeout was: ${timeout}`
+      );
+    }
+    switch (commandType) {
+      case CommandType.PostGQL:
+        return cy.postGQL(gqlQuery).then((res) => {
+          if (debug) {
+            console.log(res);
+          }
+          if (!predicate(res)) {
+            cy.wait(delayBetweenCalls);
+            currentElapsed += delayBetweenCalls;
+            return cy.while(
+              gqlQuery,
+              commandType,
+              predicate,
+              delayBetweenCalls,
+              timeout,
+              options,
+              currentElapsed
+            );
+          } else {
+            return res;
+          }
+        });
+        break;
+      case CommandType.PostGQLBearer:
+        return cy.postGQLBearer(gqlQuery).then((res) => {
+          if (debug) {
+            console.log(res);
+          }
+          if (!predicate(res)) {
+            cy.wait(delayBetweenCalls);
+            currentElapsed += delayBetweenCalls;
+            return cy.while(
+              gqlQuery,
+              commandType,
+              predicate,
+              delayBetweenCalls,
+              timeout,
+              options,
+              currentElapsed
+            );
+          } else {
+            return res;
+          }
+        });
+        break;
+      case CommandType.PostGQLWithIdempotencyKey:
+        return cy
+          .PostGQLWithIdempotencyKey(gqlQuery, idempotencyKey)
+          .then((res) => {
+            if (debug) {
+              console.log(res);
+            }
+            if (!predicate(res)) {
+              cy.wait(delayBetweenCalls);
+              currentElapsed += delayBetweenCalls;
+              return cy.while(
+                gqlQuery,
+                commandType,
+                predicate,
+                delayBetweenCalls,
+                timeout,
+                options,
+                currentElapsed
+              );
+            } else {
+              return res;
+            }
+          });
+        break;
+      case CommandType.postGQLWithoutTenantSecret:
+        return cy.postGQLWithoutTenantSecret(gqlQuery).then((res) => {
+          if (debug) {
+            console.log(res);
+          }
+          if (!predicate(res)) {
+            cy.wait(delayBetweenCalls);
+            currentElapsed += delayBetweenCalls;
+            return cy.while(
+              gqlQuery,
+              commandType,
+              predicate,
+              delayBetweenCalls,
+              timeout,
+              options,
+              currentElapsed
+            );
+          } else {
+            return res;
+          }
+        });
+        break;
+      default:
+        throw new Error("No command type specified!");
+    }
+  }
+);

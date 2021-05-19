@@ -1,5 +1,7 @@
 /// <reference types="cypress" />
 
+import { CommandType } from "../../support/commands";
+
 describe("Mutation: createRefund", () => {
   it("should fail when no idempotency-key header is sent with the request", () => {
     const gqlQuery = `mutation createRefund {
@@ -41,7 +43,24 @@ describe("Mutation: createRefund", () => {
       paymentId = res.id;
       amount = res.amount;
 
-      cy.wait(60000);
+      let gql = `query payments {
+        payments(id: "${paymentId}") {
+          totalCount
+          nodes {
+            pendingReasonCode
+            id
+            status
+            pendingReason
+          }
+        }
+      }`;
+      cy.log("Wait for payment to be completed");
+      cy.while(
+        gql,
+        CommandType.PostGQL,
+        (res) => res.body.data.payments.nodes[0].status === "COMPLETED",
+        10000
+      );
       const gqlQuery = `mutation createRefund {
           createRefund(
             input: {
@@ -73,9 +92,30 @@ describe("Mutation: createRefund", () => {
         assert.isNull(res.body.data.createRefund.error);
         assert.exists(res.body.data.createRefund.refund);
         assert.exists(res.body.data.createRefund.refund.id);
-      });
 
-      cy.wait(5000);
+        gql = `query {
+        refunds(id: "${res.body.data.createRefund.refund.id}") {
+          totalCount
+          edges {
+            node {
+              id
+              status
+              amount
+              refundReason
+            }
+          }
+        }
+      }
+      `;
+        cy.log("Wait for refund to be completed");
+        cy.while(
+          gql,
+          CommandType.PostGQL,
+          (res) => res.body.data.refunds.edges[0].node.status === "COMPLETED",
+          10000,
+          120000
+        );
+      });
 
       // Should fail when calling again with same Idempotency Key
       cy.postGQLWithIdempotencyKey(gqlQuery, paymentId).then((res) => {
@@ -117,7 +157,24 @@ describe("Mutation: createRefund", () => {
       let partialAmount1 = originalAmount - 100;
       let partialAmount2 = originalAmount - partialAmount1;
 
-      cy.wait(60000);
+      let gql = `query payments {
+        payments(id: "${paymentId}") {
+          totalCount
+          nodes {
+            pendingReasonCode
+            id
+            status
+            pendingReason
+          }
+        }
+      }`;
+      cy.log("Wait for payment to be completed");
+      cy.while(
+        gql,
+        CommandType.PostGQL,
+        (res) => res.body.data.payments.nodes[0].status === "COMPLETED",
+        10000
+      );
 
       let gqlQuery = `mutation createRefund {
         createRefund(
@@ -154,6 +211,29 @@ describe("Mutation: createRefund", () => {
         assert.isNull(res.body.data.createRefund.error);
         assert.exists(res.body.data.createRefund.refund);
         assert.exists(res.body.data.createRefund.refund.id);
+
+        gql = `query {
+        refunds(id: "${res.body.data.createRefund.refund.id}") {
+          totalCount
+          edges {
+            node {
+              id
+              status
+              amount
+              refundReason
+            }
+          }
+        }
+      }
+      `;
+        cy.log("Wait for refund to be completed");
+        cy.while(
+          gql,
+          CommandType.PostGQL,
+          (res) => res.body.data.refunds.edges[0].node.status === "COMPLETED",
+          10000,
+          120000
+        );
       });
 
       gqlQuery = `mutation createRefund {
@@ -173,8 +253,6 @@ describe("Mutation: createRefund", () => {
         }
       }
       `;
-
-      cy.wait(60000);
 
       // Second partial refund
       cy.postGQLWithIdempotencyKey(gqlQuery, paymentId + "1").then((res) => {
