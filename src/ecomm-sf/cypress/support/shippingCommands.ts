@@ -387,7 +387,17 @@ const compareMethodCosts = (newCosts: {name: string, cost: number}[], originalCo
     expect(val.cost).to.eql(expectedCost, errorMessage);
   });
 };
-  
+
+// Command to set shipping origin, get properties of shipping providers, and store them.
+Cypress.Commands.add("prepForShipping", (providerName?: string) => {
+  cy.visit("/");
+  cy.login();
+  return cy.setShippingOrigin().then(() => {
+    return cy.checkAvailableShippers(providerName).then((providers) => {
+      return cy.wrap(providers);
+    });
+  });
+});
 
 Cypress.Commands.add("clickSave", () => {
   return cy.get("[name=save]").click();
@@ -573,28 +583,32 @@ Cypress.Commands.add("enableCarrierServices", (providerName: string, domestic?: 
 // TODO: rename to something more descriptive
 Cypress.Commands.add("postConfigChange", (providerName: string) => {
   return cy.clickBack().then(() => {
-    const findOtherProvider = () => {
-      const filterProvider = (index, item) => {
-        return item.cells[0].innerText !== providerName && item.cells[3].innerHTML.includes("true-icon");
-      };
-      return cy.findTableItem("#shippingproviders-grid", "#shippingproviders-grid_next", filterProvider).then((row) => {
-        if (row) {
-          cy.wrap(row[0]).clickRowBtn("Edit");
-          cy.wrap(row[0]).find("td[data-columnname=IsActive]").find("input").toggle();
-          cy.wrap(row[0]).clickRowBtn("Update");
-          cy.allowLoad().then(() => {
-            findOtherProvider();
-          });
-        } else {
-          return;
-        }
-      });
-    };
     cy.wait(2000);
     cy.wait("@shippingProviders"); // This intercept is set up in goToShippingProviders. If the command is removed later, will need to set up a new intercept
-    cy.allowLoad().then(() => {
-      findOtherProvider();
+    return cy.disableOtherProviders(providerName);
+  });
+});
+
+Cypress.Commands.add("disableOtherProviders", (providerName: string) => {
+  const findOtherProvider = () => {
+    const filterProvider = (index, item) => {
+      return item.cells[0].innerText !== providerName && item.cells[3].innerHTML.includes("true-icon");
+    };
+    return cy.findTableItem("#shippingproviders-grid", "#shippingproviders-grid_next", filterProvider).then((row) => {
+      if (row) {
+        cy.wrap(row[0]).clickRowBtn("Edit");
+        cy.wrap(row[0]).find("td[data-columnname=IsActive]").find("input").toggle();
+        cy.wrap(row[0]).clickRowBtn("Update");
+        cy.allowLoad().then(() => {
+          findOtherProvider();
+        });
+      } else {
+        return;
+      }
     });
+  };
+  cy.allowLoad().then(() => {
+    findOtherProvider();
   }).then(() => {
     cy.findShippingProvider(providerName).then((row) => {
       if (!row[0].cells[3].innerHTML.includes("true-icon")) {

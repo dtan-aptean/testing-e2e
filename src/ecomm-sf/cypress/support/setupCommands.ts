@@ -498,7 +498,7 @@ Cypress.Commands.add("setShippingOrigin", () => {
 });
 
 // Checks that there are shipping providers
-Cypress.Commands.add("checkAvailableShippers", () => {
+Cypress.Commands.add("checkAvailableShippers", (providerName?: string) => {
   Cypress.log({
     displayName: "checkAvailableShippers",
     message: "Checking # of shipping providers"
@@ -530,16 +530,23 @@ Cypress.Commands.add("checkAvailableShippers", () => {
         .find("tbody")
         .find("tr")
         .then(($rows) => {
-          if ($rows.length === 1 || $rows.length === 0) {
-            expect($rows.length).to.be.greaterThan(1, "No additional shipping providers available. Cannot run shipping tests.");
-          } else {
-            const nonManual = $rows.filter((index, item) => {
-              return !item.cells[0].innerText.includes("Manual");
+          if (providerName) {
+            const providerPresent = $rows.filter((index, item) => {
+              return item.cells[0].innerText.includes(providerName);
             });
-            if (nonManual.length < 1) {
-              expect(nonManual.length).to.be.greaterThan(1, "Not enough additional shipping providers available. Cannot run shipping tests.");
+            if (providerPresent.length === 0) {
+              expect(providerPresent.length).to.be.greaterThan(0, `Shipping Provider "${providerName}" must be present for these tests.`);
             } else {
-              const names = fetchProviderNames(nonManual);
+              const names = fetchProviderNames($rows);
+              return cy.storeShipperProperties(names).then(() => {
+                return names;
+              });
+            }
+          } else {
+            if ($rows.length === 1 || $rows.length === 0) {
+              expect($rows.length).to.be.greaterThan(1, "No additional shipping providers available. Cannot run shipping tests.");
+            } else {
+              const names = fetchProviderNames($rows);
               return cy.storeShipperProperties(names).then(() => {
                 return names;
               });
@@ -702,12 +709,14 @@ Cypress.Commands.add("resetShippingProviders", () => {
   };
   cy.visit("/");
   cy.login();
-  cy.goToShippingProviders();
-  cy.allowLoad();
-  const originalProviderProperties = Cypress.env("shipProperties");
-  if (originalProviderProperties) {
-    checkTableRows(originalProviderProperties)
-  }
+  cy.goToShippingProviders().then(() => {
+    cy.wait(10);
+    cy.allowLoad();
+    const originalProviderProperties = Cypress.env("shipProperties");
+    if (originalProviderProperties) {
+      checkTableRows(originalProviderProperties)
+    }
+  });
 });
 
 // Sets a single shipping provider back to its original configuration with the provided array

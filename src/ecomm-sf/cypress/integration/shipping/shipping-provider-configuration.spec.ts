@@ -9,7 +9,9 @@ describe("Ecommerce", function () {
 
     before(() => {
       cy.checkAvailableShippers().then((providers) => {
-        providerNames = providers;
+        providerNames = providers.filter((prov) => {
+          return !prov.includes("Manual");
+        });
       });
     });
 

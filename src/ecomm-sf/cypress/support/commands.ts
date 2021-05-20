@@ -1157,7 +1157,60 @@ Cypress.Commands.add("fillOutBilling", () => {
   });
   cy.get(".new-address-next-step-button").eq(0).click();
   return cy.wait("@billingSaved");
-})
+});
+
+// Chooses a payment method if available, preferring ApteanPay.
+// If choice is unavailable, then it will simply fill out info
+Cypress.Commands.add("filloutPayment", () => {
+  const log = Cypress.log({
+    name: "filloutPayment",
+    message: "Choose payment method, provide info"
+  });
+
+  cy.intercept("POST", "/checkout/OpcSavePaymentMethod/").as('paymentMethodSaved');
+  cy.intercept("POST", "/checkout/OpcSavePaymentInfo/").as('paymentSaved');
+
+  const filloutInfo = () => {
+    return cy.get("#co-payment-info-form").then(($element) => {    
+      cy.wait(2000); // Allow iFrame to load
+      const iframe = $element.find("#credit-card-iframe");
+      if (iframe.length === 0) {
+        // Non iframe version
+        cy.get("#CreditCardType").select("Discover");
+        cy.get("#CardholderName").type("Cypress McTester")
+        cy.get("#CardNumber").type("6011111111111117");
+        cy.get("#ExpireMonth").select("03");
+        cy.get("#ExpireYear").select("2024");
+        cy.get("#CardCode").type("123"); 
+        cy.get(".payment-info-next-step-button").click();
+        return cy.wait('@paymentSaved');
+      } else {
+        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cc-number").type("6011111111111117");
+        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-month").type("03");
+        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-year").type("24");
+        cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cvv-number").type("123");
+        cy.get("#submit-credit-card-button").click();
+        cy.wait(5000); // Allow iFrame to finish sumbitting
+        cy.get(".payment-info-next-step-button").click();
+        return cy.wait('@paymentSaved');
+      }
+    });
+  };
+
+  return cy.url().then((url) => {
+    if (url.includes("#opc-payment_method")) {
+      // TODO: Make sure this will choose ApteanPay every tume
+      cy.get("#payment-method-block").find("#paymentmethod_0").check();
+      cy.get(".payment-method-next-step-button").click();
+      return cy.wait('@paymentMethodSaved').then(() => {
+        return filloutInfo();
+      });
+    } else {
+      // Only one payment method available, sent straight to payment info step
+      return filloutInfo();
+    }
+  });
+});
 
 // Progresses through checkout to get to confirm order.
 Cypress.Commands.add("getToConfirmOrder", () => {
@@ -1267,7 +1320,7 @@ Cypress.Commands.add("changeProviderProps", (providerName: string, activate: boo
     cy.wrap(row).find("td[data-columnname=DisplayOrder]").invoke("text").then((curDisOrder: string) => {
       cy.wrap(row).find("td[data-columnname=IsActive]").find("i").invoke("hasClass", "true-icon").then((isActive: boolean) => {
         if (curDisOrder !== newOrder || isActive !== activate) {
-          cy.wrap(row).find("a").contains("Edit").click();
+          cy.wrap(row).clickRowBtn("Edit", { force: true });
           cy.wait(300);
           if (isActive !== activate) {
             cy.wrap(row).find("td[data-columnname=IsActive]").find("input").toggle();
@@ -1276,12 +1329,21 @@ Cypress.Commands.add("changeProviderProps", (providerName: string, activate: boo
             cy.wrap(row).find("td[data-columnname=DisplayOrder]").find("input").replaceText(newOrder);
           }
           // TODO: Could probably wait on an intercept here
-          cy.wrap(row).find("a").contains("Update").click();
+          cy.wrap(row).clickRowBtn("Update", { force: true });
           cy.allowLoad();
         }
       });
     });
   });
+});
+
+Cypress.Commands.add("refreshTable", () => {
+  const log = Cypress.log({
+    name: "refreshTable",
+    message: "Refreshing table"
+  });
+  cy.get(".data-tables-refresh:visible", { log: false }).find("button", { log: false }).click({ force: true, log: false });
+  cy.allowLoad();
 });
 
 // COMMANDS FOR TESTS THAT ARE THE SAME BETWEEN REGISTERED USERS AND GUESTS
