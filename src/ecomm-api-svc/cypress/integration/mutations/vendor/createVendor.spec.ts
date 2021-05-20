@@ -1,8 +1,8 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../../support/commands";
+import { createMutResMessage, toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 9
+// TEST COUNT: 13
 describe('Mutation: createVendor', () => {
     var id = '';
     const mutationName = 'createVendor';
@@ -270,6 +270,330 @@ describe('Mutation: createVendor', () => {
                                     metaDescription
                                     metaTitle
                                     languageCode
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+    });
+
+    context("Testing PriceRange input", () => {
+        it("Mutation will fail if priceRange.priceFrom.amount is > than priceRange.priceTo.amount", () => {
+            const info = [{name: `Cypress Invalid PriceRange Amount ${mutationName}`, languageCode: "Standard"}];
+            const priceRange = {
+                priceFrom: {
+                    amount: Cypress._.random(10000, 20000),
+                    currency: "USD"
+                },
+                priceTo: {
+                    amount: Cypress._.random(100, 9999),
+                    currency: "USD"
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        ${infoName}: ${toFormattedString(info)}
+                        priceRange: ${toFormattedString(priceRange)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        ${infoName} {
+                            name
+                            languageCode
+                        }
+                        priceRange {
+                            manuallyPriceRange
+                            priceRangeFiltering
+                            priceFrom {
+                                amount
+                                currency
+                            }
+                            priceTo {
+                                amount
+                                currency
+                            }
+                        }
+                    }
+                }
+            }`;
+            // TODO: replace with custom command later
+            cy.postGQL(mutation).then((res) => {
+                const failureMessage = createMutResMessage(false, mutationName);
+
+                // should have data
+                assert.exists(res.body.data, "Response data should exist");
+                // Check data for errors
+                // Validate Errors
+                assert.exists(res.body.data[mutationName].error, "Should have errors");
+                // Validate data types and values
+                // Validate code
+                assert.isString(res.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);
+                expect(res.body.data[mutationName].code).to.eql("ERROR", `Expect ${mutationName}.code to be ERROR`);
+                // Validate message
+                assert.isString(res.body.data[mutationName].message, `Expect ${mutationName}.message to be a string`);
+                expect(res.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
+                assert.notExists(res.body.data[mutationName][itemPath], `Expect mutation not to return a ${itemPath}`);
+            });
+        });
+
+        it("Mutation will fail if the currency of priceRange.priceFrom and priceRange.priceTo are not the same", () => {
+            const info = [{name: `Cypress PriceRange.PriceFrom Currency ${mutationName}`, languageCode: "Standard"}];
+            const priceRange = {
+                priceFrom: {
+                    amount: Cypress._.random(100, 9999),
+                    currency: "EUR"
+                },
+                priceTo: {
+                    amount: Cypress._.random(10000, 20000),
+                    currency: "USD"
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        ${infoName}: ${toFormattedString(info)}
+                        priceRange: ${toFormattedString(priceRange)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        ${infoName} {
+                            name
+                            languageCode
+                        }
+                        priceRange {
+                            manuallyPriceRange
+                            priceRangeFiltering
+                            priceFrom {
+                                amount
+                                currency
+                            }
+                            priceTo {
+                                amount
+                                currency
+                            }
+                        }
+                    }
+                }
+            }`;
+            // TODO: replace with custom command later
+            cy.postGQL(mutation).then((res) => {
+                const failureMessage = createMutResMessage(false, mutationName);
+
+                // should have data
+                assert.exists(res.body.data, "Response data should exist");
+                // Check data for errors
+                // Validate Errors
+                assert.exists(res.body.data[mutationName].error, "Should have errors");
+                // Validate data types and values
+                // Validate code
+                assert.isString(res.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);
+                expect(res.body.data[mutationName].code).to.eql("ERROR", `Expect ${mutationName}.code to be ERROR`);
+                // Validate message
+                assert.isString(res.body.data[mutationName].message, `Expect ${mutationName}.message to be a string`);
+                expect(res.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
+                assert.notExists(res.body.data[mutationName][itemPath], `Expect mutation not to return a ${itemPath}`);
+
+                const secondInfo = [{name: `Cypress PriceRange.PriceTo Currency ${mutationName}`, languageCode: "Standard"}];
+                const secondPriceRange = {
+                    priceFrom: {
+                        amount: Cypress._.random(100, 9999),
+                        currency: "USD"
+                    },
+                    priceTo: {
+                        amount: Cypress._.random(10000, 20000),
+                        currency: "EUR"
+                    }
+                };
+                const secondMutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            ${infoName}: ${toFormattedString(secondInfo)}
+                            priceRange: ${toFormattedString(secondPriceRange)}
+                        }
+                    ) {
+                        ${standardMutationBody}
+                    }
+                }`;
+                // TODO: replace with custom command later
+                cy.postGQL(secondMutation).then((resp) => {
+                    //const failureMessage = createMutResMessage(false, mutationName);
+
+                    // should have data
+                    assert.exists(resp.body.data, "Response data should exist");
+                    // Check data for errors
+                    // Validate Errors
+                    assert.exists(resp.body.data[mutationName].error, "Should have errors");
+                    // Validate data types and values
+                    // Validate code
+                    assert.isString(resp.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);
+                    expect(resp.body.data[mutationName].code).to.eql("ERROR", `Expect ${mutationName}.code to be ERROR`);
+                    // Validate message
+                    assert.isString(resp.body.data[mutationName].message, `Expect ${mutationName}.message to be a string`);
+                    expect(resp.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
+                    assert.notExists(resp.body.data[mutationName][itemPath], `Expect mutation not to return a ${itemPath}`);
+                });
+            });
+        });
+
+        it("Mutation will successfully save all priceRange properties even when priceRangeFiltering = false", () => {
+            const info = [{name: `Cypress PriceRange false ${mutationName}`, languageCode: "Standard"}];
+            const priceRange = {
+                priceRangeFiltering: false,
+                manuallyPriceRange: false,
+                priceFrom: {
+                    amount: Cypress._.random(100, 9999),
+                    currency: "USD"
+                },
+                priceTo: {
+                    amount: Cypress._.random(10000, 20000),
+                    currency: "USD"
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        ${infoName}: ${toFormattedString(info)}
+                        priceRange: ${toFormattedString(priceRange)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        ${infoName} {
+                            name
+                            languageCode
+                        }
+                        priceRange {
+                            manuallyPriceRange
+                            priceRangeFiltering
+                            priceFrom {
+                                amount
+                                currency
+                            }
+                            priceTo {
+                                amount
+                                currency
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = [infoName, "priceRange"];
+                const propValues = [info, priceRange];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                ${infoName} {
+                                    name
+                                    languageCode
+                                }
+                                priceRange {
+                                    manuallyPriceRange
+                                    priceRangeFiltering
+                                    priceFrom {
+                                        amount
+                                        currency
+                                    }
+                                    priceTo {
+                                        amount
+                                        currency
+                                    }
+                                }
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will successfully save the priceRange input", () => {
+            const info = [{name: `Cypress PriceRange ${mutationName}`, languageCode: "Standard"}];
+            const priceRange = {
+                priceRangeFiltering: Cypress._.random(0, 1) === 1,
+                manuallyPriceRange: Cypress._.random(0, 1) === 1,
+                priceFrom: {
+                    amount: Cypress._.random(100, 9999),
+                    currency: "USD"
+                },
+                priceTo: {
+                    amount: Cypress._.random(10000, 20000),
+                    currency: "USD"
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        ${infoName}: ${toFormattedString(info)}
+                        priceRange: ${toFormattedString(priceRange)}
+                    }
+                ) {
+                    code
+                    message
+                    error
+                    ${itemPath} {
+                        id
+                        ${infoName} {
+                            name
+                            languageCode
+                        }
+                        priceRange {
+                            manuallyPriceRange
+                            priceRangeFiltering
+                            priceFrom {
+                                amount
+                                currency
+                            }
+                            priceTo {
+                                amount
+                                currency
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = [infoName, "priceRange"];
+                const propValues = [info, priceRange];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                ${infoName} {
+                                    name
+                                    languageCode
+                                }
+                                priceRange {
+                                    manuallyPriceRange
+                                    priceRangeFiltering
+                                    priceFrom {
+                                        amount
+                                        currency
+                                    }
+                                    priceTo {
+                                        amount
+                                        currency
+                                    }
                                 }
                             }
                         }

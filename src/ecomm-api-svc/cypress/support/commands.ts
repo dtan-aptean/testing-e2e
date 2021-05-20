@@ -171,7 +171,7 @@ const createErrorMessage = (res, gqlBody: string, queryOrMut: string): string =>
 };
 
 // Create the generic message we expect to see back for most successful mutations, and some unsuccessful mutation
-const createMutResMessage = (isSuccess: boolean, mutationName: string): string => {
+export const createMutResMessage = (isSuccess: boolean, mutationName: string): string => {
     const transformFeature = (str: string): string => {
         while(str.search(/[A-Z]/g) !== -1) {
             str = str.replace(str.charAt(str.search(/[A-Z]/g)), " " + str.charAt(str.search(/[A-Z]/g)).toLowerCase());
