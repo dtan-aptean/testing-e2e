@@ -6,20 +6,20 @@
 export const toFormattedString = (item, isMessage?: boolean, indentation?: number): string => {
     // Names of fields that are enum types and should not be wrapped in quotations.
     const enumTypes = ["discountType", "discountLimitationType", "manageInventoryMethod", "backOrderMode"];
-    function addTabs (depthLevel: number) {
+    function addTabs(depthLevel: number) {
         var indent = '  ';
         for (var i = 1; i < depthLevel; i++) {
             indent = indent + '  ';
         }
         return indent;
     };
-    function iterateThrough (propNames?: string[], descentLevel?: number) {
+    function iterateThrough(propNames?: string[], descentLevel?: number) {
         var returnValue = descentLevel && isMessage ? addTabs(descentLevel) : '';
         for (var i = 0; i < (propNames ? propNames.length : item.length); i++) {
             if (i !== 0) {
                 returnValue = returnValue + ', ' + (descentLevel && isMessage ? '\n' + addTabs(descentLevel) : '');
             }
-            var value = propNames ? item[propNames[i]]: item[i];
+            var value = propNames ? item[propNames[i]] : item[i];
             if (typeof value === 'string') {
                 var allowTransformation = true;
                 if (propNames && enumTypes.includes(propNames[i])) {
@@ -32,7 +32,7 @@ export const toFormattedString = (item, isMessage?: boolean, indentation?: numbe
                 // Arrays return as an object, so this will get both
                 value = toFormattedString(value, isMessage, descentLevel);
             }
-            returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}`: value);
+            returnValue = returnValue + (propNames ? `${propNames[i]}: ${value}` : value);
         }
         return returnValue;
     };
@@ -57,7 +57,7 @@ export const toFormattedString = (item, isMessage?: boolean, indentation?: numbe
         descentLevel = indentation + 1;
         closer = '\n' + addTabs(indentation) + closer;
     } else {
-        closer = props ? ' ' + closer : closer; 
+        closer = props ? ' ' + closer : closer;
     }
     itemAsString = itemAsString + iterateThrough(props, descentLevel) + closer;
     return itemAsString;
@@ -85,39 +85,39 @@ export const verifyStorefrontEnv = (env: string): boolean => {
 export const setAltStorefrontEnv = (envName: string) => {
     if (envName === "storefrontUrl") {
         if (Cypress.config("baseUrl").includes('dev')) {
-            Cypress.log({message: "Setting Storefront Url to dev url"});
+            Cypress.log({ message: "Setting Storefront Url to dev url" });
             Cypress.env(envName, "https://dev.apteanecommerce.com/");
         } else if (Cypress.config("baseUrl").includes('tst')) {
-            Cypress.log({message: "Setting Storefront Url to tst url"});
+            Cypress.log({ message: "Setting Storefront Url to tst url" });
             Cypress.env(envName, "https://tst.apteanecommerce.com/");
         } else {
-            Cypress.log({message: "Storefront Url can't be fixed: forcing failure"});
+            Cypress.log({ message: "Storefront Url can't be fixed: forcing failure" });
             expect(Cypress.env(envName)).to.not.eql(Cypress.env(envName), `Please fill in env value ${envName} with valid value`);
         }
     } else if (envName === "storefrontLogin") {
         if (Cypress.config("baseUrl").includes('dev')) {
-            Cypress.log({message: "Setting Storefront username to dev user"});
+            Cypress.log({ message: "Setting Storefront username to dev user" });
             Cypress.env(envName, "bhargava.deshpande@aptean.com");
         } else if (Cypress.config("baseUrl").includes('tst')) {
-            Cypress.log({message: "Setting Storefront username to tst user"});
+            Cypress.log({ message: "Setting Storefront username to tst user" });
             Cypress.env(envName, "cypress.tester@testenvironment.com");
         } else {
-            Cypress.log({message: "Storefront username can't be fixed: forcing failure"});
+            Cypress.log({ message: "Storefront username can't be fixed: forcing failure" });
             expect(Cypress.env(envName)).to.not.eql(Cypress.env(envName), `Please fill in env value ${envName} with valid value`);
         }
     } else if (envName === "storefrontPassword") {
         if (Cypress.config("baseUrl").includes('dev')) {
-            Cypress.log({message: "Setting Storefront password to dev pass"});
+            Cypress.log({ message: "Setting Storefront password to dev pass" });
             Cypress.env(envName, "admin");
         } else if (Cypress.config("baseUrl").includes('tst')) {
-            Cypress.log({message: "Setting Storefront password to tst pass"});
+            Cypress.log({ message: "Setting Storefront password to tst pass" });
             Cypress.env(envName, "CypressTester1");
         } else {
-            Cypress.log({message: "Storefront password can't be fixed: forcing failure"});
+            Cypress.log({ message: "Storefront password can't be fixed: forcing failure" });
             expect(Cypress.env(envName)).to.not.eql(Cypress.env(envName), `Please fill in env value ${envName} with valid value`);
         }
     } else {
-        Cypress.log({message: "Invalid env name given: forcing failure"});
+        Cypress.log({ message: "Invalid env name given: forcing failure" });
         expect(["storefrontUrl", "storefrontLogin", "storefrontPassword"]).to.include(envName, "Please use one of the valid storefront env names");
     }
 };
@@ -125,7 +125,7 @@ export const setAltStorefrontEnv = (envName: string) => {
 export const confirmStorefrontEnvValues = () => {
     const storefrontNames = ["storefrontUrl", "storefrontLogin", "storefrontPassword"];
     storefrontNames.forEach((sfName) => {
-        if (!verifyStorefrontEnv(sfName)){
+        if (!verifyStorefrontEnv(sfName)) {
             setAltStorefrontEnv(sfName);
         }
     });
@@ -173,7 +173,7 @@ const createErrorMessage = (res, gqlBody: string, queryOrMut: string): string =>
 // Create the generic message we expect to see back for most successful mutations, and some unsuccessful mutation
 const createMutResMessage = (isSuccess: boolean, mutationName: string): string => {
     const transformFeature = (str: string): string => {
-        while(str.search(/[A-Z]/g) !== -1) {
+        while (str.search(/[A-Z]/g) !== -1) {
             str = str.replace(str.charAt(str.search(/[A-Z]/g)), " " + str.charAt(str.search(/[A-Z]/g)).toLowerCase());
         }
         return str;
@@ -188,7 +188,7 @@ const createMutResMessage = (isSuccess: boolean, mutationName: string): string =
         case "returnReason":
             message = "returnReason";
             break;
-        default : 
+        default:
             message = (mutationFeature === "customerRole" || mutationFeature === "manufacturer") ? `${transformFeature(mutationFeature)}s` : transformFeature(mutationFeature);
     };
     return isSuccess ? `${message} ${mutation}` : `${mutation}${mutationName.includes("delete") ? " the" : ""} ${message}`;
@@ -226,6 +226,25 @@ const getInfoName = (item): string | null => {
  * THE POST COMMAND USED BY ALL COMMANDS THAT MAKE API CALLS
  */
 
+// Logs in with the configured username/password
+Cypress.Commands.add("login", () => {
+    Cypress.log({
+        name: "login",
+    });
+    cy.on("uncaught:exception", (err, runnable) => {
+        return false;
+    });
+    cy.get(".header-links").then(($el) => {
+        if (!$el[0].innerText.includes('LOG OUT')) {
+            cy.get(".header-links").find(".ico-login").click({ force: true });
+            cy.wait(200);
+            cy.get(".email").type(Cypress.config("username"));
+            cy.get(".password").type(Cypress.config("password"));
+            cy.get(".login-button").click();
+        }
+    });
+});
+
 // This will post GQL query or mutation. Use altUrl to post the call to a different url than baseUrl
 Cypress.Commands.add('postGQL', (query, altUrl?: string) => {
     Cypress.log({
@@ -233,28 +252,28 @@ Cypress.Commands.add('postGQL', (query, altUrl?: string) => {
         consoleProps: () => {
             return {
                 "URL used": altUrl ? altUrl : Cypress.config("baseUrl"),
-                "Headers": `"x-aptean-apim": ${Cypress.env('x-aptean-apim')} \n\t\t\t "x-aptean-tenant": ${Cypress.env('x-aptean-tenant')} \n\t\t\t "x-aptean-tenant-secret": ${Cypress.env('x-aptean-tenant-secret')}`, 
+                "Headers": `"x-aptean-apim": ${Cypress.env('x-aptean-apim')} \n\t\t\t "x-aptean-tenant": ${Cypress.env('x-aptean-tenant')} \n\t\t\t "x-aptean-tenant-secret": ${Cypress.env('x-aptean-tenant-secret')}`,
                 "Query/Mutation Body": query,
             };
         },
     });
     if (altUrl) {
-        if (altUrl.charAt(altUrl.length -1 ) === "/") {
+        if (altUrl.charAt(altUrl.length - 1) === "/") {
             altUrl = altUrl.slice(0, altUrl.length - 1)
         }
     }
     return cy.request({
-      method: 'POST',
-      url: altUrl ? altUrl + '/graphql' : '/graphql',
-      headers: {
-        'x-aptean-apim': Cypress.env('x-aptean-apim'),
-        'x-aptean-tenant': Cypress.env('x-aptean-tenant'),
-        'x-aptean-tenant-secret': Cypress.env('x-aptean-tenant-secret')
-      },
-      body: { query },
-      failOnStatusCode: false,
-      timeout: Cypress.env('gqlTimeout'),
-      retryOnNetworkFailure: true,
+        method: 'POST',
+        url: altUrl ? altUrl + '/graphql' : '/graphql',
+        headers: {
+            'x-aptean-apim': Cypress.env('x-aptean-apim'),
+            'x-aptean-tenant': Cypress.env('x-aptean-tenant'),
+            'x-aptean-tenant-secret': Cypress.env('x-aptean-tenant-secret')
+        },
+        body: { query },
+        failOnStatusCode: false,
+        timeout: Cypress.env('gqlTimeout'),
+        retryOnNetworkFailure: true,
     });
 });
 
@@ -352,7 +371,7 @@ Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: 
 Cypress.Commands.add("confirmError", (res, expect200?: boolean) => {
     Cypress.log({
         name: "confirmError",
-        message: `Confirm expected errors.${expect200? " Expecting 200 status code": ""}`,
+        message: `Confirm expected errors.${expect200 ? " Expecting 200 status code" : ""}`,
         consoleProps: () => {
             return {
                 "Response": res,
@@ -428,7 +447,7 @@ Cypress.Commands.add("postAndValidate", (gqlQuery: string, queryName: string, al
         },
     });
     return cy.postGQL(gqlQuery, altUrl).then((res) => {
-        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
+        Cypress.log({ message: `Duration: ${res.duration}ms (${res.duration / 1000}s)` });
         cy.validateQueryRes(gqlQuery, res, queryName).then(() => {
             return res;
         });
@@ -451,7 +470,7 @@ Cypress.Commands.add("postMutAndValidate", (gqlMut: string, mutationName: string
         },
     });
     return cy.postGQL(gqlMut, altUrl).then((res) => {
-        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
+        Cypress.log({ message: `Duration: ${res.duration}ms (${res.duration / 1000}s)` });
         cy.validateMutationRes(gqlMut, res, mutationName, itemPath).then(() => {
             return res;
         });
@@ -472,7 +491,7 @@ Cypress.Commands.add("postAndConfirmError", (gqlBody: string, expect200?: boolea
         },
     });
     return cy.postGQL(gqlBody, altUrl).then((res) => {
-        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
+        Cypress.log({ message: `Duration: ${res.duration}ms (${res.duration / 1000}s)` });
         cy.confirmError(res, expect200).then(() => {
             return res;
         });
@@ -493,7 +512,7 @@ Cypress.Commands.add("postAndConfirmMutationError", (gqlMutation: string, mutati
         },
     });
     return cy.postGQL(gqlMutation, altUrl).then((res) => {
-        Cypress.log({message: `Duration: ${res.duration}ms (${res.duration / 1000}s)`});
+        Cypress.log({ message: `Duration: ${res.duration}ms (${res.duration / 1000}s)` });
         cy.confirmMutationError(res, mutationName, itemPath).then(() => {
             return res;
         });
@@ -589,8 +608,8 @@ Cypress.Commands.add("postAndCheckCustom", (query: string, queryName: string, id
             cy.checkCustomData(res, queryName, true, customData);
         } else if (nodes.length > 1) {
             // Create a dummy object with the same structure as response for checkCustomData to look at
-            const dummy = {body: {data: {}}};
-            Object.defineProperty(dummy.body.data, queryName, {value: {nodes: []}});
+            const dummy = { body: { data: {} } };
+            Object.defineProperty(dummy.body.data, queryName, { value: { nodes: [] } });
             // Look for the specific node we want
             const node = nodes.filter((item) => {
                 return item.id === id;
@@ -634,7 +653,7 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, itemPath: string, 
             message
             error
             ${itemPath} {
-                ${itemPath === "refund" ? refundIdFormat: "id"}
+                ${itemPath === "refund" ? refundIdFormat : "id"}
                 ${additionalFields ? additionalFields : ""}
             }
         }
@@ -693,7 +712,7 @@ Cypress.Commands.add("createAssociatedItems", (
             createdIds.push(returnedId);
             item.id = returnedId;
             createdItems.push(item);
-            deletionIds.push({itemId: returnedId, deleteName: deleteName, itemName: name, queryName: queryName});
+            deletionIds.push({ itemId: returnedId, deleteName: deleteName, itemName: name, queryName: queryName });
             if (additionalResFields) {
                 fullResBodies.push(returnedBody);
             }
@@ -705,7 +724,7 @@ Cypress.Commands.add("createAssociatedItems", (
         cy.wait(4000);
         createAndPush(item, name);
     };
-    const resObject = {deletionIds: deletionIds, items: createdItems, itemIds: createdIds} as {deletionIds: SupplementalItemRecord[], items: any[], itemIds: string[], fullItems?: any[]};
+    const resObject = { deletionIds: deletionIds, items: createdItems, itemIds: createdIds } as { deletionIds: SupplementalItemRecord[], items: any[], itemIds: string[], fullItems?: any[] };
     if (additionalResFields) {
         resObject.fullItems = fullResBodies;
     }
@@ -716,9 +735,9 @@ Cypress.Commands.add("createAssociatedItems", (
 //Pass in names to create new categories, or a name and an id to create a child and attach it to an existing parent
 Cypress.Commands.add("createParentAndChildCat", (
     newChildName: string,
-    newParentName?: string, 
-    existingParent?: string 
-    ) => {
+    newParentName?: string,
+    existingParent?: string
+) => {
     const createChild = (parentId: string) => {
         const mutation = `mutation {
             createCategory(
@@ -746,15 +765,15 @@ Cypress.Commands.add("createParentAndChildCat", (
                 }
             }
         }`;
-        return cy.postMutAndValidate(mutation, "createCategory","category").then((res) => {
+        return cy.postMutAndValidate(mutation, "createCategory", "category").then((res) => {
             const id = res.body.data.createCategory.category.id;
-            return cy.wrap({parentId: parentId, childId: id, childRes: res});
+            return cy.wrap({ parentId: parentId, childId: id, childRes: res });
         });
     };
     if (existingParent) {
         return createChild(existingParent);
     } else if (newParentName) {
-        const parentCategory = {categoryInfo: [{name: newParentName, languageCode: "Standard"}] };
+        const parentCategory = { categoryInfo: [{ name: newParentName, languageCode: "Standard" }] };
         return cy.createAndGetId("createCategory", "category", toFormattedString(parentCategory)).then((parentId: string) => {
             return createChild(parentId);
         });
@@ -911,8 +930,8 @@ Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, se
 
 // Post and confirm deletion by querying for the item afterward
 Cypress.Commands.add("postAndConfirmDelete", (
-    gqlMut: string, 
-    mutationName: string, 
+    gqlMut: string,
+    mutationName: string,
     queryInformation: {
         queryName: string
         itemId: string,
@@ -1017,7 +1036,7 @@ Cypress.Commands.add("deleteSupplementalItems", (extraItems: SupplementalItemRec
  * If parentName but no parentId, it will delete all children whose parent's name matches parentName
  * If no parentName, it will delete all categories with a matching child name.
  */
-Cypress.Commands.add("deleteParentAndChildCat", (children: {name: string, id: string} | {name: string, id: string}[], parentName: string, parentId: string) => {
+Cypress.Commands.add("deleteParentAndChildCat", (children: { name: string, id: string } | { name: string, id: string }[], parentName: string, parentId: string) => {
     // Return if arguments are invalid
     if (Array.isArray(children)) {
         if (children.length === 0) {
@@ -1148,7 +1167,7 @@ const verifySeoData = (seo, expectedSeo, itemInfo) => {
                 } else {
                     expect(currSeo[props[i]]).to.include(seoItem[props[i]].toLowerCase().replace(' ', '-'), `Verify seoData[${index}].${props[i]}`);
                 }
-            }  else {
+            } else {
                 expect(currSeo[props[i]]).to.be.eql(seoItem[props[i]], `Verify seoData[${index}].${props[i]}`);
             }
         }
@@ -1227,7 +1246,7 @@ const matchArrayItems = (resArray: [], matchArray: [], originalProperty: string,
 // Function that iterates through array and calls above functions
 const compareExpectedToResults = (subject, propertyNames: string[], expectedValues: []) => {
     for (var i = 0; i < propertyNames.length; i++) {
-        if (propertyNames[i] === "seoData"){
+        if (propertyNames[i] === "seoData") {
             var infoIndex = propertyNames.indexOf(propertyNames.find((name) => {
                 return name.includes("Info");
             }));
@@ -1287,11 +1306,11 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, itemP
         expect(matchingItems.length).to.be.eql(matchArray.length, `Expecting ${matchArray.length} updated items in ${originalProperty}`);
         return matchingItems.length === matchArray.length;
     };
-    function matchObject (item, itemToMatch, parentProperty: string) {
+    function matchObject(item, itemToMatch, parentProperty: string) {
         const props = Object.getOwnPropertyNames(itemToMatch);
         for (var p = 0; p < props.length; p++) {
             // For better documentation of the specific problem field if something isn't right
-            const descendingPropName = `${parentProperty ? parentProperty + "." : ""}${props[p]}`; 
+            const descendingPropName = `${parentProperty ? parentProperty + "." : ""}${props[p]}`;
             expect(item).to.have.ownPropertyDescriptor(props[p], `The item should have a ${props[p]} property`);
             if (itemToMatch[props[p]] && item[props[p]] === null) {
                 assert.exists(item[props[p]], `${descendingPropName} should not be null`);
@@ -1320,7 +1339,7 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, itemP
         }
     };
     for (var i = 0; i < propNames.length; i++) {
-        if (propNames[i] === "seoData"){
+        if (propNames[i] === "seoData") {
             var infoIndex = propNames.indexOf(propNames.find((name) => {
                 return name.includes("Info");
             }));
@@ -1356,7 +1375,7 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, queryName: string, ite
             };
         },
     });
-    
+
     return cy.postAndValidate(query, queryName, altUrl).then((resp) => {
         const targetNode = resp.body.data[queryName].nodes.filter((item) => {
             const id = queryName === "refunds" ? item.order.id : item.id;

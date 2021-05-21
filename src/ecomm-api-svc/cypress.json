@@ -1,15 +1,17 @@
 {
-    "baseUrl": "#{ECOMM_API_URL}#", 
-    "chromeWebSecurity": false,
-    "defaultCommandTimeout": 10000,
-    "env": {
-      "x-aptean-apim": "#{X_APTEAN_APIM}#", 
-      "x-aptean-tenant": "#{X_ECOMM_TENANT}#",
-      "x-aptean-tenant-secret": "#{X_ECOMM_TENANT_SECRET}#",
-      "gqlTimeout": 5000,
-      "storefrontUrl": "#{ECOMM_PORTAL_BASE_URL}#",
-      "storefrontLogin": "#{ECOMM_USERNAME}#",
-      "storefrontPassword": "#{ECOMM_PASSWORD}#"
-    }, 
-    "supportFile": "cypress/support/index.ts"
+  "baseUrl": "https://tst.ecomm-graph.apteansharedservices.com/",
+  "username": "joshua.jeng@aptean.com",
+  "password": "Aptean123",
+  "chromeWebSecurity": false,
+  "defaultCommandTimeout": 10000,
+  "env": {
+    "x-aptean-apim": "99f3052d-b177-45a1-8e2b-3f6113067478",
+    "x-aptean-tenant": "b78b2eb9-8f0b-461a-91b2-61229fb8b1dd",
+    "x-aptean-tenant-secret": "ecomm-tst-secret",
+    "gqlTimeout": 5000,
+    "storefrontUrl": "tst.apteanecommerce.com/en/",
+    "storefrontLogin": "joshua.jeng@aptean.com",
+    "storefrontPassword": "Aptean123"
+  },
+  "supportFile": "cypress/support/index.ts"
 }

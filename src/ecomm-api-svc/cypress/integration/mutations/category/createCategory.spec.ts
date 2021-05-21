@@ -4,6 +4,7 @@ import { confirmStorefrontEnvValues, createInfoDummy, SupplementalItemRecord, to
 
 // TEST COUNT: 13
 describe('Mutation: createCategory', () => {
+    debugger;
     var id = '';
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'createCategory';
@@ -47,7 +48,7 @@ describe('Mutation: createCategory', () => {
             return;
         }
         if (originalBaseUrl !== "" && Cypress.config("baseUrl") !== originalBaseUrl) {
-            Cypress.log({message: "Switching the baseUrl back to the original"});
+            Cypress.log({ message: "Switching the baseUrl back to the original" });
             Cypress.config("baseUrl", originalBaseUrl);
             cy.wait(1000);
         }
@@ -57,7 +58,7 @@ describe('Mutation: createCategory', () => {
         });
 
         // Delete the child and parent category
-        cy.deleteParentAndChildCat({name: childCatName, id: childCatId}, parentCatName, parentCatId).then(() => {
+        cy.deleteParentAndChildCat({ name: childCatName, id: childCatId }, parentCatName, parentCatId).then(() => {
             childCatName = "";
             parentCatName = "";
             childCatId = "";
@@ -70,7 +71,7 @@ describe('Mutation: createCategory', () => {
             });
         }
     });
-    
+
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
             const mutation = `mutation {
@@ -127,7 +128,7 @@ describe('Mutation: createCategory', () => {
         });
 
         it("Mutation with valid 'Name' and 'languageCode' input will create a new item", () => {
-            const info = [{name: "Cypress API Category", languageCode: "Standard"}];
+            const info = [{ name: "Cypress API Category", languageCode: "Standard" }];
             const mutation = `mutation {
                 ${mutationName}(input: { ${infoName}: ${toFormattedString(info)} }) {
                     ${standardMutationBody}
@@ -157,8 +158,8 @@ describe('Mutation: createCategory', () => {
 
     context("Testing customData input and optional input", () => {
         it("Mutation with all required input and 'customData' input creates item with customData", () => {
-            const info = [{name: "Cypress Category customData", description: `Cypress ${mutationName} test`, languageCode: "Standard"}];
-            const customData = {data: `${itemPath} customData`, canDelete: true};
+            const info = [{ name: "Cypress Category customData", description: `Cypress ${mutationName} test`, languageCode: "Standard" }];
+            const customData = { data: `${itemPath} customData`, canDelete: true };
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -202,17 +203,17 @@ describe('Mutation: createCategory', () => {
             const displayOrder = Cypress._.random(1, 20);
             const name = "Cypress Category Input";
             const description = "Cypress testing 'create' mutation input";
-            const info = [{name: "Same name but in german", description: "Translate desc to German", languageCode: "de-DE"}, {name: name, description: description, languageCode: "Standard"}];
+            const info = [{ name: "Same name but in german", description: "Translate desc to German", languageCode: "de-DE" }, { name: name, description: description, languageCode: "Standard" }];
             const seoData = [
                 {
                     searchEngineFriendlyPageName: "",
-                    metaKeywords:  "",
+                    metaKeywords: "",
                     metaDescription: "",
                     metaTitle: "",
                     languageCode: "de-DE"
                 }, {
                     searchEngineFriendlyPageName: "Cypress Input",
-                    metaKeywords:  "Cypress",
+                    metaKeywords: "Cypress",
                     metaDescription: "Cypress Input metaTag",
                     metaTitle: "Cypress Input test",
                     languageCode: "Standard"
@@ -323,16 +324,16 @@ describe('Mutation: createCategory', () => {
                 });
             });
         });
-        
+
         it("Mutation with 'discountIds' input will successfully attach the discounts", () => {
             const extraCreate = "createDiscount";
             const extraPath = "discount";
             const extraQuery = "discounts";
-            const extraItemInput = {name: `Cypress ${mutationName} discount`, discountAmount: {amount: 15, currency: "USD"}, discountType: "ASSIGNED_TO_CATEGORIES"};
+            const extraItemInput = { name: `Cypress ${mutationName} discount`, discountAmount: { amount: 15, currency: "USD" }, discountType: "ASSIGNED_TO_CATEGORIES" };
             cy.createAssociatedItems(2, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
                 addExtraItemIds(deletionIds);
-                const info = [{name: `Cypress ${mutationName} discountIds test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
+                const info = [{ name: `Cypress ${mutationName} discountIds test`, description: `${mutationName} cypress test`, languageCode: "Standard" }];
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -398,12 +399,12 @@ describe('Mutation: createCategory', () => {
             const extraCreate = "createCustomerRole";
             const extraPath = "customerRole";
             const extraQuery = "customerRoles";
-            const extraItemInput = {name: `Cypress ${mutationName} role`};
+            const extraItemInput = { name: `Cypress ${mutationName} role` };
             cy.createAssociatedItems(2, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
                 addExtraItemIds(deletionIds);
-                const info = [{name: `Cypress ${mutationName} rBA test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
-                const roleBasedAccess = {enabled: true, roleIds: itemIds};
+                const info = [{ name: `Cypress ${mutationName} rBA test`, description: `${mutationName} cypress test`, languageCode: "Standard" }];
+                const roleBasedAccess = { enabled: true, roleIds: itemIds };
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -433,7 +434,7 @@ describe('Mutation: createCategory', () => {
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                     id = res.body.data[mutationName][itemPath].id;
-                    const roleAccess = {enabled: roleBasedAccess.enabled, roles: items};
+                    const roleAccess = { enabled: roleBasedAccess.enabled, roles: items };
                     const propNames = [infoName, "roleBasedAccess"];
                     const propValues = [info, roleAccess];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
@@ -471,7 +472,7 @@ describe('Mutation: createCategory', () => {
         // If you want to run just this test, I recommend changing this test and the first test to use it.only() instead of it().
         it("Mutation using showInTopMenu creates an item that shows in the storefront top menu", { baseUrl: `${Cypress.env("storefrontUrl")}` }, () => {
             const name = `Cypress TopMenu Category ${Cypress._.random(0, 999)}`;
-            const info = [{name: name, languageCode: "Standard"}];
+            const info = [{ name: name, languageCode: "Standard" }];
             const showInTopMenu = true;
             const mutation = `mutation {
                 ${mutationName}(
