@@ -1,11 +1,12 @@
 {
-  "baseUrl": "#{ECOMM_PORTAL_BASE_URL}#",
-  "username": "#{USERNAME}#",
-  "password": "#{PASSWORD}#",
-  "doNotPrepEnv": false,
-  "doNotResetEnv": false,
+  "baseUrl": "https://tst.apteanecommerce.com/",
+  "username": "cypress.tester@testenvironment.com",
+  "password": "CypressTester1",
+  "doNotPrepEnv": true,
+  "doNotResetEnv": true,
   "env": {},
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
+  "pageLoadTimeout": 240000,
   "supportFile": "cypress/support/index.ts"
 }
