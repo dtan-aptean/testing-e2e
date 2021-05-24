@@ -483,6 +483,74 @@ Cypress.Commands.add('returnRandomId', (gqlQuery: string, queryName: string, idN
     });
 });
 
+// Runs the query and grabs a random nodes to return multiple ids. Pass in the id name for queries whose id field names aren't standard 
+Cypress.Commands.add('returnMultipleRandomIds', (numberOfIds:number, gqlQuery: string, queryName: string, idName?: string) => {
+    Cypress.log({
+        name: "returnMultipleRandomIds ",
+        message: queryName + `${idName ? ", " + idName : ""}`,
+        consoleProps: () => {
+            return {
+                "Query Body": gqlQuery,
+                "Query name": queryName,
+                "Name of id field": idName ? idName : "id"
+            };
+        },
+    });
+    return cy.postAndValidate(gqlQuery, queryName).then((res) => {
+        var randomIndex = [];
+        var quot=0, rem=0, c=0;
+        var totalCount = res.body.data[queryName].totalCount > 25 ? 25 : res.body.data[queryName].totalCount;
+
+        if(totalCount>=numberOfIds)
+        {
+         quot = Math.floor(totalCount/numberOfIds);  
+         rem = totalCount%numberOfIds;
+         for(var i = 0;i < totalCount-rem;i+=quot)
+         { 
+             if(i==totalCount-quot-1)
+             {
+                randomIndex[c] = Cypress._.random(i,i+quot+rem-1);
+                c++;
+                
+             }
+             else{
+             randomIndex[c] = Cypress._.random(i,i+quot-1);
+             c++;
+             }
+         }
+        }
+        else{
+            numberOfIds = totalCount;
+            expect(numberOfIds).to.be.eql(totalCount,"Number Of iDs greater than totalCount hence returning only the ids available")
+            quot = 1; 
+            for(var i = 0;i < totalCount;i+=quot)
+            { 
+                   randomIndex[c]= Cypress._.random(i,i+quot-1);
+                   c++;
+            }
+        }
+        var randomNodes = []
+        for(var i = 0;i < numberOfIds;i++){
+         randomNodes[i] = res.body.data[queryName].nodes[randomIndex[i]];
+        }
+        var id=[];
+        for(var i = 0;i < numberOfIds;i++){
+        if (!idName) {
+            id[i] = randomNodes[i].id;
+        } else {
+            if (idName.includes(".id")) {
+                var split = idName.split(".");
+                id[i] = randomNodes[i][split[0]][split[1]];
+            } else {
+                id[i] = randomNodes[i][idName];
+            }
+        }
+    }
+        return cy.wrap(id);
+    });
+});
+
+
 // For queries that search by id instead of name. Pass in the id name for queries whose id field names aren't standard
 // Validates that a query with searchString returned the node with the correct id or nodes with ids that contain the string
 Cypress.Commands.add("validateIdSearch", (res, queryName: string, searchValue: string, idName?: string) => {
@@ -521,6 +589,35 @@ Cypress.Commands.add("validateIdSearch", (res, queryName: string, searchValue: s
         }
         expect(node.toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
         expect(edge.toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
+    }
+});
+
+// For queries that search by id instead of name. 
+Cypress.Commands.add("validateMultipleIdSearch", (res, queryName: string, idValue: [], idName?: string) => {
+    Cypress.log({
+        name: "validateMultipleIdSearch",
+        message: `${queryName}, ids: ${idValue}${idName ? ", " + idName : ""}`,
+        consoleProps: () => {
+            return {
+                "Response": res,
+                "Query name": queryName,
+                "searchString": idValue,
+                "Name of id field": idName ? idName : "id"
+            };
+        },
+    });
+    const totalCount = res.body.data[queryName].totalCount;
+    const nodes = res.body.data[queryName].nodes;
+    const edges = res.body.data[queryName].edges;
+    expect(totalCount).to.be.eql(nodes.length);
+    expect(totalCount).to.be.eql(edges.length);
+    for (var i = 0; i < nodes.length; i++) {
+      
+        const targetNode = nodes.filter((item) => {
+            const id = item.id;
+            return id === idValue[i];
+        });
+        expect(targetNode.length).to.be.eql(1, "Specific item found in nodes");
     }
 });
 
