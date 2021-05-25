@@ -1,4 +1,6 @@
 /// <reference types="cypress" />
+
+
 // TEST COUNT: 36
 describe('Query: discounts', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
@@ -26,6 +28,38 @@ describe('Query: discounts', () => {
     const standardQuery = `{
         ${queryName}(orderBy: {direction: ASC, field: NAME}) {
             ${standardQueryBody}
+        }
+    }`;
+    const extraqueryName = "categories";
+    // Standard query body to use when we don't need special data but do need special input arguments
+    const extrastandardQueryBody = `edges {
+                cursor
+                node {
+                    id
+                    categoryInfo {
+                        name
+                        languageCode
+                    }
+                }
+            }
+            nodes {
+                id
+                categoryInfo {
+                    name
+                    languageCode
+                }
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+                hasPreviousPage
+                startCursor
+            }
+            totalCount`;
+    // Standard query to use when we don't need any specialized data or input arguments
+    const extrastandardQuery = `{
+        ${extraqueryName}(orderBy: {direction: ASC, field: NAME}) {
+            ${extrastandardQueryBody}
         }
     }`;
 
@@ -580,6 +614,119 @@ describe('Query: discounts', () => {
             });
         });
     });
+
+    context('Testing "ID" input' , () => {
+       
+
+        it('Query with an array of one or more valid ids as "ids" input ', () => {
+           
+            var idValues=[],ids="";
+    
+            cy.returnMultipleRandomIds(51,standardQuery,queryName).then((id:[]) =>{
+              
+                idValues=id
+              ids ="["
+              for(var i=0;i<id.length;i++)
+              {
+                ids+='"'+id[i]+'"'+",";
+              
+              }
+              ids+="]"
+         
+             const gqlQuery = `{
+                ${queryName}( orderBy: {direction: ASC, field: NAME} ids:${ids}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                cy.validateMultipleIdSearch(resp, queryName,idValues);
+            });
+        });
+    });
+        //not placed inside the array
+        it('Query with single id as "ids" input ', () => {
+            cy.returnRandomId(standardQuery,queryName).then((id: string) =>{
+                const gqlQuery = `{
+                    ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: NAME}) {
+                        ${standardQueryBody}
+                    }
+                }`;
+                cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                    cy.validateIdSearch(resp, queryName, id);
+                });
+            });
+
+        });
+
+        it('Query with  empty array as "ids" input ', () => {
+            const gqlQuery = `{
+                ${queryName}(ids:[], orderBy: {direction: ASC, field: NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(gqlQuery, queryName);
+        });
+
+        it('Query with an array of one or more empty strings as "ids" input ', () => {
+            const gqlQuery = `{
+                ${queryName}(ids:["",""], orderBy: {direction: ASC, field: NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery,true).then((res) => {
+               
+                expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
+                expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+
+            })
+        });
+        
+        it('Query with an array of one or more non-string values as "ids" input ', () => {
+            const gqlQuery = `{
+                ${queryName}(ids:[235], orderBy: {direction: ASC, field: NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+               
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+
+            });
+
+        });
+
+        it('Query with non-array value as "ids" input ', () => {
+            const gqlQuery = `{
+                ${queryName}(ids:235, orderBy: {direction: ASC, field: NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+               
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+
+            });
+        });
+
+        it('Query with ids from a different item as "ids" input ', () => {
+            cy.returnRandomId(extrastandardQuery,extraqueryName).then((id: string) =>{
+                const gqlQuery = `{
+                    ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: NAME}) {
+                        ${standardQueryBody}
+                    }
+                }`;
+                cy.postAndConfirmError(gqlQuery,true).then((res) => {
+                    expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
+                    expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+                });
+            });
+
+        });
+    
+    });
+
 
     context("Testing response values for customData and other fields", () => {
         it("Query with customData field will return valid value", () => {
