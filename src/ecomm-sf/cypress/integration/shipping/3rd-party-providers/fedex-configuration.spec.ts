@@ -9,9 +9,7 @@ describe("Ecommerce", function () {
     var originalConfiguration = [] as {inputType: string, inputValue: boolean | string | Array}[];
 
     before(() => {
-      cy.visit("/");
-      cy.login();
-      cy.setShippingOrigin().then(() => {
+      cy.prepForShipping(provider).then(() => {
         cy.saveProviderConfiguration(provider).then((configValues) => {
           originalConfiguration = configValues;
         });
@@ -29,7 +27,9 @@ describe("Ecommerce", function () {
       cy.visit("/");
       cy.login();
       cy.clearCart();
-      cy.resetProviderConfig(provider, originalConfiguration);
+      cy.resetShippingProviders().then(() => {
+        cy.resetProviderConfig(provider, originalConfiguration);
+      });
     });
 
     context("Subsection: All FedEx Methods", () => {
