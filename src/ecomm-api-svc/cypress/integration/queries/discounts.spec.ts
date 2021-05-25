@@ -30,39 +30,7 @@ describe('Query: discounts', () => {
             ${standardQueryBody}
         }
     }`;
-    const extraqueryName = "categories";
-    // Standard query body to use when we don't need special data but do need special input arguments
-    const extrastandardQueryBody = `edges {
-                cursor
-                node {
-                    id
-                    categoryInfo {
-                        name
-                        languageCode
-                    }
-                }
-            }
-            nodes {
-                id
-                categoryInfo {
-                    name
-                    languageCode
-                }
-            }
-            pageInfo {
-                endCursor
-                hasNextPage
-                hasPreviousPage
-                startCursor
-            }
-            totalCount`;
-    // Standard query to use when we don't need any specialized data or input arguments
-    const extrastandardQuery = `{
-        ${extraqueryName}(orderBy: {direction: ASC, field: NAME}) {
-            ${extrastandardQueryBody}
-        }
-    }`;
-
+    
     var trueTotalInput = "";
 
     before(() => {
@@ -615,8 +583,7 @@ describe('Query: discounts', () => {
         });
     });
 
-    context('Testing "ID" input' , () => {
-       
+    context.only('Testing "ID" input' , () => {
 
         it('Query with an array of one or more valid ids as "ids" input ', () => {
            
@@ -711,6 +678,41 @@ describe('Query: discounts', () => {
         });
 
         it('Query with ids from a different item as "ids" input ', () => {
+
+            const extraqueryName = "categories";
+            // Standard query body to get id from diff item 
+            const extrastandardQueryBody = `edges {
+                        cursor
+                        node {
+                            id
+                            categoryInfo {
+                                name
+                                languageCode
+                            }
+                        }
+                    }
+                    nodes {
+                        id
+                        categoryInfo {
+                            name
+                            languageCode
+                        }
+                    }
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                        hasPreviousPage
+                        startCursor
+                    }
+                    totalCount`;
+            // Standard query to use when we don't need any specialized data or input arguments
+            const extrastandardQuery = `{
+                ${extraqueryName}(orderBy: {direction: ASC, field: NAME}) {
+                    ${extrastandardQueryBody}
+                }
+            }`;
+        
+
             cy.returnRandomId(extrastandardQuery,extraqueryName).then((id: string) =>{
                 const gqlQuery = `{
                     ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: NAME}) {
