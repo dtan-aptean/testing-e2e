@@ -496,11 +496,25 @@ Cypress.Commands.add('returnMultipleRandomIds', (numberOfIds:number, gqlQuery: s
             };
         },
     });
-    return cy.postAndValidate(gqlQuery, queryName).then((res) => {
+       cy.postAndValidate(gqlQuery, queryName).then((res) => {
+     
+        var totalCount = res.body.data[queryName].totalCount ;
+
+        if (totalCount > 25) {
+            cy.log("TotalCount is greater")
+            var insertIndex = gqlQuery.indexOf("orderBy");
+            gqlQuery = gqlQuery.slice(0, insertIndex) + `first: ${totalCount}, ` + gqlQuery.slice(insertIndex);
+              cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+             return  returnIds(resp,totalCount,numberOfIds)
+            });
+        }
+        else{
+            return  returnIds(res,totalCount,numberOfIds);
+        }
+    });
+    function returnIds(res,totalCount:number,numberOfIds:number){
         var randomIndex = [];
         var quot=0, rem=0, c=0;
-        var totalCount = res.body.data[queryName].totalCount > 25 ? 25 : res.body.data[queryName].totalCount;
-
         if(totalCount>=numberOfIds)
         {
          quot = Math.floor(totalCount/numberOfIds);  
@@ -530,6 +544,7 @@ Cypress.Commands.add('returnMultipleRandomIds', (numberOfIds:number, gqlQuery: s
             }
         }
         var randomNodes = []
+        cy.log(JSON.stringify(res));
         for(var i = 0;i < numberOfIds;i++){
          randomNodes[i] = res.body.data[queryName].nodes[randomIndex[i]];
         }
@@ -537,6 +552,7 @@ Cypress.Commands.add('returnMultipleRandomIds', (numberOfIds:number, gqlQuery: s
         for(var i = 0;i < numberOfIds;i++){
         if (!idName) {
             id[i] = randomNodes[i].id;
+            cy.log(id[i]);
         } else {
             if (idName.includes(".id")) {
                 var split = idName.split(".");
@@ -546,8 +562,9 @@ Cypress.Commands.add('returnMultipleRandomIds', (numberOfIds:number, gqlQuery: s
             }
         }
     }
-        return cy.wrap(id);
-    });
+    return cy.wrap(id);
+}
+
 });
 
 
@@ -607,6 +624,7 @@ Cypress.Commands.add("validateMultipleIdSearch", (res, queryName: string, idValu
         },
     });
     const totalCount = res.body.data[queryName].totalCount;
+   
     const nodes = res.body.data[queryName].nodes;
     const edges = res.body.data[queryName].edges;
     expect(totalCount).to.be.eql(nodes.length);

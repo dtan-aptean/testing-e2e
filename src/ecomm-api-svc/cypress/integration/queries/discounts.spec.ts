@@ -589,7 +589,7 @@ describe('Query: discounts', () => {
            
             var idValues=[],ids="";
     
-            cy.returnMultipleRandomIds(51,standardQuery,queryName).then((id:[]) =>{
+            cy.returnMultipleRandomIds(10,standardQuery,queryName).then((id:[]) =>{
               
                 idValues=id
               ids ="["
