@@ -887,7 +887,7 @@ describe('Query: manufacturers', () => {
              
             var ids="";
     
-            cy.returnMultipleRandomIds(52,standardQuery,queryName).then((idValues:[]) =>{
+            cy.returnMultipleRandomIds(5,standardQuery,queryName).then((idValues:[]) =>{
             
               ids ="["
               for(var i=0;i<idValues.length;i++)
@@ -906,7 +906,7 @@ describe('Query: manufacturers', () => {
                 cy.validateMultipleIdSearch(resp, queryName,idValues);
             });
         });
-    });
+        });
         //not placed inside the array
         it('Query with single id as "ids" input, returns the relevant item', () => {
             cy.returnRandomId(standardQuery,queryName).then((id: string) =>{
