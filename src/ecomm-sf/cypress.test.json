@@ -1,7 +1,9 @@
 {
   "baseUrl": "https://tst.apteanecommerce.com/",
-  "username": "cypress.tester@testenvironment.com",
-  "password": "CypressTester1",
+  "username": "cypressjosh1@tester.com",
+  "password": "Aptean123",
+  "doNotPrepEnv": true,
+  "doNotResetEnv": true,
   "env": {},
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
