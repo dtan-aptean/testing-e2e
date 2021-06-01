@@ -1,0 +1,7 @@
+{
+  "baseUrl": "#{CRM_SVC_BASE_URL}#",
+  "chromeWebSecurity": false,
+  "defaultCommandTimeout": 10000,
+  "env": {},
+  "supportFile": "cypress/support/index.ts"
+}
