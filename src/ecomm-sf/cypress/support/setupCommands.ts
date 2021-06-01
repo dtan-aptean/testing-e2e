@@ -588,6 +588,7 @@ Cypress.Commands.add("saveProviderConfiguration", (providerName) => {
     cy.allowLoad();
     cy.findShippingProvider(providerName).clickRowBtn("Configure");
     cy.allowLoad();
+    cy.wait(1000);
     cy.get(".card-body").get(".form-group:visible").then(($els) => {
       const inputRows = $els.filter((index, el) => {
         return !el.innerHTML.includes('name="save"');
@@ -747,9 +748,9 @@ Cypress.Commands.add("resetProviderConfig", (providerName: string, providerConfi
       }
     };
     cy.wrap(providerConfig).each((config, index) => {
-      Cypress.log({displayName: " ", message: config.inputValue});
       cy.wait(100);
       cy.get(".card-body").get(".form-group:visible").eq(index).then((formRow) => {
+      Cypress.log({displayName: " ", message: config.inputValue});
         if (config.inputType !== "group") {
           if (formRow[0].innerHTML.includes("k-widget")) {
             const input = formRow.find("input[id]");

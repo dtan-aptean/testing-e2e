@@ -12,7 +12,16 @@ describe('Mutation: createProductAttribute', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
         ${itemPath} {
             id
             name
@@ -146,7 +155,16 @@ describe('Mutation: createProductAttribute', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -218,7 +236,16 @@ describe('Mutation: createProductAttribute', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         description
@@ -228,8 +255,8 @@ describe('Mutation: createProductAttribute', () => {
                             isPreSelected
                             name
                             priceAdjustment {
-                            amount
-                            currency
+                                amount
+                                currency
                             }
                             weightAdjustment
                             cost {

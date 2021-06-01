@@ -13,7 +13,16 @@ describe('Mutation: deleteCustomerRole', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
     `;
 
     const queryInformation = {
@@ -130,7 +139,16 @@ describe('Mutation: deleteCustomerRole', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${extraItemPath} {
                         id
                         roleBasedAccess {
@@ -208,7 +226,16 @@ describe('Mutation: deleteCustomerRole', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${extraItemPath} {
                         id
                         roleBasedAccess {

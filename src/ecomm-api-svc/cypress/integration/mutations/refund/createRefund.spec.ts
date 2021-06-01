@@ -30,7 +30,16 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
         ${itemPath} {
             ${responseBody}
         }
@@ -61,7 +70,16 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 ${deletionName}(input: { orderId: "${id}" }) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                 }
             }`;
             const queryInformation = {queryName: queryName, itemId: id, searchParameter: "searchString"};

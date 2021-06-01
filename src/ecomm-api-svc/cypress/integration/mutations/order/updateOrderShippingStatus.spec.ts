@@ -117,7 +117,16 @@ describe('Mutation: updateOrderShippingStatus', { baseUrl: `${Cypress.env("store
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
         ${dataPath} {
             orderId
             orderStatus

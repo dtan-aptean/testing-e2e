@@ -14,7 +14,16 @@ describe('Mutation: deleteCategory', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
     `;
     const queryInformation = {
         queryName: queryName, 
@@ -247,7 +256,16 @@ describe('Mutation: deleteCategory', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${extraItemPath} {
                         id
                         discountAmount {
@@ -323,7 +341,16 @@ describe('Mutation: deleteCategory', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${extraItemPath} {
                         id
                         ${productInfoName} {

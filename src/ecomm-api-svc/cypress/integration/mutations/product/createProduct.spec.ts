@@ -15,7 +15,16 @@ describe('Mutation: createProduct', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
         ${itemPath} {
             id
             ${infoName} {
@@ -169,7 +178,16 @@ describe('Mutation: createProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -215,7 +233,16 @@ describe('Mutation: createProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         seoData {
@@ -257,7 +284,16 @@ describe('Mutation: createProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         seoData {
@@ -299,7 +335,16 @@ describe('Mutation: createProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         seoData {
@@ -319,7 +364,7 @@ describe('Mutation: createProduct', () => {
                 }
             }`;
             cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
-                expect(res.body.errors[0].message).to.eql("3 INVALID_ARGUMENT: Invalid Language Code");
+                expect(res.body.data[mutationName].errors[0].message).to.include("Invalid Language Code");
             });
         });
 
@@ -342,7 +387,16 @@ describe('Mutation: createProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -400,7 +454,16 @@ describe('Mutation: createProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -454,7 +517,16 @@ describe('Mutation: createProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -577,13 +649,20 @@ describe('Mutation: createProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             sku
-                            manufacturerInformation {
-                                partNumber
-                            }
+                            manufacturerPartNumber
                             shippingInformation {
                                 weight
                                 height
@@ -641,8 +720,8 @@ describe('Mutation: createProduct', () => {
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                     id = res.body.data[mutationName][itemPath].id;
-                    const propNames = ["sku", infoName, "inventoryInformation", "manufacturerInformation", "shippingInformation", "cartInformation", "priceInformation", "seoData", "published"];
-                    const propValues = [sku, info, inventoryInfo, manufacturerInfo, shippingInformation, cartInfo, priceInformation, seoData, published];
+                    const propNames = ["sku", infoName, "inventoryInformation", "manufacturerPartNumber", "shippingInformation", "cartInformation", "priceInformation", "seoData", "published"];
+                    const propValues = [sku, info, inventoryInfo, manufacturerPartNumber, shippingInformation, cartInfo, priceInformation, seoData, published];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
                             ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
@@ -732,7 +811,16 @@ describe('Mutation: createProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             vendor {
@@ -798,7 +886,16 @@ describe('Mutation: createProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             priceInformation {
@@ -860,7 +957,16 @@ describe('Mutation: createProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -904,7 +1010,16 @@ describe('Mutation: createProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -948,7 +1063,16 @@ describe('Mutation: createProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -1006,7 +1130,16 @@ describe('Mutation: createProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             ${infoName} {

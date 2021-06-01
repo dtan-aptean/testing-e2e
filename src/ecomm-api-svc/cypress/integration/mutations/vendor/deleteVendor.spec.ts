@@ -14,7 +14,16 @@ describe('Mutation: deleteVendor', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
     `;
 
     const queryInformation = {
@@ -116,6 +125,7 @@ describe('Mutation: deleteVendor', () => {
     });
 
     context("Testing deletion when connected to other items or features", () => {
+        // TODO: Failing because vendor is being deleted. Find out if this test case is still accurate
         it("A vendor connected to a product cannot be deleted until the connected product is deleted", () => {
             const extraDeleteName = "deleteProduct";
             const extraMutationName = "createProduct";
@@ -133,7 +143,16 @@ describe('Mutation: deleteVendor', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${extraItemPath} {
                         id
                         vendor {
@@ -181,7 +200,7 @@ describe('Mutation: deleteVendor', () => {
                             }
                         }`;
                         cy.postAndConfirmMutationError(mutation, mutationName).then((erRes) => {
-                            const errorMessage = erRes.body.errors[0].message;
+                            const errorMessage = erRes.body.data[mutationName].errors[0].message;
                             expect(errorMessage).to.contain("Vendor is Associated with Products");
                             const deleteExtra = `mutation {
                                 ${extraDeleteName}(input: { id: "${productId}" }) {

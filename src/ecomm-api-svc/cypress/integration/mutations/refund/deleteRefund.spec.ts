@@ -16,7 +16,16 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
     `;
 
     const queryInformation = {

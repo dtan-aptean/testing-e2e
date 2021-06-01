@@ -214,7 +214,16 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             address {
@@ -257,7 +266,16 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             address {
@@ -299,7 +317,16 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             address {
@@ -391,7 +418,16 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             address {
@@ -435,7 +471,16 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             address {
@@ -478,7 +523,16 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             address {

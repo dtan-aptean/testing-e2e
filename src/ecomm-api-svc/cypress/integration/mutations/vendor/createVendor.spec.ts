@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { createMutResMessage, toFormattedString } from "../../../support/commands";
+import { toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 13
 describe('Mutation: createVendor', () => {
@@ -13,7 +13,16 @@ describe('Mutation: createVendor', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
         ${itemPath} {
             id
             ${infoName} {
@@ -137,7 +146,16 @@ describe('Mutation: createVendor', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -210,7 +228,16 @@ describe('Mutation: createVendor', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         active
@@ -302,7 +329,16 @@ describe('Mutation: createVendor', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -324,24 +360,7 @@ describe('Mutation: createVendor', () => {
                     }
                 }
             }`;
-            // TODO: replace with custom command later
-            cy.postGQL(mutation).then((res) => {
-                const failureMessage = createMutResMessage(false, mutationName);
-
-                // should have data
-                assert.exists(res.body.data, "Response data should exist");
-                // Check data for errors
-                // Validate Errors
-                assert.exists(res.body.data[mutationName].error, "Should have errors");
-                // Validate data types and values
-                // Validate code
-                assert.isString(res.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);
-                expect(res.body.data[mutationName].code).to.eql("ERROR", `Expect ${mutationName}.code to be ERROR`);
-                // Validate message
-                assert.isString(res.body.data[mutationName].message, `Expect ${mutationName}.message to be a string`);
-                expect(res.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
-                assert.notExists(res.body.data[mutationName][itemPath], `Expect mutation not to return a ${itemPath}`);
-            });
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail if the currency of priceRange.priceFrom and priceRange.priceTo are not the same", () => {
@@ -365,7 +384,16 @@ describe('Mutation: createVendor', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -387,24 +415,7 @@ describe('Mutation: createVendor', () => {
                     }
                 }
             }`;
-            // TODO: replace with custom command later
-            cy.postGQL(mutation).then((res) => {
-                const failureMessage = createMutResMessage(false, mutationName);
-
-                // should have data
-                assert.exists(res.body.data, "Response data should exist");
-                // Check data for errors
-                // Validate Errors
-                assert.exists(res.body.data[mutationName].error, "Should have errors");
-                // Validate data types and values
-                // Validate code
-                assert.isString(res.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);
-                expect(res.body.data[mutationName].code).to.eql("ERROR", `Expect ${mutationName}.code to be ERROR`);
-                // Validate message
-                assert.isString(res.body.data[mutationName].message, `Expect ${mutationName}.message to be a string`);
-                expect(res.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
-                assert.notExists(res.body.data[mutationName][itemPath], `Expect mutation not to return a ${itemPath}`);
-
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
                 const secondInfo = [{name: `Cypress PriceRange.PriceTo Currency ${mutationName}`, languageCode: "Standard"}];
                 const secondPriceRange = {
                     priceFrom: {
@@ -426,24 +437,7 @@ describe('Mutation: createVendor', () => {
                         ${standardMutationBody}
                     }
                 }`;
-                // TODO: replace with custom command later
-                cy.postGQL(secondMutation).then((resp) => {
-                    //const failureMessage = createMutResMessage(false, mutationName);
-
-                    // should have data
-                    assert.exists(resp.body.data, "Response data should exist");
-                    // Check data for errors
-                    // Validate Errors
-                    assert.exists(resp.body.data[mutationName].error, "Should have errors");
-                    // Validate data types and values
-                    // Validate code
-                    assert.isString(resp.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);
-                    expect(resp.body.data[mutationName].code).to.eql("ERROR", `Expect ${mutationName}.code to be ERROR`);
-                    // Validate message
-                    assert.isString(resp.body.data[mutationName].message, `Expect ${mutationName}.message to be a string`);
-                    expect(resp.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
-                    assert.notExists(resp.body.data[mutationName][itemPath], `Expect mutation not to return a ${itemPath}`);
-                });
+                cy.postAndConfirmMutationError(secondMutation, mutationName, itemPath);
             });
         });
 
@@ -470,7 +464,16 @@ describe('Mutation: createVendor', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -548,7 +551,16 @@ describe('Mutation: createVendor', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {

@@ -13,7 +13,16 @@ const performDelete = (deleteName: string, id: string, altUrl?: string) => {
         ${deleteName}(input: {id: "${id}"}){
             code
             message
-            error
+            errors {
+                code
+                message
+                domain
+                details {
+                    code
+                    message
+                    target
+                }
+            }
         }
     }`;
     cy.postGQL(mutation, altUrl).then((res) => {
