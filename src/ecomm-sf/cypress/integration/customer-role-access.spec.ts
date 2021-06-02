@@ -2,10 +2,9 @@
 
 import { toFormattedString } from "../support/commands";
 
-let loginUrl = 'https://tst.apteanecommerce.com/en/login?returnUrl=%2Fen%2F';
-let term = 'roleAccessTest';
-let accountNum = 1;
-let password = 'Aptean123';
+const loginUrl = 'https://tst.apteanecommerce.com/en/login?returnUrl=%2Fen%2F';
+const term = 'roleAccessTest';
+const password = 'Aptean123';
 const roles = [
     {
         "id": "e069e75b-dc2f-4f99-a3cf-b8b910ed96f0",
@@ -24,6 +23,7 @@ const roles = [
         "name": "Gold"
     },
 ];
+let accountNum = 1;
 
 describe("Customer Role Access", function () {
     before(() => {
