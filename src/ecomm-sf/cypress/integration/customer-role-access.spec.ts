@@ -2,10 +2,10 @@
 
 import { toFormattedString } from "../support/commands";
 
-var loginUrl = 'https://tst.apteanecommerce.com/en/login?returnUrl=%2Fen%2F';
-var term = 'roleAccessTest';
-var accountNum = 1;
-var password = 'Aptean123';
+let loginUrl = 'https://tst.apteanecommerce.com/en/login?returnUrl=%2Fen%2F';
+let term = 'roleAccessTest';
+let accountNum = 1;
+let password = 'Aptean123';
 const roles = [
     {
         "id": "e069e75b-dc2f-4f99-a3cf-b8b910ed96f0",
@@ -79,7 +79,7 @@ describe("Customer Role Access", function () {
         // cy.postAndValidate(rolesQuery, customerRoles).then((res) => {
         // const roles = res.body.data[customerRoles].nodes;
 
-        // var length = roles.length;
+        // let length = roles.length;
         // cy.wrap(roles).as('roles');
 
         // Generates the user profiles we use in every test - not currently in use.
@@ -87,9 +87,9 @@ describe("Customer Role Access", function () {
         // cy.get('a[href*="/Admin/Customer/List"]').first().click().then(() => {
         //     // TODO: change number - currently, just for quick testing
         //     for (let i = 0; i < length; i++) {
-        //         var role = roles[i].name;
-        //         var num = i+1;
-        //         var email = 'roleAccessTest' + num + '@test.com'
+        //         let role = roles[i].name;
+        //         let num = i+1;
+        //         let email = 'roleAccessTest' + num + '@test.com'
         //         cy.get('input[name*="SearchEmail"]').type(email);
         //         cy.get('[id*="search-customers"]').click();
         //         cy.wait(100);
@@ -284,9 +284,9 @@ function generateTestItems(first, second) {
     cy.get('.administration').click();
     cy.get('li').contains('Catalog').click();
     cy.get('li').contains(first).click().then(() => {
-        var length = roles.length;
+        let length = roles.length;
         for (let i = 0; i < length; i++) {
-            var name = roles[i].name;
+            let name = roles[i].name;
             cy.get('a[href="/Admin/' + second + '/Create"]').click().then(() => {
                 if (first === 'Manufacturers') {
                     mappingSettings('div[id="manufacturer-mappings"]');
