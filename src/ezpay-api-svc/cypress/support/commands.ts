@@ -515,6 +515,28 @@ Cypress.Commands.add("getWePayAccount", (accountId) => {
   return Cypress.$.ajax(settings);
 });
 
+Cypress.Commands.add("getFeatureFlags", () => {
+  const gqlQuery = `{
+    account {
+      settings {
+        features {
+          paymentMethods {
+            autoUpdate
+          }
+          paymentRequests {
+            consolidatedPayments
+            partialPayment
+          }
+        }
+      }
+    }
+  }`;
+
+  cy.postGQL(gqlQuery).then(res => {
+    return res?.body?.data?.account?.settings?.features;
+  });
+});
+
 export enum CommandType {
   PostGQL,
   PostGQLBearer,
