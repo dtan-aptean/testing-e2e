@@ -188,6 +188,9 @@ export const createMutResMessage = (isSuccess: boolean, mutationName: string): s
         case "returnReason":
             message = "returnReason";
             break;
+        case "inventory":
+            message = "product quantity";
+            break;
         default : 
             message = (mutationFeature === "customerRole" || mutationFeature === "manufacturer") ? `${transformFeature(mutationFeature)}s` : transformFeature(mutationFeature);
     };
