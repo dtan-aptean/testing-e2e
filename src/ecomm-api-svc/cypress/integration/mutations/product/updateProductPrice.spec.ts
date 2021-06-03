@@ -49,7 +49,6 @@ describe('Mutation: updateProductPrice', () => {
         const input = `{ ${infoName}: [{name: "${name}", languageCode: "Standard"}], priceInformation: { price: { amount: ${originalPrice}, currency: "USD" } } }`;
         cy.createAndGetId(createMutName, secondaryItemPath, input).then((returnedId: string) => {
             assert.exists(returnedId);
-            Cypress.log({displayName: "ORIGINAL PRICE", message: originalPrice});
             id = returnedId;
             itemName = name;
             itemCount++;

@@ -29,10 +29,8 @@ Cypress.Commands.add("allowLoad", () => {
         return;
       }
     }
-    debugger;
     // No need to wait 10 seconds if the symbol isn't there
     if (Cypress.$(`${loadId}:visible`).length === 0) {
-        debugger;
       return;
     }
   
