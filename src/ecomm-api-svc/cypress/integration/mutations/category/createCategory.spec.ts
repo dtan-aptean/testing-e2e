@@ -4,7 +4,6 @@ import { confirmStorefrontEnvValues, createInfoDummy, createMutResMessage, Suppl
 
 // TEST COUNT: 17
 describe('Mutation: createCategory', () => {
-    debugger;
     var id = '';
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'createCategory';
@@ -294,7 +293,7 @@ describe('Mutation: createCategory', () => {
 
     context("Testing PriceRange input", () => {
         it("Mutation will fail if priceRange.priceFrom.amount is > than priceRange.priceTo.amount", () => {
-            const info = [{name: `Cypress Invalid PriceRange Amount ${mutationName}`, languageCode: "Standard"}];
+            const info = [{ name: `Cypress Invalid PriceRange Amount ${mutationName}`, languageCode: "Standard" }];
             const priceRange = {
                 priceFrom: {
                     amount: Cypress._.random(10000, 20000),
@@ -357,7 +356,7 @@ describe('Mutation: createCategory', () => {
         });
 
         it("Mutation will fail if the currency of priceRange.priceFrom and priceRange.priceTo are not the same", () => {
-            const info = [{name: `Cypress PriceRange.PriceFrom Currency ${mutationName}`, languageCode: "Standard"}];
+            const info = [{ name: `Cypress PriceRange.PriceFrom Currency ${mutationName}`, languageCode: "Standard" }];
             const priceRange = {
                 priceFrom: {
                     amount: Cypress._.random(100, 9999),
@@ -417,7 +416,7 @@ describe('Mutation: createCategory', () => {
                 expect(res.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
                 assert.notExists(res.body.data[mutationName][itemPath], `Expect mutation not to return a ${itemPath}`);
 
-                const secondInfo = [{name: `Cypress PriceRange.PriceTo Currency ${mutationName}`, languageCode: "Standard"}];
+                const secondInfo = [{ name: `Cypress PriceRange.PriceTo Currency ${mutationName}`, languageCode: "Standard" }];
                 const secondPriceRange = {
                     priceFrom: {
                         amount: Cypress._.random(100, 9999),
@@ -460,7 +459,7 @@ describe('Mutation: createCategory', () => {
         });
 
         it("Mutation will successfully save all priceRange properties even when priceRangeFiltering = false", () => {
-            const info = [{name: `Cypress PriceRange false ${mutationName}`, languageCode: "Standard"}];
+            const info = [{ name: `Cypress PriceRange false ${mutationName}`, languageCode: "Standard" }];
             const priceRange = {
                 priceRangeFiltering: false,
                 manuallyPriceRange: false,
@@ -538,7 +537,7 @@ describe('Mutation: createCategory', () => {
         });
 
         it("Mutation will successfully save the priceRange input", () => {
-            const info = [{name: `Cypress PriceRange ${mutationName}`, languageCode: "Standard"}];
+            const info = [{ name: `Cypress PriceRange ${mutationName}`, languageCode: "Standard" }];
             const priceRange = {
                 priceRangeFiltering: Cypress._.random(0, 1) === 1,
                 manuallyPriceRange: Cypress._.random(0, 1) === 1,

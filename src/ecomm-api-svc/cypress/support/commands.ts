@@ -226,25 +226,6 @@ const getInfoName = (item): string | null => {
  * THE POST COMMAND USED BY ALL COMMANDS THAT MAKE API CALLS
  */
 
-// Logs in with the configured username/password
-Cypress.Commands.add("login", () => {
-    Cypress.log({
-        name: "login",
-    });
-    cy.on("uncaught:exception", (err, runnable) => {
-        return false;
-    });
-    cy.get(".header-links").then(($el) => {
-        if (!$el[0].innerText.includes('LOG OUT')) {
-            cy.get(".header-links").find(".ico-login").click({ force: true });
-            cy.wait(200);
-            cy.get(".email").type(Cypress.config("username"));
-            cy.get(".password").type(Cypress.config("password"));
-            cy.get(".login-button").click();
-        }
-    });
-});
-
 // This will post GQL query or mutation. Use altUrl to post the call to a different url than baseUrl
 Cypress.Commands.add('postGQL', (query, altUrl?: string) => {
     Cypress.log({
