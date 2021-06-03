@@ -9,7 +9,8 @@ describe("Merchant portal", function () {
   context("Monthly Statements", () => {
     beforeEach(() => {
       cy.visit("/");
-      cy.wait(3000);
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
     });
 
     it("can open and close download statement dialog when recent statement is clicked", () => {
