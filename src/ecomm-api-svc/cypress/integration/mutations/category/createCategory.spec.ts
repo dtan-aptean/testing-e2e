@@ -4,8 +4,8 @@ import { confirmStorefrontEnvValues, createInfoDummy, createMutResMessage, Suppl
 
 // TEST COUNT: 17
 describe('Mutation: createCategory', () => {
-    var id = '';
-    var extraIds = [] as SupplementalItemRecord[];
+    let id = '';
+    let extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'createCategory';
     const deleteMutName = "deleteCategory";
     const queryName = "categories";
@@ -23,7 +23,7 @@ describe('Mutation: createCategory', () => {
             }
         }
     `;
-    var originalBaseUrl = Cypress.config("baseUrl");
+    let originalBaseUrl = Cypress.config("baseUrl");
     confirmStorefrontEnvValues();
 
     const addExtraItemIds = (extIds: SupplementalItemRecord[]) => {
@@ -31,12 +31,12 @@ describe('Mutation: createCategory', () => {
             extraIds.push(id);
         });
     };
-    var childCatName = "";
-    var parentCatName = "";
-    var childCatId = "";
-    var parentCatId = "";
+    let childCatName = "";
+    let parentCatName = "";
+    let childCatId = "";
+    let parentCatId = "";
 
-    var deleteItemsAfter = undefined as boolean | undefined;
+    let deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
         deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.deleteCypressItems(queryName, deleteMutName, infoName);
