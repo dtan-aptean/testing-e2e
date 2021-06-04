@@ -320,7 +320,6 @@ Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: 
             };
         },
     });
-    debugger;
     // should be 200 ok
     expect(res.isOkStatusCode).to.be.equal(true, "Expect statusCode to be 200 ok");
     // shoule be no errors
