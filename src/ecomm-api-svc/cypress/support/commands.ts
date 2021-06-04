@@ -320,7 +320,7 @@ Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: 
             };
         },
     });
-
+    debugger;
     // should be 200 ok
     expect(res.isOkStatusCode).to.be.equal(true, "Expect statusCode to be 200 ok");
     // shoule be no errors
@@ -329,7 +329,6 @@ Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: 
     assert.exists(res.body.data, "Expect response to have data");
     // Validate data types and values
     // Validate code
-    debugger;
     assert.isString(res.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);
     expect(res.body.data[mutationName].code).not.to.eql("ERROR", `Expect ${mutationName}.code not be ERROR`);
     // Validate message
@@ -1290,7 +1289,6 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, itemP
             };
         },
     });
-    debugger;
     if (proNames !== 'customerInfo') {
         expect(propNames.length).to.be.eql(values.length, "Same number of properties and values given to function");
     }
