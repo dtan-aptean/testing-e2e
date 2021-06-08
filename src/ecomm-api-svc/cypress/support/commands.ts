@@ -394,11 +394,11 @@ Cypress.Commands.add("confirmMutationError", (res, mutationName: string, itemPat
             };
         },
     });
+    // Check data for errors
     // should have errors
     assert.exists(res.body.data[mutationName].errors, "Errors should be present");
     // should have data
     assert.exists(res.body.data, "Response data should exist");
-    // Check data for errors
     // Validate data types and values
     // Validate code
     assert.isString(res.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);

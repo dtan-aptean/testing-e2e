@@ -11,6 +11,8 @@ describe("Merchant portal", function () {
     beforeEach(() => {
       //navigate to home screen
       cy.visit("/");
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       // Onbaord if necessary
       cy.onboard({
         entityType: "business",
@@ -49,7 +51,7 @@ describe("Merchant portal", function () {
       // Get the disputes
       cy.get("[data-cy=payment-disputes-tab]", { timeout: 20000 }).click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(1000);
+      cy.wait(5000);
       cy.get("[data-cy=dispute-table-body]").invoke("children").as("rows");
     });
 
@@ -58,10 +60,12 @@ describe("Merchant portal", function () {
         const originalLength = $el.length;
         if (originalLength === 0) {
           cy.createAndPay(1, "9.61", "disputes");
+          cy.wait(5000);
+          cy.waitAfterLogIn(0, 5);
           cy.get("[data-cy=payment-disputes-tab]", { timeout: 20000 }).click();
           cy.wait(800000);
           cy.get("[data-cy=refresh]").click();
-          cy.wait(2000);
+          cy.wait(5000);
           cy.get("[data-cy=dispute-table-body]")
             .invoke("children")
             .then(($children) => {
@@ -78,7 +82,7 @@ describe("Merchant portal", function () {
               cy.wrap($row)
                 .find("td")
                 .then(($cells) => {
-                  status = $cells.text();
+                  status = $cells.eq(2).text();
                   daysRemaining = $cells.eq(4).text();
                   if (
                     status === "Action Needed" &&
@@ -91,12 +95,14 @@ describe("Merchant portal", function () {
             .then(() => {
               if (activeArray.length === 0) {
                 cy.createAndPay(1, "9.61", "disputes");
+                cy.wait(5000);
+                cy.waitAfterLogIn(0, 5);
                 cy.get("[data-cy=payment-disputes-tab]", {
                   timeout: 20000,
                 }).click();
                 cy.wait(800000);
                 cy.get("[data-cy=refresh]").click();
-                cy.wait(3000);
+                cy.wait(5000);
                 cy.get("@rows").should("have.length.gte", 1);
                 let hasActiveDispute = false;
                 // Get the rows with active disputes
@@ -128,6 +134,8 @@ describe("Merchant portal", function () {
 
     it("View disputes table on dispute tab", () => {
       cy.visit("/");
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       // Visit the tab as if going to it for the first time
       cy.get("[data-cy=payment-disputes-tab]", { timeout: 20000 }).click();
       // Make sure the table exists and is visible
@@ -252,14 +260,12 @@ describe("Merchant portal", function () {
       cy.get("@rows").should("have.length.gte", 1);
       cy.get("@rows").eq(0).as("firstRow");
       // Just get the first row, there's an invoice regardless of status
-      cy.get("@firstRow").find("td").eq(6).as("actionsCell");
-      cy.get("@actionsCell").scrollIntoView().should("be.visible");
-      cy.get("@firstRow").trigger("mouseover");
-      cy.get("@actionsCell").within(() => {
-        // Both the review button and the details button have the same data-cy
-        cy.get("[data-cy=view-dispute]").scrollIntoView().should("be.visible");
-        cy.get("[data-cy=view-dispute]").click({ force: true });
-      });
+      cy.get("@firstRow")
+        .find("td")
+        .eq(1)
+        .within(() => {
+          cy.get('a[href="#"]').click({ force: true });
+        });
       cy.wait(1000);
       cy.get("[data-cy=dispute-information]").should("exist").and("be.visible");
       cy.get("[data-cy=download-dispute-invoice]")
