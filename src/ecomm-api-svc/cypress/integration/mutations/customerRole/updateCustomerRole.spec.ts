@@ -255,8 +255,8 @@ describe('Mutation: updateCustomerRole', () => {
                     input: {
                         id: "${id}"
                         isTaxExempt: ${isTaxExempt}
-                        hasFreeShipping: ${freeShipping}
-                        isActive: ${active}
+                        freeShipping: ${freeShipping}
+                        active: ${active}
                         enablePasswordLifetime: ${enablePasswordLifetime}
                         name: "${newName}"
                         overrideTaxDisplayType: ${overrideTaxDisplayType}
@@ -280,8 +280,8 @@ describe('Mutation: updateCustomerRole', () => {
                     ${itemPath} {
                         id
                         isTaxExempt
-                        hasFreeShipping
-                        isActive
+                        freeShipping
+                        active
                         enablePasswordLifetime
                         name
                         isSystemRole
@@ -292,7 +292,7 @@ describe('Mutation: updateCustomerRole', () => {
                 }
             }`;
             cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                const propNames = ["name", "isTaxExempt", "hasFreeShipping", "isActive", "enablePasswordLifetime", "overrideTaxDisplayType", "defaultTaxDisplayType", "isSystemRole", "systemName"];
+                const propNames = ["name", "isTaxExempt", "freeShipping", "active", "enablePasswordLifetime", "overrideTaxDisplayType", "defaultTaxDisplayType", "isSystemRole", "systemName"];
                 const propValues = [newName, isTaxExempt, freeShipping, active, enablePasswordLifetime, overrideTaxDisplayType, defaultTaxDisplayType, isSystemRole, systemName];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
@@ -300,8 +300,8 @@ describe('Mutation: updateCustomerRole', () => {
                             nodes {
                                 id
                                 isTaxExempt
-                                hasFreeShipping
-                                isActive
+                                freeShipping
+                                active
                                 enablePasswordLifetime
                                 name
                                 isSystemRole
