@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "devDependencies": {
+    "cypress": "^7.3.0"
   },
   "scripts": {
     "cypress": "cypress open",

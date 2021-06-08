@@ -10,6 +10,8 @@ describe("Merchant Portal", function () {
   context("Help Center", () => {
     beforeEach(() => {
       cy.visit("/");
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       // navigate to help center screen
       cy.get("[data-cy=user-settings]").click();
       cy.get("[data-cy=help]").click();

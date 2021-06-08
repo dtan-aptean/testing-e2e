@@ -23,6 +23,8 @@ describe("Merchant portal", function () {
     beforeEach(() => {
       // navigate to manage account screen
       cy.visit("/");
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       cy.get("[data-cy=user-settings]").click();
       cy.get("[data-cy=manage-account]").click();
     });

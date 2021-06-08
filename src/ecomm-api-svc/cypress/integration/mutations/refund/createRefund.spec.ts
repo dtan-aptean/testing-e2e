@@ -16,10 +16,14 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
     const responseBody = `
                 order {
                     id
-                    paymentStatus
-                    refundedAmount {
-                        amount
-                        currency
+                    paymentInfo {
+                        paymentStatus
+                    }
+                    totals {
+                        refund {
+                            amount
+                            currency
+                        }
                     }
                 }
                 isPartialRefund
@@ -50,7 +54,10 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
 		deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.wait(1000);
         cy.visit("/");  // Go to the storefront and login
+        cy.setTheme();
         cy.storefrontLogin();
+        cy.setupRequiredProducts();
+        cy.goToPublicHome();
         cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
             const { orderId, orderAmount } = orderInfo;
             assert.exists(orderId);
@@ -82,11 +89,24 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                     }
                 }
             }`;
-            const queryInformation = {queryName: queryName, itemId: id, searchParameter: "searchString"};
+            const queryInformation = {queryName: queryName, itemId: id, searchParameter: "ids"};
             cy.postAndConfirmDelete(removalMutation, deletionName, queryInformation, originalBaseUrl).then(() => {
                 refundCreated = false;
             });
         }
+    });
+
+    after(() => {
+        cy.visit("/");  // Go to the storefront and login
+        cy.setTheme();
+        cy.storefrontLogin();
+        if (!Cypress.env("storedTheme")) {
+            cy.setTheme(Cypress.env("storedTheme"));
+        }
+        if (!deleteItemsAfter) {
+            return;
+        }
+        cy.cleanupEnvironment();
     });
 
     context("Testing basic required inputs", () => {
@@ -118,7 +138,7 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
         });
 
         it("Mutation will fail with 'orderId' of an unpaid order", () => {
-            cy.goToPublicHome().then(() => {
+            cy.visit("/").then(() => {
                 cy.get(".header-links").then(($el) => {
                     if (!$el[0].innerText.includes('LOG OUT')) {
                         cy.storefrontLogin();
@@ -140,13 +160,14 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                             }
                         }`;
                         cy.postAndConfirmMutationError(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
-                            expect(res.body.errors[0].message).to.include("Cannot Refund Unpaid Orders");
+                            expect(res.body.data[mutationName].errors[0].message).to.include("Cannot Refund Unpaid Orders");
                         });
                     });
                 });
             });
         });
 
+        // TODO: Failing with message "Currency is Required"
         it("Mutation will fail with 'orderId' input from an order with an existing refund", () => {
             const mutation = `mutation {
                 ${mutationName}(
@@ -179,81 +200,126 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             });
         });
 
+        // TODO: Failing with message "Currency is Required"
         it("Mutation with valid 'orderId' input will create a full refund", () => {
-            const refundAmount = {
-                amount: orderTotal,
-                currency: "USD"
-            };
-            const dummyOrder = {
-                id: id,
-                paymentStatus: "REFUNDED",
-                refundedAmount: refundAmount
-            };
-            const mutation = `mutation {
-                ${mutationName}(
-                    input: {
-                        orderId: "${id}"
+            cy.visit("/");
+            cy.setTheme();
+            cy.storefrontLogin();
+            cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
+                const { orderId, orderAmount } = orderInfo;
+                assert.exists(orderId);
+                assert.exists(orderAmount);
+                id = orderId;
+                orderTotal = orderAmount;
+            }).then(() => {
+                const refundAmount = {
+                    amount: orderTotal,
+                    currency: "USD"
+                };
+                const dummyOrder = {
+                    id: id,
+                    paymentInfo: {
+                        paymentStatus: "REFUNDED",
+                    },
+                    totals: {
+                        refund: refundAmount
                     }
-                ) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
-                refundCreated = true;
-                const propNames = ["isPartialRefund", "refundAmount", "order"];
-                const propValues = [false, refundAmount, dummyOrder];
-                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                    const query = `{
-                        ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                            nodes {
-                                ${responseBody}
-                            }
+                };
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: {
+                            orderId: "${id}"
                         }
-                    }`;
-                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl);
+                    ) {
+                        ${standardMutationBody}
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
+                    refundCreated = true;
+                    const propNames = ["isPartialRefund", "refundAmount", "order"];
+                    const propValues = [false, refundAmount, dummyOrder];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                nodes {
+                                    ${responseBody}
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl);
+                    });
                 });
             });
         });
 
+        // TODO: Failing with message "Currency is Required"
         it("Mutation with valid 'orderId' and 'isPartialRefund' will create a partial refund", () => {
-            const refundAmount = {
-                amount: 0,
-                currency: "USD"
-            };
-            const dummyOrder = {
-                id: id,
-                paymentStatus: "PARTIALLY_REFUNDED",
-                refundedAmount: refundAmount
-            };
-            const mutation = `mutation {
-                ${mutationName}(
-                    input: {
-                        orderId: "${id}"
-                        isPartialRefund: true 
+            cy.visit("/");
+            cy.setTheme();
+            cy.storefrontLogin();
+            cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
+                const { orderId, orderAmount } = orderInfo;
+                assert.exists(orderId);
+                assert.exists(orderAmount);
+                id = orderId;
+                orderTotal = orderAmount;
+            }).then(() => {
+                const refundAmount = {
+                    amount: 0,
+                    currency: "USD"
+                };
+                const dummyOrder = {
+                    id: id,
+                    paymentInfo: {
+                        paymentStatus: "PARTIALLY_REFUNDED",
+                    },
+                    totals: {
+                        refund: refundAmount
                     }
-                ) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
-                refundCreated = true;
-                const propNames = ["isPartialRefund", "refundAmount", "order"];
-                const propValues = [true, refundAmount, dummyOrder];
-                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                    const query = `{
-                        ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                            nodes {
-                                ${responseBody}
-                            }
+                };
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: {
+                            orderId: "${id}"
+                            isPartialRefund: true 
                         }
-                    }`;
-                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl);
+                    ) {
+                        ${standardMutationBody}
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
+                    refundCreated = true;
+                    const propNames = ["isPartialRefund", "refundAmount", "order"];
+                    const propValues = [true, refundAmount, dummyOrder];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                                nodes {
+                                    ${responseBody}
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl);
+                    });
                 });
             });
         });
     });
 
     context("Testing 'refundAmount'", () => {
+        beforeEach(() => {
+            cy.visit("/");
+            cy.setTheme();
+            cy.storefrontLogin();
+            cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
+                const { orderId, orderAmount } = orderInfo;
+                assert.exists(orderId);
+                assert.exists(orderAmount);
+                id = orderId;
+                orderTotal = orderAmount;
+            });
+        });
+
         it("Mutation that creates a partial refund with a refundAmount will set the refundedAmount to that amount", () => {
             const refundAmount = {
                 amount: Math.floor(Cypress._.random(1, orderTotal / 2)),
@@ -261,8 +327,12 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             };
             const dummyOrder = {
                 id: id,
-                refundedAmount: refundAmount,
-                paymentStatus: "PARTIALLY_REFUNDED"
+                paymentInfo: {
+                    paymentStatus: "PARTIALLY_REFUNDED",
+                },
+                totals: {
+                    refund: refundAmount
+                }
             };
             const mutation = `mutation {
                 ${mutationName}(
@@ -281,7 +351,7 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 const propValues = [true, refundAmount, dummyOrder];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
                                 ${responseBody}
                             }
@@ -299,8 +369,12 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             };
             const dummyOrder = {
                 id: id,
-                refundedAmount: refundAmount,
-                paymentStatus: "REFUNDED"
+                paymentInfo: {
+                    paymentStatus: "REFUNDED",
+                },
+                totals: {
+                    refund: refundAmount
+                }
             };
             const mutation = `mutation {
                 ${mutationName}(
@@ -318,7 +392,7 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 const propValues = [false, refundAmount, dummyOrder];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
                                 ${responseBody}
                             }
@@ -329,6 +403,7 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             });
         });
 
+        // TODO: Response behavior doesn't match. Update?
         it("Mutation that doesn't include 'isPartialRefund' but has a refundAmount less than the totalAmount will create a full refund", () => {
             const inputRefundAmount = {
                 amount: Math.floor(Cypress._.random(orderTotal / 10, orderTotal / 2)),
@@ -340,8 +415,12 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             };
             const dummyOrder = {
                 id: id,
-                refundedAmount: refundAmount,
-                paymentStatus: "REFUNDED"
+                paymentInfo: {
+                    paymentStatus: "REFUNDED",
+                },
+                totals: {
+                    refund: refundAmount
+                }
             };
             const mutation = `mutation {
                 ${mutationName}(
@@ -359,7 +438,7 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 const propValues = [false, refundAmount, dummyOrder];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
                                 ${responseBody}
                             }
@@ -370,6 +449,7 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             });
         });
 
+        // TODO: Got an error with a specific message for this scenario. Update test.
         it("Mutation that attempts to refund more than the order's total will accept the amount provided", () => {
             const refundAmount = {
                 amount: orderTotal * 2,
@@ -377,8 +457,12 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             };
             const dummyOrder = {
                 id: id,
-                paymentStatus: "REFUNDED",
-                refundedAmount: refundAmount
+                paymentInfo: {
+                    paymentStatus: "REFUNDED",
+                },
+                totals: {
+                    refund: refundAmount
+                }
             };
             const mutation = `mutation {
                 ${mutationName}(
@@ -396,7 +480,7 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 const propValues = [false, refundAmount, dummyOrder];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
                                 ${responseBody}
                             }
@@ -409,6 +493,19 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
     });
 
     context("Testing all optional input", () => {
+        beforeEach(() => {
+            cy.visit("/");
+            cy.setTheme();
+            cy.storefrontLogin();
+            cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
+                const { orderId, orderAmount } = orderInfo;
+                assert.exists(orderId);
+                assert.exists(orderAmount);
+                id = orderId;
+                orderTotal = orderAmount;
+            });
+        });
+
         it("Mutation creates item that has all included input", () => {
             const isPartialRefund = Cypress._.random(0, 1) === 1;
             const refundAmount = {
@@ -417,8 +514,12 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             };
             const dummyOrder = {
                 id: id,
-                paymentStatus: isPartialRefund ? "PARTIALLY_REFUNDED" : "REFUNDED",
-                refundedAmount: refundAmount
+                paymentInfo: {
+                    paymentStatus: isPartialRefund ? "PARTIALLY_REFUNDED" : "REFUNDED",
+                },
+                totals: {
+                    refund: refundAmount
+                }
             };
             const mutation = `mutation {
                 ${mutationName}(
@@ -437,7 +538,7 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 const propValues = [isPartialRefund, refundAmount, dummyOrder];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
-                        ${queryName}(searchString: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                        ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             nodes {
                                 ${responseBody}
                             }

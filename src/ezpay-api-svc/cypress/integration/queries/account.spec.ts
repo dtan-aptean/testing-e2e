@@ -113,6 +113,16 @@ describe('Query: account', () => {
             accountType
             accountLastFour
           }
+          features {
+            paymentMethods {
+              autoUpdate
+            }
+            paymentRequests {
+              consolidatedPayments
+              partialPayment
+            }
+          }
+          supportedPaymentMethods
         }
         tosAcceptance {
           date

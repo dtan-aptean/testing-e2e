@@ -12,9 +12,11 @@ describe("Merchant portal", function () {
       // navigate to home screen
       cy.visit("/");
       cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
 
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
+      cy.wait(5000);
       cy.get("[data-cy=payments-table-body]")
         .find("tr")
         .eq(0)
@@ -23,6 +25,7 @@ describe("Merchant portal", function () {
 
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
+      cy.wait(5000);
       cy.get("[data-cy=payment-request-table-body]")
         .find("tr")
         .eq(0)
@@ -44,7 +47,7 @@ describe("Merchant portal", function () {
       cy.wait(3000);
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentRequestCells")
         .eq(2)
@@ -63,13 +66,14 @@ describe("Merchant portal", function () {
 
     it("Merchant clicks the refund button and an issue refund modal opens", () => {
       cy.createAndPay(1, "10", "refund");
-      cy.visit("/");
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       cy.wait(35000);
 
       //Checking in payments
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       //checking if status is still pending and then waiting accordingly
       cy.get("body").then(($body) => {
@@ -82,7 +86,7 @@ describe("Merchant portal", function () {
         ) {
           cy.wait(35000);
           cy.get("[data-cy=refresh]").click();
-          cy.wait(3000);
+          cy.wait(5000);
         }
       });
 
@@ -104,7 +108,7 @@ describe("Merchant portal", function () {
       //Checking in payment requests
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentRequestCells")
         .eq(2)
@@ -126,7 +130,7 @@ describe("Merchant portal", function () {
       //Checking in payments
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentCells")
         .eq(2)
@@ -149,7 +153,7 @@ describe("Merchant portal", function () {
       //Checking in payment requests
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentRequestCells")
         .eq(2)
@@ -174,7 +178,7 @@ describe("Merchant portal", function () {
       //Checking in payments
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentCells")
         .eq(2)
@@ -197,7 +201,7 @@ describe("Merchant portal", function () {
       //Checking in payment requests
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentRequestCells")
         .eq(2)
@@ -222,7 +226,7 @@ describe("Merchant portal", function () {
       //Checking in payments
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentCells")
         .eq(2)
@@ -256,7 +260,7 @@ describe("Merchant portal", function () {
       //Checking in payment requests
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentRequestCells")
         .eq(2)
@@ -292,7 +296,7 @@ describe("Merchant portal", function () {
       //Checking in payments
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentCells")
         .eq(2)
@@ -320,7 +324,7 @@ describe("Merchant portal", function () {
       //Checking in payment requests
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentRequestCells")
         .eq(2)
@@ -350,7 +354,7 @@ describe("Merchant portal", function () {
       //Checking in payments
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentCells")
         .eq(2)
@@ -371,7 +375,7 @@ describe("Merchant portal", function () {
       //Checking in payment requests
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentRequestCells")
         .eq(2)
@@ -395,7 +399,7 @@ describe("Merchant portal", function () {
     it("Refunding a request updates that request and payment in the table", () => {
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
       cy.get("@firstPaymentRequestCells")
         .eq(2)
         .should(($cell) => {
@@ -429,7 +433,7 @@ describe("Merchant portal", function () {
 
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       cy.get("@firstPaymentCells")
         .eq(2)
@@ -441,10 +445,12 @@ describe("Merchant portal", function () {
     it("Refunding a payment updates the payment and request in the table", () => {
       //creating the payment
       cy.createAndPay(1, "10.00", "payment");
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       cy.wait(35000);
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       //checking if status is still pending and then waiting accordingly
       cy.get("body").then(($body) => {
@@ -457,7 +463,7 @@ describe("Merchant portal", function () {
         ) {
           cy.wait(35000);
           cy.get("[data-cy=refresh]").click();
-          cy.wait(3000);
+          cy.wait(5000);
         }
       });
 
@@ -487,7 +493,7 @@ describe("Merchant portal", function () {
       //checking payment request status
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
       cy.get("@firstPaymentRequestCells")
         .eq(2)
         .should(($cell) => {

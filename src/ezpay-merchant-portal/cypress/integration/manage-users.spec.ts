@@ -11,6 +11,8 @@ describe("Merchant portal", function () {
     beforeEach(() => {
       // navigate to manage users screen
       cy.visit("/");
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       cy.get("[data-cy=user-settings]").click();
       cy.get("[data-cy=manage-users]").click();
     });
@@ -28,6 +30,7 @@ describe("Merchant portal", function () {
 
     it("should pass if able to add new user", () => {
       cy.get("[data-cy=refresh]").click();
+      cy.wait(3000);
       cy.get("[data-cy=add-new-user]").click();
       cy.get("[data-cy=add-new-user-cancel]")
         .should("be.visible")
@@ -45,8 +48,8 @@ describe("Merchant portal", function () {
       cy.getInput("first-name").clear();
       cy.getInput("last-name").type("Doe").should("have.value", "Doe");
       cy.getInput("email")
-        .type("john.doetesting@aptean.com")
-        .should("have.value", "john.doetesting@aptean.com");
+        .type("john.doe@aptean.com")
+        .should("have.value", "john.doe@aptean.com");
       cy.getSelect("role").select("EDITOR").should("have.value", "EDITOR");
 
       // validate if last name is mandatory
@@ -61,8 +64,8 @@ describe("Merchant portal", function () {
 
       // save new user
       cy.getInput("email")
-        .type("john.doetesting@aptean.com")
-        .should("have.value", "john.doetesting@aptean.com");
+        .type("john.doe@aptean.com")
+        .should("have.value", "john.doe@aptean.com");
       cy.get("[data-cy=add-new-user-save]").should("be.enabled");
       cy.get("[data-cy=add-new-user-save]").click();
 
@@ -70,19 +73,19 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=users-table]").within(() => {
         cy.contains("John");
         cy.contains("Doe");
-        cy.contains("john.doetesting@aptean.com");
+        cy.contains("john.doe@aptean.com");
         cy.contains("Editor");
       });
 
       // verify added record number in the table
       cy.get(
-        "[data-cy=users-table]>tbody>tr:contains(john.doetesting@aptean.com)"
+        "[data-cy=users-table]>tbody>tr:contains(john.doe@aptean.com)"
       ).should("have.length", 1);
     });
 
     it("should pass if able to edit an user", () => {
       cy.get(
-        "[data-cy=users-table]>tbody>tr:contains(john.doetesting@aptean.com)"
+        "[data-cy=users-table]>tbody>tr:contains(john.doe@aptean.com)"
       ).within(() => {
         cy.get("[data-cy=edit-row]").click();
       });
@@ -108,13 +111,13 @@ describe("Merchant portal", function () {
 
       // verify added record number in the table
       cy.get(
-        "[data-cy=users-table]>tbody>tr:contains(john.doetesting@aptean.com)"
+        "[data-cy=users-table]>tbody>tr:contains(john.doe@aptean.com)"
       ).should("have.length", 1);
     });
 
     it("should pass if able to delete an user", () => {
       cy.get(
-        "[data-cy=users-table]>tbody>tr:contains(john.doetesting@aptean.com)"
+        "[data-cy=users-table]>tbody>tr:contains(john.doe@aptean.com)"
       ).within(() => {
         cy.get("[data-cy=delete-row]").click();
       });
@@ -122,11 +125,11 @@ describe("Merchant portal", function () {
       // cancel should close the dialog
       cy.get("[data-cy=delete-user-dialog-header]").should("be.visible");
       cy.get("[data-cy=delete-user-cancel]").click();
-      cy.get("[data-cy=delete-user-dialog-header]").should("not.be.visible");
+      cy.get("[data-cy=delete-user-dialog-header]").should("not.exist");
 
       // delete user
       cy.get(
-        "[data-cy=users-table]>tbody>tr:contains(john.doetesting@aptean.com)"
+        "[data-cy=users-table]>tbody>tr:contains(john.doe@aptean.com)"
       ).within(() => {
         cy.get("[data-cy=delete-row]").click();
       });
@@ -134,7 +137,7 @@ describe("Merchant portal", function () {
 
       // verify record deletion in the table
       cy.get(
-        "[data-cy=users-table]>tbody>tr:contains(john.doetesting@aptean.com)"
+        "[data-cy=users-table]>tbody>tr:contains(john.doe@aptean.com)"
       ).should("not.exist");
     });
   });
