@@ -1592,10 +1592,10 @@ describe("Mutation: createPayment: consolidated payment flow", () => {
                   // get feature flags set for the current tenant
                   cy.getFeatureFlags().then((features) => {
                     const { paymentRequests } = features || {};
-                    const { consolidatedPayments } = paymentRequests || {};
+                    const { consolidatedPayment } = paymentRequests || {};
 
                     // it should work only if the feature is enabled
-                    if (consolidatedPayments) {
+                    if (consolidatedPayment) {
                       // should be 200 ok
                       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -1694,10 +1694,10 @@ describe("Mutation: createPayment: consolidated payment flow", () => {
                   // get feature flags set for the current tenant
                   cy.getFeatureFlags().then((features) => {
                     const { paymentRequests } = features || {};
-                    const { consolidatedPayments } = paymentRequests || {};
+                    const { consolidatedPayment } = paymentRequests || {};
 
                     // it should work only if the feature is enabled
-                    if (consolidatedPayments) {
+                    if (consolidatedPayment) {
                       // should be 200 ok
                       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -1773,10 +1773,10 @@ describe("Mutation: createPayment: consolidated payment flow", () => {
                   // get feature flags set for the current tenant
                   cy.getFeatureFlags().then((features) => {
                     const { paymentRequests } = features || {};
-                    const { consolidatedPayments } = paymentRequests || {};
+                    const { consolidatedPayment } = paymentRequests || {};
 
                     // it should work only if the feature is enabled
-                    if (consolidatedPayments) {
+                    if (consolidatedPayment) {
                       // should be 200 ok
                       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
@@ -1852,11 +1852,11 @@ describe("Mutation: createPayment: consolidated payment flow", () => {
                   // get feature flags set for the current tenant
                   cy.getFeatureFlags().then((features) => {
                     const { paymentRequests } = features || {};
-                    const { consolidatedPayments, partialPayment } =
+                    const { consolidatedPayment, partialPayment } =
                       paymentRequests || {};
 
                     // it should work only if both features are enabled
-                    if (consolidatedPayments && partialPayment) {
+                    if (consolidatedPayment && partialPayment) {
                       // should be 200 ok
                       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
