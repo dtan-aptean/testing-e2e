@@ -225,7 +225,9 @@ describe('Mutation: createCustomerRole', () => {
                         id
                         isTaxExempt
                         freeShipping
+                        hasFreeShipping
                         active
+                        isActive
                         enablePasswordLifetime
                         name
                         isSystemRole
@@ -237,8 +239,8 @@ describe('Mutation: createCustomerRole', () => {
             }`;
             cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 id = res.body.data[mutationName][itemPath].id;
-                const propNames = ["name", "isTaxExempt", "freeShipping", "active", "enablePasswordLifetime", "overrideTaxDisplayType", "defaultTaxDisplayType", "isSystemRole", "systemName"];
-                const propValues = [name, isTaxExempt, freeShipping, active, enablePasswordLifetime, overrideTaxDisplayType, defaultTaxDisplayType, isSystemRole, systemName];
+                const propNames = ["name", "isTaxExempt", "freeShipping", "hasFreeShipping", "active", "isActive", "enablePasswordLifetime", "overrideTaxDisplayType", "defaultTaxDisplayType", "isSystemRole", "systemName"];
+                const propValues = [name, isTaxExempt, freeShipping, freeShipping, active, active, enablePasswordLifetime, overrideTaxDisplayType, defaultTaxDisplayType, isSystemRole, systemName];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
@@ -246,7 +248,9 @@ describe('Mutation: createCustomerRole', () => {
                                 id
                                 isTaxExempt
                                 freeShipping
+                                hasFreeShipping
                                 active
+                                isActive
                                 enablePasswordLifetime
                                 name
                                 isSystemRole
