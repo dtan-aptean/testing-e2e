@@ -1,20 +1,17 @@
 /// <reference types="cypress" />
 
-import { confirmStorefrontEnvValues, createInfoDummy, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 17
 describe('Mutation: createCustomer', () => {
     let email = '';
     let vendorId = '';
     let companyId = '';
     let goldId = '';
     let adminId = '';
-    const originalBaseUrl = Cypress.config("baseUrl");
     const mutationName = 'createCustomer';
     const deleteMutName = "deleteCustomer";
     const queryName = "customers";
     const itemPath = 'customer';
-    const infoName = "customerInfo";
     const standardMutationContent = `
         code
         message
@@ -48,6 +45,7 @@ describe('Mutation: createCustomer', () => {
         }`;
         if (email !== '') {
             cy.postAndValidate(query, 'customers').then((res) => {
+                debugger;
                 let id = res.body.data[queryName].nodes[0].id;
                 const deleteName = 'deleteCustomer';
                 const mutation = `mutation {
@@ -283,7 +281,7 @@ describe('Mutation: createCustomer', () => {
                         email: "${testEmail}",
                         firstName: "Testy",
                         lastName: "McTest",
-                        gender: BAKLAVA
+                        gender: WAAAGH
                     }
                     
                 ) {
@@ -312,7 +310,7 @@ describe('Mutation: createCustomer', () => {
                     ${standardMutationContent}
                     ${itemPath} {
                         ${requiredItems}
-                        isActive
+                        gender
                     }
                 }
             }`;
@@ -369,8 +367,30 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
+        it("Mutation will fail if 'dateOfBirth' has non-date-format input", () => {
+            const date = 'January 1, 2000'
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                dateOfBirth: date
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        dateOfBirth
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
         it("Mutation will succeed if 'isTaxExempt' has a boolean input", () => {
-            const date = new Date();
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -395,7 +415,6 @@ describe('Mutation: createCustomer', () => {
         });
 
         it("Mutation will fail if 'isTaxExempt' has a non-boolean input", () => {
-            const date = new Date();
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -417,7 +436,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'newsletter' has any number input", () => {
+        it("Mutation will succeed if 'newsletter' has a number input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -447,7 +466,7 @@ describe('Mutation: createCustomer', () => {
                 email: testEmail,
                 firstName: 'Testy',
                 lastName: 'McTest',
-                newsletter: '4'
+                newsletter: 'Waaagh'
             };
             const mutation = `mutation {
                 ${mutationName}(
@@ -465,8 +484,31 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
+        it("Mutation will succeed if 'adminComment' has a string input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                adminComment: "Waaagh"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        adminComment
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
+        });
+
         it("Mutation will fail if 'adminComment' has a non-string input", () => {
-            const date = new Date();
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -488,38 +530,13 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'adminComment' has a string input", () => {
-            const date = new Date();
-            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
-            const input = {
-                email: testEmail,
-                firstName: 'Testy',
-                lastName: 'McTest',
-                adminComment: "I'm gonna need two bolters for this heresy."
-            };
-            const mutation = `mutation {
-                ${mutationName}(
-                    input: ${toFormattedString(input)}
-                ) {
-                    ${standardMutationContent}
-                    ${itemPath} {
-                        ${requiredItems}
-                        adminComment
-                    }
-                }
-            }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                email = res.body.data[mutationName][itemPath].email;
-            });
-        });
-
         it("Mutation will succeed if 'vendorId' has a string input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
                 firstName: 'Testy',
                 lastName: 'McTest',
-                vendorId: 'Trazyn the Infinite'
+                vendorId: 'Waaagh'
             };
             const mutation = `mutation {
                 ${mutationName}(
@@ -561,37 +578,13 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will succeed if 'vendorId' has no input", () => {
-            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
-            const input = {
-                email: testEmail,
-                firstName: 'Testy',
-                lastName: 'McTest',
-                vendorId: null
-            };
-            const mutation = `mutation {
-                ${mutationName}(
-                    input: ${toFormattedString(input)}
-                ) {
-                    ${standardMutationContent}
-                    ${itemPath} {
-                        ${requiredItems}
-                        vendorId
-                    }
-                }
-            }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                email = res.body.data[mutationName][itemPath].email;
-            });
-        });
-
         it("Mutation will succeed if 'affiliateId' has a string input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
                 firstName: 'Testy',
                 lastName: 'McTest',
-                affiliateId: 'Trazyn the Infinite'
+                affiliateId: 'Waaagh'
             };
             const mutation = `mutation {
                 ${mutationName}(
@@ -616,30 +609,6 @@ describe('Mutation: createCustomer', () => {
                 firstName: 'Testy',
                 lastName: 'McTest',
                 affiliateId: 4
-            };
-            const mutation = `mutation {
-                ${mutationName}(
-                    input: ${toFormattedString(input)}
-                ) {
-                    ${standardMutationContent}
-                    ${itemPath} {
-                        ${requiredItems}
-                        affiliateId
-                    }
-                }
-            }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                email = res.body.data[mutationName][itemPath].email;
-            });
-        });
-
-        it("Mutation will succeed if 'affiliateId' has no input", () => {
-            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
-            const input = {
-                email: testEmail,
-                firstName: 'Testy',
-                lastName: 'McTest',
-                affiliateId: null
             };
             const mutation = `mutation {
                 ${mutationName}(
@@ -705,6 +674,29 @@ describe('Mutation: createCustomer', () => {
             cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 email = res.body.data[mutationName][itemPath].email;
             });
+        });
+
+        it("Mutation will fail if 'cannotLoginUntilDate' has non-date-format input", () => {
+            const date = 'January 1, 2000'
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                cannotLoginUntilDate: date
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        cannotLoginUntilDate
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will succeed if 'requireReLogin' has a boolean input", () => {
@@ -870,7 +862,7 @@ describe('Mutation: createCustomer', () => {
                 email: testEmail,
                 firstName: 'Testy',
                 lastName: 'McTest',
-                managerOfVendorId: 'Trazyn the Infinite'
+                managerOfVendorId: 'Waaagh'
             };
             const mutation = `mutation {
                 ${mutationName}(
@@ -958,7 +950,7 @@ describe('Mutation: createCustomer', () => {
     //             email: testEmail,
     //             firstName: 'Testy',
     //             lastName: 'McTest',
-    //             companyId: 'Trazyn the Infinite'
+    //             companyId: 'Waaagh'
     //         };
     //         const mutation = `mutation {
     //             ${mutationName}(
@@ -1213,7 +1205,7 @@ describe('Mutation: createCustomer', () => {
                 firstName: 'Testy',
                 lastName: 'McTest',
                 billingAddress: {
-                    email: 'McTest'
+                    email: 'Waaagh'
                 }
             };
             const mutation = `mutation {
@@ -1264,8 +1256,7 @@ describe('Mutation: createCustomer', () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
-                    input:
-                    {
+                    input: {
                         email: "${testEmail}",
                         firstName: "Testy",
                         lastName: "McTest",
@@ -1298,8 +1289,7 @@ describe('Mutation: createCustomer', () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
-                    input:
-                    {
+                    input: {
                         email: "${testEmail}",
                         firstName: "Testy",
                         lastName: "McTest",
@@ -1330,8 +1320,7 @@ describe('Mutation: createCustomer', () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
-                    input:
-                    {
+                    input: {
                         email: "${testEmail}",
                         firstName: "Testy",
                         lastName: "McTest",
@@ -1358,12 +1347,42 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
+        it("Mutation will fail if 'billingAddress's 'phone's required 'phoneType' has non-valid enum input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        email: "${testEmail}",
+                        firstName: "Testy",
+                        lastName: "McTest",
+                        billingAddress: {
+                            phone: {
+                                phoneNumber: "Waaagh",
+                                phoneType: WAAAGH
+                            }
+                        }
+                    }
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        billingAddress {
+                            phone {
+                                phoneNumber
+                                phoneType
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
         it("Mutation will succeed if 'billingAddress's 'phone' has valid 'countryCode input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
-                    input:
-                    {
+                    input: {
                         email: "${testEmail}",
                         firstName: "Testy",
                         lastName: "McTest",
@@ -1398,8 +1417,7 @@ describe('Mutation: createCustomer', () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
-                    input:
-                    {
+                    input: {
                         email: "${testEmail}",
                         firstName: "Testy",
                         lastName: "McTest",
@@ -1408,6 +1426,39 @@ describe('Mutation: createCustomer', () => {
                                 phoneNumber: "Waaagh",
                                 phoneType: WORK,
                                 countryCode: 'ZA'
+                            }
+                        }
+                    }
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        billingAddress {
+                            phone {
+                                phoneNumber
+                                phoneType
+                                countryCode
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will fail if 'billingAddress's 'phone' has a non-valid, enum 'countryCode' input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        email: "${testEmail}",
+                        firstName: "Testy",
+                        lastName: "McTest",
+                        billingAddress: {
+                            phone: {
+                                phoneNumber: "Waaagh",
+                                phoneType: WORK,
+                                countryCode: WAAAGH
                             }
                         }
                     }
@@ -1775,6 +1826,757 @@ describe('Mutation: createCustomer', () => {
                     ${itemPath} {
                         ${requiredItems}
                         billingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                                line2
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+    });
+
+    context("Testing customer optional input 'shippingAddress', which requires complex data)", () => {
+        it("Mutation will succeed if 'shippingAddress' has a string 'firstName' input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    firstName: 'Testy'
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            firstName
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
+        });
+
+        it("Mutation will fail if 'shippingAddress' has a non-string 'firstName' input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    firstName: 4
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            firstName
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will succeed if 'shippingAddress' has a string 'lastName' input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    lastName: 'McTest'
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            lastName
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
+        });
+
+        it("Mutation will fail if 'shippingAddress' has a non-string 'lastName' input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    lastName: 4
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            lastName
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will succeed if 'shippingAddress' has a string 'email' input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    email: 'McTest'
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            email
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
+        });
+
+        it("Mutation will fail if 'shippingAddress' has a non-string 'email' input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    email: 4
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            email
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will succeed if 'shippingAddress's 'phone' has valid, required 'phoneNumber' and 'phoneType' inputs", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        email: "${testEmail}",
+                        firstName: "Testy",
+                        lastName: "McTest",
+                        shippingAddress: {
+                            phone: {
+                                phoneNumber: "Waaagh",
+                                phoneType: WORK
+                            }
+                        }
+                    }
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            phone {
+                                phoneNumber
+                                phoneType
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'phone's required 'phoneNumber' has a non-string input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        email: "${testEmail}",
+                        firstName: "Testy",
+                        lastName: "McTest",
+                        shippingAddress: {
+                            phone: {
+                                phoneNumber: 4,
+                                phoneType: WORK
+                            }
+                        }
+                    }
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            phone {
+                                phoneNumber
+                                phoneType
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'phone's required 'phoneType' has a non-enum input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        email: "${testEmail}",
+                        firstName: "Testy",
+                        lastName: "McTest",
+                        shippingAddress: {
+                            phone: {
+                                phoneNumber: "Waaagh",
+                                phoneType: 'WORK'
+                            }
+                        }
+                    }
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            phone {
+                                phoneNumber
+                                phoneType
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'phone's required 'phoneType' has a non-valid enum input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        email: "${testEmail}",
+                        firstName: "Testy",
+                        lastName: "McTest",
+                        shippingAddress: {
+                            phone: {
+                                phoneNumber: "Waaagh",
+                                phoneType: WAAAGH
+                            }
+                        }
+                    }
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            phone {
+                                phoneNumber
+                                phoneType
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will succeed if 'shippingAddress's 'phone' has valid 'countryCode input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        email: "${testEmail}",
+                        firstName: "Testy",
+                        lastName: "McTest",
+                        shippingAddress: {
+                            phone: {
+                                phoneNumber: "Waaagh",
+                                phoneType: WORK,
+                                countryCode: ZA
+                            }
+                        }
+                    }
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            phone {
+                                phoneNumber
+                                phoneType
+                                countryCode
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'phone' has a non-enum 'countryCode' input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        email: "${testEmail}",
+                        firstName: "Testy",
+                        lastName: "McTest",
+                        shippingAddress: {
+                            phone: {
+                                phoneNumber: "Waaagh",
+                                phoneType: WORK,
+                                countryCode: 'ZA'
+                            }
+                        }
+                    }
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            phone {
+                                phoneNumber
+                                phoneType
+                                countryCode
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'phone' has a non-valid enum 'countryCode' input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        email: "${testEmail}",
+                        firstName: "Testy",
+                        lastName: "McTest",
+                        shippingAddress: {
+                            phone: {
+                                phoneNumber: "Waaagh",
+                                phoneType: WORK,
+                                countryCode: WAAAGH
+                            }
+                        }
+                    }
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            phone {
+                                phoneNumber
+                                phoneType
+                                countryCode
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will succeed if 'shippingAddress's 'address' has all required inputs", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 'Cadia',
+                        postalCode: 'stands',
+                        region: 'Eye of Terror'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'address's 'country' has a non-string input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 4,
+                        postalCode: 'stands',
+                        region: 'Eye of Terror'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'address's 'postalCode' has a non-string input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 'Cadia',
+                        postalCode: 4,
+                        region: 'Eye of Terror'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'address's 'region' has a non-string input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 'Cadia',
+                        postalCode: 'stands',
+                        region: 4
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will succeed if 'shippingAddress's 'address's 'city' has a valid input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 'Cadia',
+                        postalCode: 'stands',
+                        region: 'Eye of Terror',
+                        city: 'Pylons'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                                city
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'address's 'city' has a non-string input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 'Cadia',
+                        postalCode: 'stands',
+                        region: 'Eye of Terror',
+                        city: 4
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                                city
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will succeed if 'shippingAddress's 'address's 'line1' has a valid input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 'Cadia',
+                        postalCode: 'stands',
+                        region: 'Eye of Terror',
+                        line1: 'Pylons'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                                line1
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'address's 'line1' has a non-string input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 'Cadia',
+                        postalCode: 'stands',
+                        region: 'Eye of Terror',
+                        line1: 4
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                                line1
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will succeed if 'shippingAddress's 'address's 'line2' has a valid input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 'Cadia',
+                        postalCode: 'stands',
+                        region: 'Eye of Terror',
+                        line2: 'Pylons'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                                line2
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'address's 'line2' has a non-string input", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 'Cadia',
+                        postalCode: 'stands',
+                        region: 'Eye of Terror',
+                        line2: 4
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
                             address {
                                 country
                                 postalCode
