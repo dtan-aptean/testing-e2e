@@ -2,7 +2,7 @@
 
 import { SupplementalItemRecord } from "../../support/commands";
 
-// TEST COUNT: 47
+// TEST COUNT: 54
 describe('Query: categories', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "categories";
@@ -905,6 +905,58 @@ describe('Query: categories', () => {
             cy.postAndValidate(gqlQuery, queryName).then((res) => {
                 cy.checkCustomData(res, queryName);
             });
+        });
+    });
+
+    context("Testing 'ids' input", () => {
+        it("Using 'ids' input will return only the items with ids that were used as input", () => {
+            let count = 3;
+            cy.queryAndValidateMultipleIds(count, queryName, standardQueryBody);
+        });
+
+        it("Using a single id as 'ids' input returns only the relevant item", () => {
+            cy.queryAndValidateRandomId(queryName, standardQueryBody);
+        });
+
+        it("Using 'ids' input as an empty array returns id values", () => {
+            const ids = [];
+            cy.queryAndValidateEmptyArray(ids, queryName, standardQueryBody);
+        });
+
+        it("Using an array of empty strings as 'ids' input will return an error", () => {
+            const ids = ["", "", "", ""];
+            cy.queryAndValidateEmptyStrings(ids, queryName, standardQueryBody);
+        });
+
+        it("Using an array of non-string values as 'ids' input returns an error", () => {
+            const ids = [1234, true, 235];
+            cy.queryAndValidateNonStringValues(ids, queryName, standardQueryBody);
+        });
+
+        it("Using a non-array value as 'ids' input returns an error", () => {
+            const ids = true;
+            cy.queryAndValidateNonArrayValues(ids, queryName, standardQueryBody);
+        });
+
+        it("Using ids from a different item as 'ids' input returns an error", () => {
+            const extraQueryName = "checkoutAttributes";
+            const extraStandardQueryBody = `edges {
+                cursor
+                node {
+                    id
+                }
+            }
+            nodes {
+                id
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+                hasPreviousPage
+                startCursor
+            }
+            totalCount`;
+            cy.queryAndValidateDifferentItemIds(extraQueryName, extraStandardQueryBody, queryName, standardQueryBody);
         });
     });
 });

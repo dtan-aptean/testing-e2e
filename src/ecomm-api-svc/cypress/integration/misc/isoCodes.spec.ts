@@ -23,38 +23,23 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
 
     context("Orders Query: Testing response of country field", () => {
         const queryName = "orders";
-        var trueTotalInput = "";
-        before(() => {
+
+        it("Query that requests billingInfo.address.country field will receive 2-digit ISO codes", () => {
             const query = `{
                 ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
                     totalCount
                     nodes {
                         id
-                    }
-                }
-            }`;
-            cy.postAndValidate(query, queryName, originalBaseUrl).then((res) => {
-                const { nodes, totalCount } = res.body.data[queryName];
-                if (totalCount > nodes.length) {
-                    trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", ": "";
-                }
-            });
-        });
-
-        it("Query that requests billingInfo.address.country field will receive 2-digit ISO codes", () => {
-            const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
-                    totalCount
-                    nodes {
-                        id
-                        billingInfo {
-                            address {
-                                city
-                                country
-                                line1
-                                line2
-                                postalCode
-                                region
+                        paymentInfo {
+                            billingInfo {
+                                address {
+                                    city
+                                    country
+                                    line1
+                                    line2
+                                    postalCode
+                                    region
+                                }
                             }
                         }
                     }
@@ -63,14 +48,14 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
             cy.postAndValidate(query, queryName, originalBaseUrl).then((res) => {
                 const nodes = res.body.data[queryName].nodes;
                 const validNodes = nodes.filter((node) => {
-                    return node.billingInfo !== null && node.billingInfo.address !== null;
+                    return node.paymentInfo.billingInfo !== null && node.paymentInfo.billingInfo.address !== null;
                 });
                 if (validNodes.length > 0) {
                     nodes.forEach((node, index) => {
-                        const country = node.billingInfo.address.country;
-                        assert.isString(country, `Order ${index + 1}'s billingInfo.address.country is a string`);
-                        expect(country).to.have.length(2, `Order ${index + 1}'s billingInfo.address.country is a 2-digit value`);
-                        expect(countryCodes).to.include(country, `Order ${index + 1}'s billingInfo.address.country is a valid country code`);
+                        const country = node.paymentInfo.billingInfo.address.country;
+                        assert.isString(country, `Order ${index + 1}'s paymentInfo.billingInfo.address.country is a string`);
+                        expect(country).to.have.length(2, `Order ${index + 1}'s paymentInfo.billingInfo.address.country is a 2-digit value`);
+                        expect(countryCodes).to.include(country, `Order ${index + 1}'s paymentInfo.billingInfo.address.country is a valid country code`);
                     });
                 } else {
                     Cypress.log({message: "Test inconclusive. No orders with a non-null billingInfo.address"});
@@ -80,17 +65,21 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
 
         it("Query that requests pickupAddress.country field will receive 2-digit ISO codes", () => {
             const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
                     totalCount
                     nodes {
                         id
-                        pickupAddress {
-                            city
-                            country
-                            line1
-                            line2
-                            postalCode
-                            region
+                        pickupInfo {
+                            contact {
+                                address {
+                                    city
+                                    country
+                                    line1
+                                    line2
+                                    postalCode
+                                    region
+                                }
+                            }
                         }
                     }
                 }
@@ -98,14 +87,14 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
             cy.postAndValidate(query, queryName, originalBaseUrl).then((res) => {
                 const nodes = res.body.data[queryName].nodes;
                 const validNodes = nodes.filter((node) => {
-                    return node.pickupAddress !== null;
+                    return node.pickupInfo.contact !== null && node.pickupInfo.contact.address !== null;
                 });
                 if (validNodes.length > 0) {
                     validNodes.forEach((node, index) => {
-                        const country = node.pickupAddress.country;
-                        assert.isString(country, `Order ${index + 1}'s pickupAddress.country is a string`);
-                        expect(country).to.have.length(2, `Order ${index + 1}'s pickupAddress.country is a 2-digit value`);
-                        expect(countryCodes).to.include(country, `Order ${index + 1}'s pickupAddress.country is a valid country code`);
+                        const country = node.pickupInfo.contact.address.country;
+                        assert.isString(country, `Order ${index + 1}'s pickupInfo.contact.address.country is a string`);
+                        expect(country).to.have.length(2, `Order ${index + 1}'s pickupInfo.contact.address.country is a 2-digit value`);
+                        expect(countryCodes).to.include(country, `Order ${index + 1}'s pickupInfo.contact.address.country is a valid country code`);
                     });
                 } else {
                     Cypress.log({message: "Test inconclusive. No orders with a non-null pickup address"});
@@ -196,6 +185,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                 }
             });
             
+            // TODO: failing saying that postal code was not included
             it("Mutation will fail when using the full name of a country instead of the ISO code", () => {
                 const countryIndex = Cypress._.random(0, countryCount - 1);
                 const regionArray = countryRegions[countryIndex];
@@ -242,7 +232,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                     }
                 }`;
                 cy.postAndConfirmMutationError(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
-                    const errorMessage = res.body.errors[0].message;
+                    const errorMessage = res.body.data[mutationName].errors[0].message;
                     expect(errorMessage).to.contain("Country Or State Not Found");
                 });
             });
@@ -294,11 +284,12 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                     }
                 }`;
                 cy.postAndConfirmMutationError(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
-                    const errorMessage = res.body.errors[0].message;
+                    const errorMessage = res.body.data[mutationName].errors[0].message;
                     expect(errorMessage).to.contain("Country Or State Not Found");
                 });
             });
     
+            // TODO: failing saying that postal code was not included
             it("Mutation will succeed when using a valid ISO code as the address' country", () => {
                 const countryIndex = Cypress._.random(0, countryCount - 1);
                 const regionArray = countryRegions[countryIndex];
@@ -399,6 +390,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                 }
             });
     
+            // TODO: failing saying that postal code was not included
             it("Mutation will fail when using the full name of a country instead of the ISO code", () => {
                 const countryIndex = Cypress._.random(0, countryCount - 1);
                 const regionArray = countryRegions[countryIndex];
@@ -446,7 +438,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                     }
                 }`;
                 cy.postAndConfirmMutationError(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
-                    const errorMessage = res.body.errors[0].message;
+                    const errorMessage = res.body.data[mutationName].errors[0].message;
                     expect(errorMessage).to.contain("Country Or State Not Found");
                 });
             });
@@ -499,11 +491,12 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                     }
                 }`;
                 cy.postAndConfirmMutationError(mutation, mutationName, itemPath, originalBaseUrl).then((res) => {
-                    const errorMessage = res.body.errors[0].message;
+                    const errorMessage = res.body.data[mutationName].errors[0].message;
                     expect(errorMessage).to.contain("Country Or State Not Found");
                 });
             });
     
+            // TODO: failing saying that postal code was not included
             it("Mutation will succeed when using a valid ISO code as the address' country", () => {
                 const countryIndex = Cypress._.random(0, countryCount - 1);
                 const regionArray = countryRegions[countryIndex];

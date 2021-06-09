@@ -423,13 +423,11 @@ Cypress.Commands.add(
     cy.generatePaymentRequest(requestAmount).then((paymentRequest) => {
       cy.generateWepayTokenCreditCard()
         .then((payfacToken) => {
-          cy.wait(1000).then(() => {
-            return cy
-              .convertPayfacPaymentMethodTokenCreditCard(payfacToken.id)
-              .then((paymentMethodId) => {
-                return paymentMethodId;
-              });
-          });
+          return cy
+            .convertPayfacPaymentMethodTokenCreditCard(payfacToken.id)
+            .then((paymentMethodId) => {
+              return paymentMethodId;
+            });
         })
         .then((paymentMethodId) => {
           // payment
@@ -513,6 +511,28 @@ Cypress.Commands.add("getWePayAccount", (accountId) => {
     },
   };
   return Cypress.$.ajax(settings);
+});
+
+Cypress.Commands.add("getFeatureFlags", () => {
+  const gqlQuery = `{
+    account {
+      settings {
+        features {
+          paymentMethods {
+            autoUpdate
+          }
+          paymentRequests {
+            consolidatedPayment
+            partialPayment
+          }
+        }
+      }
+    }
+  }`;
+
+  cy.postGQL(gqlQuery).then((res) => {
+    return res?.body?.data?.account?.settings?.features;
+  });
 });
 
 export enum CommandType {

@@ -10,20 +10,23 @@ describe("All Payments Table", function () {
 
     beforeEach(() => {
       cy.visit("/");
-      cy.wait(4000);
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       // navigate to help center screen
       cy.get("[data-cy=payment-tab]", { timeout: 20000 }).click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
       cy.get("[data-cy=payments-table-body]").find("tr").eq(0).as("firstRow");
     });
 
     it("Creating a payment should add the new payment row in table", () => {
       cy.createAndPay(1, "10.00", "payment");
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       cy.wait(35000);
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       //checking if status is still pending and then waiting accordingly
       cy.get("body").then(($body) => {
@@ -36,7 +39,7 @@ describe("All Payments Table", function () {
         ) {
           cy.wait(35000);
           cy.get("[data-cy=refresh]").click();
-          cy.wait(3000);
+          cy.wait(5000);
         }
       });
 
@@ -162,10 +165,12 @@ describe("All Payments Table", function () {
     it("Payment refund status should work as expected", () => {
       //creating the payment
       cy.createAndPay(1, "10.00", "payment");
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       cy.wait(35000);
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
 
       //checking if status is still pending and then waiting accordingly
       cy.get("body").then(($body) => {
@@ -178,7 +183,7 @@ describe("All Payments Table", function () {
         ) {
           cy.wait(35000);
           cy.get("[data-cy=refresh]").click();
-          cy.wait(3000);
+          cy.wait(5000);
         }
       });
 
@@ -198,6 +203,7 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=refund-dialog-title]").should("not.exist");
 
       //checking the status for partially refunded
+      cy.wait(5000);
       cy.get("body").then(($body) => {
         if (
           !$body
@@ -211,7 +217,7 @@ describe("All Payments Table", function () {
         }
       });
       cy.get("[data-cy=refresh]").click();
-      cy.wait(5000);
+      cy.wait(7000);
       cy.get("@firstRow").find("td").eq(2).contains("Partially Refunded");
 
       //making remaining amount refund
@@ -226,6 +232,7 @@ describe("All Payments Table", function () {
       cy.get("[data-cy=refund-dialog-title]").should("not.exist");
 
       //checking the status for fully refunded
+      cy.wait(5000);
       cy.get("body").then(($body) => {
         if (
           !$body
@@ -239,16 +246,17 @@ describe("All Payments Table", function () {
         }
       });
       cy.get("[data-cy=refresh]").click();
-      cy.wait(5000);
+      cy.wait(7000);
       cy.get("@firstRow").find("td").eq(2).contains("Fully Refunded");
     });
 
     it("Failed payment should not have refund option", () => {
       cy.createAndPay(1, "6.61", "payment");
-      cy.wait(20000);
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(5000);
+      cy.wait(7000);
       cy.get("@firstRow").find("td").eq(2).should("contain", "Failed");
       cy.get("@firstRow").click();
       cy.get("[data-cy=refund]").should("be.disabled");

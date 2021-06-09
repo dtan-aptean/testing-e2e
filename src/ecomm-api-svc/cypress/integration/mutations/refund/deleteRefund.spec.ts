@@ -31,7 +31,7 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
     const queryInformation = {
         queryName: queryName, 
         itemId: id, 
-        searchParameter: "searchString"
+        searchParameter: "ids"
     };
 
     const updateIds = (providedId?: string) => {
@@ -61,7 +61,10 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
 		deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.wait(1000);
         cy.visit("/");  // Go to the storefront and login
+        cy.setTheme();
         cy.storefrontLogin();
+        cy.setupRequiredProducts();
+        cy.goToPublicHome();
         cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
             const { orderId, orderAmount } = orderInfo;
             assert.exists(orderId);
@@ -71,13 +74,26 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
         });
     });
 
+    beforeEach(() => {
+        cy.visit("/");
+        cy.setTheme();
+        cy.storefrontLogin();
+        cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
+            const { orderId, orderAmount } = orderInfo;
+            assert.exists(orderId);
+            assert.exists(orderAmount);
+            orderInUse = orderId;
+            refund = orderAmount;;
+        });
+    });
+
     afterEach(() => {
 		if (!deleteItemsAfter) {
 			return;
 		}
         if (id !== '') {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
-            cy.queryForDeletedById(false, id, "searchString", queryName, originalBaseUrl).then((itemPresent: boolean) => {
+            cy.queryForDeletedById(false, id, "ids", queryName, originalBaseUrl).then((itemPresent: boolean) => {
                 if (itemPresent) {
                     const mutation = `mutation {
                         ${mutationName}(input: {orderId: "${id}"}){
@@ -127,10 +143,11 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 }
             }`;
             cy.postAndConfirmMutationError(mutation, mutationName, undefined, originalBaseUrl).then((res) => {
-                expect(res.body.errors[0].message).to.include("Refund does not exist for this order");
+                expect(res.body.data[mutationName].errors[0].message).to.include("Refund does not exist for this order");
             });
         });
 
+        // TODO: Querying with deleted id returns error. Fix.
         it("Mutation will succeed with given the 'orderId' of an existing item", () => {
             refundOrder().then(() => {
                 const mutation = `mutation {
@@ -144,24 +161,33 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             });
         });
 
-        it("Mutation that successfully deletes a refund also updates various fields on the order", () => {
+        // TODO: Querying with deleted id returns error. Fix.
+        it.only("Mutation that successfully deletes a refund also updates various fields on the order", () => {
             refundOrder().then(() => {
                 const dummyOrder = {
                     id: orderInUse,
-                    paymentStatus: "REFUNDED",
-                    refundedAmount: {
-                        amount: refund,
-                        currency: "USD"
+                    paymentInfo: {
+                        paymentStatus: "REFUNDED",
+                    },
+                    totals: {
+                        refund: {
+                            amount: refund,
+                            currency: "USD"
+                        }
                     }
                 };
                 const orderQuery = `{
-                    orders(id: "${orderInUse}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+                    orders(ids: "${orderInUse}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         nodes {
                             id
-                            paymentStatus
-                            refundedAmount {
-                                amount
-                                currency
+                            paymentInfo {
+                                paymentStatus
+                            }
+                            totals {
+                                refund {
+                                    amount
+                                    currency
+                                }
                             }
                         }
                     }
@@ -176,10 +202,14 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                         updateIds();
                         const postDeleteOrder = {
                             id: orderInUse,
-                            paymentStatus: "PAID",
-                            refundedAmount: {
-                                amount: 0,
-                                currency: "USD"
+                            paymentInfo: {
+                                paymentStatus: "PAID",
+                            },
+                            totals: {
+                                refund: {
+                                    amount: 0,
+                                    currency: "USD"
+                                }
                             }
                         };
                         cy.confirmUsingQuery(orderQuery, "orders", orderInUse, Object.getOwnPropertyNames(postDeleteOrder), Object.values(postDeleteOrder), originalBaseUrl);
