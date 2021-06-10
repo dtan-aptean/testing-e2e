@@ -514,14 +514,14 @@ Cypress.Commands.add("", (queryName: string, standardQueryBody: string) => {
 
 Cypress.Commands.add("queryAndValidateMultipleIds", (count, queryName, standardQueryBody) => {
     const extraGqlQuery = `{
-        ${queryName}(orderBy: {direction: ASC, field: NAME}) {
+        ${queryName}(orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
             ${standardQueryBody}
         }
     }`;
     cy.returnMultipleIds(count, extraGqlQuery, queryName).then((IDs: string[]) => {
         cy.get('@totCount').then((totalCount: number) => {
             const gqlQuery = `{
-                ${queryName}(orderBy: {direction: ASC, field: NAME}
+                ${queryName}(orderBy: {direction: ASC, field: ${defaultField(queryName)}}
                     ids: ${toFormattedString(IDs)}
                     ) {
                     ${standardQueryBody}
@@ -539,13 +539,13 @@ Cypress.Commands.add("queryAndValidateMultipleIds", (count, queryName, standardQ
 
 Cypress.Commands.add("queryAndValidateRandomId", (queryName, standardQueryBody) => {
     const extraGqlQuery = `{
-        ${queryName}(orderBy: {direction: ASC, field: NAME}) {
+        ${queryName}(orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
             ${standardQueryBody}
         }
     }`;
     cy.returnRandomId(extraGqlQuery, queryName).then((curId: string) => {
         const gqlQuery = `{
-            ${queryName}(orderBy: {direction: ASC, field: NAME}
+            ${queryName}(orderBy: {direction: ASC, field: ${defaultField(queryName)}}
                 ids: "${curId}"
                 ) {
                 ${standardQueryBody}
@@ -558,11 +558,9 @@ Cypress.Commands.add("queryAndValidateRandomId", (queryName, standardQueryBody) 
     });
 });
 
-Cypress.Commands.add("queryAndValidateEmptyArray", (ids, queryName, standardQueryBody) => {
+Cypress.Commands.add("queryAndValidateEmptyArray", (queryName, standardQueryBody) => {
     const gqlQuery = `{
-        ${queryName}(orderBy: {direction: ASC, field: NAME}
-            ids: []
-            ) {
+        ${queryName}(ids: [], orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
             ${standardQueryBody}
         }
     }`;
@@ -571,7 +569,7 @@ Cypress.Commands.add("queryAndValidateEmptyArray", (ids, queryName, standardQuer
 
 Cypress.Commands.add("queryAndValidateEmptyStrings", (ids, queryName, standardQueryBody) => {
     const gqlQuery = `{
-        ${queryName}(orderBy: {direction: ASC, field: NAME}
+        ${queryName}(orderBy: {direction: ASC, field: ${defaultField(queryName)}}
             ids: ${toFormattedString(ids)}
             ) {
             ${standardQueryBody}
@@ -585,7 +583,7 @@ Cypress.Commands.add("queryAndValidateEmptyStrings", (ids, queryName, standardQu
 
 Cypress.Commands.add("queryAndValidateNonStringValues", (ids, queryName, standardQueryBody) => {
     const gqlQuery = `{
-        ${queryName}(orderBy: {direction: ASC, field: NAME}
+        ${queryName}(orderBy: {direction: ASC, field: ${defaultField(queryName)}}
             ids: [
                 ${ids}
             ]
@@ -601,7 +599,7 @@ Cypress.Commands.add("queryAndValidateNonStringValues", (ids, queryName, standar
 
 Cypress.Commands.add("queryAndValidateNonArrayValues", (ids, queryName, standardQueryBody) => {
     const gqlQuery = `{
-        ${queryName}(orderBy: {direction: ASC, field: NAME}
+        ${queryName}(orderBy: {direction: ASC, field: ${defaultField(queryName)}}
             ids: ${ids}
             ) {
             ${standardQueryBody}
@@ -615,13 +613,13 @@ Cypress.Commands.add("queryAndValidateNonArrayValues", (ids, queryName, standard
 
 Cypress.Commands.add("queryAndValidateDifferentItemIds", (extraQueryName, extraStandardQueryBody, queryName, standardQueryBody) => {
     const extraGqlQuery = `{
-        ${extraQueryName}(orderBy: {direction: ASC, field: NAME}) {
+        ${extraQueryName}(orderBy: {direction: ASC, field: ${defaultField(extraQueryName)}}) {
             ${extraStandardQueryBody}
         }
     }`;
     cy.returnRandomId(extraGqlQuery, extraQueryName).then((curId: string) => {
         const gqlQuery = `{
-            ${queryName}(orderBy: {direction: ASC, field: NAME}
+            ${queryName}(orderBy: {direction: ASC, field: ${defaultField(queryName)}}
                 ids: "${curId}"
                 ) {
                 ${standardQueryBody}

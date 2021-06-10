@@ -1,5 +1,8 @@
 /// <reference types="cypress" />
-// TEST COUNT: 47
+
+import { SupplementalItemRecord, toFormattedString } from "../../support/commands";
+
+// TEST COUNT: 51
 describe('Query: paymentSettings', () => {
     // Query name to use with functions so there's no misspelling it and it's easy to change if the query name changes
     const queryName = "paymentSettings";
@@ -256,7 +259,317 @@ describe('Query: paymentSettings', () => {
         });
     });
 
-    context.only("Testing response values for customData and other fields", () => {
+    context("Testing 'ids' input", () => {
+        it("Using 'ids' input will return only the items with ids that were used as input", () => {
+            let count = 4;
+            cy.queryAndValidateMultipleIds(count, queryName, standardQueryBody);
+        });
+
+        it("Using a single id as 'ids' input returns only the relevant item", () => {
+            cy.queryAndValidateRandomId(queryName, standardQueryBody);
+        });
+
+        it("Using 'ids' input as an empty array returns standard response as though 'ids' input was not included", () => {
+            cy.queryAndValidateEmptyArray(queryName, standardQueryBody);
+        });
+
+        it("Using an array of empty strings as 'ids' input will return an error", () => {
+            const ids = ["", "", "", ""];
+            cy.queryAndValidateEmptyStrings(ids, queryName, standardQueryBody);
+        });
+
+        it("Using an array of non-string values as 'ids' input returns an error", () => {
+            const ids = [false, true, 235];
+            cy.queryAndValidateNonStringValues(ids, queryName, standardQueryBody);
+        });
+
+        it("Using a non-array value as 'ids' input returns an error", () => {
+            const ids = false;
+            cy.queryAndValidateNonArrayValues(ids, queryName, standardQueryBody);
+        });
+
+        it("Using ids from a different item as 'ids' input returns an error", () => {
+            const extraQueryName = "returnReasons";
+            const extraStandardQueryBody = `edges {
+                cursor
+                node {
+                    id
+                }
+            }
+            nodes {
+                id
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+                hasPreviousPage
+                startCursor
+            }
+            totalCount`;
+            cy.queryAndValidateDifferentItemIds(extraQueryName, extraStandardQueryBody, queryName, standardQueryBody);
+        });
+    });
+
+    context("Testing 'companyIds' input", () => {
+        // Items created for the companyIds test
+        const createdItems = [] as SupplementalItemRecord[];
+        const createdCompanies =  [] as SupplementalItemRecord[];
+        const deleteName = "deletePaymentSettings";
+        const createMutName = "createPaymentSettings";
+        const createPath = "paymentSettings";
+        const companyMutName = "createCompany";
+        const companyPath = "company";
+        const companyQuery = "companies";
+        const companyDelete = "deleteCompany";
+        const additionalRes = `company {
+            id
+            name
+        }`;
+
+        const addCreated = (isCompany: boolean, extIds: SupplementalItemRecord[]) => {
+            extIds.forEach((id) => {
+                if (isCompany) {
+                    createdCompanies.push(id);
+                } else {
+                    createdItems.push(id);
+                }
+            });
+        };
+
+        var deleteItemsAfter = undefined as boolean | undefined;
+        before(() => {
+            deleteItemsAfter = Cypress.env("deleteItemsAfter");
+            cy.deleteCypressItems(queryName, deleteName).then(() => {
+                cy.deleteCypressItems(companyQuery, companyDelete, undefined, `Cypress ${queryName}`);
+            });
+        });
+
+        // Ensure deletion of the items we created for the productId test
+        after(() => {
+            if (!deleteItemsAfter) {
+                return;
+            }
+            cy.deleteSupplementalItems(createdItems);
+            cy.deleteSupplementalItems(createdCompanies);
+        });
+
+        it("Using 'companyIds' input as an empty array returns standard response as though 'companyIds' input was not included", () => {
+            const gqlQuery = `{
+                ${queryName}(companyIds: [], orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(gqlQuery, queryName);
+        });
+
+        it("Using an array of empty strings as 'companyIds' input will return an error", () => {
+            const gqlQuery = `{
+                ${queryName}(companyIds: ["", "", "", ""], orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
+                expect(res.body.errors[0].message[0].details[0].code).to.have.string("Invalid Argument");
+                expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+            });
+        });
+
+        it("Using an array of non-string values as 'companyIds' input returns an error", () => {
+            const companyIds = [false, true, 235];
+            const gqlQuery = `{
+                ${queryName}(companyIds: ${toFormattedString(companyIds)}, orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string("String cannot represent a non string value: "+ companyIds[0]);
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            });
+        });
+
+        it("Using a non-array value as 'companyIds' input returns an error", () => {
+            const gqlQuery = `{
+                ${queryName}(companyIds: false, orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string("String cannot represent a non string value");
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            });
+        });
+
+        it("Using ids from a non-company item as 'companyIds' input returns an error", () => {
+            const extraQueryName = "returnReasons";
+            const extraGqlQuery = `{
+                ${extraQueryName}(orderBy: {direction: ASC, field: NAME}) {
+                    edges {
+                        cursor
+                        node {
+                            id
+                        }
+                    }
+                    nodes {
+                        id
+                    }
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                        hasPreviousPage
+                        startCursor
+                    }
+                    totalCount
+                }
+            }`;
+            cy.returnRandomId(extraGqlQuery, extraQueryName).then((curId: string) => {
+                const gqlQuery = `{
+                    ${queryName}(companyIds: ["${curId}"], orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                        ${standardQueryBody}
+                    }
+                }`;
+                cy.postAndConfirmError(gqlQuery, true).then((res) => {
+                    expect(res.body.errors[0].message[0].details[0].code).to.have.string("Invalid Argument");
+                    expect(res.body.errors[0].message[0].message).to.have.string("Invalid Aptean Id");
+                    expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+                });
+            });
+        });
+
+        it("Query with valid 'companyIds' input will return only the items connected with that companyId", () => {
+            const extraItemInput = { name: `Cypress ${queryName} companyIds test`, integrationKey: `CypressQuery${Cypress._.random(10000, 100000)}` };
+            cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, extraItemInput).then((results) => {
+                const { deletionIds, itemIds } = results;
+                addCreated(true, deletionIds);
+                const companyId = itemIds[0];
+                const paymentSettingsInput =  {
+                    companyId: companyId
+                };
+                cy.createAssociatedItems(1, createMutName, createPath, queryName, paymentSettingsInput, additionalRes).then((results) => {
+                    const { deletionIds, fullItems, itemIds } = results;
+                    addCreated(false, deletionIds);
+                    const query = `{
+                        ${queryName}(companyIds: "${companyId}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                            ${standardQueryBody}
+                        }
+                    }`;
+                    cy.postAndValidate(query, queryName).then((respo) => {
+                        const { nodes, totalCount } = respo.body.data[queryName];
+                        expect(totalCount).to.be.eql(1);
+                        fullItems.forEach((item) => {
+                            expect(nodes).to.deep.include(item);
+                        });
+                        // Now delete the company
+                        cy.deleteItem(companyDelete, companyId).then(() => {
+                            itemIds.forEach((id) => {
+                                cy.deleteItem(deleteName, id);
+                                cy.wait(1000);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        it("Query with multiple valid 'companyIds' input will return all items associated with those companies", () => {
+            const extraItemInput = { name: `Cypress ${queryName} multiple companyIds test`, integrationKey: `CypressMultiple` };
+            cy.createAssociatedItems(2, companyMutName, companyPath, companyQuery, extraItemInput).then((results) => {
+                const { deletionIds, itemIds } = results;
+                addCreated(true, deletionIds);
+                const companyIdOne = itemIds[0];
+                const companyIdTwo = itemIds[1];
+                const inputOne =  {
+                    companyId: companyIdOne
+                };
+                cy.createAssociatedItems(1, createMutName, createPath, queryName, inputOne, additionalRes).then((results) => {
+                    const { deletionIds, fullItems, itemIds } = results;
+                    addCreated(false, deletionIds);
+                    const inputTwo = {
+                        companyId: companyIdTwo
+                    };
+                    cy.createAssociatedItems(1, createMutName, createPath, queryName, inputTwo, additionalRes).then((secondResults) => {
+                        const { deletionIds } = secondResults;
+                        addCreated(false, deletionIds);
+                        const expectedItems = fullItems.concat(secondResults.fullItems);
+                        const allIds = itemIds.concat(secondResults.itemIds);
+                        const query = `{
+                            ${queryName}(companyIds: ["${companyIdOne}", "${companyIdTwo}"], orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                                ${standardQueryBody}
+                            }
+                        }`;
+                        cy.postAndValidate(query, queryName).then((respo) => {
+                            const { nodes, totalCount } = respo.body.data[queryName];
+                            expect(totalCount).to.be.eql(2);
+                            expectedItems.forEach((item) => {
+                                expect(nodes).to.deep.include(item);
+                            });
+                            // Now delete the comapany
+                            cy.deleteItem(companyDelete, companyIdOne).then(() => {
+                                cy.deleteItem(companyDelete, companyIdTwo).then(() => {
+                                    allIds.forEach((id) => {
+                                        cy.deleteItem(deleteName, id);
+                                        cy.wait(1000);
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        it("Query with 'companyId' input that has no associated items will return an empty array", () => {
+            const companyInput = {name: `Cypress ${queryName} no association test`, integrationKey: `CypressUnaffiliated${Cypress._.random(10000, 100000)}`};
+            cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, companyInput).then((results) => {
+                const { deletionIds, itemIds } = results;
+                addCreated(true, deletionIds);
+                const companyId = itemIds[0];
+                const query = `{
+                    ${queryName}(companyIds: "${companyId}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                        ${standardQueryBody}
+                    }
+                }`;
+                cy.postAndValidate(query, queryName).then((res) => {
+                    const { nodes, totalCount } = res.body.data[queryName];
+                    expect(totalCount).to.be.eql(0);
+                    expect(nodes.length).to.eql(0);
+                    // Now delete the company
+                    cy.deleteItem(companyDelete, companyId);
+                });
+            });
+        });
+
+        it("Query using the 'productId' of a deleted product will return an error", () => {
+            const companyInput = {name: `Cypress ${queryName} deleted test`, integrationKey: `CypressDeleted${Cypress._.random(10000, 100000)}`};
+            cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, companyInput).then((results) => {
+                const { deletionIds, itemIds } = results;
+                addCreated(true, deletionIds);
+                const companyId = itemIds[0];
+                const paymentSettingsInput =  {
+                    companyId: companyId
+                };
+                cy.createAssociatedItems(1, createMutName, createPath, queryName, paymentSettingsInput, additionalRes).then((results) => {
+                    const { deletionIds, itemIds } = results;
+                    addCreated(false, deletionIds);
+                    // Now delete the product
+                    cy.deleteItem(companyDelete, companyId).then(() => {
+                        const query = `{
+                            ${queryName}(companyIds: "${companyId}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                                ${standardQueryBody}
+                            }
+                        }`;
+                        cy.postAndConfirmError(query, true).then(() => {
+                            itemIds.forEach((id) => {
+                                cy.deleteItem(deleteName, id);
+                                cy.wait(1000);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    context("Testing response values for customData and other fields", () => {
         it("Query with customData field will return valid value", () => {
             cy.queryForCustomData(queryName);
         });
