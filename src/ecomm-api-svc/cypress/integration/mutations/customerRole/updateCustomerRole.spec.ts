@@ -246,6 +246,10 @@ describe('Mutation: updateCustomerRole', () => {
             const freeShipping = Cypress._.random(0, 1) === 1;
             const active = Cypress._.random(0, 1) === 1;
             const enablePasswordLifetime = Cypress._.random(0, 1) === 1;
+            const overrideTaxDisplayType = Cypress._.random(0, 1) === 1;
+            const defaultTaxDisplayType = Cypress._.random(0, 1) === 1 ? "EXCLUDING_TAX" : "INCLUDING_TAX";
+            const isSystemRole = Cypress._.random(0, 1) === 1;
+            const systemName = `Cypress ${mutationName} System Role Input`;
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -255,6 +259,10 @@ describe('Mutation: updateCustomerRole', () => {
                         active: ${active}
                         enablePasswordLifetime: ${enablePasswordLifetime}
                         name: "${newName}"
+                        overrideTaxDisplayType: ${overrideTaxDisplayType}
+                        defaultTaxDisplayType: ${defaultTaxDisplayType}
+                        isSystemRole: ${isSystemRole}
+                        systemName: "${systemName}"
                     }
                 ) {
                     code
@@ -276,22 +284,30 @@ describe('Mutation: updateCustomerRole', () => {
                         active
                         enablePasswordLifetime
                         name
+                        isSystemRole
+                        systemName
+                        overrideTaxDisplayType
+                        defaultTaxDisplayType
                     }
                 }
             }`;
             cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                const propNames = ["name", "isTaxExempt", "freeShipping", "active", "enablePasswordLifetime"];
-                const propValues = [newName, isTaxExempt, freeShipping, active, enablePasswordLifetime];
+                const propNames = ["name", "isTaxExempt", "freeShipping", "active", "enablePasswordLifetime", "overrideTaxDisplayType", "defaultTaxDisplayType", "isSystemRole", "systemName"];
+                const propValues = [newName, isTaxExempt, freeShipping, active, enablePasswordLifetime, overrideTaxDisplayType, defaultTaxDisplayType, isSystemRole, systemName];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
-                                name
                                 isTaxExempt
                                 freeShipping
                                 active
                                 enablePasswordLifetime
+                                name
+                                isSystemRole
+                                systemName
+                                overrideTaxDisplayType
+                                defaultTaxDisplayType
                             }
                         }
                     }`;

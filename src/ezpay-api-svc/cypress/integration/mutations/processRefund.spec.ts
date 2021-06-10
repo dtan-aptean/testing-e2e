@@ -1,5 +1,7 @@
 /// <reference types="cypress" />
 
+import { CommandType } from "../../support/commands";
+
 describe("Mutation: processRefund", () => {
   let amount = 0;
   let paymentId = "";
@@ -10,13 +12,8 @@ describe("Mutation: processRefund", () => {
   before(() => {
     cy.fixture("processRefund").then((testData) => {
       // load test data
-      ({
-        amount,
-        paymentId,
-        paymentRequestId,
-        tenantId,
-        refundReason,
-      } = testData);
+      ({ amount, paymentId, paymentRequestId, tenantId, refundReason } =
+        testData);
     });
   });
 
@@ -38,7 +35,25 @@ describe("Mutation: processRefund", () => {
         }
       }`;
 
-      cy.wait(60000); // Wait for the payment to be completed...
+      let gql = `query payments {
+        payments(id: "${paymentId}") {
+          totalCount
+          nodes {
+            pendingReasonCode
+            id
+            status
+            pendingReason
+          }
+        }
+      }`;
+      cy.log("Wait for payment to be completed");
+      cy.while(
+        gql,
+        CommandType.PostGQL,
+        (res) => res.body.data.payments.nodes[0].status === "COMPLETED",
+        10000
+      );
+
       cy.postGQL(gqlQuery).then((res) => {
         // should be 200 ok
         cy.expect(res.isOkStatusCode).to.be.equal(true);
@@ -137,7 +152,25 @@ describe("Mutation: processRefund", () => {
       paymentId = res.id;
       amount = res.amount;
       refundReason = "Item not as requested";
-      cy.wait(60000); // Wait for the payment to be completed...
+
+      let gql = `query payments {
+        payments(id: "${paymentId}") {
+          totalCount
+          nodes {
+            pendingReasonCode
+            id
+            status
+            pendingReason
+          }
+        }
+      }`;
+      cy.log("Wait for payment to be completed");
+      cy.while(
+        gql,
+        CommandType.PostGQL,
+        (res) => res.body.data.payments.nodes[0].status === "COMPLETED",
+        10000
+      );
 
       const gqlQuery = `mutation {
         processRefund(
