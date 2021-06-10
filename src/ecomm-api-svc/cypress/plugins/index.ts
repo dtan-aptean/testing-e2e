@@ -25,38 +25,19 @@ import axios from 'axios';
   
   on('after:run', async (results) => {
     if (results) {
-      let facts = [];
-      let failed: Array<string> = [];
-      let skipped: Array<string> = [];
+      let facts: Array<any> = [];
       facts.push({
-        "name": "Duration",
+        "name": "Total Duration",
         "value": `${results.totalDuration/1000} seconds`
       });
-      results.runs.forEach(r => {
-        r.tests.forEach(t => {
-          // Check if there is passed attempt
-          if (!t.attempts.some(a => { return a.state == "passed" })) {
-            if (t.attempts[0].state == "failed") 
-              failed.push(`${t.title[1]}:${t.title[2]}`);
-            else 
-              skipped.push(`${t.title[1]}:${t.title[2]}`);
-          }
+
+      results.runs.forEach((r, index) => {
+        facts.push({
+          "name": `Spec ${index + 1}`,
+          "value": `<b>${r.spec.name}</b><br>Total: ${r.stats.tests}<br>Passing: ${r.stats.passes}<br>Failing: ${r.stats.failures}<br>Pending: ${r.stats.pending}<br>Skipped: ${r.stats.skipped}<br>Duration: ${r.stats.duration/1000} seconds`
         });
       });
-
-      if (failed.length > 0) {
-        facts.push({
-          "name": "Failed",
-          "value": failed.join("<br>")
-        })
-      }
-      if (skipped.length > 0) {
-        facts.push({
-          "name": "Skipped",
-          "value": skipped.join("<br>")
-        })
-      }      
-
+    
       await axios.post("https://apteanonline.webhook.office.com/webhookb2/b879817b-ffa3-404c-8f59-37ecabce0a54@560ec2b0-df0c-4e8c-9848-a15718863bb6/IncomingWebhook/eb364835301e4e84a8228da33ba09146/a7c163f2-fcf7-4365-a94c-6d9bf23155cc", {      
           "@type": "MessageCard",
           "@context": "http://schema.org/extensions",
