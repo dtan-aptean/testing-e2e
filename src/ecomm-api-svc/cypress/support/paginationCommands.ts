@@ -500,14 +500,16 @@ Cypress.Commands.add('returnMultipleRandomIds', (numberOfIds:number, gqlQuery: s
      
         var totalCount = res.body.data[queryName].totalCount ;
 
-        if (totalCount > 25) {
+        if (numberOfIds > 25 && totalCount>25) {
             var insertIndex = gqlQuery.indexOf("orderBy");
-            gqlQuery = gqlQuery.slice(0, insertIndex) + `first: ${totalCount}, ` + gqlQuery.slice(insertIndex);
+            gqlQuery = gqlQuery.slice(0, insertIndex) + `first: ${numberOfIds}, ` + gqlQuery.slice(insertIndex);
               cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                  totalCount=numberOfIds;
              return  returnIds(resp,totalCount,numberOfIds)
             });
         }
         else{
+            totalCount = totalCount > 25? 25:res.body.data[queryName].totalCount;
             return  returnIds(res,totalCount,numberOfIds);
         }
     });
@@ -596,6 +598,7 @@ Cypress.Commands.add("validateIdSearch", (res, queryName: string, searchValue: s
                 var split = idName.split(".");
                 node = nodes[i][split[0]][split[1]];
                 edge = edges[i].node[split[0]][split[1]];
+                
             } else {
                 node = nodes[i][idName];
                 edge = edges[i].node[idName];
@@ -621,20 +624,40 @@ Cypress.Commands.add("validateMultipleIdSearch", (res, queryName: string, idValu
         },
     });
     const totalCount = res.body.data[queryName].totalCount;
-   
+   var node,edge;
     const nodes = res.body.data[queryName].nodes;
     const edges = res.body.data[queryName].edges;
     expect(totalCount).to.be.eql(nodes.length);
     expect(totalCount).to.be.eql(edges.length);
     for (var i = 0; i < nodes.length; i++) {
-      
-        const targetNode = nodes.filter((item) => {
+    var targetNode;
+      if(!idName){
+        targetNode = nodes.filter((item) => {
             const id = item.id;
             return id === idValue[i];
         });
+      
+       }
+        else {
+           if (idName.includes(".id")) {
+                var split = idName.split(".");
+                targetNode = nodes.filter((item) => {
+                    const id = item[split[0]][split[1]];
+                    return id === idValue[i];
+                });
+               
+            } else {
+                targetNode = nodes.filter((item) => {
+                    const id = item.idName;
+                    return id === idValue[i];
+                });
+               
+            }
+        }
         expect(targetNode.length).to.be.eql(1, "Specific item found in nodes");
     }
 });
+
 
 /**
  * COMMANDS FOR BEFORE/AFTER TESTS

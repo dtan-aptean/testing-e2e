@@ -897,7 +897,7 @@ Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, se
     });
     var idField = queryName === "refunds" ? "order { id }" : "id";
     const searchQuery = `{
-        ${queryName}(${searchParameter}: "${itemId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+        ${queryName}(${searchParameter}: "${itemId}", orderBy: {direction: ASC, field: ${queryName === "refunds" ? "TIMESTAMP" : "NAME"}}) {
             nodes {
                 ${idField}
             }

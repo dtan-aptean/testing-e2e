@@ -6,12 +6,8 @@ describe("Query: AccountBalance", () => {
     cy.getWePayAccount(Cypress.env("wepay-account-id")).then((res) => {
       const balanceObject =
         res.balances.currencies.USD ?? res.balances.currencies.CAD;
-      const {
-        balance,
-        incoming_pending,
-        outgoing_pending,
-        reserve,
-      } = balanceObject;
+      const { balance, incoming_pending, outgoing_pending, reserve } =
+        balanceObject;
 
       const gqlQuery = `
       query {
