@@ -595,6 +595,151 @@ describe('Query: refunds', () => {
         });
     });
 
+    context('Testing "ID" input' , () => {
+
+        it('Query with an array of one or more valid ids as "ids" input, returns relevant items ', () => {
+           
+            var ids="";
+
+            cy.returnMultipleRandomIds(5,standardQuery,queryName,"order.id").then((idValues:[]) =>{
+                
+              ids ="["
+              for(var i=0;i<idValues.length;i++)
+              {
+                ids+='"'+idValues[i]+'"'+",";
+              
+              }
+              ids+="]"
+         
+             const gqlQuery = `{
+                ${queryName}( orderBy: {direction: ASC, field: TIMESTAMP } ids:${ids}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                cy.validateMultipleIdSearch(resp, queryName,idValues,"order.id");
+            });
+        });
+    });
+        //not placed inside the array
+        it('Query with single id as "ids" input, returns relevant item ', () => {
+            cy.returnRandomId(standardQuery,queryName,"order.id").then((id: string) =>{
+                const gqlQuery = `{
+                    ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: TIMESTAMP }) {
+                        ${standardQueryBody}
+                    }
+                }`;
+                cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                    cy.validateIdSearch(resp, queryName, id,"order.id");
+                });
+            });
+
+        });
+
+        it('Query with  empty array as "ids" input, returns response data', () => {
+            const gqlQuery = `{
+                ${queryName}(ids:[], orderBy: {direction: ASC, field: TIMESTAMP }) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(gqlQuery, queryName);
+        });
+
+        it('Query with an array of one or more empty strings as "ids" input, returns error', () => {
+            const gqlQuery = `{
+                ${queryName}(ids:["",""], orderBy: {direction: ASC, field: TIMESTAMP }) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery,true).then((res) => {
+               
+                expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
+                expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+
+            })
+        });
+        
+        it('Query with an array of one or more non-string values as "ids" input, returns error ', () => {
+            const gqlQuery = `{
+                ${queryName}(ids:[235], orderBy: {direction: ASC, field: TIMESTAMP }) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+               
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+
+            });
+
+        });
+
+        it('Query with non-array value as "ids" input, returns error ', () => {
+            const gqlQuery = `{
+                ${queryName}(ids:235, orderBy: {direction: ASC, field: TIMESTAMP }) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+               
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+
+            });
+        });
+
+        it('Query with ids from a different item as "ids" input, returns error ', () => {
+
+            const extraqueryName = "categories";
+            // Standard query body to get id from diff item 
+            const extrastandardQueryBody = `edges {
+                        cursor
+                        node {
+                            id
+                            categoryInfo {
+                                name
+                                languageCode
+                            }
+                        }
+                    }
+                    nodes {
+                        id
+                        categoryInfo {
+                            name
+                            languageCode
+                        }
+                    }
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                        hasPreviousPage
+                        startCursor
+                    }
+                    totalCount`;
+            // Standard query to use when we don't need any specialized data or input arguments
+            const extrastandardQuery = `{
+                ${extraqueryName}(orderBy: {direction: ASC, field: NAME}) {
+                    ${extrastandardQueryBody}
+                }
+            }`;
+        
+
+            cy.returnRandomId(extrastandardQuery,extraqueryName).then((id: string) =>{
+                const gqlQuery = `{
+                    ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: TIMESTAMP }) {
+                        ${standardQueryBody}
+                    }
+                }`;
+                cy.postAndConfirmError(gqlQuery,true).then((res) => {
+                    expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
+                    expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+                });
+            });
+
+        });
+    
+    });
+
     context("Testing response values for specific fields", () => {
         it("Query returns a refundAmount that matches the refundedAmount field on the corresponding order", () => {
             const gqlQuery =  `{
