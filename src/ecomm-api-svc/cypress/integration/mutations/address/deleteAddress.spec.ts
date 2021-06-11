@@ -128,6 +128,19 @@ describe('Mutation: deleteAddress', () => {
     });
 
     context("Testing Address API's required inputs", () => {
+        it("Mutation will succeed if 'id' is a valid string", () => {
+            const mutationName = "deleteAddress";
+            const mutation =
+                `mutation {
+                    ${mutationName}(input: { id: "${addressId}" }) {
+                        ${standardMutationContent}
+                    }
+                }`;
+            cy.postMutAndValidate(mutation, mutationName, 'deleteMutation').then((res) => {
+                addressId = '';
+            });
+        });
+
         it("Mutation will fail if 'id' is not a string", () => {
             const mutationName = "deleteAddress";
             const mutation =
@@ -148,19 +161,6 @@ describe('Mutation: deleteAddress', () => {
                     }
                 }`;
             cy.postAndConfirmMutationError(mutation, mutationName);
-        });
-
-        it("Mutation will succeed if 'id' is a valid string", () => {
-            const mutationName = "deleteAddress";
-            const mutation =
-                `mutation {
-                    ${mutationName}(input: { id: "${addressId}" }) {
-                        ${standardMutationContent}
-                    }
-                }`;
-            cy.postMutAndValidate(mutation, mutationName, 'deleteMutation').then((res) => {
-                addressId = '';
-            });
         });
     });
 });

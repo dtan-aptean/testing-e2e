@@ -1,7 +1,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 43
+// TEST COUNT: 42
 describe('Mutation: updateAddress', () => {
   let companyId = '';
   let addressId = '';
@@ -762,7 +762,7 @@ describe('Mutation: updateAddress', () => {
     });
   });
 
-  context("Testing Address API's 'contactDetails' 'address' inputs", () => {
+  context.only("Testing Address API's 'contactDetails' 'address' inputs", () => {
     it("Mutation will succeed if 'address's required inputs are valid", () => {
       const mutation = `mutation {
                 ${mutationName} (
@@ -950,9 +950,9 @@ describe('Mutation: updateAddress', () => {
                     addressType: BILLING,
                     contactDetails: {
                         address: {
-                            country: US,
-                            postalCode: 4,
-                        }
+                            country: "US",
+                            postalCode: "Pylons",
+                          }
                     }
                   }
                 ) {
@@ -980,8 +980,8 @@ describe('Mutation: updateAddress', () => {
                     addressType: BILLING,
                     contactDetails: {
                         address: {
-                            country: US,
-                            postalCode: 4,
+                            country: "US",
+                            postalCode: "Pylons",
                             region: GEORGIA
                         }
                     }
@@ -992,9 +992,7 @@ describe('Mutation: updateAddress', () => {
                   addressType
                   contactDetails {
                     address {
-                        country
-                        postalCode
-                        region
+                      ${reqAddressInfo}
                     }
                   }
                 }
@@ -1003,7 +1001,7 @@ describe('Mutation: updateAddress', () => {
       cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will fail if 'region' is not included", () => {
+    it("Mutation will fail if 'region' is not a valid string", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -1012,8 +1010,9 @@ describe('Mutation: updateAddress', () => {
                     addressType: BILLING,
                     contactDetails: {
                         address: {
-                            country: US,
-                            postalCode: 4,
+                            country: "US",
+                            postalCode: "Pylons",
+                            region: "Cadia"
                         }
                     }
                   }
@@ -1023,46 +1022,13 @@ describe('Mutation: updateAddress', () => {
                   addressType
                   contactDetails {
                     address {
-                        country
-                        postalCode
+                      ${reqAddressInfo}
                     }
                   }
                 }
               }
             }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if'region' is not a valid string", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            country: US,
-                            postalCode: 4,
-                            region: "KHORN"
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                        country
-                        postalCode
-                        region
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
+      cy.postAndConfirmMutationError(mutation, mutationName);
     });
 
     it("Mutation will succeed if 'city' is a string", () => {
