@@ -2,6 +2,8 @@
  * HELPER FUNCTIONS
  */
 
+import { toPlainObject } from "cypress/types/lodash";
+
 // Turns an array or object into a string to use as gql input or with a custom command's consoleProps logging functionality
 export const toFormattedString = (item, isMessage?: boolean, indentation?: number): string => {
     // Names of fields that are enum types and should not be wrapped in quotations.
@@ -191,6 +193,10 @@ export const createMutResMessage = (isSuccess: boolean, mutationName: string): s
         default : 
             message = (mutationFeature === "customerRole" || mutationFeature === "manufacturer") ? `${transformFeature(mutationFeature)}s` : transformFeature(mutationFeature);
     };
+    if(mutation=="deleted" && message =="address")
+    {
+        message="Address"
+    }
     return isSuccess ? `${message} ${mutation}` : `${mutation}${mutationName.includes("delete") ? " the" : ""} ${message}`;
 };
 
@@ -341,7 +347,7 @@ Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: 
     if (itemPath !== "deleteMutation") {
         // Validate response object
         assert.exists(res.body.data[mutationName][itemPath], `Expect mutation to return a ${itemPath}`);
-        assert.isObject(res.body.data[mutationName][itemPath], `Expect ${itemPath} to be an object`);
+       // assert.isObject(res.body.data[mutationName][itemPath], `Expect ${itemPath} to be an object`);
     }
 });
 
@@ -665,61 +671,81 @@ Cypress.Commands.add("createAssociatedItems", (
     queryName: string,
     inputBase,
     additionalResFields?
-) => {
+    ) => {
     Cypress.log({
-        name: "createAssociatedItems",
-        message: `Creating ${numberToMake} items with ${createName}`,
-        consoleProps: () => {
-            return {
-                "Number to make": numberToMake,
-                "Create mutation": createName,
-                "Query name": queryName,
-                "Item path": itemPath,
-                "Input base": toFormattedString(inputBase, true),
-                "Additional response fields": additionalResFields ? additionalResFields : "Not provided"
-            };
-        }
-    });
-    const createInput = (input, newName: string, infoName: string | null) => {
-        const retInput = JSON.parse(JSON.stringify(input));
-        if (infoName) {
-            retInput[infoName][0].name = newName;
-        } else {
-            retInput.name = newName;
-        }
-        return retInput;
-    };
-    const deleteName = createName.replace("create", "delete");
-    const deletionIds = [] as SupplementalItemRecord[];
-    const createdItems = [];
-    const createdIds = [] as string[];
-    const fullResBodies = [];
-    var infoName = getInfoName(inputBase);
-    var nameBase = infoName ? inputBase[infoName][0].name : inputBase.name;
-    const createAndPush = (item, name) => {
-        cy.createAndGetId(createName, itemPath, toFormattedString(item), additionalResFields).then((returnedBody) => {
-            const returnedId = additionalResFields ? returnedBody.id : returnedBody;
-            createdIds.push(returnedId);
-            item.id = returnedId;
-            createdItems.push(item);
-            deletionIds.push({itemId: returnedId, deleteName: deleteName, itemName: name, queryName: queryName});
-            if (additionalResFields) {
-                fullResBodies.push(returnedBody);
+    name:"createAssociatedItems",
+    message:`Creating ${numberToMake} items with ${createName}`,
+    consoleProps: () => {
+    return {
+    "Number to make":numberToMake,
+    "Create mutation":createName,
+    "Query name":queryName,
+    "Item path":itemPath,
+    "Input base":toFormattedString(inputBase, true),
+    "Additional response fields":additionalResFields ? additionalResFields : "Not provided"
+                };
             }
         });
-    };
-    for (var i = 1; i <= numberToMake; i++) {
-        var name = numberToMake !== 1 ? `${nameBase} ${i}` : nameBase;
-        var item = createInput(inputBase, name, infoName);
-        cy.wait(4000);
-        createAndPush(item, name);
-    };
-    const resObject = {deletionIds: deletionIds, items: createdItems, itemIds: createdIds} as {deletionIds: SupplementalItemRecord[], items: any[], itemIds: string[], fullItems?: any[]};
-    if (additionalResFields) {
-        resObject.fullItems = fullResBodies;
-    }
-    return cy.wrap(resObject);
-});
+     
+    const getNameBase = () => {
+    const propNames = Object.getOwnPropertyNames(inputBase);
+    if (propNames.includes("firstName") && propNames.includes("lastName")) {
+    return { firstName:inputBase.firstName, lastName:inputBase.lastName };
+            } else {
+    returninputBase.name;
+            }
+        };
+    const incrementNameBase = (nameBase, i) => {
+    if (typeof nameBase === "object") {
+    return { firstName:`${nameBase.firstName}${i}`, lastName:`${nameBase.lastName}${i}` };
+            } else {
+    return`${nameBase}${i}`
+            }
+        };
+    const createInput = (input, newName, infoName: string | null) => {
+    const retInput = JSON.parse(JSON.stringify(input));
+    if (infoName) {
+    retInput[infoName][0].name = newName;
+            } else if (typeof newName === "object") {
+    retInput.firstName = newName.firstName;
+    retInput.lastName = newName.lastName;
+            } else {
+    retInput.name = newName;
+            }
+    return retInput;
+        };
+
+        const deleteName = createName.replace("create", "delete");
+        const deletionIds = [] as SupplementalItemRecord[];
+        const createdItems = [];
+        const createdIds = [] as string[];
+        const fullResBodies = [];
+        var infoName = getInfoName(inputBase);
+        var nameBase = infoName ? inputBase[infoName][0].name : getNameBase();
+        const createAndPush = (item, name) => {
+            cy.createAndGetId(createName, itemPath, toFormattedString(item), additionalResFields).then((returnedBody) => {
+                const returnedId = additionalResFields ? returnedBody.id : returnedBody;
+                createdIds.push(returnedId);
+                item.id = returnedId;
+                createdItems.push(item);
+                deletionIds.push({itemId: returnedId, deleteName: deleteName, itemName: name, queryName: queryName});
+                if (additionalResFields) {
+                    fullResBodies.push(returnedBody);
+                }
+            });
+        };
+        for (var i = 1; i <= numberToMake; i++) {
+            var name = numberToMake !== 1 ? incrementNameBase(nameBase, i) : nameBase;
+            var item = createInput(inputBase, name, infoName);
+            cy.wait(4000);
+            createAndPush(item, name);
+        };
+        const resObject = {deletionIds: deletionIds, items: createdItems, itemIds: createdIds} as {deletionIds: SupplementalItemRecord[], items: any[], itemIds: string[], fullItems?: any[]};
+        if (additionalResFields) {
+            resObject.fullItems = fullResBodies;
+        }
+        return cy.wrap(resObject);
+    });
 
 // Creates a parent and child category.
 //Pass in names to create new categories, or a name and an id to create a child and attach it to an existing parent
@@ -1395,3 +1421,80 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, queryName: string, ite
         compareExpectedToResults(node, propNames, values);
     });
 });
+
+Cypress.Commands.add("createAndGetMultipleIds",(NumberToMake: number,createName: string, itemPath: string, input: string,altUrl?:String) => {
+    Cypress.log({
+        name: "createAndGetMultipleIds",
+        message: `Creating ${itemPath}`,
+        consoleProps: () => {
+            return {
+                "Mutation": createName,
+                "Response item path": itemPath,
+                "Input string": input,
+                "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
+            };
+        }
+    });
+    const createdIds = [];
+
+    // const getNameBase = () => {
+    //     const propNames;
+    //     if(itemPath=="addressInfo"){
+    //         var ip=JSON.parse(JSON.stringify(input))
+    //          propNames = Object.getOwnPropertyNames(ip.contactDetails);
+    //     }else{
+    //          propNames = Object.getOwnPropertyNames(input);}
+    //     if (propNames.includes("firstName") && propNames.includes("lastName")&&itemPath=="addressInfo") {
+    //     return { firstName:input.contactDetails.firstName, lastName:input.contactDetails.lastName };
+    //           }
+    //     else if (propNames.includes("firstName") && propNames.includes("lastName")) {
+    //     return { firstName:input.firstName, lastName:input.lastName };
+    //             } else {
+    //     return input.name;
+    //             }
+    //         };
+    //     const incrementNameBase = (nameBase, i) => {
+    //     if (typeof nameBase === "object") {
+    //     return { firstName:`${nameBase.firstName}${i}`, lastName:`${nameBase.lastName}${i}` };
+    //             } else {
+    //     return`${nameBase}${i}`
+    //             }
+    //         };
+
+    // var infoName = getInfoName(input);
+    // var nameBase = infoName ? input[infoName][0].name : getNameBase();
+
+    // const createInput = (input, newName, infoName: string | null) => {
+    //     const retInput = JSON.parse(JSON.stringify(input));
+    //     if (infoName) {
+    //     retInput[infoName][0].name = newName;
+    //             } else if (typeof newName === "object" && itemPath=="addressInfo") {
+    //     retInput.contactDetails.firstName = newName.firstName;
+    //     retInput.contactDetails.lastName = newName.lastName;
+    //             }else if (typeof newName === "object") {
+    //     retInput.firstName = newName.firstName;
+    //     retInput.lastName = newName.lastName;
+    //             } else {
+    //     retInput.name = newName;
+    //             }
+    //     return retInput;
+    //         };
+
+    const createAndPush =() => {
+    cy.createAndGetId(createName, itemPath,input).then((returnedBody) => {
+        const returnedId = returnedBody;
+        cy.log(returnedId)
+        createdIds.push(returnedId);
+    });
+}
+    for(var i=0;i<NumberToMake;i++){
+        // var name=input.contactDetails.firstName;
+        // name= NumberToMake !== 1 ? `${name}${i}`:name
+     //  name = NumberToMake !== 1 ? incrementNameBase(nameBase, i) : nameBase;
+        // const item= createInput(input,name);
+        // cy.wait(4000);
+       createAndPush(createName,itemPath,input);
+    }
+    return cy.wrap(createdIds);
+});
+

@@ -210,7 +210,7 @@ Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number
 // Runs the query and grabs the createdDate from a random node, as long as the created date starts with 20 (aka was created in the 2000s)
 Cypress.Commands.add('returnRandomDate', (gqlQuery: string, queryName: string, getLowerStart?: boolean, after?: string) => {
     Cypress.log({
-        name: "returnRandomName",
+        name: "returnRandomDate",
         message: `${queryName}${after ? ". Return date after: " + after : ""}`,
         consoleProps: () => {
             return {
@@ -310,10 +310,32 @@ Cypress.Commands.add('returnRandomName', (gqlQuery: string, queryName: string) =
         if (totalCount > 1) {
             randomIndex = Cypress._.random(0, totalCount - 1);
         }
+        var duplicateArray;
         var randomNode = res.body.data[queryName].nodes[randomIndex];
-        const duplicateArray = res.body.data[queryName].nodes.filter((val) => {
+        if(queryName=="addresses"){
+            duplicateArray = res.body.data[queryName].nodes.filter((val) => {
+                return val.contactDetails.firstName === randomNode.contactDetails.firstName;  
+            });
+        } else {
+         duplicateArray = res.body.data[queryName].nodes.filter((val) => {
             return val.name === randomNode.name;
         });
+        }
+        if(queryName=="addresses"){
+            if (duplicateArray.length > 1) {
+                const uniqueArray = res.body.data[queryName].nodes.filter((val) => {
+                    return val.contactDetails.firstName !== randomNode.contactDetails.firstName;
+                });
+                randomIndex = 0;
+                if (uniqueArray.length > 1) {
+                    randomIndex = Cypress._.random(0, uniqueArray.length - 1);
+                    randomNode = uniqueArray[randomIndex];
+                }
+               
+            }
+            return cy.wrap(randomNode.contactDetails.firstName);
+        }
+        else{
         if (duplicateArray.length > 1) {
             const uniqueArray = res.body.data[queryName].nodes.filter((val) => {
                 return val.name !== randomNode.name;
@@ -321,10 +343,13 @@ Cypress.Commands.add('returnRandomName', (gqlQuery: string, queryName: string) =
             randomIndex = 0;
             if (uniqueArray.length > 1) {
                 randomIndex = Cypress._.random(0, uniqueArray.length - 1);
+                randomNode = uniqueArray[randomIndex];
             }
-            randomNode = uniqueArray[randomIndex];
+           
         }
         return cy.wrap(randomNode.name);
+    }
+        
     });
 });
 
@@ -347,8 +372,14 @@ Cypress.Commands.add("validateNameSearch", (res, queryName: string, searchValue:
     expect(totalCount).to.be.eql(nodes.length);
     expect(totalCount).to.be.eql(edges.length);
     for (var i = 0; i < nodes.length; i++) {
+        if(queryName=="addresses"){
+            expect(nodes[i].contactDetails.firstName.toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
+            expect(edges[i].node.contactDetails.firstName.toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
+        }
+        else{
         expect(nodes[i].name.toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
         expect(edges[i].node.name.toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
+        }
     }
 });
 
@@ -626,12 +657,17 @@ Cypress.Commands.add("validateMultipleIdSearch", (res, queryName: string, idValu
     const edges = res.body.data[queryName].edges;
     expect(totalCount).to.be.eql(nodes.length);
     expect(totalCount).to.be.eql(edges.length);
+    const targetNode;
     for (var i = 0; i < nodes.length; i++) {
       
-        const targetNode = nodes.filter((item) => {
-            const id = item.id;
-            return id === idValue[i];
-        });
+        // const targetNode = nodes.filter((item) => {
+        //     return item.id === idValue[i];
+        // });
+        for(var j=0;j<idValue.length;i++){
+         if (idValue[i]==nodes[j].id){
+             targetNode = "1"
+         }
+        }
         expect(targetNode.length).to.be.eql(1, "Specific item found in nodes");
     }
 });
