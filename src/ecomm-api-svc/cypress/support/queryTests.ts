@@ -4,6 +4,19 @@
 
 import { toFormattedString } from "./commands";
 
+export const defaultField = (queryName: string) => {
+    var field = "NAME";
+    switch(queryName) {
+        case ("orders" || "refunds"):
+            field = "TIMESTAMP"
+            break;
+        case "paymentSettings":
+            field = "COMPANY_NAME";
+            break;
+    };
+    return field;
+};
+
 Cypress.Commands.add("queryAndValidateMultipleIds", (count, queryName, standardQueryBody) => {
     const extraGqlQuery = `{
         ${queryName}(orderBy: {direction: ASC, field: NAME}) {

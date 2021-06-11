@@ -2,6 +2,8 @@
  * HELPER FUNCTIONS
  */
 
+import { defaultField } from "./queryTests";
+
 // Turns an array or object into a string to use as gql input or with a custom command's consoleProps logging functionality
 export const toFormattedString = (item, isMessage?: boolean, indentation?: number): string => {
     // Names of fields that are enum types and should not be wrapped in quotations.
@@ -856,9 +858,13 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
             name
             languageCode
         }`;
+    } else if (queryName === "paymentSettings") {
+        nameField = `company {
+            name
+        }`;
     }
     var searchQuery = `{
-        ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: NAME}) {
+        ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
             totalCount
             nodes {
                 id
@@ -893,7 +899,7 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
             } else {
                 matchingItems = nodes.filter((item) => {
                     if (validName) {
-                        return item.id.toUpperCase() === itemId.toUpperCase() && item.name === itemName;
+                        return item.id.toUpperCase() === itemId.toUpperCase() && (queryName === "paymentSettings" ? item.company.name : item.name) === itemName;
                     } else {
                         return item.id.toUpperCase() === itemId.toUpperCase();
                     }
@@ -926,7 +932,7 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
 // Same as above but for items that don't have a name and instead works by the id field
 Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, searchParameter: string, queryName: string, altUrl?: string) => {
     Cypress.log({
-        name: "queryForDeleted",
+        name: "queryForDeletedById",
         message: `querying ${queryName} for deleted item "${itemId}"`,
         consoleProps: () => {
             return {
@@ -940,7 +946,7 @@ Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, se
     });
     var idField = queryName === "refunds" ? "order { id }" : "id";
     const searchQuery = `{
-        ${queryName}(${searchParameter}: "${itemId}", orderBy: {direction: ASC, field: ${queryName === "refunds" ? "TIMESTAMP" : "NAME"}}) {
+        ${queryName}(${searchParameter}: "${itemId}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
             nodes {
                 ${idField}
             }
