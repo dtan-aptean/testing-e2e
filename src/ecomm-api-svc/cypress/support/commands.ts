@@ -188,6 +188,9 @@ export const createMutResMessage = (isSuccess: boolean, mutationName: string): s
         case "returnReason":
             message = "returnReason";
             break;
+        case "inventory":
+            message = "product quantity";
+            break;
         default:
             message = (mutationFeature === "customerRole" || mutationFeature === "manufacturer") ? `${transformFeature(mutationFeature)}s` : transformFeature(mutationFeature);
     };
@@ -898,7 +901,7 @@ Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, se
     });
     var idField = queryName === "refunds" ? "order { id }" : "id";
     const searchQuery = `{
-        ${queryName}(${searchParameter}: "${itemId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+        ${queryName}(${searchParameter}: "${itemId}", orderBy: {direction: ASC, field: ${queryName === "refunds" ? "TIMESTAMP" : "NAME"}}) {
             nodes {
                 ${idField}
             }
