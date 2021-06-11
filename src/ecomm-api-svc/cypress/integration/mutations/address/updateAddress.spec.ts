@@ -1,7 +1,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 40
+// TEST COUNT: 43
 describe('Mutation: updateAddress', () => {
   let companyId = '';
   let addressId = '';
@@ -126,7 +126,7 @@ describe('Mutation: updateAddress', () => {
   });
 
   context("Testing Address API's required inputs", () => {
-    it("Mutation will succeed if 'id' is a valid string", () => {
+    it("Mutation will succeed if required inputs are valid", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -250,13 +250,12 @@ describe('Mutation: updateAddress', () => {
       cy.postAndConfirmMutationError(mutation, mutationName);
     });
 
-    it("Mutation will succeed if 'addressType' is a valid enum", () => {
+    it("Mutation will fail if 'addressType' is not included", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
                     companyId:"${companyId}",
-                    addressType: BILLING
                   }
                 ) {
                 ${standardMutationContent}
@@ -265,7 +264,7 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-      cy.postMutAndValidate(mutation, mutationName, itemPath);
+      cy.postAndConfirmError(mutation);
     });
 
     it("Mutation will fail if 'addressType' is not an enum", () => {
@@ -298,402 +297,6 @@ describe('Mutation: updateAddress', () => {
                 ${standardMutationContent}
                 addressInfo {
                   addressType
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'phone's 'phoneType' is not included", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        phone: {
-                            phoneNumber: "KHORN"
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    phone {
-                        phoneNumber
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'phone's 'phoneType' is not an enum", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        phone: {
-                            phoneNumber: "KHORN"
-                            phoneType: "UNKNOWN"
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    phone {
-                        phoneNumber
-                        phoneType
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'phone's 'phoneType' is not a valid enum", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        phone: {
-                            phoneNumber: "KHORN"
-                            phoneType: WAAAGH
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    phone {
-                        phoneNumber
-                        phoneType
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'phone's 'phoneNumber' is not included", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        phone: {
-                            phoneType: UNKNOWN
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    phone {
-                        phoneType
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'phone's 'phoneNumber' is not a string", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        phone: {
-                            phoneNumber: 4
-                            phoneType: UNKNOWN
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    phone {
-                        phoneNumber
-                        phoneType
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'address's 'country' is not included", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            postalCode: "Pylons",
-                            region: "Georgia"
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                        postalCode
-                        region
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'address's 'country' is not a string", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            country: US,
-                            postalCode: "Pylons",
-                            region: "Georgia"
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                        country
-                        postalCode
-                        region
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'address's 'country' is not a valid string", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            country: "KHORN",
-                            postalCode: "Pylons",
-                            region: "Georgia"
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                        country
-                        postalCode
-                        region
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmMutationError(mutation, mutationName);
-    });
-
-    it("Mutation will fail if 'address's 'postalCode' is not included", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            country: US,
-                            region: "Georgia"
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                        country
-                        region
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'address's 'postalCode' is not a string", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            country: US,
-                            postalCode: 4,
-                            region: "Georgia"
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                        country
-                        postalCode
-                        region
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'address's 'region' is not a string", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            country: US,
-                            postalCode: 4,
-                            region: GEORGIA
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                        country
-                        postalCode
-                        region
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'address's 'region' is not included", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            country: US,
-                            postalCode: 4,
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                        country
-                        postalCode
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'address's 'region' is not a valid string", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            country: US,
-                            postalCode: 4,
-                            region: "KHORN"
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                        country
-                        postalCode
-                        region
-                    }
-                  }
                 }
               }
             }`;
@@ -895,7 +498,180 @@ describe('Mutation: updateAddress', () => {
   });
 
   context("Testing Address API's 'contactDetails's optional 'phone' inputs", () => {
-    it("Mutation will succeed if required 'phone' inputs included and 'countryCode' is a valid enum", () => {
+    it("Mutation will succeed if 'phone's required inputs are valid", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING
+                    contactDetails: {
+                      phone: {
+                        ${reqPhoneInput}
+                      }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    phone {
+                      ${reqPhoneInfo}
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
+
+    it("Mutation will fail if 'phone's 'phoneType' is not included", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        phone: {
+                            phoneNumber: "KHORN"
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    phone {
+                        phoneNumber
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+
+    it("Mutation will fail if 'phone's 'phoneType' is not an enum", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        phone: {
+                            phoneNumber: "KHORN"
+                            phoneType: "UNKNOWN"
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    phone {
+                      ${reqPhoneInfo}
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'phone's 'phoneType' is not a valid enum", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        phone: {
+                            phoneNumber: "KHORN"
+                            phoneType: WAAAGH
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    phone {
+                      ${reqPhoneInfo}
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'phone's 'phoneNumber' is not included", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        phone: {
+                            phoneType: UNKNOWN
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    phone {
+                        phoneType
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'phone's 'phoneNumber' is not a string", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        phone: {
+                            phoneNumber: 4
+                            phoneType: UNKNOWN
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    phone {
+                        phoneNumber
+                        phoneType
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will succeed if 'countryCode' is a valid enum", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -925,7 +701,7 @@ describe('Mutation: updateAddress', () => {
       cy.postMutAndValidate(mutation, mutationName, itemPath);
     });
 
-    it("Mutation will fail if required 'phone' inputs included but 'countryCode' is a not an enum", () => {
+    it("Mutation will fail if 'countryCode' is a not an enum", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -955,7 +731,7 @@ describe('Mutation: updateAddress', () => {
       cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will fail if required 'phone' inputs included but 'countryCode' is a not a valid enum", () => {
+    it("Mutation will fail if 'countryCode' is a not a valid enum", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -987,7 +763,309 @@ describe('Mutation: updateAddress', () => {
   });
 
   context("Testing Address API's 'contactDetails' 'address' inputs", () => {
-    it("Mutation will succeed if required 'address' inputs included and 'city' is a string", () => {
+    it("Mutation will succeed if 'address's required inputs are valid", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        address: {
+                            ${reqAddressInput}
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                        ${reqAddressInfo}
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
+
+    it("Mutation will fail if 'country' is not included", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        address: {
+                            postalCode: "Pylons",
+                            region: "Georgia"
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                        postalCode
+                        region
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'country' is not a string", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        address: {
+                            country: US,
+                            postalCode: "Pylons",
+                            region: "Georgia"
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                      ${reqAddressInfo}
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'country' is not a valid string", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        address: {
+                            country: "KHORN",
+                            postalCode: "Pylons",
+                            region: "Georgia"
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                      ${reqAddressInfo}
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmMutationError(mutation, mutationName);
+    });
+
+    it("Mutation will fail if 'postalCode' is not included", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        address: {
+                            country: US,
+                            region: "Georgia"
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                        country
+                        region
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'postalCode' is not a string", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        address: {
+                            country: US,
+                            postalCode: 4,
+                            region: "Georgia"
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                      ${reqAddressInfo}
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'region' is not included", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        address: {
+                            country: US,
+                            postalCode: 4,
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                      country
+                      postalCode
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'region' is not a string", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        address: {
+                            country: US,
+                            postalCode: 4,
+                            region: GEORGIA
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                        country
+                        postalCode
+                        region
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'region' is not included", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        address: {
+                            country: US,
+                            postalCode: 4,
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                        country
+                        postalCode
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if'region' is not a valid string", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                        address: {
+                            country: US,
+                            postalCode: 4,
+                            region: "KHORN"
+                        }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                        country
+                        postalCode
+                        region
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will succeed if 'city' is a string", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -1017,7 +1095,7 @@ describe('Mutation: updateAddress', () => {
       cy.postMutAndValidate(mutation, mutationName, itemPath);
     });
 
-    it("Mutation will fail if required 'address' inputs included but 'city' is not a string", () => {
+    it("Mutation will fail if 'city' is not a string", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -1047,7 +1125,7 @@ describe('Mutation: updateAddress', () => {
       cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will succeed if required 'address' inputs included and 'line1' is a string", () => {
+    it("Mutation will succeed if 'line1' is a string", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -1077,7 +1155,7 @@ describe('Mutation: updateAddress', () => {
       cy.postMutAndValidate(mutation, mutationName, itemPath);
     });
 
-    it("Mutation will fail if required 'address' inputs included but 'line1' is not a string", () => {
+    it("Mutation will fail if 'line1' is not a string", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -1107,7 +1185,7 @@ describe('Mutation: updateAddress', () => {
       cy.postAndConfirmError(mutation);
     });
 
-    it("Mutation will succeed if required 'address' inputs included and 'line2' is a string", () => {
+    it("Mutation will succeed if 'line2' is a string", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -1137,7 +1215,7 @@ describe('Mutation: updateAddress', () => {
       cy.postMutAndValidate(mutation, mutationName, itemPath);
     });
 
-    it("Mutation will fail if required 'address' inputs included but 'line2' is not a string", () => {
+    it("Mutation will fail if 'line2' is not a string", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
