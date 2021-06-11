@@ -2,7 +2,7 @@
 import { add } from "cypress/types/lodash";
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 10
+// TEST COUNT: 3
 describe('Mutation: deleteAddress', () => {
     let companyId = '';
     let addressId = '';

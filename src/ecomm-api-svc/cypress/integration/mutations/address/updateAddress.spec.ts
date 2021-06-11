@@ -1,7 +1,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 10
+// TEST COUNT: 40
 describe('Mutation: updateAddress', () => {
   let companyId = '';
   let addressId = '';
