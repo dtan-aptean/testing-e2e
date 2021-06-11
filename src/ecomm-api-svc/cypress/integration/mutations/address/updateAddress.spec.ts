@@ -3,21 +3,21 @@ import { toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 10
 describe('Mutation: updateAddress', () => {
-    let companyId = '';
-    let addressId = '';
-    const mutationName = 'updateAddress';
-    const itemPath = 'addressInfo';
-    const addressType = `SHIPPING`;
-    const reqPhoneInput = `
+  let companyId = '';
+  let addressId = '';
+  const mutationName = 'updateAddress';
+  const itemPath = 'addressInfo';
+  const addressType = `SHIPPING`;
+  const reqPhoneInput = `
         phoneType: UNKNOWN, 
         phoneNumber: "Badab" 
     `;
-    const reqAddressInput = `
+  const reqAddressInput = `
         country: "US",
         postalCode: "Pylons",
         region: "Georgia"
     `;
-    const standardMutationContent = `
+  const standardMutationContent = `
         code
         message
         errors {
@@ -31,25 +31,25 @@ describe('Mutation: updateAddress', () => {
             }
         }
     `;
-    const reqPhoneInfo = `
+  const reqPhoneInfo = `
         phoneType
         phoneNumber
     `;
-    const reqAddressInfo = `
+  const reqAddressInfo = `
         country
         postalCode
         region
     `;
 
-    before(() => {
-        const input = {
-            name: "Address API Test Company",
-            integrationKey: 'testkey' + Math.floor(100000 + Math.random() * 900000)
-        };
-        const mutationName = 'createCompany';
-        const companyPath = 'company';
-        const mutation =
-            `mutation {
+  before(() => {
+    const input = {
+      name: "Address API Test Company",
+      integrationKey: 'testkey' + Math.floor(100000 + Math.random() * 900000)
+    };
+    const mutationName = 'createCompany';
+    const companyPath = 'company';
+    const mutation =
+      `mutation {
                 ${mutationName}(
                     input:  ${toFormattedString(input)}
                 ) {
@@ -61,11 +61,11 @@ describe('Mutation: updateAddress', () => {
                     }
                 }
             }`;
-        cy.postMutAndValidate(mutation, mutationName, companyPath).then((res) => {
-            companyId = res.body.data[mutationName][companyPath].id;
-            const addressMut = 'createAddress';
-            const addressPath = 'addressInfo'
-            const mutation = `mutation {
+    cy.postMutAndValidate(mutation, mutationName, companyPath).then((res) => {
+      companyId = res.body.data[mutationName][companyPath].id;
+      const addressMut = 'createAddress';
+      const addressPath = 'addressInfo'
+      const mutation = `mutation {
                 ${addressMut}(
                   input: {
                     companyId: "${companyId}"
@@ -94,40 +94,40 @@ describe('Mutation: updateAddress', () => {
                   }
                 }
               }`;
-            cy.postMutAndValidate(mutation, addressMut, addressPath).then((res) => {
-                const queryName = 'addresses';
-                const query = `{
+      cy.postMutAndValidate(mutation, addressMut, addressPath).then((res) => {
+        const queryName = 'addresses';
+        const query = `{
                     ${queryName}(companyId: "${companyId}", orderBy: {direction: ASC, field: NAME }) {
                         nodes {
                             id
                         }
                     }
                 }`;
-                cy.postAndValidate(query, queryName).then((res) => {
-                    addressId = res.body.data[queryName].nodes[0].id;
-                });
-            });
+        cy.postAndValidate(query, queryName).then((res) => {
+          addressId = res.body.data[queryName].nodes[0].id;
         });
+      });
     });
+  });
 
-    after(() => {
-        if (companyId !== '') {
-            const mutationName = "deleteCompany";
-            const mutation =
-                `mutation {
+  after(() => {
+    if (companyId !== '') {
+      const mutationName = "deleteCompany";
+      const mutation =
+        `mutation {
                     ${mutationName}(input: { id: "${companyId}" }) {
                         ${standardMutationContent}
                     }
                 }`;
-            cy.postMutAndValidate(mutation, mutationName, 'deleteMutation').then((res) => {
-                companyId = '';
-            });
-        }
-    });
+      cy.postMutAndValidate(mutation, mutationName, 'deleteMutation').then((res) => {
+        companyId = '';
+      });
+    }
+  });
 
-    context("Testing Address API's required inputs", () => {
-        it("Mutation will succeed if 'id' is a valid string", () => {
-            const mutation = `mutation {
+  context("Testing Address API's required inputs", () => {
+    it("Mutation will succeed if 'id' is a valid string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -141,11 +141,28 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath);
-        });
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
 
-        it("Mutation will fail if 'id' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'id' is not included", () => {
+      const mutation = `mutation {
+              ${mutationName} (
+                input: {
+                  companyId:"${companyId}",
+                  addressType: BILLING
+                }
+              ) {
+              ${standardMutationContent}
+              addressInfo {
+                addressType
+              }
+            }
+          }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'id' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: ${addressId},
@@ -159,11 +176,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'id' is not a valid string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'id' is not a valid string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "KHORN",
@@ -177,15 +194,14 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName);
-        });
+      cy.postAndConfirmMutationError(mutation, mutationName);
+    });
 
-        it("Mutation will succeed if 'companyId' is a valid string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'companyId' is not included", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
-                    companyId:"${companyId}",
                     addressType: BILLING
                   }
                 ) {
@@ -195,11 +211,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath);
-        });
+      cy.postAndConfirmMutationError(mutation, mutationName);
+    });
 
-        it("Mutation will fail if 'companyId' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'companyId' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -213,11 +229,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'companyId' is not a valid string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'companyId' is not a valid string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -231,11 +247,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName);
-        });
+      cy.postAndConfirmMutationError(mutation, mutationName);
+    });
 
-        it("Mutation will succeed if 'addressType' is a valid enum", () => {
-            const mutation = `mutation {
+    it("Mutation will succeed if 'addressType' is a valid enum", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -249,11 +265,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath);
-        });
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
 
-        it("Mutation will fail if 'addressType' is not an enum", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'addressType' is not an enum", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -267,11 +283,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'addressType' is not a valid enum", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'addressType' is not a valid enum", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -285,11 +301,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'phone's 'phoneType' is not included", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'phone's 'phoneType' is not included", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -313,11 +329,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'phone's 'phoneType' is not an enum", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'phone's 'phoneType' is not an enum", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -343,11 +359,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'phone's 'phoneType' is not a valid enum", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'phone's 'phoneType' is not a valid enum", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -373,11 +389,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'phone's 'phoneNumber' is not included", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'phone's 'phoneNumber' is not included", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -401,11 +417,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'phone's 'phoneNumber' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'phone's 'phoneNumber' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -431,11 +447,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'address's 'country' is not included", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'address's 'country' is not included", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -461,11 +477,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'address's 'country' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'address's 'country' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -493,11 +509,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'address's 'country' is not a valid string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'address's 'country' is not a valid string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -525,11 +541,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName);
-        });
+      cy.postAndConfirmMutationError(mutation, mutationName);
+    });
 
-        it("Mutation will fail if 'address's 'postalCode' is not included", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'address's 'postalCode' is not included", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -555,11 +571,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'address's 'postalCode' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'address's 'postalCode' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -587,11 +603,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'address's 'region' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'address's 'region' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -619,11 +635,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'address's 'region' is not included", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'address's 'region' is not included", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -649,11 +665,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if 'address's 'region' is not a valid string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'address's 'region' is not a valid string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -681,17 +697,17 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
     });
+  });
 
-    context("Testing Address API's simple, optional inputs", () => {
-        it("Mutation will succeed if 'customData' is an object", () => {
-            const customData = {
-                text: "For the emperor",
-                number: 4
-            }
-            const mutation = `mutation {
+  context("Testing Address API's simple, optional inputs", () => {
+    it("Mutation will succeed if 'customData' is an object", () => {
+      const customData = {
+        text: "For the emperor",
+        number: 4
+      }
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -707,15 +723,15 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath);
-        });
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
 
-        it("Mutation will fail if 'customData' is not an object", () => {
-            const customData = [
-                "For the emperor",
-                "Exterminatus"
-            ]
-            const mutation = `mutation {
+    it("Mutation will fail if 'customData' is not an object", () => {
+      const customData = [
+        "For the emperor",
+        "Exterminatus"
+      ]
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -730,11 +746,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will succeed if 'contactDetails's 'firstName' is a string", () => {
-            const mutation = `mutation {
+    it("Mutation will succeed if 'contactDetails's 'firstName' is a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -754,11 +770,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath);
-        });
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
 
-        it("Mutation will fail if 'contactDetails's 'firstname' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'contactDetails's 'firstname' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -778,11 +794,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will succeed if 'contactDetails's 'lastName' is a string", () => {
-            const mutation = `mutation {
+    it("Mutation will succeed if 'contactDetails's 'lastName' is a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -802,11 +818,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath);
-        });
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
 
-        it("Mutation will fail if 'contactDetails's 'lastName' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'contactDetails's 'lastName' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -826,11 +842,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will succeed if 'contactDetails's 'email' is a string", () => {
-            const mutation = `mutation {
+    it("Mutation will succeed if 'contactDetails's 'email' is a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -850,11 +866,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath);
-        });
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
 
-        it("Mutation will fail if 'contactDetails's 'email' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if 'contactDetails's 'email' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -874,13 +890,13 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
     });
+  });
 
-    context("Testing Address API's 'contactDetails's optional 'phone' inputs", () => {
-        it("Mutation will succeed if required 'phone' inputs included and 'countryCode' is a valid enum", () => {
-            const mutation = `mutation {
+  context("Testing Address API's 'contactDetails's optional 'phone' inputs", () => {
+    it("Mutation will succeed if required 'phone' inputs included and 'countryCode' is a valid enum", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -906,11 +922,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath);
-        });
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
 
-        it("Mutation will fail if required 'phone' inputs included but 'countryCode' is a not an enum", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if required 'phone' inputs included but 'countryCode' is a not an enum", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -936,11 +952,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will fail if required 'phone' inputs included but 'countryCode' is a not a valid enum", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if required 'phone' inputs included but 'countryCode' is a not a valid enum", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -966,13 +982,13 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
     });
+  });
 
-    context("Testing Address API's 'contactDetails' 'address' inputs", () => {
-        it("Mutation will succeed if required 'address' inputs included and 'city' is a string", () => {
-            const mutation = `mutation {
+  context("Testing Address API's 'contactDetails' 'address' inputs", () => {
+    it("Mutation will succeed if required 'address' inputs included and 'city' is a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -998,11 +1014,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath);
-        });
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
 
-        it("Mutation will fail if required 'address' inputs included but 'city' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if required 'address' inputs included but 'city' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -1028,11 +1044,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will succeed if required 'address' inputs included and 'line1' is a string", () => {
-            const mutation = `mutation {
+    it("Mutation will succeed if required 'address' inputs included and 'line1' is a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -1058,11 +1074,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath);
-        });
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
 
-        it("Mutation will fail if required 'address' inputs included but 'line1' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if required 'address' inputs included but 'line1' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -1088,11 +1104,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
+    });
 
-        it("Mutation will succeed if required 'address' inputs included and 'line2' is a string", () => {
-            const mutation = `mutation {
+    it("Mutation will succeed if required 'address' inputs included and 'line2' is a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -1118,11 +1134,11 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath);
-        });
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
 
-        it("Mutation will fail if required 'address' inputs included but 'line2' is not a string", () => {
-            const mutation = `mutation {
+    it("Mutation will fail if required 'address' inputs included but 'line2' is not a string", () => {
+      const mutation = `mutation {
                 ${mutationName} (
                   input: {
                     id: "${addressId}",
@@ -1148,7 +1164,7 @@ describe('Mutation: updateAddress', () => {
                 }
               }
             }`;
-            cy.postAndConfirmError(mutation);
-        });
+      cy.postAndConfirmError(mutation);
     });
+  });
 });
