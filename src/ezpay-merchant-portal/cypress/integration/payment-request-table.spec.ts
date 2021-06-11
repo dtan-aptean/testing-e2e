@@ -12,9 +12,12 @@ describe("Payment Request Table", function () {
 
     beforeEach(() => {
       cy.visit("/");
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       // navigate to help center screen
       cy.get("[data-cy=payment-requests-tab]", { timeout: 20000 }).click();
       cy.get("[data-cy=refresh]").click();
+      cy.wait(5000);
       cy.get("[data-cy=payment-request-table-body]")
         .invoke("children")
         .as("rows");
@@ -40,7 +43,7 @@ describe("Payment Request Table", function () {
           cy.wait(500);
           cy.get("[data-cy=payment-requests-tab]").click();
           cy.get("[data-cy=refresh]").click();
-          cy.wait(500);
+          cy.wait(5000);
           cy.get("[data-cy=payment-request-table-body]")
             .find("tr")
             .eq(0)
@@ -82,6 +85,7 @@ describe("Payment Request Table", function () {
       cy.get("div.MuiDialog-root").find(".MuiBackdrop-root").should("exist");
       cy.get("div.MuiDialog-root")
         .find(".MuiBackdrop-root")
+        .first()
         .click({ force: true }); // Force the click because Cypress considers the backdrop not visible, and thus unclickable
       cy.get("[data-cy=payment-request-details-modal]").should("not.exist");
 
@@ -182,7 +186,7 @@ describe("Payment Request Table", function () {
       cy.wait(2000);
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(2000);
+      cy.wait(5000);
       cy.get("[data-cy=payment-request-table-body]")
         .find("tr")
         .eq(0)
@@ -205,7 +209,7 @@ describe("Payment Request Table", function () {
 
       //checking if status is still pending and then waiting accordingly
       cy.get("[data-cy=refresh]").click();
-      cy.wait(3000);
+      cy.wait(5000);
       cy.get("body").then(($body) => {
         if (
           $body
@@ -220,7 +224,7 @@ describe("Payment Request Table", function () {
 
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(4000);
+      cy.wait(5000);
       cy.get("@newCells")
         .eq(2)
         .should(($cell) => {
@@ -243,7 +247,7 @@ describe("Payment Request Table", function () {
       cy.wait(90000);
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(4000);
+      cy.wait(5000);
       cy.get("@newCells")
         .eq(2)
         .should(($cell) => {
@@ -321,7 +325,7 @@ describe("Payment Request Table", function () {
 
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(2000);
+      cy.wait(5000);
       cy.get("@newCells")
         .eq(2)
         .should(($cell) => {
@@ -339,11 +343,13 @@ describe("Payment Request Table", function () {
       cy.wait(4000);
       // creating the completed payment request record to check the refund modal
       cy.createAndPay(1, "1.00", "refund");
+      cy.wait(5000);
+      cy.waitAfterLogIn(0, 5);
       cy.wait(35000);
 
       //checking if status is still pending and then waiting accordingly
       cy.get("[data-cy=refresh]").click();
-      cy.wait(2000);
+      cy.wait(5000);
       cy.get("body").then(($body) => {
         if (
           $body
@@ -358,7 +364,7 @@ describe("Payment Request Table", function () {
 
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(2000);
+      cy.wait(5000);
       cy.get("[data-cy=payment-request-table-body]")
         .find("tr")
         .eq(0)
@@ -413,7 +419,7 @@ describe("Payment Request Table", function () {
       cy.wait(2000);
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
-      cy.wait(2000);
+      cy.wait(5000);
       cy.get("[data-cy=payment-request-table-body]")
         .find("tr")
         .eq(0)
@@ -511,6 +517,7 @@ describe("Payment Request Table", function () {
       cy.wait(2000);
 
       cy.get("[data-cy=refresh]").click();
+      cy.wait(5000);
       // search for reference number and get created payment request
       cy.getInput("search")
         .type(referenceNumber)
@@ -544,6 +551,7 @@ describe("Payment Request Table", function () {
       cy.getInput("search").clear();
       cy.wait(5000);
       cy.get("[data-cy=refresh]").click();
+      cy.wait(5000);
 
       // search for email and get created payment request
       cy.getInput("search").type(email).should("have.value", email.toString());
@@ -574,6 +582,7 @@ describe("Payment Request Table", function () {
       cy.getInput("search").clear();
       cy.wait(5000);
       cy.get("[data-cy=refresh]").click();
+      cy.wait(5000);
 
       // search for email and get created payment request
       cy.getInput("search").type(phone).should("have.value", phone.toString());
@@ -642,7 +651,7 @@ describe("Payment Request Table", function () {
       cy.wait(3000);
 
       cy.get("[data-cy=refresh]").click();
-      cy.wait(2000);
+      cy.wait(5000);
 
       cy.get("[data-cy=payment-request-table-body]")
         .get("tr")

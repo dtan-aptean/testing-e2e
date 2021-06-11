@@ -2,10 +2,11 @@
 
 import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 7
+// TEST COUNT: 8
 describe('Mutation: deleteCustomerRole', () => {
     var id = '';
     var currentItemName = '';
+    var itemCount = 1;
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'deleteCustomerRole';
     const createName = 'createCustomerRole';
@@ -13,7 +14,16 @@ describe('Mutation: deleteCustomerRole', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
     `;
 
     const queryInformation = {
@@ -36,9 +46,10 @@ describe('Mutation: deleteCustomerRole', () => {
 	});
 
     beforeEach(() => {
-        const name = `Cypress test: ${mutationName}'s deletee`;
+        const name = `Cypress test: ${mutationName}'s deletee #${itemCount}`;
         const input = `{name: "${name}"}`;
         cy.createAndGetId(createName, "customerRole", input).then((returnedId: string) => {
+            itemCount++;
             updateIdAndName(returnedId, name);
         });
     });
@@ -109,6 +120,58 @@ describe('Mutation: deleteCustomerRole', () => {
                 cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
+
+        it("Mutation will allow a new item to be created using the old item's name", () => {
+            const createMut = `mutation {
+                ${createName}(input: { name: "${currentItemName}" }) {
+                    code
+                    message
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
+                    customerRole {
+                        id
+                        name
+                    }
+                }
+            }`;
+            cy.postAndConfirmMutationError(createMut, createName, "customerRole").then((resp) => {
+                // Make sure that the message has "unique" in it
+                expect(resp.body.data[createName].errors[0].message.toLowerCase()).to.include("unique");
+                expect(resp.body.data[createName].errors[0].message).to.eql("Customer Role Name is Required and should be unique.");
+                const mutation = `mutation {
+                    ${mutationName}(input: { id: "${id}" }) {
+                        ${standardMutationBody}
+                    }
+                }`;
+                cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+                    cy.postMutAndValidate(createMut, createName, "customerRole").then((res) => {
+                        var newId = res.body.data[createName].customerRole.id;
+                        updateIdAndName(newId, currentItemName);
+                        const propNames = ["name"];
+                        const propValues = [currentItemName];
+                        cy.confirmMutationSuccess(res, createName, "customerRole", propNames, propValues).then(() => {
+                            const query = `{
+                                ${queryName}(searchString: "${currentItemName}", orderBy: {direction: ASC, field: NAME}) {
+                                    nodes {
+                                        id
+                                        name
+                                    }
+                                }
+                            }`;
+                            cy.confirmUsingQuery(query, queryName, newId, propNames, propValues);
+                        });
+                    });
+                });
+            });
+        });
     });
 
     context("Testing deletion when connected to other items or features", () => {
@@ -130,7 +193,16 @@ describe('Mutation: deleteCustomerRole', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${extraItemPath} {
                         id
                         roleBasedAccess {
@@ -208,7 +280,16 @@ describe('Mutation: deleteCustomerRole', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${extraItemPath} {
                         id
                         roleBasedAccess {

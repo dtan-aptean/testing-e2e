@@ -188,6 +188,9 @@ export const createMutResMessage = (isSuccess: boolean, mutationName: string): s
         case "returnReason":
             message = "returnReason";
             break;
+        case "inventory":
+            message = "product quantity";
+            break;
         default:
             message = (mutationFeature === "customerRole" || mutationFeature === "manufacturer") ? `${transformFeature(mutationFeature)}s` : transformFeature(mutationFeature);
     };
@@ -335,7 +338,7 @@ Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: 
     assert.isString(res.body.data[mutationName].message, `Expect ${mutationName}.message to be a string`);
     expect(res.body.data[mutationName].message).to.eql(successMessage, `Expect ${mutationName}.message to be the correct success message`);
     // Validate error
-    assert.isNull(res.body.data[mutationName].error, `Expect ${mutationName}.error to be null`);
+    assert.isNull(res.body.data[mutationName].errors, `Expect ${mutationName}.errors to be null`);
     // Delete mutations don't return an item.
     // To avoid asserting a non-existant item, delete commands pass in the itemPath as "deleteMutation" 
     if (itemPath !== "deleteMutation") {
@@ -391,11 +394,11 @@ Cypress.Commands.add("confirmMutationError", (res, mutationName: string, itemPat
             };
         },
     });
+    // Check data for errors
     // should have errors
-    assert.exists(res.body.errors, "Errors should be present");
+    assert.exists(res.body.data[mutationName].errors, "Errors should be present");
     // should have data
     assert.exists(res.body.data, "Response data should exist");
-    // Check data for errors
     // Validate data types and values
     // Validate code
     assert.isString(res.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);
@@ -593,7 +596,7 @@ Cypress.Commands.add("postAndCheckCustom", (query: string, queryName: string, id
             Object.defineProperty(dummy.body.data, queryName, { value: { nodes: [] } });
             // Look for the specific node we want
             const node = nodes.filter((item) => {
-                return item.id === id;
+                return item.id.toUpperCase() === id.toUpperCase();
             });
             if (node.length === 1) {
                 // If found, push the node into our dummy object's nodes array
@@ -632,7 +635,16 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, itemPath: string, 
         ${mutationName}(input: ${input}) {
             code
             message
-            error
+            errors {
+                code
+                message
+                domain
+                details {
+                    code
+                    message
+                    target
+                }
+            }
             ${itemPath} {
                 ${itemPath === "refund" ? refundIdFormat : "id"}
                 ${additionalFields ? additionalFields : ""}
@@ -640,7 +652,7 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, itemPath: string, 
         }
     }`;
     return cy.postMutAndValidate(mutation, mutationName, itemPath, altUrl).then((res) => {
-        const id = itemPath === "refund" ? res.body.data[mutationName][itemPath].order.id : res.body.data[mutationName][itemPath].id;
+        const id = itemPath === "refund" ? res.body.data[mutationName][itemPath].order.id.toUpperCase() : res.body.data[mutationName][itemPath].id.toUpperCase();
         if (additionalFields) {
             return res.body.data[mutationName][itemPath];
         } else {
@@ -729,7 +741,16 @@ Cypress.Commands.add("createParentAndChildCat", (
             ) {
                 code
                 message
-                error
+                errors {
+                    code
+                    message
+                    domain
+                    details {
+                        code
+                        message
+                        target
+                    }
+                }
                 category {
                     id
                     categoryInfo {
@@ -747,7 +768,7 @@ Cypress.Commands.add("createParentAndChildCat", (
             }
         }`;
         return cy.postMutAndValidate(mutation, "createCategory", "category").then((res) => {
-            const id = res.body.data.createCategory.category.id;
+            const id = res.body.data.createCategory.category.id.toUpperCase();
             return cy.wrap({ parentId: parentId, childId: id, childRes: res });
         });
     };
@@ -821,17 +842,17 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
                         var nameMatches = item[infoName].filter((infoItem) => {
                             return infoItem.name === itemName && infoItem.languageCode === "Standard";
                         });
-                        return item.id === itemId && nameMatches.length > 0;
+                        return item.id.toUpperCase() === itemId.toUpperCase() && nameMatches.length > 0;
                     } else {
-                        return item.id === itemId;
+                        return item.id.toUpperCase() === itemId.toUpperCase();
                     }
                 });
             } else {
                 matchingItems = nodes.filter((item) => {
                     if (validName) {
-                        return item.id === itemId && item.name === itemName;
+                        return item.id.toUpperCase() === itemId.toUpperCase() && item.name === itemName;
                     } else {
-                        return item.id === itemId;
+                        return item.id.toUpperCase() === itemId.toUpperCase();
                     }
                 });
             }
@@ -876,7 +897,7 @@ Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, se
     });
     var idField = queryName === "refunds" ? "order { id }" : "id";
     const searchQuery = `{
-        ${queryName}(${searchParameter}: "${itemId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
+        ${queryName}(${searchParameter}: "${itemId}", orderBy: {direction: ASC, field: ${queryName === "refunds" ? "TIMESTAMP" : "NAME"}}) {
             nodes {
                 ${idField}
             }
@@ -895,7 +916,7 @@ Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, se
             // Compare ids to make sure it's not there.
             var matchingItems = nodes.filter((item) => {
                 var id = queryName === "refunds" ? item.order.id : item.id;
-                return id === itemId;
+                return id.toUpperCase() === itemId.toUpperCase();
             });
             if (matchingItems.length > 0) {
                 message = "Query returned item, deletion failed";
@@ -962,7 +983,16 @@ Cypress.Commands.add("deleteItem", (mutationName: string, id: string, altUrl?: s
         ${mutationName}(input: { id: "${id}" }) {
             code
             message
-            error
+            errors {
+                code
+                message
+                domain
+                details {
+                    code
+                    message
+                    target
+                }
+            }
         }
     }`;
     return cy.postMutAndValidate(mutation, mutationName, "deleteMutation", altUrl);
@@ -1075,7 +1105,7 @@ Cypress.Commands.add("deleteParentAndChildCat", (children: { name: string, id: s
                     var childCats = cats.filter(childFilter);
                     if (parentId !== "" && childCats.length > 0) {
                         var child = childCats.filter((cat) => {
-                            return cat.parent && cat.parent.id === parentId;
+                            return cat.parent && cat.parent.id.toUpperCase() === parentId.toUpperCase();
                         });
                         deleteCats(child);
                     } else if (parentName !== "" && childCats.length > 0) {
@@ -1360,7 +1390,7 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, queryName: string, ite
     return cy.postAndValidate(query, queryName, altUrl).then((resp) => {
         const targetNode = resp.body.data[queryName].nodes.filter((item) => {
             const id = queryName === "refunds" ? item.order.id : item.id;
-            return id === itemId;
+            return id.toUpperCase() === itemId.toUpperCase();
         });
         expect(targetNode.length).to.be.eql(1, "Specific item found in nodes");
         const node = targetNode[0];

@@ -13,7 +13,16 @@ const performDelete = (deleteName: string, id: string, altUrl?: string) => {
         ${deleteName}(input: {id: "${id}"}){
             code
             message
-            error
+            errors {
+                code
+                message
+                domain
+                details {
+                    code
+                    message
+                    target
+                }
+            }
         }
     }`;
     cy.postGQL(mutation, altUrl).then((res) => {
@@ -178,5 +187,162 @@ Cypress.Commands.add("postNoFail", (gqlQuery: string, queryName: string, altUrl?
         }
         Cypress.log({name: "postNoFail", message: `Querying ${queryName} failed`});
         return false;
+    });
+});
+
+// Names of the items created by the below function.
+export const storefrontCategory = "Digital Cypress Flora";
+export const storefrontProductOne = "Digital Saharan Cypress";
+export const storefrontProductTwo = "Digital Guadalupe Cypress";
+
+Cypress.Commands.add("openPanel", (panelId: string) => {
+    return cy.get(panelId).then(($el) => {
+        if ($el.hasClass("collapsed-card")) {
+            cy.wrap($el).find(".card-header").find("button").click({force: true});
+            cy.wait(500);
+        }
+    });
+});
+
+const enableAdvancedSettings = () => {
+    return cy.get("body").then(($el) => {
+        if ($el.hasClass("basic-settings-mode")) {
+            cy.get("#advanced-settings-mode").click({force: true});
+            cy.wait(500);
+        }
+    });
+};
+
+// Delete any Cypress discounts, products, and categories
+Cypress.Commands.add("cleanupEnvironment", () => {
+    const cleanupCatalog = (isCategory: boolean) => {
+        return cy.get(".pagination").invoke('children').then(($li) => {
+            if ($li.length === 2) {
+                return;
+            } else {
+                cy.get(isCategory ? "#categories-grid" : "#products-grid")
+                    .find("tbody")
+                    .find("tr")
+                    .each(($row) => {
+                        const text = $row[0].innerText.toLowerCase();
+                        expect(text).to.include("cypress");
+                        cy.wrap($row).find("input").check({force: true});              
+                    }).then(() => {
+                        cy.get("#delete-selected").click({force: true})
+                        cy.wait(500);
+                        cy.get("#delete-selected-action-confirmation-submit-button").click({force: true});
+                        cy.wait(1000);
+                        cy.allowLoad();
+                        cleanupCatalog(isCategory);
+                    });
+            }
+        });
+    };
+  
+    const searchCatalog = (itemName: string) => {
+        if (Cypress.$("#delete-selected-action-confirmation:visible").length > 0) {
+            cy.get("#delete-selected-action-confirmation").find(".close").click({ force: true });
+            cy.wait(1000);
+        }
+        const isCategory = itemName === storefrontCategory;
+        const inputId = isCategory ? "#SearchCategoryName" : "#SearchProductName";
+        const buttonId = isCategory ? "#search-categories" : "#search-products";
+        cy.get(inputId).type(itemName, {force: true});
+        cy.get(buttonId).click({force: true});
+        cy.allowLoad();
+        return cleanupCatalog(isCategory);
+    };
+  
+    Cypress.log({displayName: "cleanupProducts", message: "Deleting Cypress products"});
+    // Clean up products
+    cy.visit("/Admin/Product/List");
+    cy.allowLoad();
+    searchCatalog(storefrontProductOne).then(() => {
+        cy.get("#SearchProductName").clear({force: true});
+        searchCatalog(storefrontProductTwo).then(() => {
+            Cypress.log({displayName: "cleanupCategories", message: "Deleting Cypress categories"});
+            cy.visit("/Admin/Category/List");
+            cy.allowLoad();
+            searchCatalog(storefrontCategory);
+        });
+    });
+});
+
+Cypress.Commands.add("setupRequiredProducts", () => {
+    cy.clearCart();
+    // Admin site has undefined Globalize, causes Cypress to autofail tests
+    cy.on("uncaught:exception", (err, runnable) => {
+        return false;
+    });
+    cy.get(".administration").click({ force: true });
+    cy.wait(1000);
+    return cy.cleanupEnvironment().then(() => {      
+        cy.visit("/Admin/Category/List");
+        cy.wait(1000);
+        cy.get("a").contains("Add new").click({force: true});
+        cy.wait(5000);
+        return enableAdvancedSettings().then(() => {
+            cy.wait(2000);
+            // Fill in name and description
+            return cy.openPanel("#category-info").then(() => {
+                cy.get("#Name").type(storefrontCategory, {force: true});
+                return cy.openPanel("#category-display").then(() => {
+                    if (Cypress.$("#Published").prop("checked") !== true) {
+                        cy.get("#Published").check({force: true});
+                    }
+                    if (Cypress.$("#ShowOnHomepage").prop("checked") !== true) {
+                        cy.get("#ShowOnHomepage").check({force: true});
+                    }
+                    if (Cypress.$("#IncludeInTopMenu").prop("checked") !== true) {
+                        cy.get("#IncludeInTopMenu").check({force: true});
+                    }
+                    cy.get("button[name=save]").click({force: true});
+                    cy.wait(5000);
+                    cy.location("pathname").should("eql", "/Admin/Category/List");
+
+                    cy.visit("/Admin/Product/List");
+                    cy.allowLoad();
+
+                    cy.intercept("/Admin/Product/Create").as("productCreation");
+                    const createProduct = (productName: string, price: string) => {
+                        cy.get("a").contains("Add new").click({force: true});
+                        cy.wait(5000);
+                        cy.wait("@productCreation");
+                        return cy.location("pathname").should("eql", "/Admin/Product/Create").then(() => {
+                            enableAdvancedSettings().then(() => {
+                                cy.wait(2000);
+                                // Fill in name and description
+                                cy.openPanel("#product-info").then(() => {
+                                    cy.get("#product-info")
+                                        .find("#Name")
+                                        .type(productName, {force: true});
+
+                                    // Add category
+                                    cy.get("#SelectedCategoryIds").select(storefrontCategory, {force: true});
+                                    // Make sure it's published
+                                    if (Cypress.$("#Published").prop("checked") !== true) {
+                                        cy.get("#Published").check({force: true});
+                                    }
+                                    // Price
+                                    cy.openPanel("#product-price").then(() => {
+                                        cy.get("#Price").clear({force: true}).type(price, {force: true});
+                                        cy.get("button[name=save]").click({force: true});
+                                        cy.wait(5000);
+                                        cy.location("pathname").should("eql", "/Admin/Product/List");
+                                    });
+                                });
+                            });
+                        });
+                    };
+
+                    return createProduct(storefrontProductOne, "500").then(() => {
+                        return createProduct(storefrontProductTwo, "700").then(() => {
+                            // Extra time to allow the store to process the deletion and recreation
+                            return cy.wait(10000);
+                        });
+                    });
+                });
+            });
+        });
     });
 });

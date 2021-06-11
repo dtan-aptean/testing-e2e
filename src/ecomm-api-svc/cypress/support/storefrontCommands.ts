@@ -1,6 +1,9 @@
 /**
  * STOREFRONT COMMANDS: FOR USE WITH REFUND AND ORDER MUTATIONS
  */
+
+import { storefrontCategory, storefrontProductOne, storefrontProductTwo } from "./setupCommands";
+
 // Get the currently visible top menu. Cypress may display the mobile or desktop top menu depending on screen size
 const getVisibleMenu = () => {
     if (Cypress.$(".menu-toggle:visible").length === 0) {
@@ -17,19 +20,101 @@ const goToCart = () => {
     cy.wait(500);
 };
 
+Cypress.Commands.add("allowLoad", () => {
+    var loadId = "#ajaxBusy";
+    // Accounts for public store where the busy symbol has a different identifier
+    if (Cypress.$("#ajaxBusy:visible").length === 0) {
+        if (Cypress.$(".ajax-loading-block-window:visible").length > 0) {
+            loadId = ".ajax-loading-block-window";
+        } else if (Cypress.$(".nopAjaxCartPanelAjaxBusy:visible").length > 0) {
+            loadId = ".nopAjaxCartPanelAjaxBusy";
+        } else if (Cypress.$("#cciframe-processing:visible").length > 0) {
+            loadId = "#cciframe-processing";
+        } else {
+           return; 
+        }
+    }
+    // No need to wait 10 seconds if the symbol isn't there
+    if (Cypress.$(`${loadId}:visible`).length === 0) {
+        return;
+    }
+  
+    var totalTime = 5000;
+    Cypress.log({displayName: "allowLoad"});
+    const checkLoadSymbol = () => {
+        const loadingSymbol = Cypress.$(`${loadId}:visible`);
+        if (loadingSymbol.length > 0) {
+            cy.wait(3000).then(() => {
+                totalTime+=3000;
+                checkLoadSymbol();
+            });
+        } else {
+            Cypress.log({displayName: "allowLoad", message: `Waited ${totalTime / 1000}s for the page to load`});
+            return;
+        }
+    };
+    // Wait a base 5 seconds, then check if it's still loading
+    cy.wait(5000).then(() => {
+        checkLoadSymbol();
+    });
+});
+
+// Set the theme 
+Cypress.Commands.add("setTheme", (originalTheme?: string) => {
+    const currentTheme = Cypress.$("#store-theme").find("option:selected").text();
+    if (!Cypress.env("storedTheme")) {
+        Cypress.env("storedTheme", currentTheme);
+    }
+    if (originalTheme) {
+        Cypress.log({
+            name: "setTheme",
+            message: `Resetting theme to ${originalTheme}`
+        });
+        cy.get("#store-theme").select(originalTheme);
+    } else if (currentTheme !== "Aptean Default") {
+        Cypress.log({
+            name: "setTheme",
+            message: "Setting theme to Aptean default"
+        });
+        cy.get("#store-theme").select("Aptean Default");
+    }
+});
+
+Cypress.Commands.add("addToCart", { prevSubject: 'element' }, (subject, optionObject) => {
+    var clickOptions;
+    if (optionObject) {
+        clickOptions = optionObject;
+        clickOptions.log = false;
+    } else {
+        clickOptions = { log: false };
+    }
+    cy.wrap(subject, { log: false }).click(clickOptions);
+    cy.wait(1000, { log: false });
+    return cy.allowLoad().then(() => {
+        if (Cypress.$(".productAddedToCartWindow:visible").length > 0) {
+            cy.get(".continueShoppingLink").click(clickOptions);
+            cy.wait(200, { log: false });
+        }
+    });
+});
+
 // Log in to the storefront
 Cypress.Commands.add("storefrontLogin", () => {
     Cypress.log({
         name: "storefrontLogin"
     });
+    cy.on("uncaught:exception", (err, runnable) => {
+        return false;
+    });
     cy.get(".header-links").then(($el) => {
         if (!$el[0].innerText.includes('LOG OUT')) {
-            cy.wrap($el).find(".ico-login").click();
+            cy.wrap($el).find(".ico-login").click({force: true});
             cy.wait(200);
-            cy.get(".email").type(Cypress.env("storefrontLogin"));
-            cy.get(".password").type(Cypress.env("storefrontPassword"));
+            cy.get("#Email").type(Cypress.env("storefrontLogin"), {force: true});
+            cy.get("#Password").type(Cypress.env("storefrontPassword"), {force: true});
             cy.get(".login-button").click({force: true});
             cy.wait(200);
+            cy.setTheme();
         }
     });
 });
@@ -41,15 +126,32 @@ Cypress.Commands.add("goToPublicHome", () => {
     });
     cy.location("pathname").then((path) => {
         if (path.includes("Admin")) {
-            cy.get(".navbar-nav").find("li").eq(4).find("a").click({force: true});
+            cy.get(".navbar-nav").find("li").eq(5).find("a").click({force: true});
             cy.wait(1000);
             cy.location("pathname").should("not.contain", "Admin");
         } else if (path.includes("en")) {
-            getVisibleMenu()
-                .find("li")
-                .contains("Home page")
-                .click({force: true});
+            cy.get(".header-logo")
+                .find("a")
+                .click({force: true})
             cy.wait(500); 
+        }
+    });
+});
+
+Cypress.Commands.add("openAdminSidebar", () => {
+    return cy.get("body").invoke("hasClass", "sidebar-collapse").then((menuIsCollapsed: boolean) => {
+        if (menuIsCollapsed) {
+            return cy.get("#nopSideBarPusher").click({ force: true});
+        }
+    });
+});
+
+Cypress.Commands.add("openParentTree", (parentName, force?: boolean) => {
+    return cy.get(".nav-sidebar").find(`li:contains('${parentName}')`).eq(0).then(($el) => {
+        var openChildTree = $el.find(".nav-treeview:visible");
+        if (openChildTree.length === 0) {
+            var clickOptions = force ? { force: true } : undefined;
+            return cy.get(".nav-sidebar").find("li").contains(parentName).click(clickOptions);
         }
     });
 });
@@ -67,10 +169,11 @@ Cypress.Commands.add("getToOrders", () => {
     cy.get(".administration").click({ force: true });
     cy.wait(1000);
     cy.location("pathname").should("eq", "/Admin");
-    cy.get(".sidebar-menu.tree").find("li").contains("Sales").click({force: true});
-    cy.get(".sidebar-menu.tree")
+    cy.openAdminSidebar();
+    cy.openParentTree("Sales", {force: true});
+    cy.get(".nav-sidebar")
       .find("li")
-      .find(".treeview-menu")
+      .find(".nav-treeview")
       .find("li")
       .contains("Orders")
       .click({force: true});
@@ -132,7 +235,6 @@ Cypress.Commands.add("completeCheckout", (checkoutOptions?) => {
             cy.wait(2000);
             cy.url().then((url) => {
                 if (url.includes("#opc-payment_method")) {
-                    
                     cy.get("#payment-method-block").find("#paymentmethod_0").check();
                     cy.get(".payment-method-next-step-button").click();
                     cy.wait('@paymentMethodSaved');
@@ -155,10 +257,12 @@ Cypress.Commands.add("completeCheckout", (checkoutOptions?) => {
                         cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-year").type("24");
                         cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cvv-number").type("123");
                         cy.get("#submit-credit-card-button").click();
-                        cy.wait(2000); // Allow iFrame to finish sumbitting
+                        cy.wait(5000); // Allow iFrame to finish sumbitting
+                        cy.allowLoad();
+                        cy.get("#cciframe-errors").should("not.be.visible");
                     }
                     
-                    cy.get(".payment-info-next-step-button").click();
+                    cy.get(".payment-info-next-step-button").click({force: true});
                     cy.wait('@paymentSaved');
                     // Confirm order
                     cy.get(".confirm-order-next-step-button")
@@ -177,15 +281,39 @@ Cypress.Commands.add("clearCart", () => {
         name: "clearCart"
     });
     goToCart();
-    cy.get(".cart > tbody")
-        .find("tr")
-        .each(($tr, $i, $all) => {
-            cy.wrap($tr).find("td").eq(0).find("input").check({ force: true });
-        })
-        .then(() => {
-            cy.get(".update-cart-button").click({ force: true });
-            cy.wait(500);
-        });
+    cy.wait(1000);
+    return cy.get(".order-summary-content").then(($div) => {
+        if (!$div[0].innerHTML.includes("no-data")) {
+            return cy.get(".cart").find("tbody").then((tbody) => {
+                var needToClickUpdate = tbody.find("input[name=removefromcart]:visible").length > 0;
+                if (needToClickUpdate) {
+                  return cy.wrap(tbody)
+                    .find("tr")
+                    .each(($tr, $i, $all) => {
+                        cy.wrap($tr).find("input[name=removefromcart]:visible").check();
+                    }).then(() => {
+                        cy.get(".update-cart-button").click();
+                        cy.wait(500);
+                    });
+                } else {
+                    const clickRemoveBtn = () => {
+                        cy.get(".cart")
+                            .find("tbody")
+                            .find("tr")
+                            .eq(0)
+                            .find(".remove-btn")
+                            .click({force: true});
+                        return cy.wait(1000).then(() => {
+                            if (Cypress.$(".remove-btn:visible").length > 0) {
+                                clickRemoveBtn();
+                            }
+                        });
+                    };
+                    return clickRemoveBtn();
+                }
+            });
+        }
+    });
 });
 
 // Ensure that we purchase more than ten of an item
@@ -209,15 +337,15 @@ Cypress.Commands.add("addProduct", (categoryName: string, productName: string) =
         .find("li")
         .contains(categoryName)
         .click({force: true});
-    cy.wait(500);
+    cy.wait(1000);
     cy.contains(productName)
         .click({force: true});
-    cy.wait(500); 
+    cy.wait(1000); 
     cy.ensurePurchaseMultiple();
-    cy.wait(500);
-    cy.get(".add-to-cart-button")
-        .click({force: true});
+    cy.wait(1000);
+    cy.get(".add-to-cart-button").addToCart({force: true});
     cy.wait(200);
+    cy.allowLoad();
 });
 
 // Add the default cypress products to the cart
@@ -225,9 +353,8 @@ Cypress.Commands.add("addCypressProductsToCart", () => {
     Cypress.log({
         message: `Adding default Cypress products to cart`
     });
-    const category = "Cypress Trees";
-    cy.addProduct(category, "Bald Cypress").then(() => {
-        cy.addProduct(category, "Montezuma Cypress").then(() => {
+    cy.addProduct(storefrontCategory, storefrontProductOne).then(() => {
+        cy.addProduct(storefrontCategory, storefrontProductTwo).then(() => {
             goToCart();
         });
     });
@@ -253,7 +380,7 @@ Cypress.Commands.add("placeOrder", (checkoutOptions?, productOptions?: {firstCat
     }
     cy.location("pathname").should("include", "cart");
     cy.completeCheckout(checkoutOptions);
-    cy.location("pathname").should("include", "checkout/completed/");
+    cy.location("pathname").should("include", "/checkout/completed");
     return cy.get(".order-number").find('strong').invoke("text").then(($el) => {
         var orderNumber = $el.slice(0).replace("Order number: ", "");
         cy.get(".order-completed-continue-button").click({force: true});
@@ -296,41 +423,33 @@ Cypress.Commands.add("createOrderGetAmount", (doNotPayOrder?: boolean) => {
 });
 
 Cypress.Commands.add("createOrderRetrieveId", (gqlUrl: string, doNotPayOrder?: boolean) => {
-    const trueCountQuery = `{
-        orders(orderBy: {direction: ASC, field: TIMESTAMP}) {
-            totalCount
+    const orderQuery = `{
+        orders(orderBy: {direction: DESC, field: TIMESTAMP}) {
+            nodes {
+                id
+            }
         }
     }`;
-    return cy.postGQL(trueCountQuery, gqlUrl).then((re) => {
-        const trueCount = re.body.data.orders.totalCount;
-        const orderQuery = `{
-            orders(${trueCount >= 25 ? "first: " + (trueCount + 1) + ", ": ""}orderBy: {direction: ASC, field: TIMESTAMP}) {
-                nodes {
-                    id
-                }
-            }
-        }`;
-        return cy.postGQL(orderQuery, gqlUrl).then((res) => {
-            const orgOrders =  res.body.data.orders.nodes;
-            return cy.createOrderGetAmount(doNotPayOrder).then((orderInfo) => {
-                const {orderAmount} = orderInfo;
-                cy.wait(1000);
-                return cy.postGQL(orderQuery, gqlUrl).then((resp) => {
-                    const newOrders = resp.body.data.orders.nodes;
-                    expect(newOrders.length).to.be.greaterThan(orgOrders.length, "Should be a new order");
-                    const relevantOrder = newOrders.filter((order) => {
-                        var notPresent = true;
-                        for(var i = 0; i < orgOrders.length; i++) {
-                            if (orgOrders[i].id === order.id) {
-                                notPresent = false;
-                                break;
-                            }
+    return cy.postAndValidate(orderQuery, "orders", gqlUrl).then((res) => {
+        const orgOrders =  res.body.data.orders.nodes;
+        return cy.createOrderGetAmount(doNotPayOrder).then((orderInfo) => {
+            const {orderAmount} = orderInfo;
+            cy.wait(1000);
+            return cy.postAndValidate(orderQuery, "orders", gqlUrl).then((resp) => {
+                const newOrders = resp.body.data.orders.nodes;
+                const relevantOrder = newOrders.filter((order) => {
+                    var notPresent = true;
+                    for(var i = 0; i < orgOrders.length; i++) {
+                        if (orgOrders[i].id === order.id) {
+                            notPresent = false;
+                            break;
                         }
-                        return notPresent;
-                    });
-                    const trueId = relevantOrder[0].id;
-                    return cy.wrap({orderId: trueId, orderAmount: orderAmount});
+                    }
+                    return notPresent;
                 });
+                expect(relevantOrder).to.have.length(1, "There should be one new order");
+                const trueId = relevantOrder[0].id;
+                return cy.wrap({orderId: trueId, orderAmount: orderAmount});
             });
         });
     });
@@ -355,11 +474,11 @@ Cypress.Commands.add("createShippingOrderId", (
             }
         }
     }`;
-    return cy.postGQL(query, gqlUrl).then((res) => {
+    return cy.postAndValidate(query, "orders", gqlUrl).then((res) => {
         const orgOrders =  res.body.data.orders.nodes;
         return cy.placeOrder(checkoutOptions, productOptions).then((orderNumber: string) => {
             cy.wait(1000);
-            return cy.postGQL(query, gqlUrl).then((resp) => {
+            return cy.postAndValidate(query, "orders", gqlUrl).then((resp) => {
                 const newOrders = resp.body.data.orders.nodes;
                 expect(newOrders.length).to.be.greaterThan(orgOrders.length, "Should be a new order");
                 const relevantOrder = newOrders.filter((order) => {
@@ -441,7 +560,7 @@ Cypress.Commands.add("getCountries", () => {
                 if (currentPage < total) {
                     cy.get("#countries-grid_next").find("a").click({ force: true });
                     cy.wait('@countryTableLoaded');
-                    cy.wait(10000);
+                    cy.allowLoad();
                     pageThrough(total, names, isoCodes);
                 } else {
                     expect(names.length).to.eql(isoCodes.length, "Should be same number of items");
@@ -512,7 +631,7 @@ Cypress.Commands.add("getRegions", (countryNames: string[]) => {
                 var currentPage = Number($item[0].innerText);
                 if (currentPage < totalPages) {
                     cy.get("#states-grid_next").find("a").click();
-                    cy.wait(10000);
+                    cy.allowLoad();
                     pullStates(totalPages, regionNames);
                 } else {
                     return cy.wrap(regionNames);
@@ -532,9 +651,9 @@ Cypress.Commands.add("getRegions", (countryNames: string[]) => {
             }
         };
         const openStatePanel = () => {
-            cy.get("#country-states").find(".panel-heading").then(($el) => {
-                    if (!$el.hasClass("opened")) {
-                        cy.wrap($el).click({force: true});
+            cy.get("#country-states").then(($el) => {
+                    if ($el.hasClass("collapsed-card")) {
+                        cy.wrap($el).find(".card-header").find("button").click({force: true});
                     }
                 });
         };
@@ -557,7 +676,7 @@ Cypress.Commands.add("getRegions", (countryNames: string[]) => {
                     var currentPage = Number($item[0].innerText);
                     if (currentPage < total) {
                         cy.get("#countries-grid_next").find("a").click();
-                        cy.wait(10000);
+                        cy.allowLoad();
                         findCountry(total, countryIndex, regions);
                     } else {
                         // Call function to either return the collected regions or start looking for the next country

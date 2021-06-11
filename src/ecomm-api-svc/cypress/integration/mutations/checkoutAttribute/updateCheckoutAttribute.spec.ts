@@ -22,7 +22,16 @@ describe('Mutation: updateCheckoutAttribute', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
         ${itemPath} {
             id
             name
@@ -199,7 +208,16 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -249,7 +267,16 @@ describe('Mutation: updateCheckoutAttribute', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             name
@@ -317,7 +344,16 @@ describe('Mutation: updateCheckoutAttribute', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         displayOrder
@@ -402,7 +438,16 @@ describe('Mutation: updateCheckoutAttribute', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             name

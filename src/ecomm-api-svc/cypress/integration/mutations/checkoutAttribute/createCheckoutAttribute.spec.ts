@@ -12,7 +12,16 @@ describe('Mutation: createCheckoutAttribute', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
         ${itemPath} {
             id
             name
@@ -161,7 +170,16 @@ describe('Mutation: createCheckoutAttribute', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -235,7 +253,16 @@ describe('Mutation: createCheckoutAttribute', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         displayOrder
@@ -315,7 +342,16 @@ describe('Mutation: createCheckoutAttribute', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             name

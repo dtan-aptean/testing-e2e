@@ -1,41 +1,46 @@
 // Azure AD Auth - https://mechanicalrock.github.io/2020/05/05/azure-ad-authentication-cypress.html
+Cypress.Commands.add("waitAfterLogIn", (waitCount: number, maxWait: number) => {
+  if (waitCount === maxWait) {
+    return;
+  }
+  cy.get("body").then(($loginBody) => {
+    if (!$loginBody.find("[data-cy=payment-tab]").length) {
+      cy.wait(10000);
+      cy.waitAfterLogIn(waitCount + 1, maxWait);
+    }
+    return;
+  });
+});
+
 Cypress.Commands.add("login", () => {
-  cy.task("authenticateUser", {
-    email: Cypress.config("username"),
-    password: Cypress.config("password"),
-    root: Cypress.config("baseUrl"),
-    clientId: Cypress.config("clientId"),
-    scopes: Cypress.config("scopes"),
-    authorityName: Cypress.config("authority"),
-    homeAccountIdentifier: Cypress.config("homeAccountIdentifier"),
-  }).then((creds) => {
-    // Need to store in creds to bypass undefined type errors.
-    Cypress.env(creds);
-    const clientId = Cypress.config("clientId");
-    const {
-      contextClientKey,
-      contextScopeKey,
-      contextClientValue,
-      contextScopeValue,
-      accessToken,
-      info,
-      cookies,
-    } = Cypress.env();
-    if (
-      contextScopeValue &&
-      contextClientValue &&
-      accessToken &&
-      info &&
-      cookies
-    ) {
-      cy.setCookie("ai_session", cookies[0].value);
-      cy.setCookie("ai_user", cookies[1].value);
-      sessionStorage.setItem(`${contextScopeKey}`, contextScopeValue);
-      sessionStorage.setItem(`${contextClientKey}`, contextClientValue);
-      sessionStorage.setItem("msal.idtoken", accessToken);
-      sessionStorage.setItem(`msal.${clientId}.idtoken`, accessToken);
-      sessionStorage.setItem(`msal.client.info`, info);
-      sessionStorage.setItem(`msal.${clientId}.client.info`, info);
+  const waitForB2COrLogin = (waitCount: number) => {
+    if (waitCount > 10) {
+      return;
+    }
+    cy.get("body").then(($loginBody) => {
+      if (
+        !$loginBody.find("input[id=logonIdentifier]").length &&
+        !$loginBody.find("[data-cy=payment-tab]").length
+      ) {
+        cy.wait(10000);
+        waitForB2COrLogin(waitCount + 1);
+      }
+      return;
+    });
+  };
+
+  sessionStorage.clear();
+
+  cy.visit("/", { timeout: 100000 });
+  cy.wait(5000);
+  waitForB2COrLogin(0);
+
+  cy.get("body").then(($body) => {
+    if ($body.find("input[id=logonIdentifier]").length) {
+      cy.get("input[id=logonIdentifier]").type(Cypress.config("username"));
+      cy.get("input[id=password]").type(Cypress.config("password"));
+      cy.get("button[id=next]").click({ force: true });
+      cy.waitAfterLogIn(0, 10);
     }
   });
 });
@@ -226,7 +231,6 @@ Cypress.Commands.add("postGQL", (query) => {
       authorization: Cypress.env("authorization"),
       "x-aptean-apim": Cypress.env("x-aptean-apim"),
       "x-aptean-tenant": Cypress.env("x-aptean-tenant"),
-      "x-ezpay": Cypress.env("x-ezpay"),
     },
     body: { query },
     failOnStatusCode: false,
@@ -246,7 +250,6 @@ Cypress.Commands.add("getInvoiceRef", () => {
       ],
       "x-aptean-tenant": Cypress.env("x-aptean-tenant"),
       "x-aptean-apim": Cypress.env("x-aptean-apim"),
-      "x-ezpay": Cypress.env("x-ezpay"),
     },
     data: `------WebKitFormBoundaryyvKAJwzxkixBJ6vF\r\nContent-Disposition: form-data; name="operations"\r\n\r\n{"operationName":"uploadDocument","variables":{"input":{"file":null}},"query":"mutation uploadDocument($input: UploadInput!) { upload(input: $input) { uniqueId } }\\n"}\r\n------WebKitFormBoundaryyvKAJwzxkixBJ6vF\r\nContent-Disposition: form-data; name="map"\r\n\r\n{"1":["variables.input.file"]}\r\n------WebKitFormBoundaryyvKAJwzxkixBJ6vF\r\nContent-Disposition: form-data; name="1"; filename="sample.pdf"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.3\r\n%����\r\n\r\n1 0 obj\r\n<<\r\n/Type /Catalog\r\n/Outlines 2 0 R\r\n/Pages 3 0 R\r\n>>\r\nendobj\r\n\r\n2 0 obj\r\n<<\r\n/Type /Outlines\r\n/Count 0\r\n>>\r\nendobj\r\n\r\n3 0 obj\r\n<<\r\n/Type /Pages\r\n/Count 2\r\n/Kids [ 4 0 R 6 0 R ] \r\n>>\r\nendobj\r\n\r\n4 0 obj\r\n<<\r\n/Type /Page\r\n/Parent 3 0 R\r\n/Resources <<\r\n/Font <<\r\n/F1 9 0 R \r\n>>\r\n/ProcSet 8 0 R\r\n>>\r\n/MediaBox [0 0 612.0000 792.0000]\r\n/Contents 5 0 R\r\n>>\r\nendobj\r\n\r\n5 0 obj\r\n<< /Length 1074 >>\r\nstream\r\n2 J\r\nBT\r\n0 0 0 rg\r\n/F1 0027 Tf\r\n57.3750 722.2800 Td\r\n( A Simple PDF File ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 688.6080 Td\r\n( This is a small demonstration .pdf file - ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 664.7040 Td\r\n( just for use in the Virtual Mechanics tutorials. More text. And more ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 652.7520 Td\r\n( text. And more text. And more text. And more text. ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 628.8480 Td\r\n( And more text. And more text. And more text. And more text. And more ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 616.8960 Td\r\n( text. And more text. Boring, zzzzz. And more text. And more text. And ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 604.9440 Td\r\n( more text. And more text. And more text. And more text. And more text. ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 592.9920 Td\r\n( And more text. And more text. ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 569.0880 Td\r\n( And more text. And more text. And more text. And more text. And more ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 557.1360 Td\r\n( text. And more text. And more text. Even more. Continued on page 2 ...) Tj\r\nET\r\nendstream\r\nendobj\r\n\r\n6 0 obj\r\n<<\r\n/Type /Page\r\n/Parent 3 0 R\r\n/Resources <<\r\n/Font <<\r\n/F1 9 0 R \r\n>>\r\n/ProcSet 8 0 R\r\n>>\r\n/MediaBox [0 0 612.0000 792.0000]\r\n/Contents 7 0 R\r\n>>\r\nendobj\r\n\r\n7 0 obj\r\n<< /Length 676 >>\r\nstream\r\n2 J\r\nBT\r\n0 0 0 rg\r\n/F1 0027 Tf\r\n57.3750 722.2800 Td\r\n( Simple PDF File 2 ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 688.6080 Td\r\n( ...continued from page 1. Yet more text. And more text. And more text. ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 676.6560 Td\r\n( And more text. And more text. And more text. And more text. And more ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 664.7040 Td\r\n( text. Oh, how boring typing this stuff. But not as boring as watching ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 652.7520 Td\r\n( paint dry. And more text. And more text. And more text. And more text. ) Tj\r\nET\r\nBT\r\n/F1 0010 Tf\r\n69.2500 640.8000 Td\r\n( Boring.  More, a little more text. The end, and just as well. ) Tj\r\nET\r\nendstream\r\nendobj\r\n\r\n8 0 obj\r\n[/PDF /Text]\r\nendobj\r\n\r\n9 0 obj\r\n<<\r\n/Type /Font\r\n/Subtype /Type1\r\n/Name /F1\r\n/BaseFont /Helvetica\r\n/Encoding /WinAnsiEncoding\r\n>>\r\nendobj\r\n\r\n10 0 obj\r\n<<\r\n/Creator (Rave \\(http://www.nevrona.com/rave\\))\r\n/Producer (Nevrona Designs)\r\n/CreationDate (D:20060301072826)\r\n>>\r\nendobj\r\n\r\nxref\r\n0 11\r\n0000000000 65535 f\r\n0000000019 00000 n\r\n0000000093 00000 n\r\n0000000147 00000 n\r\n0000000222 00000 n\r\n0000000390 00000 n\r\n0000001522 00000 n\r\n0000001690 00000 n\r\n0000002423 00000 n\r\n0000002456 00000 n\r\n0000002574 00000 n\r\n\r\ntrailer\r\n<<\r\n/Size 11\r\n/Root 1 0 R\r\n/Info 10 0 R\r\n>>\r\n\r\nstartxref\r\n2714\r\n%%EOF\r\n\r\n------WebKitFormBoundaryyvKAJwzxkixBJ6vF--\r\n`,
   };
@@ -327,6 +330,7 @@ Cypress.Commands.add("getMerchantIndex", (amount) => {
         payerTransactionSummaryByMerchant{
           merchantSummary{
             merchantInfo{
+              name
               owner{
                 tenantId
               }
@@ -342,7 +346,16 @@ Cypress.Commands.add("getMerchantIndex", (amount) => {
     const merchantSummary =
       resp.body.data.payerTransactionSummaryByMerchant.merchantSummary;
 
-    merchantSummary.forEach((element, index) => {
+    console.log(merchantSummary);
+
+    const sortedMerchantSummary = merchantSummary.slice().sort((a, b) => {
+      if (a.merchantInfo.name && b.merchantInfo.name) {
+        return a.merchantInfo.namee > b.merchantInfo.name ? 1 : -1;
+      }
+      return 0;
+    });
+
+    sortedMerchantSummary.forEach((element, index) => {
       if (element.merchantInfo.owner.tenantId === userTenant) {
         merchantIndex = index;
       }
@@ -350,7 +363,7 @@ Cypress.Commands.add("getMerchantIndex", (amount) => {
 
     const response = {
       merchantIndex: merchantIndex,
-      merchantLength: merchantSummary.length,
+      merchantLength: sortedMerchantSummary.length,
     };
     return response;
   });
@@ -361,6 +374,51 @@ Cypress.Commands.add("getMerchantIndex", (amount) => {
  * count - the number of payment requests that should be paid
  */
 Cypress.Commands.add("makePayment", (count) => {
+  const waitAfterRootPageVisit = (waitCount: number) => {
+    if (waitCount > 10) {
+      return;
+    }
+    cy.get("body").then(($rootBody) => {
+      if (
+        !$rootBody.find("[data-cy=sign-in]").length &&
+        !$rootBody.find("div:contains(Unpaid Invoices)").length
+      ) {
+        cy.wait(5000);
+        waitAfterRootPageVisit(waitCount + 1);
+      }
+      return;
+    });
+  };
+
+  const waitAfterSignInClick = (waitCount: number) => {
+    if (waitCount > 10) {
+      return;
+    }
+    cy.get("body").then(($rootBody) => {
+      if (
+        !$rootBody.find("input[id=logonIdentifier]").length &&
+        !$rootBody.find("div:contains(Unpaid Invoices)").length
+      ) {
+        cy.wait(10000);
+        waitAfterSignInClick(0);
+      }
+      return;
+    });
+  };
+
+  const waitForRequestLoading = (waitCount: number) => {
+    if (waitCount > 3) {
+      return;
+    }
+    cy.get("body").then(($rootBody) => {
+      if (!$rootBody.find("button:contains(MAKE PAYMENT)").length) {
+        cy.wait(10000);
+        waitForRequestLoading(waitCount + 1);
+      }
+      return;
+    });
+  };
+
   Cypress.log({
     name: "makePayment",
     message: `${count}`,
@@ -382,15 +440,14 @@ Cypress.Commands.add("makePayment", (count) => {
     const appWindow = $body[0].ownerDocument.defaultView;
     // TODO - switch this to work in all environments
     appWindow.location = "https://tst.payer.apteanpay.com/";
+    waitAfterRootPageVisit(0);
     return new Promise((resolve) => {
       setTimeout((x) => {
-        //Waiting so in case the user is already logged in dom won't show signin button
-        cy.wait(3000);
         // Log in - taken from payer portal login command
         cy.get("body").then(($body) => {
           if ($body.find("[data-cy=sign-in]").length) {
             cy.get("[data-cy=sign-in]").click({ force: true });
-            cy.wait(10000);
+            waitAfterSignInClick(0);
 
             // check if clicking sign in automatically logs you in, else enter credentials on B2C page
             cy.get("body").then(($body) => {
@@ -400,12 +457,13 @@ Cypress.Commands.add("makePayment", (count) => {
                 );
                 cy.get("input[id=password]").type(Cypress.config("password"));
                 cy.get("button[id=next]").click();
+                cy.wait(10000);
               }
             });
           }
         });
+
         // Wait to finish logging in, or to finish loading
-        cy.wait(10000);
         cy.get("body").then(($loadingBody) => {
           if (
             $loadingBody.find("[data-cy=sign-in]").length > 0 ||
@@ -468,6 +526,8 @@ Cypress.Commands.add("makePayment", (count) => {
             cy.get("[data-cy=menu-options]").should("have.length", length + 1);
           };
 
+          cy.get("[data-cy=menu-icon]").click({ force: true });
+
           if (
             $boday.find("[data-cy=menu-options]").length === 1 &&
             !$boday.find("[data-cy=add-bank-account]").length
@@ -496,13 +556,14 @@ Cypress.Commands.add("makePayment", (count) => {
               }
               // Let table load
               // Grab the first payment from the table and pay by credit card
+              waitForRequestLoading(0);
               cy.get("table")
                 .find("tr")
-                .eq(1)
-                .find("td")
-                .eq(5)
-                .find("button")
-                .click({ force: true });
+                .eq(0)
+                .within(() => {
+                  cy.get("button").click({ force: true });
+                });
+
               // Wait for page to load
               cy.wait(5000);
               // TODO: Set up command to deal when payer has no payment method or doesn't have default payment method, etc
@@ -532,6 +593,7 @@ Cypress.Commands.add("makePayment", (count) => {
               cy.get("[data-cy=submit-payment-button]").click();
               cy.wait(500);
               cy.get("[data-cy=pay-now]").click();
+              cy.wait(15000);
               cy.wait(5000).then(() => {
                 // If we need to make more than one payment, send us back to the home page
                 if (count > 1) {

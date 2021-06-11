@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 
-describe('Query: account', () => {
-  it('should pass if the query returns valid return type', () => {
+describe("Query: account", () => {
+  it("should pass if the query returns valid return type", () => {
     const gqlQuery = `{
       account {
         balances {
@@ -113,6 +113,16 @@ describe('Query: account', () => {
             accountType
             accountLastFour
           }
+          features {
+            paymentMethods {
+              autoUpdate
+            }
+            paymentRequests {
+              consolidatedPayment
+              partialPayment
+            }
+          }
+          supportedPaymentMethods
         }
         tosAcceptance {
           date
@@ -131,12 +141,15 @@ describe('Query: account', () => {
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then((res) => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
       // no errors
-      assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+      assert.notExists(
+        res.body.errors,
+        `One or more errors ocuured while executing query: ${gqlQuery}`
+      );
 
       // has data
       assert.exists(res.body.data);
@@ -153,13 +166,13 @@ describe('Query: account', () => {
     });
   });
 
-  it('should fail if no return type is provided', () => {
+  it("should fail if no return type is provided", () => {
     const gqlQuery = `{
 				account {
 				}
 			}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then((res) => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -171,7 +184,7 @@ describe('Query: account', () => {
     });
   });
 
-  it('should pass if the query has at least one return type', () => {
+  it("should pass if the query has at least one return type", () => {
     const gqlQuery = `{
 				account {
           owner {
@@ -180,12 +193,15 @@ describe('Query: account', () => {
 				}
 			}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then((res) => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
       // no errors
-      assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+      assert.notExists(
+        res.body.errors,
+        `One or more errors ocuured while executing query: ${gqlQuery}`
+      );
 
       // has data
       assert.exists(res.body.data);

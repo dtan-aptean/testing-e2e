@@ -483,6 +483,90 @@ Cypress.Commands.add('returnRandomId', (gqlQuery: string, queryName: string, idN
     });
 });
 
+// Runs the query and grabs a random nodes to return multiple ids. Pass in the id name for queries whose id field names aren't standard 
+Cypress.Commands.add('returnMultipleRandomIds', (numberOfIds:number, gqlQuery: string, queryName: string, idName?: string) => {
+    Cypress.log({
+        name: "returnMultipleRandomIds ",
+        message: queryName + `${idName ? ", " + idName : ""}`,
+        consoleProps: () => {
+            return {
+                "Query Body": gqlQuery,
+                "Query name": queryName,
+                "Name of id field": idName ? idName : "id"
+            };
+        },
+    });
+       cy.postAndValidate(gqlQuery, queryName).then((res) => {
+     
+        var totalCount = res.body.data[queryName].totalCount ;
+
+        if (numberOfIds > 25 && totalCount>25) {
+            var insertIndex = gqlQuery.indexOf("orderBy");
+            gqlQuery = gqlQuery.slice(0, insertIndex) + `first: ${numberOfIds}, ` + gqlQuery.slice(insertIndex);
+              cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                  totalCount=numberOfIds;
+             return  returnIds(resp,totalCount,numberOfIds)
+            });
+        }
+        else{
+            totalCount = totalCount > 25? 25:res.body.data[queryName].totalCount;
+            return  returnIds(res,totalCount,numberOfIds);
+        }
+    });
+    function returnIds(res,totalCount:number,numberOfIds:number){
+        var randomIndex = [];
+        var quot=0, rem=0, c=0;
+        if(totalCount>=numberOfIds)
+        {
+         quot = Math.floor(totalCount/numberOfIds);  
+         rem = totalCount%numberOfIds;
+         for(var i = 0;i < totalCount-rem;i+=quot)
+         { 
+             if(i==totalCount-quot-1)
+             {
+                randomIndex[c] = Cypress._.random(i,i+quot+rem-1);
+                c++;
+                
+             }
+             else{
+             randomIndex[c] = Cypress._.random(i,i+quot-1);
+             c++;
+             }
+         }
+        }
+        else{
+            numberOfIds = totalCount;
+            expect(numberOfIds).to.be.eql(totalCount,"Number Of iDs greater than totalCount hence returning only the ids available")
+            quot = 1; 
+            for(var i = 0;i < totalCount;i+=quot)
+            { 
+                   randomIndex[c]= Cypress._.random(i,i+quot-1);
+                   c++;
+            }
+        }
+        var randomNodes = []
+        for(var i = 0;i < numberOfIds;i++){
+         randomNodes[i] = res.body.data[queryName].nodes[randomIndex[i]];
+        }
+        var id=[];
+        for(var i = 0;i < numberOfIds;i++){
+        if (!idName) {
+            id[i] = randomNodes[i].id;
+        } else {
+            if (idName.includes(".id")) {
+                var split = idName.split(".");
+                id[i] = randomNodes[i][split[0]][split[1]];
+            } else {
+                id[i] = randomNodes[i][idName];
+            }
+        }
+    }
+    return cy.wrap(id);
+}
+
+});
+
+
 // For queries that search by id instead of name. Pass in the id name for queries whose id field names aren't standard
 // Validates that a query with searchString returned the node with the correct id or nodes with ids that contain the string
 Cypress.Commands.add("validateIdSearch", (res, queryName: string, searchValue: string, idName?: string) => {
@@ -514,6 +598,7 @@ Cypress.Commands.add("validateIdSearch", (res, queryName: string, searchValue: s
                 var split = idName.split(".");
                 node = nodes[i][split[0]][split[1]];
                 edge = edges[i].node[split[0]][split[1]];
+                
             } else {
                 node = nodes[i][idName];
                 edge = edges[i].node[idName];
@@ -523,6 +608,56 @@ Cypress.Commands.add("validateIdSearch", (res, queryName: string, searchValue: s
         expect(edge.toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
     }
 });
+
+// For queries that search by id instead of name. 
+Cypress.Commands.add("validateMultipleIdSearch", (res, queryName: string, idValue: [], idName?: string) => {
+    Cypress.log({
+        name: "validateMultipleIdSearch",
+        message: `${queryName}, ids: ${idValue}${idName ? ", " + idName : ""}`,
+        consoleProps: () => {
+            return {
+                "Response": res,
+                "Query name": queryName,
+                "searchString": idValue,
+                "Name of id field": idName ? idName : "id"
+            };
+        },
+    });
+    const totalCount = res.body.data[queryName].totalCount;
+   var node,edge;
+    const nodes = res.body.data[queryName].nodes;
+    const edges = res.body.data[queryName].edges;
+    expect(totalCount).to.be.eql(nodes.length);
+    expect(totalCount).to.be.eql(edges.length);
+    for (var i = 0; i < nodes.length; i++) {
+    var targetNode;
+      if(!idName){
+        targetNode = nodes.filter((item) => {
+            const id = item.id;
+            return id === idValue[i];
+        });
+      
+       }
+        else {
+           if (idName.includes(".id")) {
+                var split = idName.split(".");
+                targetNode = nodes.filter((item) => {
+                    const id = item[split[0]][split[1]];
+                    return id === idValue[i];
+                });
+               
+            } else {
+                targetNode = nodes.filter((item) => {
+                    const id = item.idName;
+                    return id === idValue[i];
+                });
+               
+            }
+        }
+        expect(targetNode.length).to.be.eql(1, "Specific item found in nodes");
+    }
+});
+
 
 /**
  * COMMANDS FOR BEFORE/AFTER TESTS
@@ -822,4 +957,60 @@ Cypress.Commands.add("verifyPageInfo", (res, queryName: string, expectNext?: boo
     }
     expect(pageInfo.startCursor).to.be.eql(edges[0].cursor);
     expect(pageInfo.endCursor).to.be.eql(edges[edges.length-1].cursor);
+});
+
+Cypress.Commands.add('returnMultipleIds', (idCount :number, gqlQuery: string, queryName: string, idName?: string) => {
+    Cypress.log({
+        name: "returnRandomId",
+        message: queryName + `${idName ? ", " + idName : ""}`,
+        consoleProps: () => {
+            return {
+                "ID count": idCount,
+                "Query Body": gqlQuery,
+                "Query name": queryName,
+                "Name of id field": idName ? idName : "id"
+            };
+        },
+    });
+    return cy.postAndValidate(gqlQuery, queryName).then((res) => {
+        var totalCount = res.body.data[queryName].totalCount;
+        var ids = [];
+        if(idCount <= 25){
+            if(totalCount >= idCount){
+                totalCount = idCount;
+                for(let i = 0; i < idCount; i++){
+                    ids[i] = res.body.data[queryName].nodes[i].id;
+                }
+            }
+            else{
+                cy.log("Only " + totalCount + " ids are found, validating with " + totalCount + " ids");
+                for(let i = 0; i < totalCount; i++){
+                    ids[i] = res.body.data[queryName].nodes[i].id;
+                }
+            }
+        }
+        else if (idCount > 25) {
+            let insertIndex = gqlQuery.indexOf("orderBy");
+            gqlQuery = gqlQuery.slice(0, insertIndex) + `first: ${idCount},` + gqlQuery.slice(insertIndex);
+            return cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                totalCount = res.body.data[queryName].totalCount;
+                if(totalCount >= idCount){
+                    totalCount = idCount;
+                    for(let i = 0; i < idCount; i++){
+                        ids[i] = resp.body.data[queryName].nodes[i].id;
+                    }
+                }
+                else{
+                    cy.log("Only " + totalCount + " ids are found, validating with " + totalCount + " ids");
+                    for(let i = 0; i < totalCount; i++){
+                        ids[i] = resp.body.data[queryName].nodes[i].id;
+                    }
+                }
+                cy.wrap(totalCount).as('totCount');
+                return cy.wrap(ids);
+            });
+        }
+        cy.wrap(totalCount).as('totCount');
+        return cy.wrap(ids);
+    });
 });

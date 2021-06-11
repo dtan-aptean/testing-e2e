@@ -17,7 +17,16 @@ describe('Mutation: updateProduct', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
         ${itemPath} {
             id
             ${infoName} {
@@ -102,6 +111,7 @@ describe('Mutation: updateProduct', () => {
             cy.postAndConfirmError(mutation);
         });
 
+        // TODO: Not failing: product ges updated. Ask about this
         it("Mutation will fail if the only input provided is 'id'", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { id: "${id}" }) {
@@ -198,7 +208,16 @@ describe('Mutation: updateProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -246,7 +265,16 @@ describe('Mutation: updateProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -293,7 +321,16 @@ describe('Mutation: updateProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         seoData {
@@ -336,7 +373,16 @@ describe('Mutation: updateProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         seoData {
@@ -379,7 +425,16 @@ describe('Mutation: updateProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         seoData {
@@ -399,7 +454,7 @@ describe('Mutation: updateProduct', () => {
                 }
             }`;
             cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
-                expect(res.body.errors[0].message).to.eql("3 INVALID_ARGUMENT: Invalid Language Code");
+                expect(res.body.data[mutationName].errors[0].message).to.include("Invalid Language Code");
             });
         });
 
@@ -423,7 +478,16 @@ describe('Mutation: updateProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -481,7 +545,16 @@ describe('Mutation: updateProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -535,7 +608,16 @@ describe('Mutation: updateProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -584,9 +666,6 @@ describe('Mutation: updateProduct', () => {
             const twoWeeks = new Date(today.valueOf() + 1209600000);
             const sku = "Cypress Sku";
             const manufacturerPartNumber = `C-${Cypress._.random(1, 10)}`;
-            const manufacturerInfo = {
-                partNumber: manufacturerPartNumber
-            };
             const freeShipping = Cypress._.random(0, 1) === 1;
             const shippingInformation = {
                 weight: Cypress._.random(1, 10),
@@ -657,13 +736,20 @@ describe('Mutation: updateProduct', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         sku
-                        manufacturerInformation {
-                            partNumber
-                        }
+                        manufacturerPartNumber
                         shippingInformation {
                             weight
                             height
@@ -720,17 +806,15 @@ describe('Mutation: updateProduct', () => {
                 }
             }`;
             cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                const propNames = ["sku", infoName, "inventoryInformation", "manufacturerInformation", "shippingInformation", "cartInformation", "priceInformation", "seoData", "published"];
-                const propValues = [sku, info, inventoryInfo, manufacturerInfo, shippingInformation, cartInfo, priceInformation, seoData, published];
+                const propNames = ["sku", infoName, "inventoryInformation", "manufacturerPartNumber", "shippingInformation", "cartInformation", "priceInformation", "seoData", "published"];
+                const propValues = [sku, info, inventoryInfo, manufacturerPartNumber, shippingInformation, cartInfo, priceInformation, seoData, published];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${info[1].name}", orderBy: {direction: ASC, field: NAME}) {
                             nodes {
                                 id
                                 sku
-                                manufacturerInformation {
-                                    partNumber
-                                }
+                                manufacturerPartNumber
                                 shippingInformation {
                                     weight
                                     height
@@ -813,7 +897,16 @@ describe('Mutation: updateProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             vendor {
@@ -880,7 +973,16 @@ describe('Mutation: updateProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             priceInformation {
@@ -943,7 +1045,16 @@ describe('Mutation: updateProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -988,7 +1099,16 @@ describe('Mutation: updateProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -1033,7 +1153,16 @@ describe('Mutation: updateProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -1092,7 +1221,16 @@ describe('Mutation: updateProduct', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             ${infoName} {

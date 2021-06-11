@@ -2,7 +2,7 @@
 
 import { createInfoDummy, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 28
+// TEST COUNT: 35
 describe('Mutation: createDiscount', () => {
     var id = '';
     var extraIds = [] as SupplementalItemRecord[];
@@ -13,7 +13,16 @@ describe('Mutation: createDiscount', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
         ${itemPath} {
             id
             name
@@ -72,7 +81,7 @@ describe('Mutation: createDiscount', () => {
 
         it("Mutation will fail with no 'Name' input", () => {
             const discountAmount = {
-                amount: Cypress._.random(0, 10),
+                amount: Cypress._.random(100, 1000),
                 currency: "USD"
             };
             const mutation = `mutation {
@@ -89,7 +98,7 @@ describe('Mutation: createDiscount', () => {
 
         it("Mutation will fail with invalid 'Name' input", () => {
             const discountAmount = {
-                amount: Cypress._.random(0, 10),
+                amount: Cypress._.random(100, 1000),
                 currency: "USD"
             };
             const mutation = `mutation {
@@ -113,7 +122,7 @@ describe('Mutation: createDiscount', () => {
         it("Mutation with valid 'Name' and 'discountAmount' input will create a new item", () => {
             const name = "Cypress API Discount";
             const discountAmount = {
-                amount: Cypress._.random(0, 10),
+                amount: Cypress._.random(100, 1000),
                 currency: "USD"
             };
             const mutation = `mutation {
@@ -148,7 +157,7 @@ describe('Mutation: createDiscount', () => {
         it("Mutation with all required input and 'customData' input creates item with customData", () => {
             const name = "Cypress Discount customData";
             const discountAmount = {
-                amount: Cypress._.random(0, 10),
+                amount: Cypress._.random(100, 1000),
                 currency: "USD"
             };
             const customData = {data: `${itemPath} customData`, canDelete: true};
@@ -162,7 +171,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -212,7 +230,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -277,7 +304,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         isCumulative
@@ -329,6 +365,226 @@ describe('Mutation: createDiscount', () => {
         });
     });
 
+    context("Testing 'discountStartDate' and 'discountEndDate'", () => {
+        var today = new Date();
+        var todayString = today.toISOString();
+        var twoDaysAhead = new Date(today.valueOf() + 172800000);
+        var aheadString = twoDaysAhead.toISOString();
+
+        const discountDateBody = `
+            code
+            message
+            errors {
+                code
+                message
+                domain
+                details {
+                    code
+                    message
+                    target
+                }
+            }
+            ${itemPath} {
+                id
+                name
+                discountAmount {
+                    amount
+                    currency
+                }
+                discountStartDate
+                discountEndDate
+            }
+        `;
+        
+        // TODO: Come in and fix the specific type of error when the mutation starts returning an error as expected
+        it("Mutation will return an error when given invalid 'discountStartDate' input", () => {
+            const name = `Cypress ${mutationName} invalid dStartDate`;
+            const discountAmount = {
+                amount: Cypress._.random(100, 1000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                        discountStartDate: true
+                    }
+                ) {
+                    ${discountDateBody}
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+        });
+
+        // TODO: Come in and fix the specific type of error when the mutation starts returning an error as expected
+        it("Mutation will return an error when given invalid 'discountEndDate' input", () => {
+            const name = `Cypress ${mutationName} invalid dEndDate`;
+            const discountAmount = {
+                amount: Cypress._.random(100, 1000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                        discountEndDate: true
+                    }
+                ) {
+                    ${discountDateBody}
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+        });
+
+        // TODO: Come in and fix the specific type of error when the mutation starts returning an error as expected
+        it("Mutation will return an error when given a non-date string value as 'discountStartDate' input", () => {
+            const name = `Cypress ${mutationName} non-date dStartDate`;
+            const discountAmount = {
+                amount: Cypress._.random(100, 1000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                        discountStartDate: "abcde"
+                    }
+                ) {
+                    ${discountDateBody}
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+        });
+
+        // TODO: Come in and fix the specific type of error when the mutation starts returning an error as expected
+        it("Mutation will return an error when given a non-date string value as 'discountEndDate' input", () => {
+            const name = `Cypress ${mutationName} non-date dEndDate`;
+            const discountAmount = {
+                amount: Cypress._.random(100, 1000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                        discountEndDate: "fghij"
+                    }
+                ) {
+                    ${discountDateBody}
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+        });
+
+        it("Mutation will successfully save the discountStartDate when given valid 'discountStartDate' as input", () => {
+            const name = `Cypress ${mutationName} discountStartDate`;
+            const discountAmount = {
+                amount: Cypress._.random(100, 1000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                        discountStartDate: "${todayString}"
+                    }
+                ) {
+                    ${discountDateBody}
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = ["discountStartDate", "name", "discountAmount"];
+                const propValues = [todayString, name, discountAmount];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                                discountStartDate
+                                discountEndDate
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will successfully save the discountEndDate when given valid 'discountEndDate' as input", () => {
+            const name = `Cypress ${mutationName} discountEndDate`;
+            const discountAmount = {
+                amount: Cypress._.random(100, 1000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                        discountEndDate: "${aheadString}"
+                    }
+                ) {
+                    ${discountDateBody}
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                id = res.body.data[mutationName][itemPath].id;
+                const propNames = ["discountEndDate", "name", "discountAmount"];
+                const propValues = [aheadString, name, discountAmount];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                    const query = `{
+                        ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
+                            nodes {
+                                id
+                                name
+                                discountAmount {
+                                    amount
+                                    currency
+                                }
+                                discountStartDate
+                                discountEndDate
+                            }
+                        }
+                    }`;
+                    cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                });
+            });
+        });
+
+        // TODO: Come in and fix the specific type of error when the mutation starts returning an error as expected
+        it("Mutation will return an error when 'discountEndDate' is sooner than 'discountStartDate' input", () => {
+            const name = `Cypress ${mutationName} reversed dates`;
+            const discountAmount = {
+                amount: Cypress._.random(100, 1000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                        discountEndDate: "${todayString}"
+                        discountStartDate: "${aheadString}"
+                    }
+                ) {
+                    ${discountDateBody}
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+        });
+    });
+
     context("Testing 'usePercentageForDiscount'", () => {
         it("Mutation with input 'usePercentageForDiscount' = true but no 'maximumDiscountAmount' input will fail", () => {
             const mutation = `mutation {
@@ -345,7 +601,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         usePercentageForDiscount
@@ -383,7 +648,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         usePercentageForDiscount
@@ -431,7 +705,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -505,7 +788,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -555,7 +847,7 @@ describe('Mutation: createDiscount', () => {
         it("Mutation will create item with a discountLimitationCount of 0 if the discountLimitationType is not included", () => {
             const name = "Cypress no LimitationType";
             const discountAmount = {
-                amount: Cypress._.random(0, 10),
+                amount: Cypress._.random(100, 1000),
                 currency: "USD"
             };
             const discountLimitationCount = Cypress._.random(1, 5);
@@ -569,7 +861,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         discountLimitationCount
@@ -609,7 +910,7 @@ describe('Mutation: createDiscount', () => {
         it("Mutation will create item with correct discountLimitationCount if the provided input include discountLimitationType as N_TIMES_ONLY", () => {
             const name = "Cypress N Times only";
             const discountAmount = {
-                amount: Cypress._.random(0, 10),
+                amount: Cypress._.random(100, 1000),
                 currency: "USD"
             };
             const discountLimitationCount = Cypress._.random(1, 5);
@@ -625,7 +926,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         discountLimitationCount
@@ -665,7 +975,7 @@ describe('Mutation: createDiscount', () => {
         it("Mutation will create item with correct discountLimitationCount if the provided input include discountLimitationType as N_TIMES_PER_CUSTOMER", () => {
             const name = "Cypress N Times PC";
             const discountAmount = {
-                amount: Cypress._.random(0, 10),
+                amount: Cypress._.random(100, 1000),
                 currency: "USD"
             };
             const discountLimitationCount = Cypress._.random(1, 5);
@@ -681,7 +991,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         discountLimitationCount
@@ -751,7 +1070,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         discountType
@@ -807,7 +1135,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         discountType
@@ -872,7 +1209,16 @@ describe('Mutation: createDiscount', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             discountType
@@ -945,7 +1291,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -1001,7 +1356,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -1057,7 +1421,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -1113,7 +1486,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -1169,7 +1551,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -1225,7 +1616,16 @@ describe('Mutation: createDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -1289,7 +1689,16 @@ describe('Mutation: createDiscount', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             discountAmount {
@@ -1364,7 +1773,16 @@ describe('Mutation: createDiscount', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             discountAmount {
@@ -1439,7 +1857,16 @@ describe('Mutation: createDiscount', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             discountAmount {

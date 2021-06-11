@@ -16,7 +16,16 @@ describe('Mutation: updateReturnReason', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
         ${itemPath} {
             id
             name
@@ -139,7 +148,16 @@ describe('Mutation: updateReturnReason', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         name
@@ -184,7 +202,16 @@ describe('Mutation: updateReturnReason', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             name
@@ -224,7 +251,16 @@ describe('Mutation: updateReturnReason', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         displayOrder

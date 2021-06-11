@@ -6,6 +6,7 @@
   "authority": "#{MSAL_AUTHORITY}#",
   "scopes": "#{READ_SCOPE}# #{WRITE_SCOPE}#",
   "homeAccountIdentifier": "#{HOME_ACCOUNT_IDENTIFIER}#",
+  "tokenUrl": "#{EZPAY_TOKEN_URL}#",
   "env": {
     "api-svc-url": "#{EZPAY_API_URL}#", 
     "authorization": "bearer --BEARER_TOKEN--", 

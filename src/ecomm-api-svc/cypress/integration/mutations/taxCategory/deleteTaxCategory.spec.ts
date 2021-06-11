@@ -13,7 +13,16 @@ describe('Mutation: deleteTaxCategory', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
     `;
 
     const queryInformation = {
@@ -134,7 +143,16 @@ describe('Mutation: deleteTaxCategory', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${extraItemPath} {
                         id
                         name
@@ -176,7 +194,7 @@ describe('Mutation: deleteTaxCategory', () => {
                             }
                         }`;
                         cy.postAndConfirmMutationError(mutation, mutationName).then((erRes) => {
-                            const errorMessage = erRes.body.errors[0].message;
+                            const errorMessage = erRes.body.data[mutationName].errors[0].message;
                             expect(errorMessage).to.contain("TaxCategory is Associated with Checkout Attributes");
                             const deleteExtra = `mutation {
                                 ${extraDeleteName}(input: { id: "${attributeId}" }) {
@@ -215,7 +233,16 @@ describe('Mutation: deleteTaxCategory', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${extraItemPath} {
                         id
                         priceInformation {
@@ -261,7 +288,7 @@ describe('Mutation: deleteTaxCategory', () => {
                             }
                         }`;
                         cy.postAndConfirmMutationError(mutation, mutationName).then((erRes) => {
-                            const errorMessage = erRes.body.errors[0].message;
+                            const errorMessage = erRes.body.data[mutationName].errors[0].message;
                             expect(errorMessage).to.contain("TaxCategory is Associated with Products");
                             const deleteExtra = `mutation {
                                 ${extraDeleteName}(input: { id: "${productId}" }) {

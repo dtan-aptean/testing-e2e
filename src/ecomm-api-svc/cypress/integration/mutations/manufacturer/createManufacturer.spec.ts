@@ -14,7 +14,16 @@ describe('Mutation: createManufacturer', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
         ${itemPath} {
             id
             ${infoName} {
@@ -149,7 +158,16 @@ describe('Mutation: createManufacturer', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -213,7 +231,16 @@ describe('Mutation: createManufacturer', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         displayOrder
@@ -289,7 +316,16 @@ describe('Mutation: createManufacturer', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -319,7 +355,7 @@ describe('Mutation: createManufacturer', () => {
                 assert.exists(res.body.data, "Response data should exist");
                 // Check data for errors
                 // Validate Errors
-                assert.exists(res.body.data[mutationName].error, "Should have errors");
+                assert.exists(res.body.data[mutationName].errors, "Should have errors");
                 // Validate data types and values
                 // Validate code
                 assert.isString(res.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);
@@ -352,7 +388,16 @@ describe('Mutation: createManufacturer', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -382,7 +427,7 @@ describe('Mutation: createManufacturer', () => {
                 assert.exists(res.body.data, "Response data should exist");
                 // Check data for errors
                 // Validate Errors
-                assert.exists(res.body.data[mutationName].error, "Should have errors");
+                assert.exists(res.body.data[mutationName].errors, "Should have errors");
                 // Validate data types and values
                 // Validate code
                 assert.isString(res.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);
@@ -421,7 +466,7 @@ describe('Mutation: createManufacturer', () => {
                     assert.exists(resp.body.data, "Response data should exist");
                     // Check data for errors
                     // Validate Errors
-                    assert.exists(resp.body.data[mutationName].error, "Should have errors");
+                    assert.exists(resp.body.data[mutationName].errors, "Should have errors");
                     // Validate data types and values
                     // Validate code
                     assert.isString(resp.body.data[mutationName].code, `Expect ${mutationName}.code to be a string`);
@@ -457,7 +502,16 @@ describe('Mutation: createManufacturer', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -535,7 +589,16 @@ describe('Mutation: createManufacturer', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -610,7 +673,16 @@ describe('Mutation: createManufacturer', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             discounts {
@@ -681,7 +753,16 @@ describe('Mutation: createManufacturer', () => {
                     ) {
                         code
                         message
-                        error
+                        errors {
+                            code
+                            message
+                            domain
+                            details {
+                                code
+                                message
+                                target
+                            }
+                        }
                         ${itemPath} {
                             id
                             roleBasedAccess {

@@ -18,6 +18,7 @@ describe('Merchant portal', function() {
 
     beforeEach(() => {
       cy.visit('/');
+      cy.wait(7000);
     })
 
     it('should show the account button with the correct initials', () => {

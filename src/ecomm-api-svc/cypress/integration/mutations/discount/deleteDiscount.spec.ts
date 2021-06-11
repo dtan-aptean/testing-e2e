@@ -13,7 +13,16 @@ describe('Mutation: deleteDiscount', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
     `;
 
     const queryInformation = {
@@ -126,7 +135,16 @@ describe('Mutation: deleteDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     discount {
                         id
                         name
@@ -151,7 +169,16 @@ describe('Mutation: deleteDiscount', () => {
                         ) {
                             code
                             message
-                            error
+                            errors {
+                                code
+                                message
+                                domain
+                                details {
+                                    code
+                                    message
+                                    target
+                                }
+                            }
                             ${extraItemPath} {
                                 id
                                 discounts {
@@ -230,7 +257,16 @@ describe('Mutation: deleteDiscount', () => {
                 ) {
                     code
                     message
-                    error
+                    errors {
+                        code
+                        message
+                        domain
+                        details {
+                            code
+                            message
+                            target
+                        }
+                    }
                     discount {
                         id
                         name
@@ -255,7 +291,16 @@ describe('Mutation: deleteDiscount', () => {
                         ) {
                             code
                             message
-                            error
+                            errors {
+                                code
+                                message
+                                domain
+                                details {
+                                    code
+                                    message
+                                    target
+                                }
+                            }
                             ${extraItemPath} {
                                 id
                                 discounts {

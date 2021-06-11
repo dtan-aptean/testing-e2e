@@ -9,7 +9,16 @@ describe('Mutation: deleteCheckoutAttribute', () => {
     const standardMutationBody = `
         code
         message
-        error
+        errors {
+            code
+            message
+            domain
+            details {
+                code
+                message
+                target
+            }
+        }
     `;
     const queryInformation = {
         queryName: queryName, 
