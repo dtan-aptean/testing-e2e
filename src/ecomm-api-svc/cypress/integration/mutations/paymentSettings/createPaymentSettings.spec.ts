@@ -51,6 +51,20 @@ describe('Mutation: createPaymentSettings', () => {
         });
     };
 
+    const createCompany = (companyName: string, companyKey: string) => {
+        const extraItemInput = { name: `Cypress ${mutationName} ${companyName} test`, integrationKey: `Cypress-${mutationName}-${companyKey}-${Cypress._.random(10000, 100000)}` };
+        return cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, extraItemInput).then((results) => {
+            const { deletionIds, items, itemIds } = results;
+            addExtraItemIds(deletionIds);
+            const companyId = itemIds[0];
+            const company = items[0];
+            return cy.wrap({
+                companyId: companyId, 
+                company: company
+            });
+        });
+    };
+
     var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
         deleteItemsAfter = Cypress.env("deleteItemsAfter");
@@ -112,11 +126,8 @@ describe('Mutation: createPaymentSettings', () => {
         });
 
         it("Mutation will fail if using a deleted company's id as 'companyId' input", () => {
-            const extraItemInput = { name: `Cypress ${mutationName} deleted test`, integrationKey: `Cypress-${mutationName}-deleted-${Cypress._.random(10000, 100000)}` };
-            cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, extraItemInput).then((results) => {
-                const { deletionIds, itemIds } = results;
-                addExtraItemIds(deletionIds);
-                const companyId = itemIds[0];
+            createCompany("Deleted", "deleted").then((creations) => {
+                const { companyId } = creations;
                 cy.deleteItem(companyDelete, companyId).then(() => {
                     const mutation = `mutation {
                         ${mutationName}(input: { companyId: "${companyId}" }) {
@@ -131,11 +142,8 @@ describe('Mutation: createPaymentSettings', () => {
         });
 
         it("Mutation will succeed with valid 'companyId' input", () => {
-            const extraItemInput = { name: `Cypress ${mutationName} test`, integrationKey: `Cypress-${mutationName}-creation-${Cypress._.random(10000, 100000)}` };
-            cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, extraItemInput).then((results) => {
-                const { deletionIds, items, itemIds } = results;
-                addExtraItemIds(deletionIds);
-                const companyId = itemIds[0];
+            createCompany("Basic", "basic").then((creations) => {
+                const { companyId, company } = creations;
                 const mutation = `mutation {
                     ${mutationName}(input: { companyId: "${companyId}" }) {
                         ${standardMutationBody}
@@ -144,10 +152,10 @@ describe('Mutation: createPaymentSettings', () => {
                 cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                     id = res.body.data[mutationName][itemPath].id;
                     const propNames = ["company"];
-                    const propValues = [items[0]];
+                    const propValues = [company];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${items[0].name}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                            ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
                                 nodes {
                                     id
                                     company {
@@ -165,11 +173,8 @@ describe('Mutation: createPaymentSettings', () => {
         });
 
         it("Mutation will fail if 'companyId' input is from a company that already has paymentSettings attached", () => {
-            const extraItemInput = { name: `Cypress ${mutationName} pre-used test`, integrationKey: `Cypress-${mutationName}-preUsed-${Cypress._.random(10000, 100000)}` };
-            cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, extraItemInput).then((results) => {
-                const { deletionIds, itemIds } = results;
-                addExtraItemIds(deletionIds);
-                const companyId = itemIds[0];
+            createCompany("PreUsed", "pre-used").then((creations) => {
+                const { companyId } = creations;
                 const paymentSettingsInput =  {
                     companyId: companyId
                 };
@@ -192,11 +197,8 @@ describe('Mutation: createPaymentSettings', () => {
     context("Testing customData input and optional input", () => {
         it("Mutation with all required input and 'customData' input creates item with customData", () => {
             const customData = {data: `${itemPath} customData`, canDelete: true};
-            const extraItemInput = { name: `Cypress ${mutationName} customData test`, integrationKey: `Cypress-${mutationName}-customData-${Cypress._.random(10000, 100000)}` };
-            cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, extraItemInput).then((results) => {
-                const { deletionIds, items, itemIds } = results;
-                addExtraItemIds(deletionIds);
-                const companyId = itemIds[0];
+            createCompany("CustomDate", "custom-data").then((creations) => {
+                const { companyId, company } = creations;
                 const mutation = `mutation {
                     ${mutationName}(input: { 
                         companyId: "${companyId}", 
@@ -208,10 +210,10 @@ describe('Mutation: createPaymentSettings', () => {
                 cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                     id = res.body.data[mutationName][itemPath].id;
                     const propNames = ["customData", "company"];
-                    const propValues = [customData, items[0]];
+                    const propValues = [customData, company];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${items[0].name}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                            ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
                                 nodes {
                                     id
                                     customData
@@ -225,11 +227,8 @@ describe('Mutation: createPaymentSettings', () => {
         });
 
         it("Mutation can successfully use 'token' in paymentData input", () => {
-            const extraItemInput = { name: `Cypress ${mutationName} token test`, integrationKey: `Cypress-${mutationName}-token-${Cypress._.random(10000, 100000)}` };
-            cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, extraItemInput).then((results) => {
-                const { deletionIds, items, itemIds } = results;
-                addExtraItemIds(deletionIds);
-                const companyId = itemIds[0];
+            createCompany("Token", "token").then((creations) => {
+                const { companyId, company } = creations;
                 const paymentData = [{ token: `cypress-token-${Cypress._.random(10000, 100000)}`}];
                 const mutation = `mutation {
                     ${mutationName}(input: { 
@@ -243,10 +242,10 @@ describe('Mutation: createPaymentSettings', () => {
                     id = res.body.data[mutationName][itemPath].id;
                     const dummyPaymentData = [{ token: paymentData[0].token, cardType: null, lastFour: null}];
                     const propNames = ["company", "paymentData"];
-                    const propValues = [items[0], dummyPaymentData];
+                    const propValues = [company, dummyPaymentData];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${items[0].name}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                            ${queryName}(ids: "${id}",, orderBy: {direction: ASC, field: COMPANY_NAME}) {
                                 nodes {
                                     id
                                     paymentData {
@@ -269,11 +268,8 @@ describe('Mutation: createPaymentSettings', () => {
         });
 
         it("Mutation can successfully use 'cardType' and 'lastFour' in paymentData input", () => {
-            const extraItemInput = { name: `Cypress ${mutationName} cardType/lastFour test`, integrationKey: `Cypress-${mutationName}-cardFour-${Cypress._.random(10000, 100000)}` };
-            cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, extraItemInput).then((results) => {
-                const { deletionIds, items, itemIds } = results;
-                addExtraItemIds(deletionIds);
-                const companyId = itemIds[0];
+            createCompany("CardFour", "card-four").then((creations) => {
+                const { companyId, company } = creations;
                 const paymentData = [
                     { 
                         cardType: "Visa",
@@ -292,10 +288,10 @@ describe('Mutation: createPaymentSettings', () => {
                     id = res.body.data[mutationName][itemPath].id;
                     const dummyPaymentData = [{ token: null, cardType: paymentData[0].cardType, lastFour:  paymentData[0].lastFour}];
                     const propNames = ["company", "paymentData"];
-                    const propValues = [items[0], dummyPaymentData];
+                    const propValues = [company, dummyPaymentData];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${items[0].name}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                            ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
                                 nodes {
                                     id
                                     paymentData {
@@ -318,11 +314,8 @@ describe('Mutation: createPaymentSettings', () => {
         });
 
         it("Mutation will fail if using 'token', 'cardType', and 'lastFour' together in paymentData input", () => {
-            const extraItemInput = { name: `Cypress ${mutationName} bad paymentData test`, integrationKey: `Cypress-${mutationName}-badPayment-${Cypress._.random(10000, 100000)}` };
-            cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, extraItemInput).then((results) => {
-                const { deletionIds, items, itemIds } = results;
-                addExtraItemIds(deletionIds);
-                const companyId = itemIds[0];
+            createCompany("Bad PaymentData", "bad-payment-data").then((creations) => {
+                const { companyId } = creations;
                 const paymentData = [
                     { 
                         token: `cypress-token-${Cypress._.random(10000, 100000)}`,
@@ -345,11 +338,8 @@ describe('Mutation: createPaymentSettings', () => {
         });
 
         it("Mutation creates item that has all included input", () => {
-            const extraItemInput = { name: `Cypress ${mutationName} full test`, integrationKey: `Cypress-${mutationName}-full-${Cypress._.random(10000, 100000)}` };
-            cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, extraItemInput).then((results) => {
-                const { deletionIds, items, itemIds } = results;
-                addExtraItemIds(deletionIds);
-                const companyId = itemIds[0];
+            createCompany("Full", "full").then((creations) => {
+                const { companyId, company } = creations;
                 const hasTerms = Cypress._.random(0, 1) === 1;
                 const immediateCapture = Cypress._.random(0, 1) === 1;
                 const useToken = Cypress._.random(0, 1) === 1;
@@ -390,10 +380,10 @@ describe('Mutation: createPaymentSettings', () => {
                         });
                     }
                     const propNames = ["company", "hasTerms", "immediateCapture", "paymentData"];
-                    const propValues = [items[0], hasTerms, immediateCapture, paymentData];
+                    const propValues = [company, hasTerms, immediateCapture, paymentData];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                         const query = `{
-                            ${queryName}(searchString: "${items[0].name}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
+                            ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
                                 nodes {
                                     id
                                     hasTerms

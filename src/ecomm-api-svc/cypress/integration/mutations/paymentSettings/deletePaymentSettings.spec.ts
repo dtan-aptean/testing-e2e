@@ -147,7 +147,7 @@ describe('Mutation: deletePaymentSettings', () => {
             });
         });
 
-        it("Mutation will fail when given 'id' input from an deleted item", () => {
+        it("Mutation will fail when given 'id' input from a deleted item", () => {
             const extraItemInput = { name: `Cypress ${mutationName} preDeleted test`, integrationKey: `Cypress-${mutationName}-predeleted-${Cypress._.random(10000, 100000)}` };
             cy.createAssociatedItems(1, companyMutName, "company", companyQuery, extraItemInput).then((results) => {
                 const { deletionIds, itemIds } = results;
