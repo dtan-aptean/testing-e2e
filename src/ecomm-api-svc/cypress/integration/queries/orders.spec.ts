@@ -342,7 +342,7 @@ describe('Query: orders', () => {
         });
     });
 
-    context.only("Testing 'ids' input", () => {
+    context("Testing 'ids' input", () => {
         before(() => {
             cy.postAndValidate(standardQuery, queryName).then((res) => {
                 firstId = res.body.data.orders.nodes[0].id;
