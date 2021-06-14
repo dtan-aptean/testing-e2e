@@ -652,21 +652,34 @@ Cypress.Commands.add("validateMultipleIdSearch", (res, queryName: string, idValu
         },
     });
     const totalCount = res.body.data[queryName].totalCount;
-   
+   var node,edge;
     const nodes = res.body.data[queryName].nodes;
     const edges = res.body.data[queryName].edges;
     expect(totalCount).to.be.eql(nodes.length);
     expect(totalCount).to.be.eql(edges.length);
-    const targetNode;
     for (var i = 0; i < nodes.length; i++) {
+    var targetNode;
+      if(!idName){
+        targetNode = nodes.filter((item) => {
+            const id = item.id;
+            return id === idValue[i];
+        });
       
-        // const targetNode = nodes.filter((item) => {
-        //     return item.id === idValue[i];
-        // });
-        for(var j=0;j<idValue.length;i++){
-         if (idValue[i]==nodes[j].id){
-             targetNode = "1"
-         }
+       }
+        else {
+           if (idName.includes(".id")) {
+                var split = idName.split(".");
+                targetNode = nodes.filter((item) => {
+                    const id = item[split[0]][split[1]];
+                    return id === idValue[i];
+                });
+               
+            } else {
+                targetNode = nodes.filter((item) => {
+                    const id = item.idName;
+                    return id === idValue[i];
+                });
+            }
         }
         expect(targetNode.length).to.be.eql(1, "Specific item found in nodes");
     }
@@ -751,7 +764,7 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
 
     const {edges, nodes, totalCount, pageInfo} = newData;
     // Confirm expected total count
-    expect(totalCount).to.be.eql(index, `Verify totalCount is ${index}`);
+     expect(totalCount).to.be.eql(index, `Verify totalCount is ${index}`);
     // Confirm expected node/edge count
     var includedStart = 0;
     var excludedStart = index;
