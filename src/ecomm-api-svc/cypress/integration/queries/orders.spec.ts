@@ -27,14 +27,16 @@ describe('Query: orders', () => {
         }
     }`;
 
-    var trueTotalInput = "";
+    let trueTotalInput = '';
+    let firstId = '';
+    let secondId = '';
 
     before(() => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
             const { nodes, edges, totalCount } = res.body.data[queryName];
             expect(nodes.length).to.be.eql(edges.length);
             if (totalCount > nodes.length) {
-                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", ": "";
+                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", " : "";
             }
         });
     });
@@ -262,7 +264,7 @@ describe('Query: orders', () => {
                 });
             });
         });
-        
+
         it("Query with valid 'first' input argument will return only that amount of items", () => {
             cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
                 // If there's only one item, we can't do any pagination
@@ -340,46 +342,101 @@ describe('Query: orders', () => {
         });
     });
 
-    context("Testing 'id' input", () => {
-        it("Query with a valid 'id' input argument will return the specific item", () => {
-            cy.returnRandomId(standardQuery, queryName).then((id: string) => {
-                const searchQuery = `{
-                    ${queryName}(id: "${id}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                        ${standardQueryBody}
-                    }
-                }`;
-                cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                    cy.validateIdSearch(resp, queryName, id);
-                });
+    context.only("Testing 'ids' input", () => {
+        before(() => {
+            cy.postAndValidate(standardQuery, queryName).then((res) => {
+                firstId = res.body.data.orders.nodes[0].id;
+                secondId = res.body.data.orders.nodes[1].id;
             });
         });
 
-        it("Query with a valid partial 'id' input argument will return all items containing the string", () => {
-            cy.returnRandomId(standardQuery, queryName).then((id: string) => {
-                // Get a random segment of the id
-                const halfway = Math.ceil(id.length / 2);
-                const searchId = id.slice(Cypress._.random(0, halfway - 1), Cypress._.random(halfway, id.length));
-                const searchQuery = `{
-                    ${queryName}(id: "${searchId}", orderBy: {direction: ASC, field: TIMESTAMP}) {
-                        ${standardQueryBody}
-                    }
-                }`;
-                cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                    cy.validateIdSearch(resp, queryName, searchId);
-                });
-            });
-        });
-
-        it("Query with an invalid 'id' input argument will fail", () => {
-            const gqlQuery = `{
-                ${queryName}(id: true, orderBy: {direction: ASC, field: TIMESTAMP}) {
+        it("Query will succeed if 'ids' is a valid string in an array", () => {
+            const query = `{
+                ${queryName}(
+                    orderBy: {direction: ASC, field: TIMESTAMP},
+                    ids: ["${firstId}"]) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery).then((res) => {
-                expect(res.body.errors[0].message).to.have.string('ID cannot represent a non-string and non-integer value: true');
-                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
-            });
+            cy.postAndValidate(query, queryName);
+        });
+
+        it("Query will fail if 'ids' is just a valid string", () => {
+            const query = `{
+                ${queryName}(
+                    orderBy: {direction: ASC, field: TIMESTAMP},
+                    ids: "${firstId}" {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(query);
+        });
+
+        it("Query will fail if 'ids' is not in an array", () => {
+            const query = `{
+                ${queryName}(
+                    orderBy: {direction: ASC, field: TIMESTAMP},
+                    ids: {${firstId}}) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(query);
+        });
+
+        it("Query will fail if 'ids' is not a string", () => {
+            const query = `{
+                ${queryName}(
+                    orderBy: {direction: ASC, field: TIMESTAMP},
+                    ids: [${firstId}]) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(query);
+        });
+
+        it("Query will fail if 'ids' is not a valid id", () => {
+            const query = `{
+                ${queryName}(
+                    orderBy: {direction: ASC, field: TIMESTAMP},
+                    ids: ["Waaagh"]) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(query, true);
+        });
+
+
+        it("Query will succeed if 'ids' is multiple valid strings in an array", () => {
+            const query = `{
+                ${queryName}(
+                    orderBy: {direction: ASC, field: TIMESTAMP},
+                    ids: ["${firstId}", "${secondId}"]) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndValidate(query, queryName);
+        });
+
+        it("Query will fail if 'ids' has non-strings", () => {
+            const query = `{
+                ${queryName}(
+                    orderBy: {direction: ASC, field: TIMESTAMP},
+                    ids: ["${firstId}", ${secondId}]) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(query);
+        });
+
+        it("Query will fail if 'ids' has invalid ids", () => {
+            const query = `{
+                ${queryName}(
+                    orderBy: {direction: ASC, field: TIMESTAMP},
+                    ids: ["${firstId}", "Waaagh"]) {
+                    ${standardQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(query, true);
         });
     });
 
@@ -398,7 +455,7 @@ describe('Query: orders', () => {
                 });
             });
         });
-        
+
         it("Query with a valid 'after' input argument will return all items after that value", () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -461,7 +518,7 @@ describe('Query: orders', () => {
             cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const first = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `first: ${first}`});
+                    Cypress.log({ message: `first: ${first}` });
                     const beforeQuery = `{
                         ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             ${standardQueryBody}
@@ -486,8 +543,8 @@ describe('Query: orders', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const first = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `first: ${first}`});
+                        const first = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `first: ${first}` });
                         const afterQuery = `{
                             ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                                 ${standardQueryBody}
@@ -512,7 +569,7 @@ describe('Query: orders', () => {
             cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const last = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `last: ${last}`});
+                    Cypress.log({ message: `last: ${last}` });
                     const beforeQuery = `{
                         ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                             ${standardQueryBody}
@@ -537,8 +594,8 @@ describe('Query: orders', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const last = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `last: ${last}`});
+                        const last = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `last: ${last}` });
                         const afterQuery = `{
                             ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                                 ${standardQueryBody}
