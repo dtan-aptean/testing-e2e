@@ -17,18 +17,16 @@ import * as helper from '../support/getAuthToken';
 /**
  * @type {Cypress.PluginConfig}
  */
-module.exports = (on, config) => {
+module.exports = async (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
   const dateSubFolder = new Date().toISOString().substring(0,10);
   config.screenshotsFolder = `${config.screenshotsFolder}/${dateSubFolder}`;
   config.reporterOptions.mochaFile = `/e2e/cypress/results/${dateSubFolder}/test-result-ezpay-merchant-portal-[hash].xml`; 
 
-  on('before:run', async (details: any) => {
-    const token = await helper.getAdToken(details.config.username, details.config.password, details.config.tokenUrl);
-    details.config.env.authorization = token;
-  });
-
+  const token = await helper.getAdToken(config.env.username, config.env.password, config.env.tokenUrl);
+  config.env.authorization = token;
+  
   on('after:run', async (results: any) => {
     if (results) {
       let facts: Array<any> = [];
