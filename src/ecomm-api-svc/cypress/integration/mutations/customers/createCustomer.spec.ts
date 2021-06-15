@@ -45,7 +45,6 @@ describe('Mutation: createCustomer', () => {
         }`;
         if (email !== '') {
             cy.postAndValidate(query, 'customers').then((res) => {
-                debugger;
                 let id = res.body.data[queryName].nodes[0].id;
                 const deleteName = 'deleteCustomer';
                 const mutation = `mutation {
@@ -61,7 +60,7 @@ describe('Mutation: createCustomer', () => {
     });
 
     context("Testing customer required inputs", () => {
-        it("Mutation will succeed with a minimum of 'email', 'firstName', and 'lastName' inputs", () => {
+        it("Mutation will succeed with 'email', 'firstName', and 'lastName' strings", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -83,7 +82,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail without 'email'", () => {
+        it("Mutation will if 'email' is not included", () => {
             const input = {
                 email: null,
                 firstName: 'Testy',
@@ -121,7 +120,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail without 'firstName'", () => {
+        it("Mutation will fail if 'firstName' is not included", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -203,7 +202,58 @@ describe('Mutation: createCustomer', () => {
     });
 
     context("Testing customer optional generic inputs (i.e. simple, non-specific data)", () => {
-        it("Mutation will succeed if 'isActive' has a boolean input", () => {
+        it.only("Mutation will succeed if 'customData' is an object", () => {
+            const customData = {
+                first: 1,
+                second: 'string'
+            };
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                customData: customData
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        customData
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
+        });
+
+        it.only("Mutation will fail if 'customData' is not an object", () => {
+            const customData = [1, 'string'];
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                customData: customData
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        customData
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will succeed if 'isActive' is a boolean", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -227,7 +277,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'isActive' has a non-boolean input", () => {
+        it("Mutation will fail if 'isActive' is a non-boolean", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -249,7 +299,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'gender' has one of the given enum inputs", () => {
+        it("Mutation will succeed if 'gender' is a valid enum", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -273,29 +323,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'gender' has a non-given enum input", () => {
-            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
-            const mutation = `mutation {
-                ${mutationName}(
-                    input: {
-                        email: "${testEmail}",
-                        firstName: "Testy",
-                        lastName: "McTest",
-                        gender: WAAAGH
-                    }
-                    
-                ) {
-                    ${standardMutationContent}
-                    ${itemPath} {
-                        ${requiredItems}
-                        gender
-                    }
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
-        });
-
-        it("Mutation will fail if 'gender' has a non-enum input", () => {
+        it("Mutation will fail if 'gender' it not an enum", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -317,7 +345,29 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'dateOfBirth' has a toISOString input", () => {
+        it("Mutation will fail if 'gender' is an invalid enum", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        email: "${testEmail}",
+                        firstName: "Testy",
+                        lastName: "McTest",
+                        gender: WAAAGH
+                    }
+                    
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        gender
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will succeed if 'dateOfBirth' has a toISOstring", () => {
             const date = new Date();
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
@@ -342,7 +392,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will also succeed if 'dateOfBirth' has a toDateString input", () => {
+        it("Mutation will succeed if 'dateOfBirth' has a toDatestring", () => {
             const date = new Date();
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
@@ -367,8 +417,8 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'dateOfBirth' has non-date-format input", () => {
-            const date = 'January 1, 2000'
+        it("Mutation will succeed if 'dateOfBirth' has non-date format", () => {
+            const date = 4;
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -387,10 +437,12 @@ describe('Mutation: createCustomer', () => {
                     }
                 }
             }`;
-            cy.postAndConfirmError(mutation);
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
         });
 
-        it("Mutation will succeed if 'isTaxExempt' has a boolean input", () => {
+        it("Mutation will succeed if 'isTaxExempt' is a boolean", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -414,7 +466,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'isTaxExempt' has a non-boolean input", () => {
+        it("Mutation will fail if 'isTaxExempt' is not a boolean", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -436,7 +488,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'newsletter' has a number input", () => {
+        it("Mutation will succeed if 'newsletter' is a number", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -460,7 +512,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will succeed if 'newsletter' has a string input", () => {
+        it("Mutation will succeed if 'newsletter' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -484,7 +536,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will succeed if 'adminComment' has a string input", () => {
+        it("Mutation will succeed if 'adminComment' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -508,7 +560,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'adminComment' has a non-string input", () => {
+        it("Mutation will fail if 'adminComment' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -530,7 +582,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'vendorId' has a string input", () => {
+        it("Mutation will succeed if 'vendorId' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -554,7 +606,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will succeed if 'vendorId' has a non-string input", () => {
+        it("Mutation will succeed if 'vendorId' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -578,7 +630,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will succeed if 'affiliateId' has a string input", () => {
+        it("Mutation will succeed if 'affiliateId' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -602,7 +654,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will succeed if 'affiliateId' has a non-string input", () => {
+        it("Mutation will succeed if 'affiliateId' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -626,7 +678,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will succeed if 'cannotLoginUntilDate' has a toISOString input", () => {
+        it("Mutation will succeed if 'cannotLoginUntilDate' has a toISOstring", () => {
             const date = new Date();
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
@@ -651,7 +703,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will succeed if 'cannotLoginUntilDate' has a toDateString input", () => {
+        it("Mutation will succeed if 'cannotLoginUntilDate' has a toDatestring", () => {
             const date = new Date();
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
@@ -676,8 +728,8 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'cannotLoginUntilDate' has non-date-format input", () => {
-            const date = 'January 1, 2000'
+        it("Mutation will succeed if 'cannotLoginUntilDate' has non-date format", () => {
+            const date = 4;
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -696,10 +748,12 @@ describe('Mutation: createCustomer', () => {
                     }
                 }
             }`;
-            cy.postAndConfirmError(mutation);
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                email = res.body.data[mutationName][itemPath].email;
+            });
         });
 
-        it("Mutation will succeed if 'requireReLogin' has a boolean input", () => {
+        it("Mutation will succeed if 'requireReLogin' is a boolean", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -723,7 +777,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'requireReLogin' has a non-boolean input", () => {
+        it("Mutation will fail if 'requireReLogin' is not a boolean", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -745,7 +799,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'emailCustomer' has a boolean input", () => {
+        it("Mutation will succeed if 'emailCustomer' is a boolean", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -769,7 +823,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'emailCustomer' has a non-boolean input", () => {
+        it("Mutation will fail if 'emailCustomer' is not a boolean", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -907,7 +961,6 @@ describe('Mutation: createCustomer', () => {
     //     });
 
     //     after(() => {
-    //         debugger;
     //         const mutationName = "deleteCompany";
     //         const mutation = `mutation {
     //                 ${mutationName}(input: { id: "${vendorId}" }) {
@@ -915,7 +968,6 @@ describe('Mutation: createCustomer', () => {
     //                 }
     //             }`;
     //         cy.postMutAndValidate(mutation, mutationName, 'deleteMutation').then((res) => {
-    //             debugger;
     //             companyId = '';
     //         });
     //     });
@@ -1020,7 +1072,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will succeed if 'customerRoleIds' has a multiple valid inputs", () => {
+        it("Mutation will succeed if 'customerRoleIds' has multiple valid inputs", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1090,7 +1142,7 @@ describe('Mutation: createCustomer', () => {
     });
 
     context("Testing customer optional input 'billingAddress', which requires complex data)", () => {
-        it("Mutation will succeed if 'billingAddress' has a string 'firstName' input", () => {
+        it("Mutation will succeed if 'billingAddress's 'firstName' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1118,7 +1170,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'billingAddress' has a non-string 'firstName' input", () => {
+        it("Mutation will fail if 'billingAddress's 'firstName' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1144,7 +1196,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'billingAddress' has a string 'lastName' input", () => {
+        it("Mutation will succeed if 'billingAddress's 'lastName' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1172,7 +1224,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'billingAddress' has a non-string 'lastName' input", () => {
+        it("Mutation will fail if 'billingAddress's 'lastName' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1198,7 +1250,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'billingAddress' has a string 'email' input", () => {
+        it("Mutation will succeed if 'billingAddress's 'email' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1226,7 +1278,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'billingAddress' has a non-string 'email' input", () => {
+        it("Mutation will fail if 'billingAddress's 'email' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1252,7 +1304,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'billingAddress's 'phone' has valid, required 'phoneNumber' and 'phoneType' inputs", () => {
+        it("Mutation will succeed if 'billingAddress's 'phone' has valid required 'phoneNumber' and 'phoneType' inputs", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -1285,7 +1337,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'billingAddress's 'phone's required 'phoneNumber' has a non-string input", () => {
+        it("Mutation will fail if 'billingAddress's 'phone's required 'phoneNumber' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -1316,7 +1368,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'billingAddress's 'phone's required 'phoneType' has a non-enum input", () => {
+        it("Mutation will fail if 'billingAddress's 'phone's required 'phoneType' is not a enum", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -1347,7 +1399,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'billingAddress's 'phone's required 'phoneType' has non-valid enum input", () => {
+        it("Mutation will fail if 'billingAddress's 'phone's required 'phoneType' has non-valid enum", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -1378,7 +1430,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'billingAddress's 'phone' has valid 'countryCode input", () => {
+        it("Mutation will succeed if 'billingAddress's 'phone' has valid 'countryCode'", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -1413,7 +1465,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'billingAddress's 'phone' has a non-enum 'countryCode' input", () => {
+        it("Mutation will fail if 'billingAddress's 'phone' is not a enum 'countryCode'", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -1446,7 +1498,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'billingAddress's 'phone' has a non-valid, enum 'countryCode' input", () => {
+        it("Mutation will fail if 'billingAddress's 'phone' is not a valid, enum 'countryCode'", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -1487,9 +1539,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 billingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror'
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia'
                     }
                 }
             };
@@ -1515,7 +1567,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'billingAddress's 'address's 'country' has a non-string input", () => {
+        it("Mutation will fail if 'billingAddress's 'address's 'country' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1524,8 +1576,8 @@ describe('Mutation: createCustomer', () => {
                 billingAddress: {
                     address: {
                         country: 4,
-                        postalCode: 'stands',
-                        region: 'Eye of Terror'
+                        postalCode: 'Cadia',
+                        region: 'Georgia'
                     }
                 }
             };
@@ -1549,7 +1601,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'billingAddress's 'address's 'postalCode' has a non-string input", () => {
+        it("Mutation will fail if 'billingAddress's 'address's 'country' has an invalid input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1557,9 +1609,43 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 billingAddress: {
                     address: {
-                        country: 'Cadia',
+                        country: 'Terra',
+                        postalCode: 'Cadia',
+                        region: 'Georgia'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        billingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName);
+        });
+
+        it("Mutation will fail if 'billingAddress's 'address's 'postalCode' is not a string", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                billingAddress: {
+                    address: {
+                        country: 'US',
                         postalCode: 4,
-                        region: 'Eye of Terror'
+                        region: 'Georgia'
                     }
                 }
             };
@@ -1583,7 +1669,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'billingAddress's 'address's 'region' has a non-string input", () => {
+        it("Mutation will fail if 'billingAddress's 'address's 'region' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1591,8 +1677,8 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 billingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
+                        country: 'US',
+                        postalCode: 'Cadia',
                         region: 4
                     }
                 }
@@ -1617,7 +1703,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'billingAddress's 'address's 'city' has a valid input", () => {
+        it("Mutation will fail if 'billingAddress's 'address's 'region' has an invalid input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1625,9 +1711,43 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 billingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Terra'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        billingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName);
+        });
+
+        it("Mutation will succeed if 'billingAddress's 'address's 'city' is a string", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                billingAddress: {
+                    address: {
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         city: 'Pylons'
                     }
                 }
@@ -1655,7 +1775,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'billingAddress's 'address's 'city' has a non-string input", () => {
+        it("Mutation will fail if 'billingAddress's 'address's 'city' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1663,9 +1783,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 billingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         city: 4
                     }
                 }
@@ -1691,7 +1811,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'billingAddress's 'address's 'line1' has a valid input", () => {
+        it("Mutation will succeed if 'billingAddress's 'address's 'line1' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1699,9 +1819,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 billingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         line1: 'Pylons'
                     }
                 }
@@ -1729,7 +1849,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'billingAddress's 'address's 'line1' has a non-string input", () => {
+        it("Mutation will fail if 'billingAddress's 'address's 'line1' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1737,9 +1857,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 billingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         line1: 4
                     }
                 }
@@ -1765,7 +1885,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'billingAddress's 'address's 'line2' has a valid input", () => {
+        it("Mutation will succeed if 'billingAddress's 'address's 'line2' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1773,9 +1893,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 billingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         line2: 'Pylons'
                     }
                 }
@@ -1803,7 +1923,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'billingAddress's 'address's 'line2' has a non-string input", () => {
+        it("Mutation will fail if 'billingAddress's 'address's 'line2' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1811,9 +1931,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 billingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         line2: 4
                     }
                 }
@@ -1841,7 +1961,7 @@ describe('Mutation: createCustomer', () => {
     });
 
     context("Testing customer optional input 'shippingAddress', which requires complex data)", () => {
-        it("Mutation will succeed if 'shippingAddress' has a string 'firstName' input", () => {
+        it("Mutation will succeed if 'shippingAddress' is a string 'firstName' input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1869,7 +1989,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress' has a non-string 'firstName' input", () => {
+        it("Mutation will fail if 'shippingAddress' is not a string 'firstName' input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1895,7 +2015,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'shippingAddress' has a string 'lastName' input", () => {
+        it("Mutation will succeed if 'shippingAddress' is a string 'lastName' input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1923,7 +2043,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress' has a non-string 'lastName' input", () => {
+        it("Mutation will fail if 'shippingAddress' is not a string 'lastName' input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1949,7 +2069,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'shippingAddress' has a string 'email' input", () => {
+        it("Mutation will succeed if 'shippingAddress' is a string 'email' input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -1977,7 +2097,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress' has a non-string 'email' input", () => {
+        it("Mutation will fail if 'shippingAddress' is not a string 'email' input", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -2036,7 +2156,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress's 'phone's required 'phoneNumber' has a non-string input", () => {
+        it("Mutation will fail if 'shippingAddress's 'phone's required 'phoneNumber' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -2067,7 +2187,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'shippingAddress's 'phone's required 'phoneType' has a non-enum input", () => {
+        it("Mutation will fail if 'shippingAddress's 'phone's required 'phoneType' is not a enum", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -2098,7 +2218,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'shippingAddress's 'phone's required 'phoneType' has a non-valid enum input", () => {
+        it("Mutation will fail if 'shippingAddress's 'phone's required 'phoneType' is not a valid enum", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -2129,7 +2249,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'shippingAddress's 'phone' has valid 'countryCode input", () => {
+        it("Mutation will succeed if 'shippingAddress's 'phone' has valid 'countryCode'", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -2164,7 +2284,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress's 'phone' has a non-enum 'countryCode' input", () => {
+        it("Mutation will fail if 'shippingAddress's 'phone' is not a enum 'countryCode'", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -2197,7 +2317,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'shippingAddress's 'phone' has a non-valid enum 'countryCode' input", () => {
+        it("Mutation will fail if 'shippingAddress's 'phone' is not a valid enum 'countryCode'", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const mutation = `mutation {
                 ${mutationName}(
@@ -2238,9 +2358,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 shippingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror'
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia'
                     }
                 }
             };
@@ -2266,7 +2386,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress's 'address's 'country' has a non-string input", () => {
+        it("Mutation will fail if 'shippingAddress's 'address's 'country' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -2275,8 +2395,8 @@ describe('Mutation: createCustomer', () => {
                 shippingAddress: {
                     address: {
                         country: 4,
-                        postalCode: 'stands',
-                        region: 'Eye of Terror'
+                        postalCode: 'Cadia',
+                        region: 'Georgia'
                     }
                 }
             };
@@ -2300,7 +2420,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'shippingAddress's 'address's 'postalCode' has a non-string input", () => {
+        it("Mutation will fail if 'shippingAddress's 'address's 'postalCode' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -2308,9 +2428,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 shippingAddress: {
                     address: {
-                        country: 'Cadia',
+                        country: 'US',
                         postalCode: 4,
-                        region: 'Eye of Terror'
+                        region: 'Georgia'
                     }
                 }
             };
@@ -2334,7 +2454,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'shippingAddress's 'address's 'region' has a non-string input", () => {
+        it("Mutation will fail if 'shippingAddress's 'address's 'region' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -2342,8 +2462,8 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 shippingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
+                        country: 'US',
+                        postalCode: 'Cadia',
                         region: 4
                     }
                 }
@@ -2368,7 +2488,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'shippingAddress's 'address's 'city' has a valid input", () => {
+        it("Mutation will succeed if 'shippingAddress's 'address's 'city' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -2376,9 +2496,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 shippingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         city: 'Pylons'
                     }
                 }
@@ -2406,7 +2526,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress's 'address's 'city' has a non-string input", () => {
+        it("Mutation will fail if 'shippingAddress's 'address's 'city' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -2414,9 +2534,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 shippingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         city: 4
                     }
                 }
@@ -2442,7 +2562,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'shippingAddress's 'address's 'line1' has a valid input", () => {
+        it("Mutation will succeed if 'shippingAddress's 'address's 'line1' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -2450,9 +2570,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 shippingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         line1: 'Pylons'
                     }
                 }
@@ -2480,7 +2600,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress's 'address's 'line1' has a non-string input", () => {
+        it("Mutation will fail if 'shippingAddress's 'address's 'line1' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -2488,9 +2608,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 shippingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         line1: 4
                     }
                 }
@@ -2516,7 +2636,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'shippingAddress's 'address's 'line2' has a valid input", () => {
+        it("Mutation will succeed if 'shippingAddress's 'address's 'line2' is a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -2524,9 +2644,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 shippingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         line2: 'Pylons'
                     }
                 }
@@ -2554,7 +2674,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress's 'address's 'line2' has a non-string input", () => {
+        it("Mutation will fail if 'shippingAddress's 'address's 'line2' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
                 email: testEmail,
@@ -2562,9 +2682,9 @@ describe('Mutation: createCustomer', () => {
                 lastName: 'McTest',
                 shippingAddress: {
                     address: {
-                        country: 'Cadia',
-                        postalCode: 'stands',
-                        region: 'Eye of Terror',
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Georgia',
                         line2: 4
                     }
                 }
