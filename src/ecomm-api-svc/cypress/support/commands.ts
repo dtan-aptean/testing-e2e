@@ -194,6 +194,9 @@ export const createMutResMessage = (isSuccess: boolean, mutationName: string): s
             }
             message = transformFeature(mutationFeature);
             break;
+        case "paymentSettings":
+            message = "paymentSettings";
+            break;
         case "inventory":
             message = "product quantity";
             break;

@@ -689,9 +689,8 @@ describe('Query: vendors', () => {
             cy.queryAndValidateRandomId(queryName, standardQueryBody);
         });
 
-        it("Using 'ids' input as an empty array returns id values", () => {
-            const ids = [];
-            cy.queryAndValidateEmptyArray(ids, queryName, standardQueryBody);
+        it("Using 'ids' input as an empty array returns standard response as though 'ids' input was not included", () => {
+            cy.queryAndValidateEmptyArray(queryName, standardQueryBody);
         });
 
         it("Using an array of empty strings as 'ids' input will return an error", () => {
