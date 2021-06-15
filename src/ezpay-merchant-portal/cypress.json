@@ -4,6 +4,9 @@
   "password": "#{EZPAY_TOKEN_PASS}#",
   "tokenUrl": "#{EZPAY_TOKEN_URL}#",
   "env": {
+    "username": "#{EZPAY_TOKEN_USER}#",
+    "password": "#{EZPAY_TOKEN_PASS}#",
+    "tokenUrl": "#{EZPAY_TOKEN_URL}#",    
     "api-svc-url": "#{EZPAY_API_URL}#",
     "authorization": "bearer --BEARER_TOKEN--",
     "x-aptean-apim": "#{X_APTEAN_APIM}#",
