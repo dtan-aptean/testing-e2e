@@ -1,7 +1,5 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../support/commands";
-
 const loginUrl = 'https://tst.apteanecommerce.com/en/login?returnUrl=%2Fen%2F';
 const term = 'roleAccessTest';
 const password = 'Aptean123';
