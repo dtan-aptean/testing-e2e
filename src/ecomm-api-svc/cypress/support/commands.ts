@@ -7,7 +7,7 @@ import { defaultField } from "./queryTests";
 // Turns an array or object into a string to use as gql input or with a custom command's consoleProps logging functionality
 export const toFormattedString = (item, isMessage?: boolean, indentation?: number): string => {
     // Names of fields that are enum types and should not be wrapped in quotations.
-    const enumTypes = ["discountType", "discountLimitationType", "manageInventoryMethod", "backOrderMode"];
+    const enumTypes = ["discountType", "discountLimitationType", "manageInventoryMethod", "backOrderMode", "action"];
     function addTabs (depthLevel: number) {
         var indent = '  ';
         for (var i = 1; i < depthLevel; i++) {
@@ -187,11 +187,12 @@ export const createMutResMessage = (isSuccess: boolean, mutationName: string): s
         case "category":
             message = "categories";
             break;
-        case "returnReason":
-            message = "returnReason";
-            break;
         case "paymentSettings":
-            message = "paymentSettings";
+            if (!isSuccess) {
+                message = "paymentSettings";
+                break;
+            }
+            message = transformFeature(mutationFeature);
             break;
         case "inventory":
             message = "product quantity";
@@ -1313,6 +1314,8 @@ const compareExpectedToResults = (subject, propertyNames: string[], expectedValu
                 return name.includes("Info");
             }));
             verifySeoData(subject[propertyNames[i]], expectedValues[i], expectedValues[infoIndex]);
+        } else if (propertyNames[i] === "id") {
+            expect(subject[propertyNames[i]].toUpperCase()).to.be.eql(expectedValues[i].toUpperCase(), `Verify ${propertyNames[i]}`);
         } else {
             if (expectedValues[i] && subject[propertyNames[i]] === null) {
                 assert.exists(subject[propertyNames[i]], `${propertyNames[i]} should not be null`);
@@ -1408,6 +1411,8 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, itemP
                 return name.includes("Info");
             }));
             verifySeoData(result[propNames[i]], values[i], values[infoIndex]);
+        } else if (propNames[i] === "id") {
+            expect(result[propNames[i]].toUpperCase()).to.be.eql(values[i].toUpperCase(), `Verifying ${propNames[i]}`);
         } else {
             if (values[i] && result[propNames[i]] === null) {
                 assert.exists(result[propNames[i]], `${propNames[i]} should not be null`);
