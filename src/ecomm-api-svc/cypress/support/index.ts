@@ -19,6 +19,7 @@ import './paginationCommands';
 import './storefrontCommands';
 import './setupCommands';
 import './queryTests';
+import 'cypress-mochawesome-reporter/register';
 
 /**
  * Runs before all tests to decide whether or not to delete items after a test file runs
