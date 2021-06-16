@@ -187,16 +187,6 @@ export const createMutResMessage = (isSuccess: boolean, mutationName: string): s
         case "category":
             message = "categories";
             break;
-        case "paymentSettings":
-            if (!isSuccess) {
-                message = "paymentSettings";
-                break;
-            }
-            message = transformFeature(mutationFeature);
-            break;
-        case "paymentSettings":
-            message = "paymentSettings";
-            break;
         case "inventory":
             message = "product quantity";
             break;
@@ -692,7 +682,7 @@ Cypress.Commands.add("createAssociatedItems", (
             };
         }
     });
-    
+
     const getNameBase = () => {
         const propNames = Object.getOwnPropertyNames(inputBase);
         if (propNames.includes("firstName") && propNames.includes("lastName")) {
