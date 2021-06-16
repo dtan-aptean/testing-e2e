@@ -12,17 +12,15 @@
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
 import axios from 'axios';
-
 /**
  * @type {Cypress.PluginConfig}
  */
  module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
-  require('cypress-mochawesome-reporter/plugin')(on);
   const dateSubFolder = new Date().toISOString().substring(0,10);
   config.screenshotsFolder = `${config.screenshotsFolder}/${dateSubFolder}`;
-  config.reporterOptions.reportDir = `/e2e/cypress/results/${dateSubFolder}`;
+  config.reporterOptions.mochaFile = `/e2e/cypress/results/${dateSubFolder}/test-result-ecomm-api-svc-[hash].xml`;
   
   on('after:run', async (results) => {
     if (results) {

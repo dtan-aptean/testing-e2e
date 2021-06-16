@@ -11,10 +11,5 @@
       "storefrontLogin": "#{ECOMM_USERNAME}#",
       "storefrontPassword": "#{ECOMM_PASSWORD}#"
     }, 
-    "supportFile": "cypress/support/index.ts",
-    "reporter": "cypress-mochawesome-reporter",
-    "reporterOptions": {
-      "charts": true,
-      "embeddedScreenshots": false
-    }
+    "supportFile": "cypress/support/index.ts"
 }
