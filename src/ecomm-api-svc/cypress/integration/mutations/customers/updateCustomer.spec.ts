@@ -80,7 +80,6 @@ describe('Mutation: createCustomer', () => {
                     }
                 }
             }`;
-            // TODO: seee if we can remove the .then()s. If we don't need to query, we probably don't need it.
             cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
                 customerId = res.body.data[mutationName][itemPath].id;
             });
@@ -328,71 +327,71 @@ describe('Mutation: createCustomer', () => {
         });
 
         // BUG SECTION
-        // it("Mutation will succeed if 'dateOfBirth' is a toISOstring", () => {
-        //     const date = new Date();
-        //     const input = {
-        //         id: customerId,
-        //         dateOfBirth: date.toISOString()
-        //     };
-        //     const mutation = `mutation {
-        //         ${mutationName}(
-        //             input: ${toFormattedString(input)}
-        //         ) {
-        //             ${standardMutationContent}
-        //             ${itemPath} {
-        //                 id
-        //                 dateOfBirth
-        //             }
-        //         }
-        //     }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'dateOfBirth' is a toISOstring", () => {
+            const date = new Date();
+            const input = {
+                id: customerId,
+                dateOfBirth: date.toISOString()
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        dateOfBirth
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
-        // it("Mutation will succeed if 'dateOfBirth' is a toDatestring", () => {
-        //     const date = new Date();
-        //     const input = {
-        //         id: customerId,
-        //         dateOfBirth: date.toDateString()
-        //     };
-        //     const mutation = `mutation {
-        //         ${mutationName}(
-        //             input: ${toFormattedString(input)}
-        //         ) {
-        //             ${standardMutationContent}
-        //             ${itemPath} {
-        //                 id
-        //                 dateOfBirth
-        //             }
-        //         }
-        //     }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'dateOfBirth' is a toDatestring", () => {
+            const date = new Date();
+            const input = {
+                id: customerId,
+                dateOfBirth: date.toDateString()
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        dateOfBirth
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
-        // it("Mutation will succeed if 'dateOfBirth' has non-date format", () => {
-        //     const date = 4;
-        //     const input = {
-        //         id: customerId,
-        //         dateOfBirth: date
-        //     };
-        //     const mutation = `mutation {
-        //         ${mutationName}(
-        //             input: ${toFormattedString(input)}
-        //         ) {
-        //             ${standardMutationContent}
-        //             ${itemPath} {
-        //                 id
-        //                 dateOfBirth
-        //             }
-        //         }
-        //     }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'dateOfBirth' has non-date format", () => {
+            const date = 4;
+            const input = {
+                id: customerId,
+                dateOfBirth: date
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        dateOfBirth
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
         it("Mutation will succeed if 'isTaxExempt' is a boolean", () => {
             const input = {
@@ -538,26 +537,26 @@ describe('Mutation: createCustomer', () => {
         });
 
         // BUG SECTION
-        // it("Mutation will succeed if 'vendorId' is not a string", () => {
-        //     const input = {
-        //         id: customerId,
-        //         vendorId: 4
-        //     };
-        //     const mutation = `mutation {
-        //         ${mutationName}(
-        //             input: ${toFormattedString(input)}
-        //         ) {
-        //             ${standardMutationContent}
-        //             ${itemPath} {
-        //                 id
-        //                 vendorId
-        //             }
-        //         }
-        //     }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'vendorId' is not a string", () => {
+            const input = {
+                id: customerId,
+                vendorId: 4
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        vendorId
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
         it("Mutation will succeed if 'affiliateId' is a string", () => {
             const input = {
@@ -602,71 +601,71 @@ describe('Mutation: createCustomer', () => {
         });
 
         // BUG SECTION
-        // it("Mutation will succeed if 'cannotLoginUntilDate' is a toISOstring", () => {
-        //     const date = new Date();
-        //     const input = {
-        //         id: customerId,
-        //         cannotLoginUntilDate: date.toISOString()
-        //     };
-        //     const mutation = `mutation {
-        //         ${mutationName}(
-        //             input: ${toFormattedString(input)}
-        //         ) {
-        //             ${standardMutationContent}
-        //             ${itemPath} {
-        //                 id
-        //                 cannotLoginUntilDate
-        //             }
-        //         }
-        //     }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'cannotLoginUntilDate' is a toISOstring", () => {
+            const date = new Date();
+            const input = {
+                id: customerId,
+                cannotLoginUntilDate: date.toISOString()
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        cannotLoginUntilDate
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
-        // it("Mutation will succeed if 'cannotLoginUntilDate' is a toDatestring", () => {
-        //     const date = new Date();
-        //     const input = {
-        //         id: customerId,
-        //         cannotLoginUntilDate: date.toDateString()
-        //     };
-        //     const mutation = `mutation {
-        //         ${mutationName}(
-        //             input: ${toFormattedString(input)}
-        //         ) {
-        //             ${standardMutationContent}
-        //             ${itemPath} {
-        //                 id
-        //                 cannotLoginUntilDate
-        //             }
-        //         }
-        //     }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'cannotLoginUntilDate' is a toDatestring", () => {
+            const date = new Date();
+            const input = {
+                id: customerId,
+                cannotLoginUntilDate: date.toDateString()
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        cannotLoginUntilDate
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
-        // it("Mutation will succeed if 'cannotLoginUntilDate' has non-date format", () => {
-        //     const date = 4;
-        //     const input = {
-        //         id: customerId,
-        //         cannotLoginUntilDate: date
-        //     };
-        //     const mutation = `mutation {
-        //         ${mutationName}(
-        //             input: ${toFormattedString(input)}
-        //         ) {
-        //             ${standardMutationContent}
-        //             ${itemPath} {
-        //                 id
-        //                 cannotLoginUntilDate
-        //             }
-        //         }
-        //     }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'cannotLoginUntilDate' has non-date format", () => {
+            const date = 4;
+            const input = {
+                id: customerId,
+                cannotLoginUntilDate: date
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        cannotLoginUntilDate
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
         it("Mutation will succeed if 'requireReLogin' is a boolean", () => {
             const input = {
@@ -709,45 +708,45 @@ describe('Mutation: createCustomer', () => {
         });
 
         // BUG SECTION - "Field \"emailCustomer\" is not defined by type \"UpdateCustomerInput\"."
-        // it("Mutation will succeed if 'emailCustomer' is a boolean", () => {
-        //     const input = {
-        //         id: customerId,
-        //         emailCustomer: true
-        //     };
-        //     const mutation = `mutation {
-        //         ${mutationName}(
-        //             input: ${toFormattedString(input)}
-        //         ) {
-        //             ${standardMutationContent}
-        //             ${itemPath} {
-        //                 id
-        //                 emailCustomer
-        //             }
-        //         }
-        //     }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'emailCustomer' is a boolean", () => {
+            const input = {
+                id: customerId,
+                emailCustomer: true
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        emailCustomer
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
-        // it("Mutation will fail if 'emailCustomer' is not a boolean", () => {
-        //     const input = {
-        //         id: customerId,
-        //         emailCustomer: 'true'
-        //     };
-        //     const mutation = `mutation {
-        //         ${mutationName}(
-        //             input: ${toFormattedString(input)}
-        //         ) {
-        //             ${standardMutationContent}
-        //             ${itemPath} {
-        //                 id
-        //                 emailCustomer
-        //             }
-        //         }
-        //     }`;
-        //     cy.postAndConfirmError(mutation);
-        // });
+        it("Mutation will fail if 'emailCustomer' is not a boolean", () => {
+            const input = {
+                id: customerId,
+                emailCustomer: 'true'
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        emailCustomer
+                    }
+                }
+            }`;
+            cy.postAndConfirmError(mutation);
+        });
     });
 
     context("Testing customer optional input 'managerOfVendorId', which requires content-specific data)", () => {
@@ -921,115 +920,115 @@ describe('Mutation: createCustomer', () => {
     // });
 
     // BUG SECTON "Expected value of type \"AssignmentInput!\", found \"778c9051-9651-4cdf-9f45-3b9d7937db4f\"."
-    // context("Testing customer optional input 'customerRoleIds', which requires content-specific data)", () => {
-    //     before(() => {
-    //         const queryName = 'customerRoles';
-    //         const goldQuery = `{
-    //             ${queryName}(searchString: "Gold", orderBy: {direction: ASC, field: NAME }) {
-    //                 nodes {
-    //                     id
-    //                     name
-    //                 }
-    //                 totalCount
-    //             }
-    //         }`;
-    //         cy.postAndValidate(goldQuery, queryName).then((res) => {
-    //             goldId = res.body.data[queryName].nodes[0].id;
-    //             const adminQuery = `{
-    //                 ${queryName}(searchString: "Administrators", orderBy: {direction: ASC, field: NAME }) {
-    //                     nodes {
-    //                         id
-    //                         name
-    //                     }
-    //                     totalCount
-    //                 }
-    //             }`;
-    //             cy.postAndValidate(adminQuery, queryName).then((res) => {
-    //                 adminId = res.body.data[queryName].nodes[0].id;
-    //             });
-    //         });
-    //     })
+    context("Testing customer optional input 'customerRoleIds', which requires content-specific data)", () => {
+        before(() => {
+            const queryName = 'customerRoles';
+            const goldQuery = `{
+                ${queryName}(searchString: "Gold", orderBy: {direction: ASC, field: NAME }) {
+                    nodes {
+                        id
+                        name
+                    }
+                    totalCount
+                }
+            }`;
+            cy.postAndValidate(goldQuery, queryName).then((res) => {
+                goldId = res.body.data[queryName].nodes[0].id;
+                const adminQuery = `{
+                    ${queryName}(searchString: "Administrators", orderBy: {direction: ASC, field: NAME }) {
+                        nodes {
+                            id
+                            name
+                        }
+                        totalCount
+                    }
+                }`;
+                cy.postAndValidate(adminQuery, queryName).then((res) => {
+                    adminId = res.body.data[queryName].nodes[0].id;
+                });
+            });
+        })
 
-    //     it("Mutation will succeed if 'customerRoleIds' has a valid input", () => {
-    //         const input = {
-    //             id: customerId,
-    //             customerRoleIds: [goldId]
-    //         };
-    //         const mutation = `mutation {
-    //             ${mutationName}(
-    //                 input: ${toFormattedString(input)}
-    //             ) {
-    //                 ${standardMutationContent}
-    //                 ${itemPath} {
-    //                     id
-    //                     customerRoleIds
-    //                 }
-    //             }
-    //         }`;
-    //         cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-    //             customerId = res.body.data[mutationName][itemPath].id;
-    //         });
-    //     });
+        it("Mutation will succeed if 'customerRoleIds' has a valid input", () => {
+            const input = {
+                id: customerId,
+                customerRoleIds: [goldId]
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        customerRoleIds
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
-    //     it("Mutation will succeed if 'customerRoleIds' has multiple valid inputs", () => {
-    //         const input = {
-    //             id: customerId,
-    //             customerRoleIds: [goldId, adminId]
-    //         };
-    //         const mutation = `mutation {
-    //             ${mutationName}(
-    //                 input: ${toFormattedString(input)}
-    //             ) {
-    //                 ${standardMutationContent}
-    //                 ${itemPath} {
-    //                     id
-    //                     customerRoleIds
-    //                 }
-    //             }
-    //         }`;
-    //         cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-    //             customerId = res.body.data[mutationName][itemPath].id;
-    //         });
-    //     });
+        it("Mutation will succeed if 'customerRoleIds' has multiple valid inputs", () => {
+            const input = {
+                id: customerId,
+                customerRoleIds: [goldId, adminId]
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        customerRoleIds
+                    }
+                }
+            }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
-    //     it("Mutation will fail if 'customerRoleIds' contains an invalid value", () => {
-    //         const input = {
-    //             id: customerId,
-    //             customerRoleIds: ["Waaagh"]
-    //         };
-    //         const mutation = `mutation {
-    //             ${mutationName}(
-    //                 input: ${toFormattedString(input)}
-    //             ) {
-    //                 ${standardMutationContent}
-    //                 ${itemPath} {
-    //                     id
-    //                     customerRoleIds
-    //                 }
-    //             }
-    //         }`;
-    //         cy.postAndConfirmMutationError(mutation, mutationName);
-    //     });
+        it("Mutation will fail if 'customerRoleIds' contains an invalid value", () => {
+            const input = {
+                id: customerId,
+                customerRoleIds: ["Waaagh"]
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        customerRoleIds
+                    }
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName);
+        });
 
-    //     it("Mutation will fail if 'customerRoleIds' contains a mix of valid and invalid inputs", () => {
-    //         const input = {
-    //             id: customerId,
-    //             customerRoleIds: [4, goldId]
-    //         };
-    //         const mutation = `mutation {
-    //             ${mutationName}(
-    //                 input: ${toFormattedString(input)}
-    //             ) {
-    //                 ${standardMutationContent}
-    //                 ${itemPath} {
-    //                     id
-    //                     customerRoleIds
-    //                 }
-    //             }
-    //         }`;
-    //         cy.postAndConfirmMutationError(mutation, mutationName);
-    //     });
-    // });
+        it("Mutation will fail if 'customerRoleIds' contains a mix of valid and invalid inputs", () => {
+            const input = {
+                id: customerId,
+                customerRoleIds: [4, goldId]
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        id
+                        customerRoleIds
+                    }
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName);
+        });
+    });
 
     context("Testing customer optional input 'billingAddress', which requires complex data)", () => {
         it("Mutation will succeed if 'billingAddress's 'firstName' is a string", () => {
@@ -1176,35 +1175,33 @@ describe('Mutation: createCustomer', () => {
         });
 
         // BUG SECTION - code: "Invalid Argument", message: "Customer Id Is Required", domain: "Aptean.ATG.EComm"
-        // it("Mutation will succeed if 'billingAddress's 'phone' has valid, required 'phoneNumber' and 'phoneType' inputs", () => {
-        //     const mutation = `mutation {
-        //             ${mutationName}(
-        //                 input: {
-        //                     id: "${companyId}"
-        //                     billingAddress:{
-        //                         phone: {
-        //                             phoneNumber: "Waaagh",
-        //                             phoneType: WORK
-        //                         }
-        //                     }
-        //                 }
-        //             ) {
-        //                 ${standardMutationContent}
-        //                 ${itemPath} {
-        //                     id
-        //                     billingAddress {
-        //                         phone {
-        //                             phoneNumber
-        //                             phoneType
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'billingAddress's 'phone' has valid, required 'phoneNumber' and 'phoneType' inputs", () => {
+            const mutation = `mutation {
+                    ${mutationName}(
+                        input: {
+                            billingAddress:{
+                                phone: {
+                                    phoneNumber: "Waaagh",
+                                    phoneType: WORK
+                                }
+                            }
+                        }
+                    ) {
+                        ${standardMutationContent}
+                        ${itemPath} {
+                            billingAddress {
+                                phone {
+                                    phoneNumber
+                                    phoneType
+                                }
+                            }
+                        }
+                    }
+                }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
         it("Mutation will fail if 'billingAddress's 'phone's required 'phoneNumber' is not a string", () => {
             const mutation = `mutation {
@@ -1291,37 +1288,37 @@ describe('Mutation: createCustomer', () => {
         });
 
         //BUG SECTION - code: "Invalid Argument", message: "Customer Id Is Required", domain: "Aptean.ATG.EComm"
-        // it("Mutation will succeed if 'billingAddress's 'phone' has valid 'countryCode'", () => {
-        //     const mutation = `mutation {
-        //             ${mutationName}(
-        //                 input: {
-        //                     id: "${companyId}"
-        //                     billingAddress:{
-        //                         phone: {
-        //                             phoneNumber: "Waaagh",
-        //                             phoneType: WORK,
-        //                             countryCode: ZA
-        //                         }
-        //                     }
-        //                 }
-        //             ) {
-        //                 ${standardMutationContent}
-        //                 ${itemPath} {
-        //                     id
-        //                     billingAddress {
-        //                         phone {
-        //                             phoneNumber
-        //                             phoneType
-        //                             countryCode
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'billingAddress's 'phone' has valid 'countryCode'", () => {
+            const mutation = `mutation {
+                    ${mutationName}(
+                        input: {
+                            id: "${companyId}"
+                            billingAddress:{
+                                phone: {
+                                    phoneNumber: "Waaagh",
+                                    phoneType: WORK,
+                                    countryCode: ZA
+                                }
+                            }
+                        }
+                    ) {
+                        ${standardMutationContent}
+                        ${itemPath} {
+                            id
+                            billingAddress {
+                                phone {
+                                    phoneNumber
+                                    phoneType
+                                    countryCode
+                                }
+                            }
+                        }
+                    }
+                }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
         it("Mutation will fail if 'billingAddress's 'phone' is not an enum 'countryCode'", () => {
             const mutation = `mutation {
@@ -1858,35 +1855,35 @@ describe('Mutation: createCustomer', () => {
         });
 
         // BUG SECTION - code: "Invalid Argument", message: "Customer Id Is Required", domain: "Aptean.ATG.EComm"
-        // it("Mutation will succeed if 'shippingAddress's 'phone' has valid, required 'phoneNumber' and 'phoneType' inputs", () => {
-        //     const mutation = `mutation {
-        //             ${mutationName}(
-        //                 input: {
-        //                     id: "${companyId}"
-        //                     shippingAddress:{
-        //                         phone: {
-        //                             phoneNumber: "Waaagh",
-        //                             phoneType: WORK
-        //                         }
-        //                     }
-        //                 }
-        //             ) {
-        //                 ${standardMutationContent}
-        //                 ${itemPath} {
-        //                     id
-        //                     shippingAddress {
-        //                         phone {
-        //                             phoneNumber
-        //                             phoneType
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'shippingAddress's 'phone' has valid, required 'phoneNumber' and 'phoneType' inputs", () => {
+            const mutation = `mutation {
+                    ${mutationName}(
+                        input: {
+                            id: "${companyId}"
+                            shippingAddress:{
+                                phone: {
+                                    phoneNumber: "Waaagh",
+                                    phoneType: WORK
+                                }
+                            }
+                        }
+                    ) {
+                        ${standardMutationContent}
+                        ${itemPath} {
+                            id
+                            shippingAddress {
+                                phone {
+                                    phoneNumber
+                                    phoneType
+                                }
+                            }
+                        }
+                    }
+                }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
         it("Mutation will fail if 'shippingAddress's 'phone's required 'phoneNumber' is not a string", () => {
             const mutation = `mutation {
@@ -1973,37 +1970,37 @@ describe('Mutation: createCustomer', () => {
         });
 
         // BUG SECTION - code: "Invalid Argument", message: "Customer Id Is Required", domain: "Aptean.ATG.EComm"
-        // it("Mutation will succeed if 'shippingAddress's 'phone' has valid 'countryCode'", () => {
-        //     const mutation = `mutation {
-        //             ${mutationName}(
-        //                 input: {
-        //                     id: "${companyId}"
-        //                     shippingAddress:{
-        //                         phone: {
-        //                             phoneNumber: "Waaagh",
-        //                             phoneType: WORK,
-        //                             countryCode: ZA
-        //                         }
-        //                     }
-        //                 }
-        //             ) {
-        //                 ${standardMutationContent}
-        //                 ${itemPath} {
-        //                     id
-        //                     shippingAddress {
-        //                         phone {
-        //                             phoneNumber
-        //                             phoneType
-        //                             countryCode
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }`;
-        //     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-        //         customerId = res.body.data[mutationName][itemPath].id;
-        //     });
-        // });
+        it("Mutation will succeed if 'shippingAddress's 'phone' has valid 'countryCode'", () => {
+            const mutation = `mutation {
+                    ${mutationName}(
+                        input: {
+                            id: "${companyId}"
+                            shippingAddress:{
+                                phone: {
+                                    phoneNumber: "Waaagh",
+                                    phoneType: WORK,
+                                    countryCode: ZA
+                                }
+                            }
+                        }
+                    ) {
+                        ${standardMutationContent}
+                        ${itemPath} {
+                            id
+                            shippingAddress {
+                                phone {
+                                    phoneNumber
+                                    phoneType
+                                    countryCode
+                                }
+                            }
+                        }
+                    }
+                }`;
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                customerId = res.body.data[mutationName][itemPath].id;
+            });
+        });
 
         it("Mutation will fail if 'shippingAddress's 'phone' is not an enum 'countryCode'", () => {
             const mutation = `mutation {
