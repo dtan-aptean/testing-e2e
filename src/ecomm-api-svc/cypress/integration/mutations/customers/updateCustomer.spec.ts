@@ -1,7 +1,7 @@
 import { toFormattedString } from "../../../support/commands";
 
 // TEST COUNT: 17
-describe('Mutation: createCustomer', () => {
+describe('Mutation: updateCustomer', () => {
     let customerId = '';
     let vendorId = '';
     let companyId = '';
@@ -1443,7 +1443,38 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'billingAddress's 'address's 'country' is not a string", () => {
+        it("Mutation will fail if 'billingAddress's 'address's 'country' is not a valid string", () => {
+            const input = {
+                id: customerId,
+                billingAddress: {
+                    address: {
+                        country: 'Terra',
+                        postalCode: 4,
+                        region: 'Georgia'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                    ${mutationName}(
+                        input: ${toFormattedString(input)}
+                    ) {
+                        ${standardMutationContent}
+                        ${itemPath} {
+                            id
+                            billingAddress {
+                                address {
+                                    country
+                                    postalCode
+                                    region
+                                }
+                            }
+                        }
+                    }
+                }`;
+            cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will fail if 'billingAddress's 'address's 'postalCode' is a non-string", () => {
             const input = {
                 id: customerId,
                 billingAddress: {
@@ -1474,7 +1505,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'billingAddress's 'address's 'country' is not a string", () => {
+        it("Mutation will fail if 'billingAddress's 'address's 'region' is a non-string", () => {
             const input = {
                 id: customerId,
                 billingAddress: {
@@ -1505,7 +1536,38 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'billingAddress's 'address's 'city' is a valid input", () => {
+        it("Mutation will fail if 'billingAddress's 'address's 'region' is an invalid string", () => {
+            const input = {
+                id: customerId,
+                billingAddress: {
+                    address: {
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Pylons'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                    ${mutationName}(
+                        input: ${toFormattedString(input)}
+                    ) {
+                        ${standardMutationContent}
+                        ${itemPath} {
+                            id
+                            billingAddress {
+                                address {
+                                    country
+                                    postalCode
+                                    region
+                                }
+                            }
+                        }
+                    }
+                }`;
+            cy.postAndConfirmMutationError(mutation, mutationName);
+        });
+
+        it("Mutation will succeed if 'billingAddress's 'address's 'city' is a string", () => {
             const input = {
                 id: customerId,
                 billingAddress: {
@@ -1710,8 +1772,8 @@ describe('Mutation: createCustomer', () => {
         });
     });
 
-    context("Testing customer optional input 'shippingAddress', which requires complex data)", () => {
-        it("Mutation will succeed if 'shippingAddress' is a string 'firstName' input", () => {
+    context.only("Testing customer optional input 'shippingAddress', which requires complex data)", () => {
+        it("Mutation will succeed if 'shippingAddress's 'firstName' is a string", () => {
             const input = {
                 id: customerId,
                 shippingAddress: {
@@ -1736,7 +1798,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress' is a non-string 'firstName' input", () => {
+        it("Mutation will fail if 'shippingAddress';s 'firstName' is a non-string", () => {
             const input = {
                 id: customerId,
                 shippingAddress: {
@@ -1758,7 +1820,7 @@ describe('Mutation: createCustomer', () => {
             }`;
             cy.postAndConfirmError(mutation);
         });
-        it("Mutation will succeed if 'shippingAddress' is a string 'lastName' input", () => {
+        it("Mutation will succeed if 'shippingAddress's 'lastName' is a string", () => {
             const input = {
                 id: customerId,
                 shippingAddress: {
@@ -1783,7 +1845,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress' is a non-string 'lastName' input", () => {
+        it("Mutation will fail if 'shippingAddress's 'lastName' is a non-string", () => {
             const input = {
                 id: customerId,
                 shippingAddress: {
@@ -1806,7 +1868,7 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'shippingAddress' is a string 'email' input", () => {
+        it("Mutation will succeed if 'shippingAddress's 'email' is a string", () => {
             const input = {
                 id: customerId,
                 shippingAddress: {
@@ -1831,7 +1893,7 @@ describe('Mutation: createCustomer', () => {
             });
         });
 
-        it("Mutation will fail if 'shippingAddress' is a non-string 'email' input", () => {
+        it("Mutation will fail if 'shippingAddress's 'email' is a non-string", () => {
             const input = {
                 id: customerId,
                 shippingAddress: {
@@ -2125,7 +2187,38 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'shippingAddress's 'address's 'country' is not a string", () => {
+        it("Mutation will fail if 'shippingAddress's 'address's 'country' is not a valid string", () => {
+            const input = {
+                id: customerId,
+                shippingAddress: {
+                    address: {
+                        country: 'Terra',
+                        postalCode: 'Cadia',
+                        region: 'Georgia'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                    ${mutationName}(
+                        input: ${toFormattedString(input)}
+                    ) {
+                        ${standardMutationContent}
+                        ${itemPath} {
+                            id
+                            shippingAddress {
+                                address {
+                                    country
+                                    postalCode
+                                    region
+                                }
+                            }
+                        }
+                    }
+                }`;
+            cy.postAndConfirmMutationError(mutation, mutationName);
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'address's 'postalCode' is not a string", () => {
             const input = {
                 id: customerId,
                 shippingAddress: {
@@ -2156,14 +2249,14 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will fail if 'shippingAddress's 'address's 'country' is not a string", () => {
+        it("Mutation will fail if 'shippingAddress's 'address's 'region' is not a string", () => {
             const input = {
                 id: customerId,
                 shippingAddress: {
                     address: {
                         country: 'US',
                         postalCode: 'Cadia',
-                        region: 4
+                        region: 4,
                     }
                 }
             };
@@ -2187,7 +2280,38 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
-        it("Mutation will succeed if 'shippingAddress's 'address's 'city' is a valid input", () => {
+        it("Mutation will fail if 'shippingAddress's 'address's 'region' is not a valid string", () => {
+            const input = {
+                id: customerId,
+                shippingAddress: {
+                    address: {
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Pylons'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                    ${mutationName}(
+                        input: ${toFormattedString(input)}
+                    ) {
+                        ${standardMutationContent}
+                        ${itemPath} {
+                            id
+                            shippingAddress {
+                                address {
+                                    country
+                                    postalCode
+                                    region
+                                }
+                            }
+                        }
+                    }
+                }`;
+            cy.postAndConfirmMutationError(mutation, mutationName);
+        });
+
+        it("Mutation will succeed if 'shippingAddress's 'address's 'city' is a string", () => {
             const input = {
                 id: customerId,
                 shippingAddress: {

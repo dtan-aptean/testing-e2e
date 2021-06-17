@@ -935,89 +935,89 @@ describe('Mutation: createCustomer', () => {
 
     // BUG: When trying to create a customer with a companyId, it throws an error and asks if you meant 'company' instead. If switched to 'company,
     //      it still throws an error, now asking if you meant 'companyId' instead.
-    context.only("Testing customer optional input 'companyId', which requires content-specific data)", () => {
-        before(() => {
-            const input = {
-                name: "Customer Tests Company",
-                integrationKey: 'testkey' + Math.floor(100000 + Math.random() * 900000)
-            };
-            const mutationName = 'createCompany';
-            const itemPath = 'company';
-            const mutation = `mutation {
-                ${mutationName}(
-                    input:  ${toFormattedString(input)}
-                ) {
-                    ${standardMutationContent}
-                    ${itemPath} {
-                        id
-                        name
-                        integrationKey
-                    }
-                }
-            }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                companyId = res.body.data[mutationName][itemPath].id;
-            });
-        });
+    // context("Testing customer optional input 'companyId', which requires content-specific data)", () => {
+    //     before(() => {
+    //         const input = {
+    //             name: "Customer Tests Company",
+    //             integrationKey: 'testkey' + Math.floor(100000 + Math.random() * 900000)
+    //         };
+    //         const mutationName = 'createCompany';
+    //         const itemPath = 'company';
+    //         const mutation = `mutation {
+    //             ${mutationName}(
+    //                 input:  ${toFormattedString(input)}
+    //             ) {
+    //                 ${standardMutationContent}
+    //                 ${itemPath} {
+    //                     id
+    //                     name
+    //                     integrationKey
+    //                 }
+    //             }
+    //         }`;
+    //         cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+    //             companyId = res.body.data[mutationName][itemPath].id;
+    //         });
+    //     });
 
-        after(() => {
-            const mutationName = "deleteCompany";
-            const mutation = `mutation {
-                    ${mutationName}(input: { id: "${vendorId}" }) {
-                        ${standardMutationContent}
-                    }
-                }`;
-            cy.postMutAndValidate(mutation, mutationName, 'deleteMutation').then((res) => {
-                companyId = '';
-            });
-        });
+    //     after(() => {
+    //         const mutationName = "deleteCompany";
+    //         const mutation = `mutation {
+    //                 ${mutationName}(input: { id: "${vendorId}" }) {
+    //                     ${standardMutationContent}
+    //                 }
+    //             }`;
+    //         cy.postMutAndValidate(mutation, mutationName, 'deleteMutation').then((res) => {
+    //             companyId = '';
+    //         });
+    //     });
 
-        it("Mutation will succeed if 'companyId' has a valid companyId input", () => {
-            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
-            const input = {
-                email: testEmail,
-                firstName: 'Testy',
-                lastName: 'McTest',
-                company: companyId
-            };
-            const mutation = `mutation {
-                ${mutationName}(
-                    company: ${toFormattedString(input)}
-                ) {
-                    ${standardMutationContent}
-                    ${itemPath} {
-                        ${requiredItems}
-                        company
-                    }
-                }
-            }`;
-            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                email = res.body.data[mutationName][itemPath].email;
-            });
-        });
+    //     it("Mutation will succeed if 'companyId' has a valid companyId input", () => {
+    //         const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+    //         const input = {
+    //             email: testEmail,
+    //             firstName: 'Testy',
+    //             lastName: 'McTest',
+    //             company: companyId
+    //         };
+    //         const mutation = `mutation {
+    //             ${mutationName}(
+    //                 company: ${toFormattedString(input)}
+    //             ) {
+    //                 ${standardMutationContent}
+    //                 ${itemPath} {
+    //                     ${requiredItems}
+    //                     company
+    //                 }
+    //             }
+    //         }`;
+    //         cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+    //             email = res.body.data[mutationName][itemPath].email;
+    //         });
+    //     });
 
-        it("Mutation will fail if 'companyId' has an invalid companyId input", () => {
-            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
-            const input = {
-                email: testEmail,
-                firstName: 'Testy',
-                lastName: 'McTest',
-                companyId: 'Waaagh'
-            };
-            const mutation = `mutation {
-                ${mutationName}(
-                    input: ${toFormattedString(input)}
-                ) {
-                    ${standardMutationContent}
-                    ${itemPath} {
-                        ${requiredItems}
-                        companyId
-                    }
-                }
-            }`;
-            cy.postAndConfirmMutationError(mutation, mutationName);
-        });
-    });
+    //     it("Mutation will fail if 'companyId' has an invalid companyId input", () => {
+    //         const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+    //         const input = {
+    //             email: testEmail,
+    //             firstName: 'Testy',
+    //             lastName: 'McTest',
+    //             companyId: 'Waaagh'
+    //         };
+    //         const mutation = `mutation {
+    //             ${mutationName}(
+    //                 input: ${toFormattedString(input)}
+    //             ) {
+    //                 ${standardMutationContent}
+    //                 ${itemPath} {
+    //                     ${requiredItems}
+    //                     companyId
+    //                 }
+    //             }
+    //         }`;
+    //         cy.postAndConfirmMutationError(mutation, mutationName);
+    //     });
+    // });
 
     context("Testing customer optional input 'customerRoleIds', which requires content-specific data)", () => {
         before(() => {
@@ -2420,6 +2420,40 @@ describe('Mutation: createCustomer', () => {
             cy.postAndConfirmError(mutation);
         });
 
+        it("Mutation will fail if 'shippingAddress's 'address's 'country' is not a valid string", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 'Terra',
+                        postalCode: 'Cadia',
+                        region: 'Georgia'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName);
+        });
+
         it("Mutation will fail if 'shippingAddress's 'address's 'postalCode' is not a string", () => {
             const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
             const input = {
@@ -2486,6 +2520,40 @@ describe('Mutation: createCustomer', () => {
                 }
             }`;
             cy.postAndConfirmError(mutation);
+        });
+
+        it("Mutation will fail if 'shippingAddress's 'address's 'region' is not a valid string", () => {
+            const testEmail = 'testcustomer' + Math.floor(100000 + Math.random() * 900000) + '@test.com';
+            const input = {
+                email: testEmail,
+                firstName: 'Testy',
+                lastName: 'McTest',
+                shippingAddress: {
+                    address: {
+                        country: 'US',
+                        postalCode: 'Cadia',
+                        region: 'Pylons'
+                    }
+                }
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: ${toFormattedString(input)}
+                ) {
+                    ${standardMutationContent}
+                    ${itemPath} {
+                        ${requiredItems}
+                        shippingAddress {
+                            address {
+                                country
+                                postalCode
+                                region
+                            }
+                        }
+                    }
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName);
         });
 
         it("Mutation will succeed if 'shippingAddress's 'address's 'city' is a string", () => {
