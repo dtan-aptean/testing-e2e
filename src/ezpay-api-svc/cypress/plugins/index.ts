@@ -12,6 +12,7 @@
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
 import axios from 'axios';
+const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/lib');
 /**
  * @type {Cypress.PluginConfig}
  */
@@ -20,9 +21,15 @@ module.exports = (on, config) => {
   // `config` is the resolved Cypress config
   const dateSubFolder = new Date().toISOString().substring(0,10);
   config.screenshotsFolder = `${config.screenshotsFolder}/${dateSubFolder}`;
-  config.reporterOptions.mochaFile = `/e2e/cypress/results/${dateSubFolder}/test-result-ezpay-api-svc-[hash].xml`;  
-
+  config.reporterOptions.reportDir = `/e2e/cypress/results/${dateSubFolder}`;  
+  on('before:run', async (details) => {
+    console.log('override before:run');
+    await beforeRunHook(details);
+  });
   on('after:run', async (results) => {
+    console.log('override after:run');
+    await afterRunHook();
+
     if (results) {
       let facts: Array<any> = [];
       facts.push({
