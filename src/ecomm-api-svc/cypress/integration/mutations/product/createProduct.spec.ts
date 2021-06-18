@@ -977,7 +977,7 @@ describe('Mutation: createProduct', () => {
             });
         });
 
-        it.only("Mutation with 'specificationOptionIds' input will successfully create a product with attached specificationOptions", () => {
+        it("Mutation with 'specificationOptionIds' input will successfully create a product with attached specificationOptions", () => {
             const retrieveOptionsIds = (responseBodies: []) => {
                 const ids = [] as string[];
                 responseBodies.forEach((response) => {
@@ -1021,11 +1021,7 @@ describe('Mutation: createProduct', () => {
                     id = res.body.data[mutationName][itemPath].id;
                     const propNames = [infoName];
                     const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                        const queryBody = `id
-                            ${optionsField}`;
-                        cy.queryByProductId(extraQuery, queryBody, id, fullItems);
-                    });
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
                 });
             });
         });
