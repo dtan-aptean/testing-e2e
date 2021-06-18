@@ -13,7 +13,7 @@
 // the project's config changing)
 import axios from 'axios';
 import * as helper from '../support/getAuthToken';
-
+const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/lib');
 /**
  * @type {Cypress.PluginConfig}
  */
@@ -22,12 +22,20 @@ module.exports = async (on, config) => {
   // `config` is the resolved Cypress config
   const dateSubFolder = new Date().toISOString().substring(0,10);
   config.screenshotsFolder = `${config.screenshotsFolder}/${dateSubFolder}`;
-  config.reporterOptions.mochaFile = `/e2e/cypress/results/${dateSubFolder}/test-result-ezpay-merchant-portal-[hash].xml`; 
-
+  config.reporterOptions.reportDir = `/e2e/cypress/results/${dateSubFolder}`;
+  
   const token = await helper.getAdToken(config.env.username, config.env.password, config.env.tokenUrl);
   config.env.authorization = token;
-  
+
+  on('before:run', async (details) => {
+    console.log('override before:run');
+    await beforeRunHook(details);
+  });
+
   on('after:run', async (results: any) => {
+    console.log('override after:run');
+    await afterRunHook();
+        
     if (results) {
       let facts: Array<any> = [];
       facts.push({

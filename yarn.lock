@@ -564,16 +564,6 @@ cypress-file-upload@^5.0.7:
   resolved "https://registry.yarnpkg.com/cypress-file-upload/-/cypress-file-upload-5.0.7.tgz#acf24fe08a92b2d0c892a58b56811fb933d34ea9"
   integrity sha512-cgWsWx7igxjyyVm9/VJ9ukdy69jL00I7z0lrwUWtXXLPvX4neO+8JAZ054Ax8Xf+mdV9OerenXzb9nqRoafjHA==
 
-cypress-mochawesome-reporter@^2.1.1:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/cypress-mochawesome-reporter/-/cypress-mochawesome-reporter-2.1.1.tgz#bbc4340ff08322e22ac87cfbb34f1ef418b4cd97"
-  integrity sha512-F7N3Euri00qTbVrv4v9uiI4jI46YC9kGjgwOoAn87BpUCX4Qn+R0zUpthS/RKvzCHpC7Wc1BXQy0T0mozn7c0A==
-  dependencies:
-    fs-extra "^9.0.0"
-    mochawesome "^6.1.0"
-    mochawesome-merge "^4.0.3"
-    mochawesome-report-generator "^5.1.0"
-
 cypress-mochawesome-reporter@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/cypress-mochawesome-reporter/-/cypress-mochawesome-reporter-2.2.0.tgz#a49823278595f7e369b09aa97ba5847c6ee72c07"
