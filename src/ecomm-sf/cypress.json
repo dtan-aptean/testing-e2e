@@ -7,5 +7,13 @@
   "env": {},
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
-  "supportFile": "cypress/support/index.ts"
+  "supportFile": "cypress/support/index.ts",
+  "video": false,
+  "reporter": "cypress-mochawesome-reporter",
+  "reporterOptions": {
+    "reportDir": "cypress/report",
+    "charts": true,
+    "reportPageTitle": "ecomm-sf",
+    "embeddedScreenshots": true
+  }    
 }
