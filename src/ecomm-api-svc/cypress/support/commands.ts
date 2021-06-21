@@ -326,7 +326,6 @@ Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: 
             };
         },
     });
-
     // should be 200 ok
     expect(res.isOkStatusCode).to.be.equal(true, "Expect statusCode to be 200 ok");
     // shoule be no errors
@@ -536,7 +535,6 @@ Cypress.Commands.add('queryByProductId', (queryName: string, queryBody: string, 
         var returnedItems = res.body.data[queryName].nodes;
         returnedItems.sort((a, b) => (a.id > b.id) ? 1 : -1);
         expectedItems.sort((a, b) => (a.id > b.id) ? 1 : -1);
-        debugger;
         expect(returnedItems.length).to.be.eql(expectedItems.length, `Expect ${expectedItems.length} returned item`);
         for (var i = 0; i < expectedItems.length; i++) {
             const currentItem = expectedItems[i];
