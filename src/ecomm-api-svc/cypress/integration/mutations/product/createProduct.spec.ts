@@ -1818,7 +1818,37 @@ describe('Mutation: createProduct', () => {
     });
 
     context.only("Testing 'tierPrices' customerRoleIds input", () => {
-        it("Mutation will succeed if 'price' has a valid 'currency' string", () => {
+        const goldId = '';
+        const adminId = '';
+        before(() => {
+            const queryName = 'customerRoles';
+            const goldQuery = `{
+                ${queryName}(searchString: "Gold", orderBy: {direction: ASC, field: NAME }) {
+                    nodes {
+                        id
+                        name
+                    }
+                    totalCount
+                }
+            }`;
+            cy.postAndValidate(goldQuery, queryName).then((res) => {
+                goldId = res.body.data[queryName].nodes[0].id;
+                const adminQuery = `{
+                    ${queryName}(searchString: "Administrators", orderBy: {direction: ASC, field: NAME }) {
+                        nodes {
+                            id
+                            name
+                        }
+                        totalCount
+                    }
+                }`;
+                cy.postAndValidate(adminQuery, queryName).then((res) => {
+                    adminId = res.body.data[queryName].nodes[0].id;
+                });
+            });
+        });
+
+        it("Mutation will succeed if 'customerRoleIds' has a valid input", () => {
             const info = [{
                 name: "Cypress API Product SD",
                 languageCode: "Standard"
@@ -1826,7 +1856,8 @@ describe('Mutation: createProduct', () => {
             const tierPrices = {
                 price: {
                     currency: "USD"
-                }
+                },
+                customerRoleIds: [goldId]
             }
             const mutation = `mutation {
                 ${mutationName}(
@@ -1849,6 +1880,7 @@ describe('Mutation: createProduct', () => {
                                 price {
                                     currency
                                 }
+                                customerRoleIds
                             }
                         }
                     }
@@ -1871,6 +1903,7 @@ describe('Mutation: createProduct', () => {
                                             price{
                                                 currency
                                             }
+                                            customerRoleIds
                                         }
                                     }
                                 }
