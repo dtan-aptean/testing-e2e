@@ -423,13 +423,11 @@ Cypress.Commands.add(
     cy.generatePaymentRequest(requestAmount).then((paymentRequest) => {
       cy.generateWepayTokenCreditCard()
         .then((payfacToken) => {
-          cy.wait(1000).then(() => {
-            return cy
-              .convertPayfacPaymentMethodTokenCreditCard(payfacToken.id)
-              .then((paymentMethodId) => {
-                return paymentMethodId;
-              });
-          });
+          return cy
+            .convertPayfacPaymentMethodTokenCreditCard(payfacToken.id)
+            .then((paymentMethodId) => {
+              return paymentMethodId;
+            });
         })
         .then((paymentMethodId) => {
           // payment
@@ -524,7 +522,7 @@ Cypress.Commands.add("getFeatureFlags", () => {
             autoUpdate
           }
           paymentRequests {
-            consolidatedPayments
+            consolidatedPayment
             partialPayment
           }
         }
@@ -532,7 +530,7 @@ Cypress.Commands.add("getFeatureFlags", () => {
     }
   }`;
 
-  cy.postGQL(gqlQuery).then(res => {
+  cy.postGQL(gqlQuery).then((res) => {
     return res?.body?.data?.account?.settings?.features;
   });
 });

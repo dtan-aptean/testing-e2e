@@ -1,10 +1,33 @@
 /// <reference types="cypress" />
 
+import { CommandType } from "../../support/commands";
+
 describe("Mutation: cancelPayment", () => {
   it("should pass if the mutation cancels a payment with all arguments", () => {
     cy.generatePaymentRequestAndPay(0, false).then((res) => {
       const paymentId = res.id;
-      cy.wait(45000); // Wait for the payment to be completed...
+
+      let gql = `query payments {
+        payments(id: "${paymentId}") {
+          totalCount
+          nodes {
+            pendingReasonCode
+            id
+            status
+            pendingReason
+          }
+        }
+      }`;
+      cy.log("Wait for payment to be completed");
+      cy.while(
+        gql,
+        CommandType.PostGQL,
+        (res) =>
+          res.body.data.payments.nodes[0].status === "PENDING" &&
+          res.body.data.payments.nodes[0].pendingReasonCode ===
+            "PENDING_CAPTURE",
+        10000
+      );
 
       const gqlQuery = `mutation {
           cancelPayment(
