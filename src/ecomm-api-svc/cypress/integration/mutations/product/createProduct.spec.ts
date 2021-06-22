@@ -547,8 +547,7 @@ describe('Mutation: createProduct', () => {
             const createdDate = today;
             const inventoryInfo = {
                 displayStockAvailability: Cypress._.random(0, 1) === 1,
-                // notifyAdminForQuantityBelow: Cypress._.random(1, 5), // TODO: FIX - puts in a random number from 1-5, but the query always returns 1.
-                notifyAdminForQuantityBelow: 1,
+                notifyAdminForQuantityBelow: Cypress._.random(1, 5),
                 notReturnable: Cypress._.random(0, 1) === 1,
                 availableStartDate: nextWeek.toISOString(),
                 availableEndDate: twoWeeks.toISOString(),
@@ -1817,7 +1816,7 @@ describe('Mutation: createProduct', () => {
         });
     });
 
-    context.only("Testing 'tierPrices' customerRoleIds input", () => {
+    context("Testing 'tierPrices' customerRoleIds input", () => {
         let goldId = '';
         let adminId = '';
         before(() => {
