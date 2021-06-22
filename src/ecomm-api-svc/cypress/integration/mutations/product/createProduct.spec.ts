@@ -1324,7 +1324,7 @@ describe('Mutation: createProduct', () => {
                     currency: "USD"
                 },
                 quantity: 1
-            }
+            };
             const mutation = `mutation {
                 ${mutationName}(
                     input: { 

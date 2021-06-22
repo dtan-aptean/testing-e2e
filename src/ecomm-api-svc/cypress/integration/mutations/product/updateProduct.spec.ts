@@ -1090,41 +1090,25 @@ describe('Mutation: updateProduct', () => {
         });
     });
 
-    context.only("Testing 'tierPrices' input", () => {
-        let testId = '';
-        before(() => {
-            let setupName = 'createProduct'
-            const info = [{
-                name: "Cypress API Product SD",
-                languageCode: "Standard"
-            }];
-            const mutation = `mutation {
-                ${setupName}(
-                    input: {
-                        ${infoName}: ${toFormattedString(info)}
+    context("Testing 'tierPrices' input", () => {
+        const extraCreate = "createProductSpecification";
+        const extraPath = "productSpecification";
+        const extraQuery = "productSpecifications";
+        const extraItemInput = { name: `Cypress ${mutationName} specificationOption`, options: [{ name: "specificationOption 1" }, { name: "specificationOption 2" }] };
+        const optionsField = `options {
+            id
+            name
+        }`;
+        const today = new Date();
+        it("Mutation will succeed if 'price' has a valid 'currency' string", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: "USD"
                     }
-                ) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postMutAndValidate(mutation, setupName, itemPath).then((res) => {
-                debugger;
-                testId = res.body.data[setupName][queryName].id;
-            });
-        });
-
-
-        after(() => {
-            cy.deleteCypressItems(queryName, deleteMutName, infoName);
-        });
-        it("Mutation with 'vendorId' input will successfully attach the vendor", () => {
-            const extraCreate = "createVendor";
-            const extraPath = "vendor";
-            const extraQuery = "vendors";
-            const extraItemInput = { vendorInfo: [{ name: `Cypress ${mutationName} vendor`, languageCode: "Standard" }] };
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
-                const { deletionIds, items, itemIds } = results;
-                addExtraItemIds(deletionIds, true);
+                };
                 updateCount++;
                 const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
                 const mutation = `mutation {
@@ -1132,50 +1116,718 @@ describe('Mutation: updateProduct', () => {
                         input: { 
                             id: "${id}"
                             ${infoName}: ${toFormattedString(info)}
-                            vendorId: "${itemIds[0]}"
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
                         }
                     ) {
                         ${mutDefaultContent}
                         ${itemPath} {
                             id
-                            vendor {
-                                id
-                                vendorInfo {
-                                    name
-                                    languageCode
-                                }
-                            }
                             ${infoName} {
                                 name
                                 languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
+                                    }
+                                }
                             }
                         }
                     }
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = ["vendor", infoName];
-                    const propValues = [items[0], info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                        const query = `{
-                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
-                                nodes {
-                                    id
-                                    vendor {
-                                        id
-                                        vendorInfo {
-                                            name
-                                            languageCode
-                                        }
-                                    }
-                                    ${infoName} {
-                                        name
-                                        languageCode
+                    const propNames = [infoName];
+                    const propValues = [info];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will fail if 'price's 'currency' is not a string", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: 4
+                    }
+                };
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
                                     }
                                 }
                             }
-                        }`;
-                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
-                    });
+                        }
+                    }
+                }`;
+                cy.postAndConfirmError(mutation);
+            });
+        });
+
+        it("Mutation will fail if 'price's 'currency' is not a valid string", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: 'Cadia'
+                    }
+                };
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+            });
+        });
+
+        it("Mutation will fail if 'price's 'currency' is not included", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        price: Cypress._.random(1, 10)
+                    }
+                };
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        price
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postAndConfirmError(mutation);
+            });
+        });
+
+        it("Mutation will succeed if 'amount' is a num", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        amount: Cypress._.random(1, 10),
+                        currency: "USD"
+                    }
+                };
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        amount
+                                        currency
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const propNames = [infoName];
+                    const propValues = [info];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will fail if 'amount' is not a num", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        price: 'Cadia',
+                        currency: "USD"
+                    }
+                };
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        amount
+                                        currency
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postAndConfirmError(mutation);
+            });
+        });
+
+        it("Mutation will succeed if 'quantity' is a num", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: "USD"
+                    },
+                    quantity: 1
+                };
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
+                                    }
+                                    quantity
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const propNames = [infoName];
+                    const propValues = [info];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will fail if 'quantity' is not a num", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: "USD"
+                    },
+                    quantity: 'Cadia'
+                };
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
+                                    }
+                                    quantity
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postAndConfirmError(mutation);
+            });
+        });
+
+        it("Mutation will succeed if 'startDate' is a date", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: "USD"
+                    },
+                    startDate: today
+                }
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
+                                    }
+                                    startDate
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const propNames = [infoName];
+                    const propValues = [info];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will succeed if 'startDate' is a num", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: "USD"
+                    },
+                    startDate: 4
+                }
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
+                                    }
+                                    startDate
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const propNames = [infoName];
+                    const propValues = [info];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will succeed if 'startDate' is a string", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: "USD"
+                    },
+                    startDate: 'Cadia'
+                }
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
+                                    }
+                                    startDate
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const propNames = [infoName];
+                    const propValues = [info];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will succeed if 'endDate' is a date", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: "USD"
+                    },
+                    endDate: today
+                }
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
+                                    }
+                                    endDate
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const propNames = [infoName];
+                    const propValues = [info];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will succeed if 'endDate' is a num", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: "USD"
+                    },
+                    endDate: 4
+                }
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
+                                    }
+                                    endDate
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const propNames = [infoName];
+                    const propValues = [info];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
+                });
+            });
+        });
+
+        it("Mutation will succeed if 'endDate' is a string", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: "USD"
+                    },
+                    endDate: 'Cadia'
+                }
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
+                                    }
+                                    endDate
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const propNames = [infoName];
+                    const propValues = [info];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
+                });
+            });
+        });
+    });
+
+    context.only("Testing 'tierPrices' customerRoleIds input", () => {
+        const extraCreate = "createProductSpecification";
+        const extraPath = "productSpecification";
+        const extraQuery = "productSpecifications";
+        const extraItemInput = { name: `Cypress ${mutationName} specificationOption`, options: [{ name: "specificationOption 1" }, { name: "specificationOption 2" }] };
+        const optionsField = `options {
+            id
+            name
+        }`;
+        const goldId = '';
+        const adminId = '';
+        before(() => {
+            const queryName = 'customerRoles';
+            const goldQuery = `{
+                ${queryName}(searchString: "Gold", orderBy: {direction: ASC, field: NAME }) {
+                    nodes {
+                        id
+                        name
+                    }
+                    totalCount
+                }
+            }`;
+            cy.postAndValidate(goldQuery, queryName).then((res) => {
+                goldId = res.body.data[queryName].nodes[0].id;
+                const adminQuery = `{
+                    ${queryName}(searchString: "Administrators", orderBy: {direction: ASC, field: NAME }) {
+                        nodes {
+                            id
+                            name
+                        }
+                        totalCount
+                    }
+                }`;
+                cy.postAndValidate(adminQuery, queryName).then((res) => {
+                    adminId = res.body.data[queryName].nodes[0].id;
+                });
+            });
+        });
+
+        it("Mutation will succeed if 'customerRoleIds' has a valid input", () => {
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
+                const { deletionIds, fullItems } = results;
+                addExtraItemIds(deletionIds);
+                const tierPrices = {
+                    price: {
+                        currency: "USD"
+                    },
+                    customerRoleIds: [goldId]
+                }
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            priceInformation: {
+                                tierPrices: ${toFormattedString(tierPrices)}
+                            }
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                            priceInformation {
+                                tierPrices {
+                                    price {
+                                        currency
+                                    }
+                                    customerRoleIds
+                                }
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const propNames = [infoName];
+                    const propValues = [info];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
                 });
             });
         });
