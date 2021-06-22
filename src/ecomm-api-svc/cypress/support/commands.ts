@@ -693,7 +693,7 @@ Cypress.Commands.add("createAssociatedItems", (
             return { firstName: inputBase.firstName, lastName: inputBase.lastName };
         } else if (propNames.includes("integrationKey")) {
             return {name: inputBase.name, intKey: inputBase.integrationKey};
-        } else if (!propNames.includes(name)) {
+        } else if (!propNames.includes("name")) {
             return "noName";
         } else {
             return inputBase.name;
