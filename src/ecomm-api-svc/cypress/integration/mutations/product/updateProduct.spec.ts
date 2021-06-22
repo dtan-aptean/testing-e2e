@@ -1089,4 +1089,95 @@ describe('Mutation: updateProduct', () => {
             });
         });
     });
+
+    context.only("Testing 'tierPrices' input", () => {
+        let testId = '';
+        before(() => {
+            let setupName = 'createProduct'
+            const info = [{
+                name: "Cypress API Product SD",
+                languageCode: "Standard"
+            }];
+            const mutation = `mutation {
+                ${setupName}(
+                    input: {
+                        ${infoName}: ${toFormattedString(info)}
+                    }
+                ) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postMutAndValidate(mutation, setupName, itemPath).then((res) => {
+                debugger;
+                testId = res.body.data[setupName][queryName].id;
+            });
+        });
+
+
+        after(() => {
+            cy.deleteCypressItems(queryName, deleteMutName, infoName);
+        });
+        it("Mutation with 'vendorId' input will successfully attach the vendor", () => {
+            const extraCreate = "createVendor";
+            const extraPath = "vendor";
+            const extraQuery = "vendors";
+            const extraItemInput = { vendorInfo: [{ name: `Cypress ${mutationName} vendor`, languageCode: "Standard" }] };
+            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
+                const { deletionIds, items, itemIds } = results;
+                addExtraItemIds(deletionIds, true);
+                updateCount++;
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: { 
+                            id: "${id}"
+                            ${infoName}: ${toFormattedString(info)}
+                            vendorId: "${itemIds[0]}"
+                        }
+                    ) {
+                        ${mutDefaultContent}
+                        ${itemPath} {
+                            id
+                            vendor {
+                                id
+                                vendorInfo {
+                                    name
+                                    languageCode
+                                }
+                            }
+                            ${infoName} {
+                                name
+                                languageCode
+                            }
+                        }
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    const propNames = ["vendor", infoName];
+                    const propValues = [items[0], info];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${info[0].name}", orderBy: {direction: ASC, field: NAME}) {
+                                nodes {
+                                    id
+                                    vendor {
+                                        id
+                                        vendorInfo {
+                                            name
+                                            languageCode
+                                        }
+                                    }
+                                    ${infoName} {
+                                        name
+                                        languageCode
+                                    }
+                                }
+                            }
+                        }`;
+                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
+                    });
+                });
+            });
+        });
+    });
 });
