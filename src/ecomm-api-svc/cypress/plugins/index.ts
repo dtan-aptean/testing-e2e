@@ -21,7 +21,7 @@ module.exports = (on, config) => {
   // `config` is the resolved Cypress config
   const dateSubFolder = new Date().toISOString().substring(0, 10);
   config.screenshotsFolder = `${config.screenshotsFolder}/${dateSubFolder}`;
-  // config.reporterOptions.reportDir = `/e2e/cypress/results/${dateSubFolder}`; 
+  config.reporterOptions.reportDir = `/e2e/cypress/results/${dateSubFolder}`;
 
   on('before:run', async (details) => {
     console.log('override before:run');

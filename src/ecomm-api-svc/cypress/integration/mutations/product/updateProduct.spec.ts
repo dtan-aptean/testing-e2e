@@ -1090,28 +1090,16 @@ describe('Mutation: updateProduct', () => {
         });
     });
 
-    context("Testing 'tierPrices' input", () => {
-        const extraCreate = "createProductSpecification";
-        const extraPath = "productSpecification";
-        const extraQuery = "productSpecifications";
-        const extraItemInput = { name: `Cypress ${mutationName} specificationOption`, options: [{ name: "specificationOption 1" }, { name: "specificationOption 2" }] };
-        const optionsField = `options {
-            id
-            name
-        }`;
+    context.only("Testing 'tierPrices' input", () => {
         const today = new Date();
         it("Mutation will succeed if 'price' has a valid 'currency' string", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: "USD"
-                    }
-                };
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: "USD"
+                }
+            };
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1138,26 +1126,21 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = [infoName];
-                    const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
-                });
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = [infoName];
+                const propValues = [info];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
             });
         });
 
         it("Mutation will fail if 'price's 'currency' is not a string", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: 4
-                    }
-                };
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: 4
+                }
+            };
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1184,22 +1167,17 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postAndConfirmError(mutation);
-            });
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will fail if 'price's 'currency' is not a valid string", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: 'Cadia'
-                    }
-                };
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: 'Cadia'
+                }
+            };
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1226,22 +1204,17 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
-            });
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail if 'price's 'currency' is not included", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        price: Cypress._.random(1, 10)
-                    }
-                };
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    price: Cypress._.random(1, 10)
+                }
+            };
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1268,23 +1241,18 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postAndConfirmError(mutation);
-            });
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will succeed if 'amount' is a num", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        amount: Cypress._.random(1, 10),
-                        currency: "USD"
-                    }
-                };
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    amount: Cypress._.random(1, 10),
+                    currency: "USD"
+                }
+            };
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1312,27 +1280,22 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = [infoName];
-                    const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
-                });
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = [infoName];
+                const propValues = [info];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
             });
         });
 
         it("Mutation will fail if 'amount' is not a num", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        price: 'Cadia',
-                        currency: "USD"
-                    }
-                };
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    price: 'Cadia',
+                    currency: "USD"
+                }
+            };
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1360,23 +1323,18 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postAndConfirmError(mutation);
-            });
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will succeed if 'quantity' is a num", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: "USD"
-                    },
-                    quantity: 1
-                };
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: "USD"
+                },
+                quantity: 1
+            };
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1404,27 +1362,22 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = [infoName];
-                    const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
-                });
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = [infoName];
+                const propValues = [info];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
             });
         });
 
         it("Mutation will fail if 'quantity' is not a num", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: "USD"
-                    },
-                    quantity: 'Cadia'
-                };
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: "USD"
+                },
+                quantity: 'Cadia'
+            };
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1452,23 +1405,18 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postAndConfirmError(mutation);
-            });
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will succeed if 'startDate' is a date", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: "USD"
-                    },
-                    startDate: today
-                }
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: "USD"
+                },
+                startDate: today
+            }
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1496,27 +1444,22 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = [infoName];
-                    const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
-                });
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = [infoName];
+                const propValues = [info];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
             });
         });
 
         it("Mutation will succeed if 'startDate' is a num", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: "USD"
-                    },
-                    startDate: 4
-                }
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: "USD"
+                },
+                startDate: 4
+            }
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1544,27 +1487,22 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = [infoName];
-                    const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
-                });
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = [infoName];
+                const propValues = [info];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
             });
         });
 
         it("Mutation will succeed if 'startDate' is a string", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: "USD"
-                    },
-                    startDate: 'Cadia'
-                }
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: "USD"
+                },
+                startDate: 'Cadia'
+            }
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1592,27 +1530,22 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = [infoName];
-                    const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
-                });
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = [infoName];
+                const propValues = [info];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
             });
         });
 
         it("Mutation will succeed if 'endDate' is a date", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: "USD"
-                    },
-                    endDate: today
-                }
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: "USD"
+                },
+                endDate: today
+            }
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1640,27 +1573,22 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = [infoName];
-                    const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
-                });
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = [infoName];
+                const propValues = [info];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
             });
         });
 
         it("Mutation will succeed if 'endDate' is a num", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: "USD"
-                    },
-                    endDate: 4
-                }
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: "USD"
+                },
+                endDate: 4
+            }
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1688,27 +1616,22 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = [infoName];
-                    const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
-                });
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = [infoName];
+                const propValues = [info];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
             });
         });
 
         it("Mutation will succeed if 'endDate' is a string", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: "USD"
-                    },
-                    endDate: 'Cadia'
-                }
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: "USD"
+                },
+                endDate: 'Cadia'
+            }
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1736,26 +1659,17 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = [infoName];
-                    const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
-                });
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = [infoName];
+                const propValues = [info];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
             });
         });
     });
 
-    context.only("Testing 'tierPrices' customerRoleIds input", () => {
-        const extraCreate = "createProductSpecification";
-        const extraPath = "productSpecification";
-        const extraQuery = "productSpecifications";
-        const extraItemInput = { name: `Cypress ${mutationName} specificationOption`, options: [{ name: "specificationOption 1" }, { name: "specificationOption 2" }] };
-        const optionsField = `options {
-            id
-            name
-        }`;
-        const goldId = '';
-        const adminId = '';
+    context("Testing 'tierPrices' customerRoleIds input", () => {
+        let goldId = '';
+        let adminId = '';
         before(() => {
             const queryName = 'customerRoles';
             const goldQuery = `{
@@ -1785,18 +1699,14 @@ describe('Mutation: updateProduct', () => {
         });
 
         it("Mutation will succeed if 'customerRoleIds' has a valid input", () => {
-            cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput, optionsField).then((results) => {
-                const { deletionIds, fullItems } = results;
-                addExtraItemIds(deletionIds);
-                const tierPrices = {
-                    price: {
-                        currency: "USD"
-                    },
-                    customerRoleIds: [goldId]
-                }
-                updateCount++;
-                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
-                const mutation = `mutation {
+            const tierPrices = {
+                price: {
+                    currency: "USD"
+                },
+                customerRoleIds: [goldId]
+            }
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
+            const mutation = `mutation {
                     ${mutationName}(
                         input: { 
                             id: "${id}"
@@ -1824,11 +1734,10 @@ describe('Mutation: updateProduct', () => {
                         }
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = [infoName];
-                    const propValues = [info];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
-                });
+            cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                const propNames = [infoName];
+                const propValues = [info];
+                cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues);
             });
         });
     });

@@ -1818,8 +1818,8 @@ describe('Mutation: createProduct', () => {
     });
 
     context.only("Testing 'tierPrices' customerRoleIds input", () => {
-        const goldId = '';
-        const adminId = '';
+        let goldId = '';
+        let adminId = '';
         before(() => {
             const queryName = 'customerRoles';
             const goldQuery = `{
