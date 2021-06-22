@@ -60,6 +60,11 @@ const deleteItems = (nodes, deleteName: string, searchBy: string, infoName?: str
             if (nameArray.length > 0) {
                 performDelete(deleteName, id, altUrl);
             }
+        } else if (deleteName === "deletePaymentSettings") {
+            var name = item.company.name;
+            if (name.includes(searchBy)) {
+                performDelete(deleteName, id, altUrl);
+            }
         } else {
             var name = item.name;
             if (name.includes(searchBy)) {
@@ -89,8 +94,8 @@ const getNodes = (
     additionalFields?: string,
     altUrl?: string
 ) => {
-    const nameField = getNameField(infoName);
-    const queryBody = `searchString: "${searchBy}", orderBy: {direction: ASC, field: NAME}) {
+    const nameField = queryName === "paymentSettings" ? "" : getNameField(infoName);
+    const queryBody = `searchString: "${searchBy}", orderBy: {direction: ASC, field: ${queryName === "paymentSettings" ? "COMPANY_NAME" : "NAME"}}) {
         totalCount
         nodes {
             id
@@ -137,9 +142,16 @@ Cypress.Commands.add("deleteCypressItems", (
     altUrl?: string
 ) => {
     const searchBy = searchString ? searchString : "Cypress";
-    const extraField = queryName === "categories" ? `parent {
-        id
-    }` : undefined;
+    var extraField;
+    if (queryName === "categories") {
+        extraField = `parent {
+            id
+        }`;
+    } else if (queryName === "paymentSettings") {
+        extraField = `company {
+            name
+        }`;
+    }
     Cypress.log({name: "deleteCypressItems", message: `Using ${queryName} to search for "${searchBy}"`});
     getNodes(queryName, searchBy, infoName, extraField, altUrl).then((nodes) => {
         if (nodes) {
@@ -156,6 +168,15 @@ Cypress.Commands.add("deleteCypressItems", (
                 });
                 if (parentCats.length > 0) {
                     deleteItems(parentCats, deleteName, searchBy, infoName, altUrl);
+                }
+            } else if (queryName === "paymentSettings") {
+                const cypressPaymentSettings = nodes.filter((node) => {
+                    return node.company.name.toLowerCase().includes("cypress");
+                });
+                if (cypressPaymentSettings.length > 0) {
+                    deleteItems(cypressPaymentSettings, deleteName, searchBy, infoName, altUrl);
+                } else {
+                    Cypress.log({message: "No Cypress items found"});
                 }
             } else {
                 deleteItems(nodes, deleteName, searchBy, infoName, altUrl);

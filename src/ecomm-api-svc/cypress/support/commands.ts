@@ -188,6 +188,9 @@ export const createMutResMessage = (isSuccess: boolean, mutationName: string): s
         case "returnReason":
             message = "returnReason";
             break;
+        case "paymentSettings":
+            message = "paymentSettings";
+            break;
         case "inventory":
             message = "product quantity";
             break;
@@ -683,10 +686,42 @@ Cypress.Commands.add("createAssociatedItems", (
             };
         }
     });
-    const createInput = (input, newName: string, infoName: string | null) => {
+
+    const getNameBase = () => {
+        const propNames = Object.getOwnPropertyNames(inputBase);
+        if (propNames.includes("firstName") && propNames.includes("lastName")) {
+            return { firstName: inputBase.firstName, lastName: inputBase.lastName };
+        } else if (propNames.includes("integrationKey")) {
+            return {name: inputBase.name, intKey: inputBase.integrationKey};
+        } else if (!propNames.includes(name)) {
+            return "noName";
+        } else {
+            return inputBase.name;
+        }
+    };
+    const incrementNameBase = (nameBase, i) => {
+        if (typeof nameBase === "object" && nameBase.firstName && nameBase.lastName) {
+            return { firstName: `${nameBase.firstName} ${i}`, lastName: `${nameBase.lastName} ${i}` };
+        } else if (typeof nameBase === "object" && nameBase.intKey) {
+            return { name: `${nameBase.name} ${i}`, intKey: `${nameBase}${Cypress._.random(10000, 100000)}`};
+        } else if (nameBase === "noName") {
+            return nameBase;
+        } else {
+            return `${nameBase} ${i}`
+        }
+    };
+    const createInput = (input, newName, infoName: string | null) => {
         const retInput = JSON.parse(JSON.stringify(input));
         if (infoName) {
             retInput[infoName][0].name = newName;
+        } else if (typeof newName === "object" && newName.firstName && newName.lastName) {
+            retInput.firstName = newName.firstName;
+            retInput.lastName = newName.lastName;
+        } else if (typeof newName === "object" && newName.intKey) {
+            retInput.name = newName.name;
+            retInput.integrationKey = newName.intKey;
+        } else if (newName === "noName") {
+            return retInput;
         } else {
             retInput.name = newName;
         }
@@ -698,21 +733,29 @@ Cypress.Commands.add("createAssociatedItems", (
     const createdIds = [] as string[];
     const fullResBodies = [];
     var infoName = getInfoName(inputBase);
-    var nameBase = infoName ? inputBase[infoName][0].name : inputBase.name;
+    var nameBase = infoName ? inputBase[infoName][0].name : getNameBase();
     const createAndPush = (item, name) => {
         cy.createAndGetId(createName, itemPath, toFormattedString(item), additionalResFields).then((returnedBody) => {
             const returnedId = additionalResFields ? returnedBody.id : returnedBody;
             createdIds.push(returnedId);
             item.id = returnedId;
             createdItems.push(item);
-            deletionIds.push({itemId: returnedId, deleteName: deleteName, itemName: name, queryName: queryName});
+            var correctItemName = name;
+            if (typeof name === "object" && name.firstName && name.lastName) {
+                correctItemName = item.email; //    MAKE SURE THIS IS CORRECT
+            } else if (typeof name === "object" && name.intKey) {
+                correctItemName = name.name
+            } else if (name === "noName") {
+                correctItemName = "";
+            }
+            deletionIds.push({itemId: returnedId, deleteName: deleteName, itemName:  correctItemName, queryName: queryName});
             if (additionalResFields) {
                 fullResBodies.push(returnedBody);
             }
         });
     };
     for (var i = 1; i <= numberToMake; i++) {
-        var name = numberToMake !== 1 ? `${nameBase} ${i}` : nameBase;
+        var name = numberToMake !== 1 ? incrementNameBase(nameBase, i) : nameBase;
         var item = createInput(inputBase, name, infoName);
         cy.wait(4000);
         createAndPush(item, name);

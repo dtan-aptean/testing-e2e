@@ -1,7 +1,7 @@
 import * as puppeteer from 'puppeteer';
 
 export function getAdToken(email:string, password:string, appURI:string) {
-  return puppeteer.launch({ headless: true }).then(async browser => {
+  return puppeteer.launch({ headless: true, args: ['--no-sandbox'] }).then(async browser => {
     try {
       const page = await browser.newPage();
 
@@ -23,7 +23,7 @@ export function getAdToken(email:string, password:string, appURI:string) {
       await page.waitForTimeout(500);
 
       await page.click('button[id=next]');
-      await page.waitForSelector('.jwtHeader', { visible: true, timeout: 3000 });
+      await page.waitForSelector('.jwtHeader', { visible: true, timeout: 10000 });
 
       const headerElement = await page.$(".jwtHeader");
       const headerText = await page.evaluate(element => element.innerText, headerElement);
@@ -33,7 +33,7 @@ export function getAdToken(email:string, password:string, appURI:string) {
       const signatureText = await page.evaluate(element => element.innerText, signatureElement);
       const token = `${headerText}.${claimsText}.${signatureText}`;
       browser.close();
-      return token;
+      return `bearer ${token}`;
     } catch (error) {
       console.log(error);
       browser.close();
