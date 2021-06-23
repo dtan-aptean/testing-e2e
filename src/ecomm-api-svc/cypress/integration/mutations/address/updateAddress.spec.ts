@@ -1,7 +1,7 @@
 
 import { toFormattedString } from "../../../support/commands";
 
-// TEST COUNT: 42
+// TEST COUNT: 41
 describe('Mutation: updateAddress', () => {
   let companyId = '';
   let addressId = '';
@@ -534,9 +534,9 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        phone: {
-                            phoneNumber: "KHORN"
-                        }
+                      phone: {
+                          phoneNumber: "KHORN"
+                      }
                     }
                   }
                 ) {
@@ -563,10 +563,10 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        phone: {
-                            phoneNumber: "KHORN"
-                            phoneType: "UNKNOWN"
-                        }
+                      phone: {
+                          phoneNumber: "KHORN"
+                          phoneType: "UNKNOWN"
+                      }
                     }
                   }
                 ) {
@@ -592,10 +592,10 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        phone: {
-                            phoneNumber: "KHORN"
-                            phoneType: WAAAGH
-                        }
+                      phone: {
+                          phoneNumber: "KHORN"
+                          phoneType: WAAAGH
+                      }
                     }
                   }
                 ) {
@@ -621,9 +621,9 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        phone: {
-                            phoneType: UNKNOWN
-                        }
+                      phone: {
+                          phoneType: UNKNOWN
+                      }
                     }
                   }
                 ) {
@@ -649,10 +649,10 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        phone: {
-                            phoneNumber: 4
-                            phoneType: UNKNOWN
-                        }
+                      phone: {
+                          phoneNumber: 4
+                          phoneType: UNKNOWN
+                      }
                     }
                   }
                 ) {
@@ -679,10 +679,10 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        phone: {
-                            ${reqPhoneInput}
-                            countryCode: ZA
-                        }
+                      phone: {
+                          ${reqPhoneInput}
+                          countryCode: ZA
+                      }
                     }
                   }
                 ) {
@@ -709,10 +709,10 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        phone: {
-                            ${reqPhoneInfo}
-                            countryCode: "ZA"
-                        }
+                      phone: {
+                          ${reqPhoneInfo}
+                          countryCode: "ZA"
+                      }
                     }
                   }
                 ) {
@@ -739,10 +739,10 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        phone: {
-                            ${reqPhoneInfo}
-                            countryCode: "KHORN"
-                        }
+                      phone: {
+                          ${reqPhoneInfo}
+                          countryCode: "KHORN"
+                      }
                     }
                   }
                 ) {
@@ -762,8 +762,8 @@ describe('Mutation: updateAddress', () => {
     });
   });
 
-  context.only("Testing Address API's 'contactDetails' 'address' inputs", () => {
-    it("Mutation will succeed if 'address's required inputs are valid", () => {
+  context("Testing Address API's 'contactDetails' 'address' inputs", () => {
+    it("Mutation will succeed for 'country' if both it and 'region' are valid", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -771,9 +771,10 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        address: {
-                            ${reqAddressInput}
-                        }
+                      address: {
+                        country: "US",
+                        region: "Georgia"
+                      }
                     }
                   }
                 ) {
@@ -782,43 +783,14 @@ describe('Mutation: updateAddress', () => {
                   addressType
                   contactDetails {
                     address {
-                        ${reqAddressInfo}
+                      country
+                      region
                     }
                   }
                 }
               }
             }`;
       cy.postMutAndValidate(mutation, mutationName, itemPath);
-    });
-
-    it("Mutation will fail if 'country' is not included", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            postalCode: "Pylons",
-                            region: "Georgia"
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                        postalCode
-                        region
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
     });
 
     it("Mutation will fail if 'country' is not a string", () => {
@@ -829,11 +801,11 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        address: {
-                            country: US,
-                            postalCode: "Pylons",
-                            region: "Georgia"
-                        }
+                      address: {
+                          country: US,
+                          postalCode: "Pylons",
+                          region: "Georgia"
+                      }
                     }
                   }
                 ) {
@@ -859,11 +831,11 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        address: {
-                            country: "KHORN",
-                            postalCode: "Pylons",
-                            region: "Georgia"
-                        }
+                      address: {
+                          country: "KHORN",
+                          postalCode: "Pylons",
+                          region: "Georgia"
+                      }
                     }
                   }
                 ) {
@@ -881,7 +853,7 @@ describe('Mutation: updateAddress', () => {
       cy.postAndConfirmMutationError(mutation, mutationName);
     });
 
-    it("Mutation will fail if 'postalCode' is not included", () => {
+    it("Mutation will succeed if 'region' is a valid string", () => {
       const mutation = `mutation {
                 ${mutationName} (
                   input: {
@@ -889,10 +861,9 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        address: {
-                            country: US,
-                            region: "Georgia"
-                        }
+                      address: {
+                          region: "Alabama",
+                      }
                     }
                   }
                 ) {
@@ -901,74 +872,13 @@ describe('Mutation: updateAddress', () => {
                   addressType
                   contactDetails {
                     address {
-                        country
-                        region
+                      region
                     }
                   }
                 }
               }
             }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'postalCode' is not a string", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            country: US,
-                            postalCode: 4,
-                            region: "Georgia"
-                        }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                      ${reqAddressInfo}
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
-    });
-
-    it("Mutation will fail if 'region' is not included", () => {
-      const mutation = `mutation {
-                ${mutationName} (
-                  input: {
-                    id: "${addressId}",
-                    companyId:"${companyId}",
-                    addressType: BILLING,
-                    contactDetails: {
-                        address: {
-                            country: "US",
-                            postalCode: "Pylons",
-                          }
-                    }
-                  }
-                ) {
-                ${standardMutationContent}
-                addressInfo {
-                  addressType
-                  contactDetails {
-                    address {
-                      country
-                      postalCode
-                    }
-                  }
-                }
-              }
-            }`;
-      cy.postAndConfirmError(mutation);
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
     });
 
     it("Mutation will fail if 'region' is not a string", () => {
@@ -979,11 +889,9 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
-                        address: {
-                            country: "US",
-                            postalCode: "Pylons",
-                            region: GEORGIA
-                        }
+                      address: {
+                          region: ALABAMA
+                      }
                     }
                   }
                 ) {
@@ -992,7 +900,7 @@ describe('Mutation: updateAddress', () => {
                   addressType
                   contactDetails {
                     address {
-                      ${reqAddressInfo}
+                      region
                     }
                   }
                 }
@@ -1009,10 +917,64 @@ describe('Mutation: updateAddress', () => {
                     companyId:"${companyId}",
                     addressType: BILLING,
                     contactDetails: {
+                      address: {
+                          region: "Cadia"
+                      }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                      region
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postAndConfirmMutationError(mutation, mutationName);
+    });
+
+    it("Mutation will succeed if 'postalCode' is a string", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
+                      address: {
+                        postalCode: "Pylons"
+                      }
+                    }
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                  contactDetails {
+                    address {
+                      postalCode
+                    }
+                  }
+                }
+              }
+            }`;
+      cy.postMutAndValidate(mutation, mutationName, itemPath);
+    });
+
+    it("Mutation will fail if 'postalCode' is not a string", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    addressType: BILLING,
+                    contactDetails: {
                         address: {
-                            country: "US",
-                            postalCode: "Pylons",
-                            region: "Cadia"
+                            postalCode: 4,
                         }
                     }
                   }
@@ -1022,13 +984,13 @@ describe('Mutation: updateAddress', () => {
                   addressType
                   contactDetails {
                     address {
-                      ${reqAddressInfo}
+                      postalCode
                     }
                   }
                 }
               }
             }`;
-      cy.postAndConfirmMutationError(mutation, mutationName);
+      cy.postAndConfirmError(mutation);
     });
 
     it("Mutation will succeed if 'city' is a string", () => {
@@ -1040,7 +1002,6 @@ describe('Mutation: updateAddress', () => {
                     addressType: BILLING,
                     contactDetails: {
                         address: {
-                            ${reqAddressInput}
                             city: "Cadia"
                         }
                     }
@@ -1051,7 +1012,6 @@ describe('Mutation: updateAddress', () => {
                   addressType
                   contactDetails {
                     address {
-                        ${reqAddressInfo}
                         city
                     }
                   }
