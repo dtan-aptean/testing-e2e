@@ -1,7 +1,7 @@
 import * as puppeteer from 'puppeteer';
 
 export function getAdToken(email:string, password:string, appURI:string) {
-  return puppeteer.launch({ headless: true }).then(async browser => {
+  return puppeteer.launch({ headless: true, args: ['--no-sandbox'] }).then(async browser => {
     try {
       const page = await browser.newPage();
 
