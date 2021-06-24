@@ -210,7 +210,7 @@ Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number
 // Runs the query and grabs the createdDate from a random node, as long as the created date starts with 20 (aka was created in the 2000s)
 Cypress.Commands.add('returnRandomDate', (gqlQuery: string, queryName: string, getLowerStart?: boolean, after?: string) => {
     Cypress.log({
-        name: "returnRandomName",
+        name: "returnRandomDate",
         message: `${queryName}${after ? ". Return date after: " + after : ""}`,
         consoleProps: () => {
             return {
@@ -959,9 +959,10 @@ Cypress.Commands.add("verifyPageInfo", (res, queryName: string, expectNext?: boo
     expect(pageInfo.endCursor).to.be.eql(edges[edges.length-1].cursor);
 });
 
+// Runs the query and grabs the number of IDs required
 Cypress.Commands.add('returnMultipleIds', (idCount :number, gqlQuery: string, queryName: string, idName?: string) => {
     Cypress.log({
-        name: "returnRandomId",
+        name: "returnMultipleIds",
         message: queryName + `${idName ? ", " + idName : ""}`,
         consoleProps: () => {
             return {
