@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 23
 describe('Mutation: updateCompany', () => {
@@ -15,18 +16,7 @@ describe('Mutation: updateCompany', () => {
     const queryName = "companies";
     const itemPath = 'company';
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             name
@@ -87,30 +77,15 @@ describe('Mutation: updateCompany', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, standardMutationBody);
         });
 
-        it("Mutation will fail when input 'id' is invalid", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: true }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+        it("Mutation will fail with invalid 'id' input", () => {
+            cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
         it("Mutation will act as a query statement if the only input provided is 'id'", () => {
@@ -168,18 +143,7 @@ describe('Mutation: updateCompany', () => {
             const companyName = "Cypress API Invalid Company";
             const delMutation = `mutation {
                 ${deleteMutName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                 }
             }`;
             cy.postAndConfirmDelete(delMutation, deleteMutName, queryInformation).then(() => {
@@ -207,18 +171,7 @@ describe('Mutation: updateCompany', () => {
                         customData: ${toFormattedString(customData)} 
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -278,18 +231,7 @@ describe('Mutation: updateCompany', () => {
                                 action: ASSIGN
                             }]
                         }) {
-                            code
-                            message
-                            errors {
-                                code
-                                message
-                                domain
-                                details {
-                                    code
-                                    message
-                                    target
-                                }
-                            }
+                            ${codeMessageError}
                             ${itemPath} {
                                 id
                                 name
@@ -358,18 +300,7 @@ describe('Mutation: updateCompany', () => {
                             action: ASSIGN
                         }]
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -421,18 +352,7 @@ describe('Mutation: updateCompany', () => {
                         name: "${companyName}", integrationKey: "${companyKey}"
                         customerRoleIds: ${toFormattedString(itemIds)}
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -475,18 +395,7 @@ describe('Mutation: updateCompany', () => {
                                     action: REMOVE }
                                 ]
                             }) {
-                                code
-                                message
-                                errors {
-                                    code
-                                    message
-                                    domain
-                                    details {
-                                        code
-                                        message
-                                        target
-                                    }
-                                }
+                                ${codeMessageError}
                                 ${itemPath} {
                                     id
                                     name
@@ -544,18 +453,7 @@ describe('Mutation: updateCompany', () => {
                             action: ASSIGN
                         }]
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -610,18 +508,7 @@ describe('Mutation: updateCompany', () => {
                         name: "${companyName}", integrationKey: "${companyKey}"
                         customerRoleIds: ${toFormattedString(itemIds)}
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -660,18 +547,7 @@ describe('Mutation: updateCompany', () => {
                                     action: REMOVE }
                                 ]
                             }) {
-                                code
-                                message
-                                errors {
-                                    code
-                                    message
-                                    domain
-                                    details {
-                                        code
-                                        message
-                                        target
-                                    }
-                                }
+                                ${codeMessageError}
                                 ${itemPath} {
                                     id
                                     name
@@ -733,18 +609,7 @@ describe('Mutation: updateCompany', () => {
                             action: ASSIGN }
                         ]
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -778,18 +643,7 @@ describe('Mutation: updateCompany', () => {
                         name: "${companyName}", integrationKey: "${companyKey}"
                         customerRoleIds: ${toFormattedString(itemIds)}
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -830,18 +684,7 @@ describe('Mutation: updateCompany', () => {
                                     action: REMOVE }
                                 ]
                             }) {
-                                code
-                                message
-                                errors {
-                                    code
-                                    message
-                                    domain
-                                    details {
-                                        code
-                                        message
-                                        target
-                                    }
-                                }
+                                ${codeMessageError}
                                 ${itemPath} {
                                     id
                                     name
@@ -879,18 +722,7 @@ describe('Mutation: updateCompany', () => {
                             action: ASSIGN
                         }]
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -946,18 +778,7 @@ describe('Mutation: updateCompany', () => {
                         name: "${companyName}", integrationKey: "${companyKey}"
                         customerIds: ${toFormattedString(itemIds)}
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -1004,18 +825,7 @@ describe('Mutation: updateCompany', () => {
                                     action: REMOVE }
                                 ]
                             }) {
-                                code
-                                message
-                                errors {
-                                    code
-                                    message
-                                    domain
-                                    details {
-                                        code
-                                        message
-                                        target
-                                    }
-                                }
+                                ${codeMessageError}
                                 ${itemPath} {
                                     id
                                     name
@@ -1076,18 +886,7 @@ describe('Mutation: updateCompany', () => {
                             action: ASSIGN
                         }]
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -1146,18 +945,7 @@ describe('Mutation: updateCompany', () => {
                         name: "${companyName}", integrationKey: "${companyKey}"
                         customerIds: ${toFormattedString(itemIds)}
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -1200,18 +988,7 @@ describe('Mutation: updateCompany', () => {
                                     action: REMOVE }
                                 ]
                             }) {
-                                code
-                                message
-                                errors {
-                                    code
-                                    message
-                                    domain
-                                    details {
-                                        code
-                                        message
-                                        target
-                                    }
-                                }
+                                ${codeMessageError}
                                 ${itemPath} {
                                     id
                                     name
@@ -1277,18 +1054,7 @@ describe('Mutation: updateCompany', () => {
                             action: ASSIGN }
                         ]
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -1324,18 +1090,7 @@ describe('Mutation: updateCompany', () => {
                         name: "${companyName}", integrationKey: "${companyKey}"
                         customerIds: ${toFormattedString(itemIds)}
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -1380,18 +1135,7 @@ describe('Mutation: updateCompany', () => {
                                     action: REMOVE }
                                 ]
                             }) {
-                                code
-                                message
-                                errors {
-                                    code
-                                    message
-                                    domain
-                                    details {
-                                        code
-                                        message
-                                        target
-                                    }
-                                }
+                                ${codeMessageError}
                                 ${itemPath} {
                                     id
                                     name
@@ -1433,18 +1177,7 @@ describe('Mutation: updateCompany', () => {
                             action: REMOVE}
                         ]
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -1482,18 +1215,7 @@ describe('Mutation: updateCompany', () => {
                             action: REMOVE}
                         ]
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name

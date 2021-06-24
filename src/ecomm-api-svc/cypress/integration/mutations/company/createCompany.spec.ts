@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 //TEST COUNT: 16
 describe('Mutation: createCompany', () => {
@@ -10,18 +11,7 @@ describe('Mutation: createCompany', () => {
     const queryName = 'companies';
     const itemPath = 'company';
     const standardMutationBody = `
-        code
-        message
-        errors{
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             name
@@ -57,21 +47,11 @@ describe('Mutation: createCompany', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail with no 'Name' input", () => {
@@ -202,18 +182,7 @@ describe('Mutation: createCompany', () => {
                         name: "${companyName}", integrationKey: "${companyKey}"
                         customerIds: "${itemIds[0]}"
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details{
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -269,18 +238,7 @@ describe('Mutation: createCompany', () => {
                         name: "${companyName}", integrationKey: "${companyKey}"
                         customerIds: ${toFormattedString(itemIds)}
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details{
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -445,18 +403,7 @@ describe('Mutation: createCompany', () => {
                         name: "${companyName}", integrationKey: "${companyKey}"
                         customerRoleIds: ${toFormattedString(itemIds)}
                     }) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -572,18 +519,7 @@ describe('Mutation: createCompany', () => {
                             customerRoleIds: "${customerRoleIds}"
                             customerIds: "${customerIds}"
                         }) {
-                            code
-                            message
-                            errors {
-                                code
-                                message
-                                domain
-                                details {
-                                    code
-                                    message
-                                    target
-                                }
-                            }
+                            ${codeMessageError}
                             ${itemPath} {
                                 id
                                 name
