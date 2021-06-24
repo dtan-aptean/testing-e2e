@@ -102,6 +102,7 @@ describe('Query: orders', () => {
             cy.postAndValidate(gqlQuery, queryName);
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it("Query with orderBy direction: DESC, field: TIMESTAMP will return items in a reverse order from direction: ASC", () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -130,7 +131,7 @@ describe('Query: orders', () => {
         }
         nodes {
             id
-            createdDate
+            created
         }
         pageInfo {
             endCursor
@@ -140,7 +141,8 @@ describe('Query: orders', () => {
         }
         totalCount`;
 
-        it("Query using valid 'startDate' input will return only items with a createdDate >= that startDate", () => {
+        // BUG: Internal Service Error - "Sequence contains no matching element"
+        it("Query using valid 'startDate' input will return only items with a created >= that startDate", () => {
             const query = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${createdDateQueryBody}
@@ -158,6 +160,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it("Query using valid 'endDate' input will return only items with a createdDate <= that endDate", () => {
             const query = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -176,6 +179,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it("Query using valid 'startDate' and 'endDate' input will return only items that obey startDate <= createdDate <= endDate", () => {
             const query = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -196,6 +200,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: test succeeds. No error returned.
         it("Query using an invalid 'startDate' input will return an error", () => {
             const query = `{
                 ${queryName}(startDate: false, orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -205,6 +210,7 @@ describe('Query: orders', () => {
             cy.postAndConfirmError(query);
         });
 
+        // BUG: test succeeds. No error returned.
         it("Query using an invalid 'endDate' input will return an error", () => {
             const query = `{
                 ${queryName}(endDate: false, orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -214,6 +220,7 @@ describe('Query: orders', () => {
             cy.postAndConfirmError(query);
         });
 
+        // BUG: test succeeds. No error returned.
         it("Query using invalid 'startDate' and 'endDate' inputs will return an error", () => {
             const query = `{
                 ${queryName}(startDate: [], endDate: false, orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -223,6 +230,7 @@ describe('Query: orders', () => {
             cy.postAndConfirmError(query);
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it("Query using valid 'startDate' and invalid 'endDate' inputs will return an error", () => {
             const query = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -239,6 +247,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it("Query using invalid 'startDate' and valid 'endDate' inputs will return an error", () => {
             const query = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -284,6 +293,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it("Query with valid 'last' input argument will return only that amount of items", () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -448,7 +458,9 @@ describe('Query: orders', () => {
                         ${standardQueryBody}
                     }
                 }`;
+                debugger;
                 cy.postAndValidate(beforeQuery, queryName).then((resp) => {
+                    debugger;
                     // Verify that the pageInfo's cursors match up with the edges array's cursors
                     cy.verifyPageInfo(resp, queryName, false, true);
                     cy.validateCursor(resp, queryName, "before");
@@ -456,6 +468,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it("Query with a valid 'after' input argument will return all items after that value", () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -508,7 +521,7 @@ describe('Query: orders', () => {
                 }
             }`;
             cy.postAndConfirmError(gqlQuery, true).then((res) => {
-                expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
+                expect(res.body.errors[0].message[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
             });
         });
     });
@@ -533,9 +546,17 @@ describe('Query: orders', () => {
             });
         });
 
-        it("Query with both 'after' and 'first' input will arguments return a specific amount of items after that value", () => {
+        // BUG:  "Both After and Before cursors cannot be provided in the same request"
+        // TODO: Look at this. Seems like it should be failing.
+        it.only("Query with both 'after' and 'first' input will arguments return a specific amount of items after that value", () => {
+            let smallNum = 'first: 100, ';
+            // const trueTotalQuery = `{
+            //     ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
+            //         ${standardQueryBody}
+            //     }
+            // }`;
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
+                ${queryName}(${smallNum}orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -550,7 +571,9 @@ describe('Query: orders', () => {
                                 ${standardQueryBody}
                             }
                         }`;
+                        debugger;
                         cy.postAndValidate(afterQuery, queryName).then((resp) => {
+                            debugger;
                             // Verify that the pageInfo's cursors match up with the edges array's cursors
                             cy.verifyPageInfo(resp, queryName);
                             cy.validateCursor(resp, queryName, "after", "first", first);
@@ -560,6 +583,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it("Query with both 'before' and 'last' input arguments will return a specific amount of items before that value", () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -584,6 +608,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it("Query with both 'after' and 'last' input will return a specific amount of items after that value", () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -661,6 +686,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it('Query with valid "After" input and invalid "first" input will fail', () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -680,6 +706,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it('Query with invalid "Before" input and valid "last" input will fail', () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -703,6 +730,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it('Query with valid "Before" input and invalid "last" input will fail', () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -722,6 +750,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it('Query with invalid "After" input and valid "last" input will fail', () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
@@ -745,6 +774,7 @@ describe('Query: orders', () => {
             });
         });
 
+        // BUG: Internal Service Error - "Sequence contains no matching element"
         it('Query with valid "After" input and invalid "last" input will fail', () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
