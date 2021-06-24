@@ -11,18 +11,7 @@ const performDelete = (deleteName: string, id: string, altUrl?: string) => {
     cy.wait(2000);
     var mutation = `mutation {
         ${deleteName}(input: {id: "${id}"}){
-            code
-            message
-            errors {
-                code
-                message
-                domain
-                details {
-                    code
-                    message
-                    target
-                }
-            }
+            ${codeMessageError}
         }
     }`;
     cy.postGQL(mutation, altUrl).then((res) => {

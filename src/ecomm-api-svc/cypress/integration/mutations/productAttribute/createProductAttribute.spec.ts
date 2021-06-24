@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 9
 describe('Mutation: createProductAttribute', () => {
@@ -10,18 +11,7 @@ describe('Mutation: createProductAttribute', () => {
 	const deleteMutName = "deleteProductAttribute";
     const itemPath = 'productAttribute';
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             name
@@ -82,12 +72,7 @@ describe('Mutation: createProductAttribute', () => {
         });
 
         it("Mutation will fail with invalid 'Name' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { name: 7 }) {
-                    ${standardMutationBody}
-                }
-            }`
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidName(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail without 'values' input", () => {
@@ -153,18 +138,7 @@ describe('Mutation: createProductAttribute', () => {
                         customData: ${toFormattedString(customData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -234,18 +208,7 @@ describe('Mutation: createProductAttribute', () => {
                         values: ${toFormattedString(values)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         description

@@ -1,16 +1,16 @@
 export const codeMessageError = `code
-message
-errors {
-    code
     message
-    domain
-    details {
+    errors {
         code
         message
-        target
+        domain
+        details {
+            code
+            message
+            target
+        }
     }
-}
-error`;
+    error`;
 
 Cypress.Commands.add("mutationNoInput", (mutationName: string, standardMutationBody: string) => {
     const mutation = `mutation {

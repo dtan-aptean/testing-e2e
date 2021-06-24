@@ -1,4 +1,7 @@
 /// <reference types="cypress" />
+
+import { codeMessageError } from "../../../support/mutationTests";
+
 // TEST COUNT: 6
 describe('Mutation: createReturnReason', () => {
     var id = '';
@@ -7,18 +10,7 @@ describe('Mutation: createReturnReason', () => {
     const queryName = "returnReasons";
     const itemPath = 'returnReason';
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             name
@@ -62,12 +54,7 @@ describe('Mutation: createReturnReason', () => {
         });
 
         it("Mutation will fail with invalid 'Name' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { name: 7 }) {
-                    ${standardMutationBody}
-                }
-            }`
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidName(mutationName, standardMutationBody);
         });
 
         it("Mutation with valid 'Name' input will create a new item", () => {
@@ -107,18 +94,7 @@ describe('Mutation: createReturnReason', () => {
                         customData: {data: "${customData.data}", canDelete: ${customData.canDelete}}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -155,18 +131,7 @@ describe('Mutation: createReturnReason', () => {
                         name: "${name}"
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         displayOrder

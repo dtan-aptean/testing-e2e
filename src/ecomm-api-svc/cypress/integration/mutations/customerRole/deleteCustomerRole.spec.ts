@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 8
 describe('Mutation: deleteCustomerRole', () => {
@@ -11,20 +12,6 @@ describe('Mutation: deleteCustomerRole', () => {
     const mutationName = 'deleteCustomerRole';
     const createName = 'createCustomerRole';
     const queryName = "customerRoles";
-    const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
-    `;
 
     const queryInformation = {
         queryName: queryName, 
@@ -72,70 +59,33 @@ describe('Mutation: deleteCustomerRole', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, codeMessageError);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, codeMessageError);
         });
 
         it("Mutation will fail with invalid 'id' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: true }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidId(mutationName, codeMessageError);
         });
 
         it("Mutation will succeed with valid 'id' input from an existing item", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: "${id}" }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+            cy.mutationBasicDelete(id, mutationName, codeMessageError, queryInformation).then(() => {
                 updateIdAndName();
             });
         });
 
         it("Mutation will fail when given 'id' input from an deleted item", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: "${id}" }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+            cy.mutationAlreadyDeleted(id, mutationName, codeMessageError, queryInformation).then(() => {
                 updateIdAndName();
-                cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
 
         it("Mutation will allow a new item to be created using the old item's name", () => {
             const createMut = `mutation {
                 ${createName}(input: { name: "${currentItemName}" }) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     customerRole {
                         id
                         name
@@ -148,7 +98,7 @@ describe('Mutation: deleteCustomerRole', () => {
                 expect(resp.body.data[createName].errors[0].message).to.eql("Customer Role Name is Required and should be unique.");
                 const mutation = `mutation {
                     ${mutationName}(input: { id: "${id}" }) {
-                        ${standardMutationBody}
+                        ${codeMessageError}
                     }
                 }`;
                 cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
@@ -191,18 +141,7 @@ describe('Mutation: deleteCustomerRole', () => {
                         ${infoName}: ${toFormattedString(info)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${extraItemPath} {
                         id
                         roleBasedAccess {
@@ -248,7 +187,7 @@ describe('Mutation: deleteCustomerRole', () => {
                     cy.confirmUsingQuery(query, extraQueryName, categoryId, propNames, propValues).then(() => {
                         const mutation = `mutation {
                             ${mutationName}(input: { id: "${id}" }) {
-                                ${standardMutationBody}
+                                ${codeMessageError}
                             }
                         }`;
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
@@ -278,18 +217,7 @@ describe('Mutation: deleteCustomerRole', () => {
                         ${infoName}: ${toFormattedString(info)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${extraItemPath} {
                         id
                         roleBasedAccess {
@@ -335,7 +263,7 @@ describe('Mutation: deleteCustomerRole', () => {
                     cy.confirmUsingQuery(query, extraQueryName, manufacturerId, propNames, propValues).then(() => {
                         const mutation = `mutation {
                             ${mutationName}(input: { id: "${id}" }) {
-                                ${standardMutationBody}
+                                ${codeMessageError}
                             }
                         }`;
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {

@@ -2,6 +2,8 @@
  * HELPER FUNCTIONS
  */
 
+import { codeMessageError } from "./mutationTests";
+
 // Turns an array or object into a string to use as gql input or with a custom command's consoleProps logging functionality
 export const toFormattedString = (item, isMessage?: boolean, indentation?: number): string => {
     // Names of fields that are enum types and should not be wrapped in quotations.
@@ -636,18 +638,7 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, itemPath: string, 
     }`;
     const mutation = `mutation {
         ${mutationName}(input: ${input}) {
-            code
-            message
-            errors {
-                code
-                message
-                domain
-                details {
-                    code
-                    message
-                    target
-                }
-            }
+            ${codeMessageError}
             ${itemPath} {
                 ${itemPath === "refund" ? refundIdFormat: "id"}
                 ${additionalFields ? additionalFields : ""}
@@ -782,18 +773,7 @@ Cypress.Commands.add("createParentAndChildCat", (
                     categoryInfo: [{ name: "${newChildName}", languageCode: "Standard" }]
                 }
             ) {
-                code
-                message
-                errors {
-                    code
-                    message
-                    domain
-                    details {
-                        code
-                        message
-                        target
-                    }
-                }
+                ${codeMessageError}
                 category {
                     id
                     categoryInfo {
@@ -1024,18 +1004,7 @@ Cypress.Commands.add("deleteItem", (mutationName: string, id: string, altUrl?: s
     });
     var mutation = `mutation {
         ${mutationName}(input: { id: "${id}" }) {
-            code
-            message
-            errors {
-                code
-                message
-                domain
-                details {
-                    code
-                    message
-                    target
-                }
-            }
+            ${codeMessageError}
         }
     }`;
     return cy.postMutAndValidate(mutation, mutationName, "deleteMutation", altUrl);
