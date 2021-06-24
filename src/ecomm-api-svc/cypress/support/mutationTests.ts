@@ -39,6 +39,25 @@ Cypress.Commands.add("mutationInvalidId", (mutationName: string, standardMutatio
     cy.postAndConfirmError(mutation);
 });
 
+Cypress.Commands.add("mutationOnlyId", (id: string, mutationName: string, standardMutationBody: string) => {
+    const mutation = `mutation {
+        ${mutationName}(input: { id: "${id}" }) {
+            ${standardMutationBody}
+        }
+    }`;
+    cy.postAndConfirmError(mutation);
+});
+
+Cypress.Commands.add("mutationInvalidName", (mutationName: string, standardMutationBody: string, id?: string) => {
+    let idInput = id ? `id: "${id}", ` : "";
+    const mutation = `mutation {
+        ${mutationName}(input: { ${idInput}name: 7 }) {
+            ${standardMutationBody}
+        }
+    }`;
+    cy.postAndConfirmError(mutation);
+});
+
 Cypress.Commands.add("mutationBasicDelete", (id: string, mutationName: string, standardMutationBody: string, queryInformation) => {
     const mutation = `mutation {
         ${mutationName}(input: { id: "${id}" }) {

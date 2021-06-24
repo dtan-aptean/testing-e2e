@@ -1,12 +1,15 @@
 /// <reference types="cypress" />
 
-import { toFormattedString } from "../../../support/commands";
+import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
 import { codeMessageError } from "../../../support/mutationTests";
 
-// TEST COUNT: 13
-describe('Mutation: createVendor', () => {
+// TEST COUNT: 16
+describe('Mutation: updateWarehouse', () => {
     var id = '';
-    const mutationName = "createWarehouse";
+    var itemCount = 1;
+    var extraIds = [] as SupplementalItemRecord[];
+    const mutationName = "updateWarehouse";
+    const createName = "createWarehouse";
 	const deleteMutName = "deleteWarehouse";
     const queryName = "warehouses";
     const itemPath = "warehouse";
@@ -28,19 +31,33 @@ describe('Mutation: createVendor', () => {
     `;
 
 	var deleteItemsAfter = undefined as boolean | undefined;
-	before(() => {
+    before(() => {
 		deleteItemsAfter = Cypress.env("deleteItemsAfter");
 		cy.deleteCypressItems(queryName, deleteMutName);
+    });
+
+	beforeEach(() => {
+        const name = `Cypress ${mutationName} Test #${itemCount}`;
+        // Address of Leamy Lake Park in Canada
+        const input = `{name: "${name}", address: { city: "Gatineau", country: "CA", line1: "Leamy Lake Pkwy", line2: "", postalCode: "J8X 3P5", region: "Quebec" }}`;
+        cy.createAndGetId(createName, itemPath, input).then((returnedId: string) => {
+            assert.exists(returnedId);
+            id = returnedId;
+            itemCount++;
+        });
 	});
-    
+
     afterEach(() => {
 		if (!deleteItemsAfter) {
 			return;
 		}
         if (id !== "") {
-            cy.deleteItem(deleteMutName, id).then(() => {
-                id = "";
+            // Delete any supplemental items we created
+            cy.deleteSupplementalItems(extraIds).then(() => {
+                extraIds = [];
             });
+            // Delete the item we've been updating
+            cy.deleteItem(deleteMutName, id);
         }
     });
 
@@ -53,24 +70,31 @@ describe('Mutation: createVendor', () => {
             cy.mutationEmptyObject(mutationName, standardMutationBody);
         });
 
+        it("Mutation will fail with invalid 'id' input", () => {
+            cy.mutationInvalidId(mutationName, standardMutationBody);
+        });
+
+        // TODO: failing ecause of 200 status code instead of 400
+        it("Mutation will fail if the only input provided is 'id'", () => {
+            cy.mutationOnlyId(id, mutationName, standardMutationBody);
+        });
+
         it("Mutation will fail with invalid 'Name' input", () => {
-            cy.mutationInvalidName(mutationName, standardMutationBody);
+            cy.mutationInvalidName(mutationName, standardMutationBody, id);
         });
 
         it("Mutation will fail with only 'Name' input", () => {
             const mutation = `mutation {
-                ${mutationName}(input: { name: "Cypress ${mutationName} only name" }) {
+                ${mutationName}(input: { id: "${id}", name: "Cypress ${mutationName} only name" }) {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmError(mutation).then((res) => {
-                expect(res.body.errors[0].message).to.eql('Field "CreateWarehouseInput.address" of required type "AddressInput!" was not provided.');
-            });
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail with invalid 'Address' input", () => {
             const mutation = `mutation {
-                ${mutationName}(input: { address: 7 }) {
+                ${mutationName}(input: { id: "${id}", address: 7 }) {
                     ${standardMutationBody}
                 }
             }`;
@@ -79,7 +103,7 @@ describe('Mutation: createVendor', () => {
 
         it("Mutation will fail with empty 'Address' input", () => {
             const mutation = `mutation {
-                ${mutationName}(input: { address: {} }) {
+                ${mutationName}(input: { id: "${id}", address: {} }) {
                     ${standardMutationBody}
                 }
             }`;
@@ -89,6 +113,7 @@ describe('Mutation: createVendor', () => {
         it("Mutation will fail with only 'Address' input", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { 
+                    id: "${id}",
                     address: {
                         city: "Alpharetta",
                         country: "US",
@@ -101,13 +126,13 @@ describe('Mutation: createVendor', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmError(mutation).then((res) => {
-                expect(res.body.errors[0].message).to.eql('Field \"CreateWarehouseInput.name\" of required type \"String!\" was not provided.');
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
+                expect(res.body.data[mutationName].errors[0].message).to.eql("Warehouse Name is Required");
             });
         });
 
-        it("Mutation with valid 'Name' and 'Address' input will create a new item", () => {
-            const name = `Cypress API ${mutationName}`;
+        it("Mutation will succeed with valid 'id', 'name', and 'address' input", () => {
+            const name = `Cypress ${mutationName} basic required`;
             const address = {
                 country: "US",
                 postalCode: "30022", 
@@ -116,6 +141,7 @@ describe('Mutation: createVendor', () => {
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
+                        id: "${id}"
                         name: "${name}"
                         address: ${toFormattedString(address)}
                     }
@@ -124,7 +150,6 @@ describe('Mutation: createVendor', () => {
                 }
             }`;
             cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                id = res.body.data[mutationName][itemPath].id;
                 let dummyAddress = {
                     city: "",
                     country: "US",
@@ -160,6 +185,7 @@ describe('Mutation: createVendor', () => {
         it("Mutation will fail if 'Address' input does not have 'country'", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { 
+                    id: "${id}"
                     name: "Cypress ${mutationName} missing country"
                     address: {
                         city: "Alpharetta",
@@ -180,6 +206,7 @@ describe('Mutation: createVendor', () => {
         it("Mutation will fail if 'Address' input does not have 'postalCode'", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { 
+                    id: "${id}"
                     name: "Cypress ${mutationName} missing postalCode"
                     address: {
                         city: "Alpharetta",
@@ -200,6 +227,7 @@ describe('Mutation: createVendor', () => {
         it("Mutation will fail if 'Address' input does not have 'region'", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { 
+                    id: "${id}"
                     name: "Cypress ${mutationName} missing region"
                     address: {
                         city: "Alpharetta",
@@ -219,7 +247,7 @@ describe('Mutation: createVendor', () => {
     });
 
     context("Testing customData input and optional input", () => {
-        it("Mutation with all required input and 'customData' input creates item with customData", () => {
+        it("Mutation with all required input and 'customData' input updates item with customData", () => {
             const name = `Cypress ${mutationName} customData`;
             const address = {
                 country: "US",
@@ -230,6 +258,7 @@ describe('Mutation: createVendor', () => {
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
+                        id: "${id}"
                         name: "${name}"
                         address: ${toFormattedString(address)}
                         customData: ${toFormattedString(customData)}
@@ -239,9 +268,16 @@ describe('Mutation: createVendor', () => {
                 }
             }`;
             cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                id = res.body.data[mutationName][itemPath].id;
+                let dummyAddress = {
+                    city: "",
+                    country: "US",
+                    line1: "",
+                    line2: "",
+                    postalCode: "30022",
+                    region: "Georgia"
+                };
                 const propNames = ["customData", "name", "address"];
-                const propValues = [customData, name, address];
+                const propValues = [customData, name, dummyAddress];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
                     const query = `{
                         ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME}) {
@@ -265,7 +301,74 @@ describe('Mutation: createVendor', () => {
             });
         });
 
-        it("Mutation creates item that has all included input", () => {
+        it("Mutation with all required input and 'customData' input will overwrite the customData on an existing object", () => {
+            const name = `Cypress ${mutationName} customData extra`;
+            const address = {
+                country: "US",
+                postalCode: "30022", 
+                region: "Georgia"
+            };
+            const customData = {data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+            const input = `{name: "${name}", address: ${toFormattedString(address)}, customData: ${toFormattedString(customData)}}`;
+            cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
+                assert.exists(createdItem.id);
+                assert.exists(createdItem.customData);
+                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName});
+                const newName = `Cypress ${mutationName} CD extra updated`;
+                const newAddress = {
+                    country: "CA",
+                    postalCode: "J8X 3P5",
+                    region: "Quebec"
+                };
+                const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: {
+                            id: "${createdItem.id}"
+                            name: "${newName}"
+                            address: ${toFormattedString(newAddress)}
+                            customData: ${toFormattedString(newCustomData)}
+                        }
+                    ) {
+                        ${standardMutationBody}
+                    }
+                }`;
+                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
+                    let dummyAddress = {
+                        city: "",
+                        country: newAddress.country,
+                        line1: "",
+                        line2: "",
+                        postalCode: newAddress.postalCode,
+                        region: newAddress.region
+                    };
+                    const propNames = ["customData", "name", "address"];
+                    const propValues = [newCustomData, newName, dummyAddress];
+                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
+                        const query = `{
+                            ${queryName}(searchString: "${newName}", orderBy: {direction: ASC, field: NAME}) {
+                                nodes {
+                                    id
+                                    name
+                                    address {
+                                        city
+                                        country
+                                        line1
+                                        line2
+                                        postalCode
+                                        region
+                                    }
+                                    customData
+                                }
+                            }
+                        }`;
+                        cy.postAndCheckCustom(query, queryName, id, newCustomData);
+                    });
+                });
+            });
+        });
+
+        it("Mutation will correctly use all input", () => {
             const name = `Cypress ${mutationName} Input`;
             const address = {
                 city: "Alpharetta",
@@ -278,6 +381,7 @@ describe('Mutation: createVendor', () => {
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
+                        id: "${id}"
                         name: "${name}"
                         address: ${toFormattedString(address)}
                     }
@@ -286,7 +390,6 @@ describe('Mutation: createVendor', () => {
                 }
             }`;
             cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                id = res.body.data[mutationName][itemPath].id;
                 const propNames = ["name", "address"];
                 const propValues = [name, address];
                 cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
