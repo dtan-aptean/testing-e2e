@@ -61,11 +61,11 @@ module.exports = async (on, config) => {
         });
       });
       const title = results.totalPassed < results.totalTests ? `<span style='color:red'>**IMPORTANT!<br>${results.totalPassed} out of ${results.totalTests} passed**</span>` : `<span style='color:green'>**${results.totalPassed} out of ${results.totalTests} passed**</span>`;
-      await axios.post("https://apteanonline.webhook.office.com/webhookb2/b879817b-ffa3-404c-8f59-37ecabce0a54@560ec2b0-df0c-4e8c-9848-a15718863bb6/IncomingWebhook/eb364835301e4e84a8228da33ba09146/a7c163f2-fcf7-4365-a94c-6d9bf23155cc", {      
+      await axios.post("https://apteanonline.webhook.office.com/webhookb2/b879817b-ffa3-404c-8f59-37ecabce0a54@560ec2b0-df0c-4e8c-9848-a15718863bb6/IncomingWebhook/2764818da21b4aca81dffb801f2da179/a7c163f2-fcf7-4365-a94c-6d9bf23155cc", {      
           "@type": "MessageCard",
           "@context": "http://schema.org/extensions",
           "themeColor": "0076D7",
-          "summary": "Cypress Test Result",
+          "summary": "Ezpay Payer Portal Cypress Test Result",
           "sections": [{
               "activityTitle": title,
               "activitySubtitle": "On Ezpay Payer Portal",
