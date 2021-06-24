@@ -310,21 +310,52 @@ Cypress.Commands.add('returnRandomName', (gqlQuery: string, queryName: string) =
         if (totalCount > 1) {
             randomIndex = Cypress._.random(0, totalCount - 1);
         }
+        var duplicateArray;
         var randomNode = res.body.data[queryName].nodes[randomIndex];
-        const duplicateArray = res.body.data[queryName].nodes.filter((val) => {
-            return val.name === randomNode.name;
-        });
-        if (duplicateArray.length > 1) {
-            const uniqueArray = res.body.data[queryName].nodes.filter((val) => {
-                return val.name !== randomNode.name;
+        if (queryName == "addresses") {
+            duplicateArray = res.body.data[queryName].nodes.filter((val) => {
+                return val.contactDetails.firstName === randomNode.contactDetails.firstName;  
             });
-            randomIndex = 0;
-            if (uniqueArray.length > 1) {
-                randomIndex = Cypress._.random(0, uniqueArray.length - 1);
-            }
-            randomNode = uniqueArray[randomIndex];
+        } else {
+            duplicateArray = res.body.data[queryName].nodes.filter((val) => {
+                return val.name === randomNode.name;
+            });
         }
-        return cy.wrap(randomNode.name);
+        if (queryName == "addresses") {
+            if (duplicateArray.length > 1) {
+                const uniqueArray = res.body.data[queryName].nodes.filter((val) => {
+                    return val.contactDetails.firstName !== randomNode.contactDetails.firstName;
+                });
+                randomIndex = 0;
+                if (uniqueArray.length == 1)
+                {
+                    randomNode = uniqueArray[randomIndex];
+                }
+                else if (uniqueArray.length > 1) {
+                    randomIndex = Cypress._.random(0, uniqueArray.length - 1);
+                    randomNode = uniqueArray[randomIndex];
+                }
+               
+            }
+            return cy.wrap(randomNode.contactDetails.firstName);
+        }
+        else{
+            if (duplicateArray.length > 1) {
+                const uniqueArray = res.body.data[queryName].nodes.filter((val) => {
+                    return val.name !== randomNode.name;
+                });
+                randomIndex = 0;
+                if (uniqueArray.length == 1)
+                {
+                    randomNode = uniqueArray[randomIndex];
+                }
+                else if (uniqueArray.length > 1) {
+                    randomIndex = Cypress._.random(0, uniqueArray.length - 1);
+                    randomNode = uniqueArray[randomIndex];
+                } 
+            }
+            return cy.wrap(randomNode.name);
+        }   
     });
 });
 
@@ -347,8 +378,14 @@ Cypress.Commands.add("validateNameSearch", (res, queryName: string, searchValue:
     expect(totalCount).to.be.eql(nodes.length);
     expect(totalCount).to.be.eql(edges.length);
     for (var i = 0; i < nodes.length; i++) {
+        if(queryName=="addresses"){
+            expect(nodes[i].contactDetails.firstName.toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
+            expect(edges[i].node.contactDetails.firstName.toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
+        }
+        else{
         expect(nodes[i].name.toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
         expect(edges[i].node.name.toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
+        }
     }
 });
 
@@ -500,16 +537,14 @@ Cypress.Commands.add('returnMultipleRandomIds', (numberOfIds:number, gqlQuery: s
      
         var totalCount = res.body.data[queryName].totalCount ;
 
-        if (numberOfIds > 25 && totalCount>25) {
+        if (totalCount > 25) {
             var insertIndex = gqlQuery.indexOf("orderBy");
-            gqlQuery = gqlQuery.slice(0, insertIndex) + `first: ${numberOfIds}, ` + gqlQuery.slice(insertIndex);
+            gqlQuery = gqlQuery.slice(0, insertIndex) + `first: ${totalCount}, ` + gqlQuery.slice(insertIndex);
               cy.postAndValidate(gqlQuery, queryName).then((resp) => {
-                  totalCount=numberOfIds;
              return  returnIds(resp,totalCount,numberOfIds)
             });
         }
         else{
-            totalCount = totalCount > 25? 25:res.body.data[queryName].totalCount;
             return  returnIds(res,totalCount,numberOfIds);
         }
     });
@@ -598,7 +633,6 @@ Cypress.Commands.add("validateIdSearch", (res, queryName: string, searchValue: s
                 var split = idName.split(".");
                 node = nodes[i][split[0]][split[1]];
                 edge = edges[i].node[split[0]][split[1]];
-                
             } else {
                 node = nodes[i][idName];
                 edge = edges[i].node[idName];
@@ -651,13 +685,11 @@ Cypress.Commands.add("validateMultipleIdSearch", (res, queryName: string, idValu
                     const id = item.idName;
                     return id === idValue[i];
                 });
-               
             }
         }
         expect(targetNode.length).to.be.eql(1, "Specific item found in nodes");
     }
 });
-
 
 /**
  * COMMANDS FOR BEFORE/AFTER TESTS
@@ -738,7 +770,7 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
 
     const {edges, nodes, totalCount, pageInfo} = newData;
     // Confirm expected total count
-    expect(totalCount).to.be.eql(index, `Verify totalCount is ${index}`);
+     expect(totalCount).to.be.eql(index, `Verify totalCount is ${index}`);
     // Confirm expected node/edge count
     var includedStart = 0;
     var excludedStart = index;
