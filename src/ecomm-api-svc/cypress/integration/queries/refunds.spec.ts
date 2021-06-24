@@ -807,6 +807,7 @@ describe('Query: refunds', () => {
                     startCursor
                 }
                 totalCount
+            }
         }`;
 
         const comparePaymentStatus = (nodes, isPartial: boolean, expectedStatus: string) => {

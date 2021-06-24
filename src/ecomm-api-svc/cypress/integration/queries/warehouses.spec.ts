@@ -606,7 +606,7 @@ describe('Query: warehouses', () => {
                     }
                     nodes {
                         customData
-                    }g
+                    }
                     pageInfo {
                         endCursor
                         hasNextPage
