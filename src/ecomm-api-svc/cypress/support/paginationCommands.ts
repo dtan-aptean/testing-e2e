@@ -779,8 +779,7 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
             excludedStart = value;
             eCursor = data.edges[index - value].cursor;
         } else if (firstLast === "last") {
-            includedStart = 0;
-            excludedStart = newData.edges.length;
+            includedStart = totalCount - value;
             sCursor = data.edges[includedStart].cursor;
         }
     }

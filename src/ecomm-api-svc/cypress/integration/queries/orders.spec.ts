@@ -95,12 +95,12 @@ describe('Query: orders', () => {
         });
 
         it("Query with orderBy direction: DESC, field: TIMESTAMP will return items in a reverse order from direction: ASC", () => {
-            const trueTotalQuery = `{
+            const maxItemQuery = `{
                 ${queryName}(first:${maxItems}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
+            cy.postAndValidate(maxItemQuery, queryName).then((ascRes) => {
                 const descQuery = `{
                     ${queryName}(last:${maxItems}, orderBy: {direction: DESC, field: TIMESTAMP}) {
                         ${standardQueryBody}
@@ -279,12 +279,12 @@ describe('Query: orders', () => {
 
         // BOOKMARK success
         it("Query with valid 'last' input argument will return only that amount of items", () => {
-            const trueTotalQuery = `{
+            const maxItemQuery = `{
                 ${queryName}(last:${maxItems}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.returnCount(trueTotalQuery, queryName).then((totalCount: number) => {
+            cy.returnCount(maxItemQuery, queryName).then((totalCount: number) => {
                 // If there's only one item, we can't do any pagination
                 expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
                 // Get half the items, rounding down
@@ -451,12 +451,12 @@ describe('Query: orders', () => {
         });
 
         it("Query with a valid 'after' input argument will return all items after that value", () => {
-            const trueTotalQuery = `{
+            const maxItemQuery = `{
                 ${queryName}(first:${maxItems}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.returnRandomCursor(trueTotalQuery, queryName, false).then((cursor: string) => {
+            cy.returnRandomCursor(maxItemQuery, queryName, false).then((cursor: string) => {
                 const afterQuery = `{
                     ${queryName}(after: "${cursor}", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
@@ -528,12 +528,12 @@ describe('Query: orders', () => {
         });
 
         it("Query with both 'after' and 'first' input will return a specific amount of items after that value", () => {
-            const trueTotalQuery = `{
+            const maxItemQuery = `{
                 ${queryName}(first:${maxItems}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.returnRandomCursor(trueTotalQuery, queryName, false).then((cursor: string) => {
+            cy.returnRandomCursor(maxItemQuery, queryName, false).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
@@ -555,12 +555,12 @@ describe('Query: orders', () => {
         });
 
         it("Query with both 'before' and 'last' input arguments will return a specific amount of items before that value", () => {
-            const trueTotalQuery = `{
+            const maxItemQuery = `{
                 ${queryName}(first:${maxItems}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
+            cy.returnRandomCursor(maxItemQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const last = index > 1 ? Math.floor(index / 2) : 1;
                     Cypress.log({ message: `last: ${last}` });
@@ -579,12 +579,12 @@ describe('Query: orders', () => {
         });
 
         it("Query with both 'after' and 'last' input will return a specific amount of items after that value", () => {
-            const trueTotalQuery = `{
+            const maxItemQuery = `{
                 ${queryName}(first:${maxItems}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.returnRandomCursor(trueTotalQuery, queryName, false).then((cursor: string) => {
+            cy.returnRandomCursor(maxItemQuery, queryName, false).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
@@ -656,12 +656,12 @@ describe('Query: orders', () => {
         });
 
         it('Query with valid "After" input and invalid "first" input will fail', () => {
-            const trueTotalQuery = `{
+            const maxItemQuery = `{
                 ${queryName}(first:${maxItems}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.returnRandomCursor(trueTotalQuery, queryName, false).then((cursor: string) => {
+            cy.returnRandomCursor(maxItemQuery, queryName, false).then((cursor: string) => {
                 const gqlQuery = `{
                     ${queryName}(after: "${cursor}", first: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
@@ -675,12 +675,12 @@ describe('Query: orders', () => {
         });
 
         it('Query with invalid "Before" input and valid "last" input will fail', () => {
-            const trueTotalQuery = `{
+            const maxItemQuery = `{
                 ${queryName}(first:${maxItems}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.returnCount(trueTotalQuery, queryName).then((totalCount: number) => {
+            cy.returnCount(maxItemQuery, queryName).then((totalCount: number) => {
                 // If there's only one item, we can't do any pagination
                 expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
                 // Get half the items, rounding down
@@ -698,12 +698,12 @@ describe('Query: orders', () => {
         });
 
         it('Query with valid "Before" input and invalid "last" input will fail', () => {
-            const trueTotalQuery = `{
+            const maxItemQuery = `{
                 ${queryName}(first:${maxItems}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
+            cy.returnRandomCursor(maxItemQuery, queryName, true).then((cursor: string) => {
                 const gqlQuery = `{
                     ${queryName}(before: "${cursor}", last: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
@@ -717,12 +717,12 @@ describe('Query: orders', () => {
         });
 
         it('Query with invalid "After" input and valid "last" input will fail', () => {
-            const trueTotalQuery = `{
+            const maxItemQuery = `{
                 ${queryName}(first:${maxItems}, orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.returnCount(trueTotalQuery, queryName).then((totalCount: number) => {
+            cy.returnCount(maxItemQuery, queryName).then((totalCount: number) => {
                 // If there's only one item, we can't do any pagination
                 expect(totalCount).to.be.gte(2, "Need >=2 items to test with");
                 // Get half the items, rounding down
@@ -740,12 +740,12 @@ describe('Query: orders', () => {
         });
 
         it('Query with valid "After" input and invalid "last" input will fail', () => {
-            const trueTotalQuery = `{
+            const maxItemQuery = `{
                 ${queryName}(first:${maxItems} orderBy: {direction: ASC, field: TIMESTAMP}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.returnRandomCursor(trueTotalQuery, queryName, false).then((cursor: string) => {
+            cy.returnRandomCursor(maxItemQuery, queryName, false).then((cursor: string) => {
                 const gqlQuery = `{
                     ${queryName}(after: "${cursor}", last: "4", orderBy: {direction: ASC, field: TIMESTAMP}) {
                         ${standardQueryBody}
