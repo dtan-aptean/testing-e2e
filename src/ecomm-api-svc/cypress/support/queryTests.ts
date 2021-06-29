@@ -254,7 +254,7 @@ Cypress.Commands.add("queryBeforeAfter", (queryName: string, standardQueryBody: 
         }
     }`;
     cy.postAndConfirmError(gqlQuery, true).then((res) => {
-        expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
+        expect(res.body.errors[0].message[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
     });
 });
 
@@ -508,6 +508,53 @@ Cypress.Commands.add("queryAfterInvalidLast", (queryName: string, standardQueryB
     });
 });
 
+Cypress.Commands.add("queryValidSearchString", (queryName: string, standardQuery: string, standardQueryBody: string) => {
+    cy.returnRandomName(standardQuery, queryName).then((name: string) => {
+        const searchQuery = `{
+            ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.postAndValidate(searchQuery, queryName).then((resp) => {
+            cy.validateNameSearch(resp, queryName, name);
+        });
+    });
+});
+
+Cypress.Commands.add("queryPartialSearchString", (queryName: string, standardQuery: string, standardQueryBody: string) => {
+    cy.returnRandomName(standardQuery, queryName).then((name: string) => {
+        // Get the first word if the name has multiple words. Otherwise, get a random segment of the name
+        var newWordIndex = name.search(" ");
+        var searchText = "";
+        if (newWordIndex !== -1 && newWordIndex !== 0) {
+            searchText = name.substring(0, newWordIndex);
+        } else {
+            const segmentIndex = Cypress._.random(name.length / 2, name.length - 1);
+            searchText = name.substring(0, segmentIndex);
+        }
+        const searchQuery = `{
+            ${queryName}(searchString: "${searchText}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
+                ${standardQueryBody}
+            }
+        }`;
+        cy.postAndValidate(searchQuery, queryName).then((resp) => {
+            cy.validateNameSearch(resp, queryName, searchText);
+        });
+    });
+});
+
+Cypress.Commands.add("queryInvalidSearchString", (queryName: string, standardQueryBody: string) => {
+    const gqlQuery = `{
+        ${queryName}(searchString: 7, orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
+            ${standardQueryBody}
+        }
+    }`;
+    cy.postAndConfirmError(gqlQuery).then((res) => {
+        expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 7');
+        expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+    });
+});
+
 Cypress.Commands.add("queryAndValidateMultipleIds", (count, queryName, standardQueryBody) => {
     const extraGqlQuery = `{
         ${queryName}(orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
@@ -607,13 +654,8 @@ Cypress.Commands.add("queryAndValidateNonArrayValues", (ids, queryName, standard
     });
 });
 
-Cypress.Commands.add("queryAndValidateDifferentItemIds", (extraQueryName, extraStandardQueryBody, queryName, standardQueryBody) => {
-    const extraGqlQuery = `{
-        ${extraQueryName}(orderBy: {direction: ASC, field: ${defaultField(extraQueryName)}}) {
-            ${extraStandardQueryBody}
-        }
-    }`;
-    cy.returnRandomId(extraGqlQuery, extraQueryName).then((curId: string) => {
+Cypress.Commands.add("queryAndValidateDifferentItemIds", (extraQueryName, extraQuery, queryName, standardQueryBody) => {
+    cy.returnRandomId(extraQuery, extraQueryName).then((curId: string) => {
         const gqlQuery = `{
             ${queryName}(orderBy: {direction: ASC, field: ${defaultField(queryName)}}
                 ids: "${curId}"
@@ -652,5 +694,58 @@ Cypress.Commands.add("queryForCustomData", (queryName: string) => {
     }`;
     cy.postAndValidate(gqlQuery, queryName).then((res) => {
         cy.checkCustomData(res, queryName);
+    });
+});
+
+Cypress.Commands.add("queryForAddress", (queryName: string) => {
+    const gqlQuery = `{
+        ${queryName}(orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
+            nodes {
+                address {
+                    city
+                    country
+                    line1
+                    line2
+                    postalCode
+                    region
+                }
+            }
+            totalCount
+        }
+    }`;
+    cy.postAndValidate(gqlQuery, queryName).then((res) => {
+        if (res.body.data[queryName].nodes.length > 0) {
+            const nodesPath = res.body.data[queryName].nodes;
+            nodesPath.forEach((item) => {
+                // has address field
+                expect(item).to.have.property('address');
+                if (item.address !== null) {
+                    expect(item.address).to.have.property('city');
+                    if (item.address.city !== null) {
+                        expect(item.address.city).to.be.a('string');
+                    }
+                    expect(item.address).to.have.property('country');
+                    if (item.address.country !== null) {
+                        expect(item.address.country).to.be.a('string');
+                    }
+                    expect(item.address).to.have.property('line1');
+                    if (item.address.line1 !== null) {
+                        expect(item.address.line1).to.be.a('string');
+                    }
+                    expect(item.address).to.have.property('line2');
+                    if (item.address.line2 !== null) {
+                        expect(item.address.line2).to.be.a('string');
+                    }
+                    expect(item.address).to.have.property('postalCode');
+                    if (item.address.postalCode !== null) {
+                        expect(item.address.postalCode).to.be.a('string');
+                    }
+                    expect(item.address).to.have.property('region');
+                    if (item.address.region !== null) {
+                        expect(item.address.region).to.be.a('string');
+                    }
+                }
+            });
+        }
     });
 });

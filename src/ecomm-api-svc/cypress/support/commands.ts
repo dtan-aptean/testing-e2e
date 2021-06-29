@@ -682,22 +682,22 @@ Cypress.Commands.add("createAssociatedItems", (
             };
         }
     });
-
+    
     const getNameBase = () => {
         const propNames = Object.getOwnPropertyNames(inputBase);
-        if (propNames.includes("firstName") && propNames.includes("lastName")) {
-            return { firstName: inputBase.firstName, lastName: inputBase.lastName };
+        if (propNames.includes("firstName") && propNames.includes("lastName") && propNames.includes("email")) {
+            return { firstName: inputBase.firstName, lastName: inputBase.lastName, email: inputBase.email };
         } else if (propNames.includes("integrationKey")) {
             return {name: inputBase.name, intKey: inputBase.integrationKey};
-        } else if (!propNames.includes(name)) {
+        } else if (!propNames.includes("name")) {
             return "noName";
         } else {
             return inputBase.name;
         }
     };
     const incrementNameBase = (nameBase, i) => {
-        if (typeof nameBase === "object" && nameBase.firstName && nameBase.lastName) {
-            return { firstName: `${nameBase.firstName} ${i}`, lastName: `${nameBase.lastName} ${i}` };
+        if (typeof nameBase === "object" && nameBase.firstName && nameBase.lastName && nameBase.email) {
+            return { firstName: `${nameBase.firstName} ${i}`, lastName: `${nameBase.lastName} ${i}`, email: `${nameBase.email} ${i}` };
         } else if (typeof nameBase === "object" && nameBase.intKey) {
             return { name: `${nameBase.name} ${i}`, intKey: `${nameBase}${Cypress._.random(10000, 100000)}`};
         } else if (nameBase === "noName") {
@@ -710,9 +710,10 @@ Cypress.Commands.add("createAssociatedItems", (
         const retInput = JSON.parse(JSON.stringify(input));
         if (infoName) {
             retInput[infoName][0].name = newName;
-        } else if (typeof newName === "object" && newName.firstName && newName.lastName) {
+        } else if (typeof newName === "object" && newName.firstName && newName.lastName && newName.email) {
             retInput.firstName = newName.firstName;
             retInput.lastName = newName.lastName;
+            retInput.email = newName.email;
         } else if (typeof newName === "object" && newName.intKey) {
             retInput.name = newName.name;
             retInput.integrationKey = newName.intKey;
@@ -737,8 +738,8 @@ Cypress.Commands.add("createAssociatedItems", (
             item.id = returnedId;
             createdItems.push(item);
             var correctItemName = name;
-            if (typeof name === "object" && name.firstName && name.lastName) {
-                correctItemName = item.email; //    TODO: MAKE SURE THIS IS CORRECT
+            if (typeof name === "object" && name.firstName && name.lastName && name.email) {
+                correctItemName = item.email; //    MAKE SURE THIS IS CORRECT
             } else if (typeof name === "object" && name.intKey) {
                 correctItemName = name.name
             } else if (name === "noName") {
@@ -1448,4 +1449,30 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, queryName: string, ite
         expect(propNames.length).to.be.eql(values.length, "Same number of properties and values passed in");
         compareExpectedToResults(node, propNames, values);
     });
+});
+ 
+Cypress.Commands.add("createAndGetMultipleIds",(NumberToMake: number,createName: string, itemPath: string, input: string,altUrl?:String) => {
+    Cypress.log({
+        name: "createAndGetMultipleIds",
+        message: `Creating ${itemPath}`,
+        consoleProps: () => {
+            return {
+                "Mutation": createName,
+                "Response item path": itemPath,
+                "Input string": input,
+                "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
+            };
+        }
+    });
+    const createdIds = [];
+    const createAndPush =() => {
+        cy.createAndGetId(createName, itemPath,input).then((returnedBody) => {
+            const returnedId = returnedBody;
+            createdIds.push(returnedId);
+        });
+    }
+    for(var i=0;i<NumberToMake;i++){
+        createAndPush(createName,itemPath,input);
+    }
+    return cy.wrap(createdIds);
 });
