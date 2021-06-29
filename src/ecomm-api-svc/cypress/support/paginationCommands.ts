@@ -770,7 +770,6 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
     var excludedStart = index;
     var sCursor = data.pageInfo.startCursor;
     var eCursor = data.pageInfo.endCursor;
-    var length = data.length;
     if ((firstLast === "first" || firstLast === "last") && value) {
         assert.isNotNaN(value);
         expect(nodes.length).to.be.eql(value);
@@ -787,7 +786,7 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
         expect(nodes).to.deep.include(data.nodes[i]);
         expect(edges).to.deep.include(data.edges[i]);
     }
-    for (var f = excludedStart; f < length; f++) {
+    for (var f = excludedStart; f < data.length; f++) {
         expect(nodes).not.to.deep.include(data.nodes[f]);
         expect(edges).not.to.deep.include(data.edges[f]);
     }
@@ -798,13 +797,8 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
         }
     }
     if (nodes.length !== 1 && edges.length !== 1) {
-        if (firstLast === 'last') {
-            expect(pageInfo.endCursor).to.be.eql(sCursor);
-            expect(pageInfo.endCursor).not.to.eql(eCursor);
-        } else {
-            expect(pageInfo.startCursor).to.be.eql(sCursor);
-            expect(pageInfo.endCursor).not.to.eql(eCursor);
-        }
+        expect(pageInfo.startCursor).to.be.eql(sCursor);
+        expect(pageInfo.endCursor).not.to.eql(eCursor);
     }
 });
 
@@ -823,6 +817,7 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
             };
         },
     });
+
     const { edges, nodes, totalCount, pageInfo } = newData;
     expect(totalCount).to.be.eql(data.totalCount - (index + 1), `Verify totalCount is ${data.totalCount - (index + 1)}`);
     var includedStart = index + 1;
@@ -837,7 +832,7 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
             excludedAfter = (index + 1) + value;
             eCursor = data.edges[index + value].cursor;
         } else if (firstLast === "last") {
-            includedStart = index;
+            includedStart = index + value;
             sCursor = data.edges[includedStart].cursor;
         }
     } else if (totalCount > nodes.length) {
@@ -858,15 +853,9 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
         }
     }
     if (nodes.length !== 1 && edges.length !== 1) {
-        if (firstLast === 'last') {
-            expect(pageInfo.startCursor).not.to.be.eql(sCursor);
-            expect(pageInfo.endCursor).not.to.be.eql(eCursor);
-
-        } else {
-            expect(pageInfo.startCursor).not.to.be.eql(sCursor);
-            expect(pageInfo.endCursor).to.eql(eCursor);
-        }
-    };
+        expect(pageInfo.startCursor).not.to.be.eql(sCursor);
+        expect(pageInfo.endCursor).to.eql(eCursor);
+    }
 });
 
 // Should be called after returnRandomCursor

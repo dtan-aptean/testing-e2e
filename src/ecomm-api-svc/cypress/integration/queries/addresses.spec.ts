@@ -54,9 +54,30 @@ describe('Query: addresses', () => {
         custId = providedId;
         standardQueryForCustomer = `{
            ${queryName}(orderBy: {direction: ASC, field: NAME} customerId: "${providedId}") {
-               ${standardQueryBody}
-           }
-       }`;
+                edges {
+                    cursor
+                    node {
+                        id
+                        contactDetails{
+                            firstName
+                        }
+                    }
+                }
+                nodes {
+                    id
+                    contactDetails{
+                        firstName
+                    }
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
+                totalCount
+            }
+        }`;
 
     };
 
@@ -1203,8 +1224,35 @@ describe('Query: addresses', () => {
         });
 
         it('Query with valid customer Id, returns the addresses associated with it', () => {
-            cy.postAndValidate(standardQueryForCompany, queryName).then((res) => {
-                cy.validateIdSearch(res, queryName, queryInformation.customerId);
+            const customerId = queryInformation.customerId;
+            const customerIdQuery = `{
+                ${queryName}(orderBy: {direction: ASC, field: NAME} customerId: "${customerId}") {
+                     edges {
+                         cursor
+                         node {
+                             id
+                             customer {
+                                 id
+                             }
+                         }
+                     }
+                     nodes {
+                         id
+                         customer {
+                             id
+                         }
+                     }
+                     pageInfo {
+                         endCursor
+                         hasNextPage
+                         hasPreviousPage
+                         startCursor
+                     }
+                     totalCount
+                 }
+             }`;
+            cy.postAndValidate(customerIdQuery, queryName).then((res) => {
+                cy.validateIdSearch(res, queryName, customerId, 'customer.id');
             });
         });
 
