@@ -675,23 +675,27 @@ describe('Query: checkoutAttributes', () => {
 
         it("Using ids from a different item as 'ids' input returns an error", () => {
             const extraQueryName = "returnReasons";
-            const extraStandardQueryBody = `edges {
-                cursor
-                node {
-                    id
+            const extraQuery = `{
+                ${extraQueryName}(orderBy: {direction: ASC, field: NAME}) {
+                    edges {
+                        cursor
+                        node {
+                            id
+                        }
+                    }
+                    nodes {
+                        id
+                    }
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                        hasPreviousPage
+                        startCursor
+                    }
+                    totalCount
                 }
-            }
-            nodes {
-                id
-            }
-            pageInfo {
-                endCursor
-                hasNextPage
-                hasPreviousPage
-                startCursor
-            }
-            totalCount`;
-            cy.queryAndValidateDifferentItemIds(extraQueryName, extraStandardQueryBody, queryName, standardQueryBody);
+            }`;
+            cy.queryAndValidateDifferentItemIds(extraQueryName, extraQuery, queryName, standardQueryBody);
         });
     });
 });
