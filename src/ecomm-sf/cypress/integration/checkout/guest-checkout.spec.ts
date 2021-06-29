@@ -6,6 +6,7 @@ describe("Ecommerce", function () {
     beforeEach(() => {
       cy.visit("/");
       cy.clearCart();
+      cy.visit("/");
     });
 
     it("Clicking a category brings us to the appropriate page", () => {
@@ -20,6 +21,9 @@ describe("Ecommerce", function () {
       cy.testProductTitle();
     });
 
+    // TODO: not getting success banner on these themes:
+    // prisma
+    // Use "Just added to your basket" window instead?
     it("Clicking Add to Cart successfully adds a product to the cart", () => {
       cy.testAddToCart();
     });
@@ -27,7 +31,7 @@ describe("Ecommerce", function () {
     it("Removing an item from the cart successfully removes it", () => {
       cy.goToProduct("Bald Cypress");
       cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
-      cy.get(".add-to-cart-button").click();
+      cy.get(".add-to-cart-button").addToCart();
       cy.wait(10000);
       // Get current amount of shopping cart
       cy.get(".header-links")
@@ -63,7 +67,7 @@ describe("Ecommerce", function () {
       cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
       cy.get(".qty-input").clear();
       cy.get(".qty-input").type(count.toString());
-      cy.get(".add-to-cart-button").click();
+      cy.get(".add-to-cart-button").addToCart();
       cy.wait(10000);
       cy.goToCart();
       cy.get(".cart > tbody").find("tr").eq(0).as("target");
@@ -153,7 +157,7 @@ describe("Ecommerce", function () {
     it("Clicking checkout without agreeing to TOS prevents checkout", () => {
       cy.goToProduct("Bald Cypress");
       cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
-      cy.get(".add-to-cart-button").click();
+      cy.get(".add-to-cart-button").addToCart();
       cy.goToCart();
       cy.get(".checkout-button").click();
       cy.get("#terms-of-service-warning-box").should("exist").and("be.visible");

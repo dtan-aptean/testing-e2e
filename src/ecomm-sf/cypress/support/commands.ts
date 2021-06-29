@@ -193,6 +193,24 @@ Cypress.Commands.add("clickRowBtn", { prevSubject: 'element' }, (subject, button
   return cy.wrap(subject, { log: false }).find("a", { log: false }).contains(buttonText, { log: false }).click(clickOptions);
 });
 
+Cypress.Commands.add("addToCart", { prevSubject: 'element' }, (subject, optionObject) => {
+  var clickOptions;
+  if (optionObject) {
+      clickOptions = optionObject;
+      clickOptions.log = false;
+  } else {
+      //clickOptions = { log: false };
+  }
+  cy.wrap(subject, { log: false }).click(clickOptions);
+  cy.wait(1000);
+  return cy.allowLoad().then(() => {
+      if (Cypress.$(".productAddedToCartWindow:visible").length > 0) {
+          cy.get(".continueShoppingLink").click(clickOptions);
+          cy.wait(200);
+      }
+  });
+});
+
 // Logs in with the configured username/password
 Cypress.Commands.add("login", () => {
   Cypress.log({
@@ -204,10 +222,10 @@ Cypress.Commands.add("login", () => {
   cy.get(".header-links").then(($el) => {
     if (!$el[0].innerText.includes('LOG OUT')) {
       cy.get(".header-links").find(".ico-login").click({force: true});
-      cy.wait(200);
-      cy.get(".email").type(Cypress.config("username"));
-      cy.get(".password").type(Cypress.config("password"));
-      cy.get(".login-button").click();
+      cy.wait(1000);
+      cy.get("#Email").type(Cypress.config("username"), {force: true});
+      cy.get("#Password").type(Cypress.config("password"), {force: true});
+      cy.get(".login-button").click({force: true});
     }
   });
 });
@@ -348,7 +366,7 @@ Cypress.Commands.add("goToProduct", (productName, categoryName?) => {
     })
     .as("targetProduct");
   cy.get("@targetProduct")
-    .find(".details")
+//    .find(".details")
     .scrollIntoView()
     .should("be.visible");
   cy.get("@targetProduct").find(".product-title").find("a").click();
@@ -363,12 +381,23 @@ Cypress.Commands.add("addToCartAndCheckout", (productName?: string) => {
   var category = productName === secondProduct ? secondCategory : mainCategory;
   var product = productName ? productName : mainProductOne;
   cy.goToCategory(category);
-  cy.contains(product).parents(".product-item").find(".product-box-add-to-cart-button").click();
-  cy.allowLoad();
-  cy.goToCart();
-  cy.get("#termsofservice").click();
-  cy.get(".checkout-button").click();
-  cy.wait(500);
+  return cy.contains(product).parents(".product-item").then(($product) => {
+    if ($product.find(".product-box-add-to-cart-button:visible").length > 0) {
+      cy.wrap($product).find(".product-box-add-to-cart-button").click();
+    } else {
+      cy.contains(product).click();
+      cy.wait(1000);
+      cy.allowLoad();
+      cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
+      cy.get(".add-to-cart-button").addToCart();
+    }
+  }).then(() => {
+    cy.allowLoad();
+    cy.goToCart();
+    cy.get("#termsofservice").click();
+    cy.get(".checkout-button").click();
+    cy.wait(500);
+  });
 });
 
 /**

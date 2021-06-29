@@ -28,7 +28,7 @@ describe("Ecommerce", function () {
     it("Removing an item from the cart successfully removes it", () => {
       cy.goToProduct("Bald Cypress");
       cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
-      cy.get(".add-to-cart-button").click();
+      cy.get(".add-to-cart-button").addToCart();
       cy.wait(10000);
       // Get current amount of shopping cart
       cy.get(".header-links")
@@ -64,7 +64,7 @@ describe("Ecommerce", function () {
       cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
       cy.get(".qty-input").clear();
       cy.get(".qty-input").type(count.toString());
-      cy.get(".add-to-cart-button").click();
+      cy.get(".add-to-cart-button").addToCart();
       cy.wait(10000);
       cy.goToCart();
       cy.get(".cart > tbody").find("tr").eq(0).as("target");
@@ -159,7 +159,7 @@ describe("Ecommerce", function () {
       cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
       cy.get(".qty-input").clear();
       cy.get(".qty-input").type(count.toString());
-      cy.get(".add-to-cart-button").click();
+      cy.get(".add-to-cart-button").addToCart();
       cy.wait(500);
       cy.goToCart();
       cy.get(".order-total")
@@ -183,7 +183,7 @@ describe("Ecommerce", function () {
     it("Clicking checkout without agreeing to TOS prevents checkout", () => {
       cy.goToProduct("Bald Cypress");
       cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
-      cy.get(".add-to-cart-button").click();
+      cy.get(".add-to-cart-button").addToCart();
       cy.goToCart();
       cy.get(".checkout-button").click();
       cy.get("#terms-of-service-warning-box").should("exist").and("be.visible");
