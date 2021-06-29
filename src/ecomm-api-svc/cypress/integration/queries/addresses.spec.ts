@@ -38,57 +38,57 @@ describe('Query: addresses', () => {
 
     const standardQueryForCompany, standardQueryForCustomer;
 
-    var compId="",custId="";
+    var compId = "", custId = "";
     // Standard query to use when we don't need any specialized data or input arguments
     const updateCompanyId = (providedId: string) => {
-          compId = providedId;
-          standardQueryForCompany = `{
+        compId = providedId;
+        standardQueryForCompany = `{
             ${queryName}(orderBy: {direction: ASC, field: NAME} companyId: "${providedId}" ) {
                 ${standardQueryBody}
             }
         }`;
-    
+
     };
 
     const updateCustomerId = (providedId: string) => {
         custId = providedId;
-         standardQueryForCustomer = `{
+        standardQueryForCustomer = `{
            ${queryName}(orderBy: {direction: ASC, field: NAME} customerId: "${providedId}") {
                ${standardQueryBody}
            }
        }`;
-   
-   };
 
-   const queryInformation = {
-   companyId: "",
-   customerId: ""
-   };
-    var trueTotalInput1= "", trueTotalInput2= "";
+    };
+
+    const queryInformation = {
+        companyId: "",
+        customerId: ""
+    };
+    var trueTotalInput1 = "", trueTotalInput2 = "";
     var deleteItemsAfter = undefined as boolean | undefined;
 
     before(() => {
         deleteItemsAfter = Cypress.env("deleteItemsAfter");
-      //  cy.deleteCypressItems(queryName, deleteMutName);
+        //  cy.deleteCypressItems(queryName, deleteMutName);
 
         const extraPath = "addressInfo";
         const extraCreate = "createAddress";
         const extraQuery = "addresses";
 
-        var extraPath1="company";
-        var extraCreate1="createCompany"
-        const extraItemInput1 =  `{name:"Cypress Address New Company" integrationKey: "${Math.random().toString(36).slice(2)}"}`
+        var extraPath1 = "company";
+        var extraCreate1 = "createCompany"
+        const extraItemInput1 = `{name:"Cypress Address New Company" integrationKey: "${Math.random().toString(36).slice(2)}"}`
 
         var extraPath2 = "customer";
         var extraCreate2 = "createCustomer"
-        const extraItemInput2 =  `{firstName:"Cypress Address New Customer" lastName:"Test" email: "Cypress${Math.random().toString(36).slice(2)}Test@email.com"}`
+        const extraItemInput2 = `{firstName:"Cypress Address New Customer" lastName:"Test" email: "Cypress${Math.random().toString(36).slice(2)}Test@email.com"}`
 
         var numberToMake = 5;
 
         cy.createAndGetId(extraCreate1, extraPath1, extraItemInput1).then((returnedid) => {
-           queryInformation.companyId = returnedid;
+            queryInformation.companyId = returnedid;
             updateCompanyId(returnedid)
-            const extraItemInput =  `{companyId: "${returnedid}",
+            const extraItemInput = `{companyId: "${returnedid}",
             addressType:SHIPPING,
             contactDetails:{
               firstName:"Cypress",
@@ -109,14 +109,14 @@ describe('Query: addresses', () => {
               country:"US"
             }
             }}`;
-            cy.createAndGetMultipleIds(numberToMake, extraCreate, extraPath, extraItemInput).then((ids:[]) => {
-               deletionIds1 = ids;
-               cy.postAndValidate(standardQueryForCompany, queryName).then((res) => {
+            cy.createAndGetMultipleIds(numberToMake, extraCreate, extraPath, extraItemInput).then((ids: []) => {
+                deletionIds1 = ids;
+                cy.postAndValidate(standardQueryForCompany, queryName).then((res) => {
                     const { nodes, edges, totalCount } = res.body.data[queryName];
                     expect(nodes.length).to.be.eql(edges.length);
                     expect(totalCount).to.be.eql(numberToMake);
                     if (totalCount > nodes.length) {
-                        trueTotalInput1 = totalCount > 0 ? "first: " + totalCount + ", ": "";
+                        trueTotalInput1 = totalCount > 0 ? "first: " + totalCount + ", " : "";
                     }
                 });
 
@@ -124,9 +124,9 @@ describe('Query: addresses', () => {
         });
 
         cy.createAndGetId(extraCreate2, extraPath2, extraItemInput2).then((returnedid) => {
-                 queryInformation.customerId = returnedid;
-                 updateCustomerId(returnedid)
-                 const extraItemInput =  `{customerId: "${returnedid}",
+            queryInformation.customerId = returnedid;
+            updateCustomerId(returnedid)
+            const extraItemInput = `{customerId: "${returnedid}",
                  addressType:SHIPPING,
                  contactDetails:{
                  firstName:"Cypress",
@@ -147,30 +147,28 @@ describe('Query: addresses', () => {
                    country:"US"
                  }
                  }}`;
-                 cy.createAndGetMultipleIds(numberToMake, extraCreate, extraPath, extraItemInput).then((ids:[]) => {
-                     deletionIds2 = ids;
-                     cy.postAndValidate(standardQueryForCustomer, queryName).then((res) => {
-                         const { nodes, edges, totalCount } = res.body.data[queryName];
-                         expect(nodes.length).to.be.eql(edges.length);
-                         expect(totalCount).to.be.eql(numberToMake);
-                         if (totalCount > nodes.length) {
-                             trueTotalInput2 = totalCount > 0 ? "first: " + totalCount + ", ": "";
-                         }
-                     });
-                 });
-             });
+            cy.createAndGetMultipleIds(numberToMake, extraCreate, extraPath, extraItemInput).then((ids: []) => {
+                deletionIds2 = ids;
+                cy.postAndValidate(standardQueryForCustomer, queryName).then((res) => {
+                    const { nodes, edges, totalCount } = res.body.data[queryName];
+                    expect(nodes.length).to.be.eql(edges.length);
+                    expect(totalCount).to.be.eql(numberToMake);
+                    if (totalCount > nodes.length) {
+                        trueTotalInput2 = totalCount > 0 ? "first: " + totalCount + ", " : "";
+                    }
+                });
+            });
+        });
     });
 
     after(() => {
         if (!deleteItemsAfter) {
-			return;
-		}
-        for(let i=0; i<deletionIds1.length; i++)
-        {
+            return;
+        }
+        for (let i = 0; i < deletionIds1.length; i++) {
             cy.deleteItem(deleteMutName, deletionIds1[i]);
         }
-        for(let i=0; i<deletionIds2.length; i++)
-        {
+        for (let i = 0; i < deletionIds2.length; i++) {
             cy.deleteItem(deleteMutName, deletionIds2[i]);
         }
         if (compId !== "") {
@@ -184,7 +182,7 @@ describe('Query: addresses', () => {
             });
         }
     })
-  
+
     context("Testing 'orderBy' input", () => {
         it('Query will fail if no return type is provided with Company Id', () => {
             const gqlQuery = `{
@@ -445,7 +443,7 @@ describe('Query: addresses', () => {
                 });
             });
         });
-        
+
         it("Query with invalid 'first' input argument with Company Id will fail", () => {
             const gqlQuery = `{
                 ${queryName}(first: "4", orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
@@ -481,7 +479,7 @@ describe('Query: addresses', () => {
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
             });
         });
-        
+
         it("Query with invalid 'last' input argument with Customer Id will fail", () => {
             const gqlQuery = `{
                 ${queryName}(last: "5", orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
@@ -543,7 +541,7 @@ describe('Query: addresses', () => {
                 });
             });
         });
-        
+
         it("Query with a valid 'after' input argument with Company Id will return all items after that value", () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput1}orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
@@ -608,7 +606,7 @@ describe('Query: addresses', () => {
                 expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 123');
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
             });
-        }); 
+        });
 
         it("Query with invalid 'after' input argument with Company Id will fail", () => {
             const gqlQuery = `{
@@ -633,7 +631,7 @@ describe('Query: addresses', () => {
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
             });
         });
-        
+
         it("Query with both 'before' and 'after' input arguments with Company Id will fail", () => {
             const gqlQuery = `{
                 ${queryName}(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
@@ -662,7 +660,7 @@ describe('Query: addresses', () => {
             cy.returnRandomCursor(standardQueryForCompany, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const first = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `first: ${first}`});
+                    Cypress.log({ message: `first: ${first}` });
                     const beforeQuery = `{
                         ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                             ${standardQueryBody}
@@ -681,7 +679,7 @@ describe('Query: addresses', () => {
             cy.returnRandomCursor(standardQueryForCustomer, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const first = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `first: ${first}`});
+                    Cypress.log({ message: `first: ${first}` });
                     const beforeQuery = `{
                         ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                             ${standardQueryBody}
@@ -706,8 +704,8 @@ describe('Query: addresses', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const first = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `first: ${first}`});
+                        const first = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `first: ${first}` });
                         const afterQuery = `{
                             ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                                 ${standardQueryBody}
@@ -733,8 +731,8 @@ describe('Query: addresses', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const first = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `first: ${first}`});
+                        const first = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `first: ${first}` });
                         const afterQuery = `{
                             ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                                 ${standardQueryBody}
@@ -759,7 +757,7 @@ describe('Query: addresses', () => {
             cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const last = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `last: ${last}`});
+                    Cypress.log({ message: `last: ${last}` });
                     const beforeQuery = `{
                         ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                             ${standardQueryBody}
@@ -783,7 +781,7 @@ describe('Query: addresses', () => {
             cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const last = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `last: ${last}`});
+                    Cypress.log({ message: `last: ${last}` });
                     const beforeQuery = `{
                         ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                             ${standardQueryBody}
@@ -808,8 +806,8 @@ describe('Query: addresses', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const last = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `last: ${last}`});
+                        const last = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `last: ${last}` });
                         const afterQuery = `{
                             ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                                 ${standardQueryBody}
@@ -835,8 +833,8 @@ describe('Query: addresses', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const last = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `last: ${last}`});
+                        const last = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `last: ${last}` });
                         const afterQuery = `{
                             ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                                 ${standardQueryBody}
@@ -1161,7 +1159,7 @@ describe('Query: addresses', () => {
         });
     });
 
-    context("Testing Company and Customer Id Input", () =>{
+    context("Testing Company and Customer Id Input", () => {
         it('Query with valid company Id, returns the addresses associated with it', () => {
             cy.postAndValidate(standardQueryForCompany, queryName).then((res) => {
                 cy.validateMultipleIdSearch(res, queryName, deletionIds1);
@@ -1174,9 +1172,9 @@ describe('Query: addresses', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery,true).then((res) => {
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
                 expect(res.body.errors[0].message[0].message).to.have.string('Either CompanyId or CustomerId is required');
-                expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR"); 
+                expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
             });
         });
 
@@ -1186,7 +1184,7 @@ describe('Query: addresses', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery,true).then((res) => {
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
                 expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
                 expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR")
             });
@@ -1216,7 +1214,7 @@ describe('Query: addresses', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery,true).then((res) => {
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
                 expect(res.body.errors[0].message[0].message).to.have.string('Either CompanyId or CustomerId is required');
                 expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR")
             });
@@ -1228,7 +1226,7 @@ describe('Query: addresses', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery,true).then((res) => {
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
                 expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
                 expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR")
             });
@@ -1254,7 +1252,7 @@ describe('Query: addresses', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery,true).then((res) => {
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
                 expect(res.body.errors[0].message[0].message).to.have.string('Both CompanyId and CustomerId should not be provided');
                 expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR")
             });
@@ -1288,7 +1286,7 @@ describe('Query: addresses', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery,true).then((res) => {
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
                 expect(res.body.errors[0].message[0].message).to.have.string('Either CompanyId or CustomerId is required');
                 expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR")
             });
@@ -1300,194 +1298,192 @@ describe('Query: addresses', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery,true).then((res) => {
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
                 expect(res.body.errors[0].message[0].message).to.have.string('Either CompanyId or CustomerId is required');
                 expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR")
             });
         });
 
     });
-    context('Testing IDs input',()=>{
-    it('Query with an array of one or more valid ids as "ids" input with Comapny Id ,returns the relevant items', () => {
-        var ids = "";
-        cy.returnMultipleRandomIds(2,standardQueryForCompany,queryName).then((idValues:[]) =>{
-        
-          ids = "["
-          for(var i=0;i<idValues.length;i++)
-          {
-            ids+='"'+idValues[i]+'"'+",";
-          
-          }
-          ids+= "]"
-         const gqlQuery = `{
+    context('Testing IDs input', () => {
+        it('Query with an array of one or more valid ids as "ids" input with Comapny Id ,returns the relevant items', () => {
+            var ids = "";
+            cy.returnMultipleRandomIds(2, standardQueryForCompany, queryName).then((idValues: []) => {
+
+                ids = "["
+                for (var i = 0; i < idValues.length; i++) {
+                    ids += '"' + idValues[i] + '"' + ",";
+
+                }
+                ids += "]"
+                const gqlQuery = `{
             ${queryName}( orderBy: {direction: ASC, field: NAME}  companyId:"${queryInformation.companyId}"  ids:${ids}) {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndValidate(gqlQuery, queryName).then((resp) => {
-            cy.validateMultipleIdSearch(resp, queryName,idValues);
+                cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                    cy.validateMultipleIdSearch(resp, queryName, idValues);
+                });
+            });
         });
-    });
-    });
 
-    it('Query with an array of one or more valid ids as "ids" input with Customer Id ,returns the relevant items', () => {
-        var ids= "";
+        it('Query with an array of one or more valid ids as "ids" input with Customer Id ,returns the relevant items', () => {
+            var ids = "";
 
-        cy.returnMultipleRandomIds(2,standardQueryForCustomer,queryName).then((idValues:[]) =>{
-        
-          ids = "["
-          for(var i=0; i<idValues.length; i++)
-          {
-            ids+= '"'+idValues[i]+'"'+",";
-          
-          }
-          ids+= "]"
+            cy.returnMultipleRandomIds(2, standardQueryForCustomer, queryName).then((idValues: []) => {
 
-         const gqlQuery = `{
+                ids = "["
+                for (var i = 0; i < idValues.length; i++) {
+                    ids += '"' + idValues[i] + '"' + ",";
+
+                }
+                ids += "]"
+
+                const gqlQuery = `{
             ${queryName}( orderBy: {direction: ASC, field: NAME} ids:${ids} customerId:"${queryInformation.customerId}") {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndValidate(gqlQuery, queryName).then((resp) => {
-            cy.validateMultipleIdSearch(resp, queryName,idValues);
+                cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                    cy.validateMultipleIdSearch(resp, queryName, idValues);
+                });
+            });
         });
-    });
-    });
 
-    it('Query with single id as "ids" input with Company Id, returns the relevant item', () => {
-        cy.returnRandomId(standardQueryForCompany,queryName).then((id: string) =>{
-            const gqlQuery = `{
+        it('Query with single id as "ids" input with Company Id, returns the relevant item', () => {
+            cy.returnRandomId(standardQueryForCompany, queryName).then((id: string) => {
+                const gqlQuery = `{
                 ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(gqlQuery, queryName).then((resp) => {
-                cy.validateIdSearch(resp, queryName, id);
+                cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                    cy.validateIdSearch(resp, queryName, id);
+                });
             });
         });
-    });
 
-    it('Query with single id as "ids" input with Customer Id, returns the relevant item', () => {
-        cy.returnRandomId(standardQueryForCustomer,queryName).then((id: string) =>{
-            const gqlQuery = `{
+        it('Query with single id as "ids" input with Customer Id, returns the relevant item', () => {
+            cy.returnRandomId(standardQueryForCustomer, queryName).then((id: string) => {
+                const gqlQuery = `{
                 ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(gqlQuery, queryName).then((resp) => {
-                cy.validateIdSearch(resp, queryName, id);
+                cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                    cy.validateIdSearch(resp, queryName, id);
+                });
             });
         });
-    });
 
-    it('Query with  empty array as "ids" input with Company Id, retruns response data', () => {
-        const gqlQuery = `{
+        it('Query with  empty array as "ids" input with Company Id, retruns response data', () => {
+            const gqlQuery = `{
             ${queryName}(ids:[], orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndValidate(gqlQuery, queryName);
-    });
+            cy.postAndValidate(gqlQuery, queryName);
+        });
 
-    it('Query with  empty array as "ids" input with Customer Id, retruns response data', () => {
-        const gqlQuery = `{
+        it('Query with  empty array as "ids" input with Customer Id, retruns response data', () => {
+            const gqlQuery = `{
             ${queryName}(ids:[], orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndValidate(gqlQuery, queryName);
-    });
+            cy.postAndValidate(gqlQuery, queryName);
+        });
 
-    it('Query with an array of one or more empty strings as "ids" input with Company Id, returns error ', () => {
-        const gqlQuery = `{
+        it('Query with an array of one or more empty strings as "ids" input with Company Id, returns error ', () => {
+            const gqlQuery = `{
             ${queryName}(ids:["",""], orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndConfirmError(gqlQuery,true).then((res) => {
-           
-            expect(res.body.errors[0].message[0].details[0].message).to.have.string('invalid address ids');
-            expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
 
-        })
-    });
+                expect(res.body.errors[0].message[0].details[0].message).to.have.string('invalid aptean Id:');
+                expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
 
-    it('Query with an array of one or more empty strings as "ids" input with Customer Id, returns error ', () => {
-        const gqlQuery = `{
+            })
+        });
+
+        it('Query with an array of one or more empty strings as "ids" input with Customer Id, returns error ', () => {
+            const gqlQuery = `{
             ${queryName}(ids:["",""], orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndConfirmError(gqlQuery,true).then((res) => {
-           
-            expect(res.body.errors[0].message[0].details[0].message).to.have.string('invalid address ids');
-            expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
 
-        })
-    });
+                expect(res.body.errors[0].message[0].details[0].message).to.have.string('invalid aptean Id:');
+                expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
 
-    it('Query with an array of one or more non-string values as "ids" input with Company Id, returns error ', () => {
-        const gqlQuery = `{
+            })
+        });
+
+        it('Query with an array of one or more non-string values as "ids" input with Company Id, returns error ', () => {
+            const gqlQuery = `{
             ${queryName}(ids:[235], orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndConfirmError(gqlQuery).then((res) => {
-           
-            expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
-            expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+
+            });
 
         });
 
-    });
-
-    it('Query with an array of one or more non-string values as "ids" input with Customer Id, returns error ', () => {
-        const gqlQuery = `{
+        it('Query with an array of one or more non-string values as "ids" input with Customer Id, returns error ', () => {
+            const gqlQuery = `{
             ${queryName}(ids:[235], orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndConfirmError(gqlQuery).then((res) => {
-           
-            expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
-            expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+
+            });
 
         });
 
-    });
-
-    it('Query with non-array value as "ids" input with Company Id, returns error', () => {
-        const gqlQuery = `{
+        it('Query with non-array value as "ids" input with Company Id, returns error', () => {
+            const gqlQuery = `{
             ${queryName}(ids:235, orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndConfirmError(gqlQuery).then((res) => {
-           
-            expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
-            expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            cy.postAndConfirmError(gqlQuery).then((res) => {
 
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+
+            });
         });
-    });
 
-    it('Query with non-array value as "ids" input with Customer Id, returns error', () => {
-        const gqlQuery = `{
+        it('Query with non-array value as "ids" input with Customer Id, returns error', () => {
+            const gqlQuery = `{
             ${queryName}(ids:235, orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndConfirmError(gqlQuery).then((res) => {
-           
-            expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
-            expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            cy.postAndConfirmError(gqlQuery).then((res) => {
 
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+
+            });
         });
-    });
 
-    it('Query with ids from a different item as "ids" input with Company Id returns error', () => {
-        const extraqueryName = "categories";
-        // Standard query body to get id from diff item 
-        const extrastandardQueryBody = `edges {
+        it('Query with ids from a different item as "ids" input with Company Id returns error', () => {
+            const extraqueryName = "categories";
+            // Standard query body to get id from diff item 
+            const extrastandardQueryBody = `edges {
                     cursor
                     node {
                         id
@@ -1511,33 +1507,33 @@ describe('Query: addresses', () => {
                     startCursor
                 }
                 totalCount`;
-        // Standard query to use when we don't need any specialized data or input arguments
-        const extrastandardQuery = `{
+            // Standard query to use when we don't need any specialized data or input arguments
+            const extrastandardQuery = `{
             ${extraqueryName}(orderBy: {direction: ASC, field: NAME}) {
                 ${extrastandardQueryBody}
             }
         }`;
-    
 
-        cy.returnRandomId(extrastandardQuery,extraqueryName).then((id: string) =>{
-            const gqlQuery = `{
+
+            cy.returnRandomId(extrastandardQuery, extraqueryName).then((id: string) => {
+                const gqlQuery = `{
                 ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery,true).then((res) => {
-                expect(res.body.errors[0].message[0].details[0].message).to.have.string('invalid address ids');
-                expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+                cy.postAndConfirmError(gqlQuery, true).then((res) => {
+                    expect(res.body.errors[0].message[0].details[0].message).to.have.string('invalid aptean Id:');
+                    expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+                });
             });
+
         });
 
-    });
-    
 
-    it('Query with ids from a different item as "ids" input with Customer Id returns error', () => {
-        const extraqueryName = "categories";
-        // Standard query body to get id from diff item 
-        const extrastandardQueryBody = `edges {
+        it('Query with ids from a different item as "ids" input with Customer Id returns error', () => {
+            const extraqueryName = "categories";
+            // Standard query body to get id from diff item 
+            const extrastandardQueryBody = `edges {
                     cursor
                     node {
                         id
@@ -1561,129 +1557,129 @@ describe('Query: addresses', () => {
                     startCursor
                 }
                 totalCount`;
-        // Standard query to use when we don't need any specialized data or input arguments
-        const extrastandardQuery = `{
+            // Standard query to use when we don't need any specialized data or input arguments
+            const extrastandardQuery = `{
             ${extraqueryName}(orderBy: {direction: ASC, field: NAME}) {
                 ${extrastandardQueryBody}
             }
         }`;
-    
 
-        cy.returnRandomId(extrastandardQuery,extraqueryName).then((id: string) =>{
-            const gqlQuery = `{
+
+            cy.returnRandomId(extrastandardQuery, extraqueryName).then((id: string) => {
+                const gqlQuery = `{
                 ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery,true).then((res) => {
-                expect(res.body.errors[0].message[0].details[0].message).to.have.string('invalid address ids');
-                expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+                cy.postAndConfirmError(gqlQuery, true).then((res) => {
+                    expect(res.body.errors[0].message[0].details[0].message).to.have.string('invalid aptean Id');
+                    expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
+                });
             });
+
         });
-
     });
-});
 
-context("Testing 'searchString' input", () => {
-    
-    it("Query with a valid 'searchString' input argument with Company Id will return the specific item", () => {
-        cy.returnRandomName(standardQueryForCompany, queryName).then((name: string) => {
-            const searchQuery = `{
+    context("Testing 'searchString' input", () => {
+
+        it("Query with a valid 'searchString' input argument with Company Id will return the specific item", () => {
+            cy.returnRandomName(standardQueryForCompany, queryName).then((name: string) => {
+                const searchQuery = `{
                 ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                cy.validateNameSearch(resp, queryName, name);
+                cy.postAndValidate(searchQuery, queryName).then((resp) => {
+                    cy.validateNameSearch(resp, queryName, name);
+                });
             });
         });
-    });
 
-    it("Query with a valid 'searchString' input argument with Customer Id will return the specific item", () => {
-        cy.returnRandomName(standardQueryForCustomer, queryName).then((name: string) => {
-            const searchQuery = `{
+        it("Query with a valid 'searchString' input argument with Customer Id will return the specific item", () => {
+            cy.returnRandomName(standardQueryForCustomer, queryName).then((name: string) => {
+                const searchQuery = `{
                 ${queryName}(searchString: "${name}", orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                cy.validateNameSearch(resp, queryName, name);
+                cy.postAndValidate(searchQuery, queryName).then((resp) => {
+                    cy.validateNameSearch(resp, queryName, name);
+                });
             });
         });
-    });
 
-    it("Query with a valid partial 'searchString' input argument with Company Id will return all items containing the string", () => {
-        cy.returnRandomName(standardQueryForCompany, queryName).then((name: string) => {
-            // Get the first word if the name has multiple words. Otherwise, get a random segment of the name
-            var newWordIndex = name.search(" ");
-            var searchText = "";
-            if (newWordIndex !== -1 && newWordIndex !== 0) {
-                searchText = name.substring(0, newWordIndex);
-            } else {
-                const segmentIndex = Cypress._.random(name.length / 2, name.length - 1);
-                searchText = name.substring(0, segmentIndex);
-            }
-            const searchQuery = `{
+        it("Query with a valid partial 'searchString' input argument with Company Id will return all items containing the string", () => {
+            cy.returnRandomName(standardQueryForCompany, queryName).then((name: string) => {
+                // Get the first word if the name has multiple words. Otherwise, get a random segment of the name
+                var newWordIndex = name.search(" ");
+                var searchText = "";
+                if (newWordIndex !== -1 && newWordIndex !== 0) {
+                    searchText = name.substring(0, newWordIndex);
+                } else {
+                    const segmentIndex = Cypress._.random(name.length / 2, name.length - 1);
+                    searchText = name.substring(0, segmentIndex);
+                }
+                const searchQuery = `{
                 ${queryName}(searchString: "${searchText}", orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                cy.validateNameSearch(resp, queryName, searchText);
+                cy.postAndValidate(searchQuery, queryName).then((resp) => {
+                    cy.validateNameSearch(resp, queryName, searchText);
+                });
             });
         });
-    });
-    
-    it("Query with a valid partial 'searchString' input argument with Customer Id will return all items containing the string", () => {
-        cy.returnRandomName(standardQueryForCustomer, queryName).then((name: string) => {
-            // Get the first word if the name has multiple words. Otherwise, get a random segment of the name
-            var newWordIndex = name.search(" ");
-            var searchText = "";
-            if (newWordIndex !== -1 && newWordIndex !== 0) {
-                searchText = name.substring(0, newWordIndex);
-            } else {
-                const segmentIndex = Cypress._.random(name.length / 2, name.length - 1);
-                searchText = name.substring(0, segmentIndex);
-            }
-            const searchQuery = `{
+
+        it("Query with a valid partial 'searchString' input argument with Customer Id will return all items containing the string", () => {
+            cy.returnRandomName(standardQueryForCustomer, queryName).then((name: string) => {
+                // Get the first word if the name has multiple words. Otherwise, get a random segment of the name
+                var newWordIndex = name.search(" ");
+                var searchText = "";
+                if (newWordIndex !== -1 && newWordIndex !== 0) {
+                    searchText = name.substring(0, newWordIndex);
+                } else {
+                    const segmentIndex = Cypress._.random(name.length / 2, name.length - 1);
+                    searchText = name.substring(0, segmentIndex);
+                }
+                const searchQuery = `{
                 ${queryName}(searchString: "${searchText}", orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(searchQuery, queryName).then((resp) => {
-                cy.validateNameSearch(resp, queryName, searchText);
+                cy.postAndValidate(searchQuery, queryName).then((resp) => {
+                    cy.validateNameSearch(resp, queryName, searchText);
+                });
             });
         });
-    });
-    
-    it("Query with an invalid 'searchString' input argument with Company Id will fail", () => {
-        const gqlQuery = `{
+
+        it("Query with an invalid 'searchString' input argument with Company Id will fail", () => {
+            const gqlQuery = `{
             ${queryName}(searchString: 7, orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndConfirmError(gqlQuery).then((res) => {
-            expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 7');
-            expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 7');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            });
         });
-    });
 
-    it("Query with an invalid 'searchString' input argument with Customer Id will fail", () => {
-        const gqlQuery = `{
+        it("Query with an invalid 'searchString' input argument with Customer Id will fail", () => {
+            const gqlQuery = `{
             ${queryName}(searchString: 7, orderBy: {direction: ASC, field: NAME}  customerId:"${queryInformation.customerId}") {
                 ${standardQueryBody}
             }
         }`;
-        cy.postAndConfirmError(gqlQuery).then((res) => {
-            expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 7');
-            expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            cy.postAndConfirmError(gqlQuery).then((res) => {
+                expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value: 7');
+                expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
+            });
         });
     });
-});
 
-context("Testing response values for customData and other fields", () => {
-    it("Query with customData field with Company Id will return valid value", () => {
-        const gqlQuery = `{ 
+    context("Testing response values for customData and other fields", () => {
+        it("Query with customData field with Company Id will return valid value", () => {
+            const gqlQuery = `{ 
             ${queryName}(orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                 edges {
                     cursor
@@ -1703,13 +1699,13 @@ context("Testing response values for customData and other fields", () => {
                 totalCount
             }
         }`;
-        cy.postAndValidate(gqlQuery, queryName).then((res) => {
-            cy.checkCustomData(res, queryName);
+            cy.postAndValidate(gqlQuery, queryName).then((res) => {
+                cy.checkCustomData(res, queryName);
+            });
         });
-    });
 
-    it("Query with customData field with Customer Id will return valid value", () => {
-        const gqlQuery = `{ 
+        it("Query with customData field with Customer Id will return valid value", () => {
+            const gqlQuery = `{ 
             ${queryName}(orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                 edges {
                     cursor
@@ -1729,13 +1725,13 @@ context("Testing response values for customData and other fields", () => {
                 totalCount
             }
         }`;
-        cy.postAndValidate(gqlQuery, queryName).then((res) => {
-            cy.checkCustomData(res, queryName);
+            cy.postAndValidate(gqlQuery, queryName).then((res) => {
+                cy.checkCustomData(res, queryName);
+            });
         });
-    });
 
-    it('Query all other fields with Company Id  will return valid data for the fields', () => {
-        const gqlQuery = `{
+        it('Query all other fields with Company Id  will return valid data for the fields', () => {
+            const gqlQuery = `{
             ${queryName}(orderBy: {direction: ASC, field: NAME} companyId:"${queryInformation.companyId}") {
                 edges {
                     cursor
@@ -1774,82 +1770,81 @@ context("Testing response values for customData and other fields", () => {
                 totalCount
             }
         }`;
-        cy.postAndValidate(gqlQuery, queryName).then((res) => {
-            if (res.body.data[queryName].nodes.length > 0) {
-                const nodesPath = res.body.data[queryName].nodes;
-                nodesPath.forEach((item) => {
-                    // has addressType and contactDetails
-                    expect(item).to.have.property('addressType');
-                    if (item.addressType !== null) {
-                        expect(item.addressType).to.be.a('string');
+            cy.postAndValidate(gqlQuery, queryName).then((res) => {
+                if (res.body.data[queryName].nodes.length > 0) {
+                    const nodesPath = res.body.data[queryName].nodes;
+                    nodesPath.forEach((item) => {
+                        // has addressType and contactDetails
+                        expect(item).to.have.property('addressType');
+                        if (item.addressType !== null) {
+                            expect(item.addressType).to.be.a('string');
                         }
 
-                    expect(item).to.have.property('contactDetails');
-                    if (item.contactDetails !== null) {
-                        expect(item.contactDetails).to.have.property('firstName');
-                        if (item.contactDetails.firstName !== null) {
-                            expect(item.contactDetails.firstName).to.be.a('string');
+                        expect(item).to.have.property('contactDetails');
+                        if (item.contactDetails !== null) {
+                            expect(item.contactDetails).to.have.property('firstName');
+                            if (item.contactDetails.firstName !== null) {
+                                expect(item.contactDetails.firstName).to.be.a('string');
+                            }
+                            expect(item.contactDetails).to.have.property('lastName');
+                            if (item.contactDetails.lastName !== null) {
+                                expect(item.contactDetails.lastName).to.be.a('string');
+                            }
+                            expect(item.contactDetails).to.have.property('email');
+                            if (item.contactDetails.email !== null) {
+                                expect(item.contactDetails.email).to.be.a('string');
+                            }
+                            expect(item.contactDetails).to.have.property('address');
+                            if (item.contactDetails.address !== null) {
+                                expect(item.contactDetails.address).to.have.property('city');
+                                if (item.contactDetails.address.city !== null) {
+                                    expect(item.contactDetails.address.city).to.be.a('string');
+                                }
+                                expect(item.contactDetails.address).to.have.property('country');
+                                if (item.contactDetails.address.country !== null) {
+                                    expect(item.contactDetails.address.country).to.be.a('string');
+                                }
+                                expect(item.contactDetails.address).to.have.property('line1');
+                                if (item.contactDetails.address.line1 !== null) {
+                                    expect(item.contactDetails.address.line1).to.be.a('string');
+                                }
+                                expect(item.contactDetails.address).to.have.property('line2');
+                                if (item.contactDetails.address.line2 !== null) {
+                                    expect(item.contactDetails.address.line2).to.be.a('string');
+                                }
+                                expect(item.contactDetails.address).to.have.property('postalCode');
+                                if (item.contactDetails.address.postalCode !== null) {
+                                    expect(item.contactDetails.address.postalCode).to.be.a('string');
+                                }
+                                expect(item.contactDetails.address).to.have.property('region');
+                                if (item.contactDetails.address.region !== null) {
+                                    expect(item.contactDetails.address.region).to.be.a('string');
+                                }
+                            }
+                            if (item.contactDetails.phone !== null) {
+                                item.contactDetails.phone.forEach((item1) => {
+                                    expect(item1).to.have.property('phoneType');
+                                    if (item1.phoneType !== null) {
+                                        expect(item1.phoneType).to.be.a('string');
+                                    }
+                                    expect(item1).to.have.property('phoneNumber');
+                                    if (item1.phoneNumber !== null) {
+                                        expect(item1.phoneNumber).to.be.a('string');
+                                    }
+                                    expect(item1).to.have.property('countryCode');
+                                    if (item1.countryCode !== null) {
+                                        expect(item1.countryCode).to.be.a('string');
+                                    }
+                                });
+                            }
                         }
-                        expect(item.contactDetails).to.have.property('lastName');
-                        if (item.contactDetails.lastName !== null) {
-                            expect(item.contactDetails.lastName).to.be.a('string');
-                        }
-                        expect(item.contactDetails).to.have.property('email');
-                        if (item.contactDetails.email !== null) {
-                            expect(item.contactDetails.email).to.be.a('string');
-                        }
-                        expect(item.contactDetails).to.have.property('address');
-                        if (item.contactDetails.address !== null)
-                        {
-                        expect(item.contactDetails.address).to.have.property('city');
-                        if (item.contactDetails.address.city !== null) {
-                            expect(item.contactDetails.address.city).to.be.a('string');
-                        }
-                        expect(item.contactDetails.address).to.have.property('country');
-                        if (item.contactDetails.address.country !== null) {
-                            expect(item.contactDetails.address.country).to.be.a('string');
-                        }
-                        expect(item.contactDetails.address).to.have.property('line1');
-                        if (item.contactDetails.address.line1 !== null) {
-                            expect(item.contactDetails.address.line1).to.be.a('string');
-                        }
-                        expect(item.contactDetails.address).to.have.property('line2');
-                        if (item.contactDetails.address.line2 !== null) {
-                            expect(item.contactDetails.address.line2).to.be.a('string');
-                        }
-                        expect(item.contactDetails.address).to.have.property('postalCode');
-                        if (item.contactDetails.address.postalCode !== null) {
-                            expect(item.contactDetails.address.postalCode).to.be.a('string');
-                        }
-                        expect(item.contactDetails.address).to.have.property('region');
-                        if (item.contactDetails.address.region !== null) {
-                            expect(item.contactDetails.address.region).to.be.a('string');
-                        }
-                    }
-                    if (item.contactDetails.phone !== null){
-                        item.contactDetails.phone.forEach((item1) =>{
-                        expect(item1).to.have.property('phoneType');
-                        if (item1.phoneType !== null) {
-                            expect(item1.phoneType).to.be.a('string');
-                        }
-                        expect(item1).to.have.property('phoneNumber');
-                        if (item1.phoneNumber !== null) {
-                            expect(item1.phoneNumber).to.be.a('string');
-                        }
-                        expect(item1).to.have.property('countryCode');
-                        if (item1.countryCode !== null) {
-                            expect(item1.countryCode).to.be.a('string');
-                        }
-                    });             
-                }
+                    });
                 }
             });
-            }
         });
-    });
 
-    it('Query all other fields with Customer Id will return valid data for the fields' , () => {
-        const gqlQuery = `{
+        it('Query all other fields with Customer Id will return valid data for the fields', () => {
+            const gqlQuery = `{
             ${queryName}(orderBy: {direction: ASC, field: NAME} customerId:"${queryInformation.customerId}") {
                 edges {
                     cursor
@@ -1888,152 +1883,151 @@ context("Testing response values for customData and other fields", () => {
                 totalCount
             }
         }`;
-        cy.postAndValidate(gqlQuery, queryName).then((res) => {
-            if (res.body.data[queryName].nodes.length > 0) {
-                const nodesPath = res.body.data[queryName].nodes;
-                nodesPath.forEach((item) => {
-                    // has addressType and contactDetails
-                    expect(item).to.have.property('addressType');
-                    if (item.addressType !== null) {
-                        expect(item.addressType).to.be.a('string');
+            cy.postAndValidate(gqlQuery, queryName).then((res) => {
+                if (res.body.data[queryName].nodes.length > 0) {
+                    const nodesPath = res.body.data[queryName].nodes;
+                    nodesPath.forEach((item) => {
+                        // has addressType and contactDetails
+                        expect(item).to.have.property('addressType');
+                        if (item.addressType !== null) {
+                            expect(item.addressType).to.be.a('string');
                         }
 
-                    expect(item).to.have.property('contactDetails');
-                    if (item.contactDetails !== null) {
-                        expect(item.contactDetails).to.have.property('firstName');
-                        if (item.contactDetails.firstName !== null) {
-                            expect(item.contactDetails.firstName).to.be.a('string');
+                        expect(item).to.have.property('contactDetails');
+                        if (item.contactDetails !== null) {
+                            expect(item.contactDetails).to.have.property('firstName');
+                            if (item.contactDetails.firstName !== null) {
+                                expect(item.contactDetails.firstName).to.be.a('string');
+                            }
+                            expect(item.contactDetails).to.have.property('lastName');
+                            if (item.contactDetails.lastName !== null) {
+                                expect(item.contactDetails.lastName).to.be.a('string');
+                            }
+                            expect(item.contactDetails).to.have.property('email');
+                            if (item.contactDetails.email !== null) {
+                                expect(item.contactDetails.email).to.be.a('string');
+                            }
+                            expect(item.contactDetails).to.have.property('address');
+                            if (item.contactDetails.address !== null) {
+                                expect(item.contactDetails.address).to.have.property('city');
+                                if (item.contactDetails.address.city !== null) {
+                                    expect(item.contactDetails.address.city).to.be.a('string');
+                                }
+                                expect(item.contactDetails.address).to.have.property('country');
+                                if (item.contactDetails.address.country !== null) {
+                                    expect(item.contactDetails.address.country).to.be.a('string');
+                                }
+                                expect(item.contactDetails.address).to.have.property('line1');
+                                if (item.contactDetails.address.line1 !== null) {
+                                    expect(item.contactDetails.address.line1).to.be.a('string');
+                                }
+                                expect(item.contactDetails.address).to.have.property('line2');
+                                if (item.contactDetails.address.line2 !== null) {
+                                    expect(item.contactDetails.address.line2).to.be.a('string');
+                                }
+                                expect(item.contactDetails.address).to.have.property('postalCode');
+                                if (item.contactDetails.address.postalCode !== null) {
+                                    expect(item.contactDetails.address.postalCode).to.be.a('string');
+                                }
+                                expect(item.contactDetails.address).to.have.property('region');
+                                if (item.contactDetails.address.region !== null) {
+                                    expect(item.contactDetails.address.region).to.be.a('string');
+                                }
+                            }
+                            if (item.contactDetails.phone !== null) {
+                                item.contactDetails.phone.forEach((item1) => {
+                                    expect(item1).to.have.property('phoneType');
+                                    if (item1.phoneType !== null) {
+                                        expect(item1.phoneType).to.be.a('string');
+                                    }
+                                    expect(item1).to.have.property('phoneNumber');
+                                    if (item1.phoneNumber !== null) {
+                                        expect(item1.phoneNumber).to.be.a('string');
+                                    }
+                                    expect(item1).to.have.property('countryCode');
+                                    if (item1.countryCode !== null) {
+                                        expect(item1.countryCode).to.be.a('string');
+                                    }
+                                });
+                            }
                         }
-                        expect(item.contactDetails).to.have.property('lastName');
-                        if (item.contactDetails.lastName !== null) {
-                            expect(item.contactDetails.lastName).to.be.a('string');
-                        }
-                        expect(item.contactDetails).to.have.property('email');
-                        if (item.contactDetails.email !== null) {
-                            expect(item.contactDetails.email).to.be.a('string');
-                        }
-                        expect(item.contactDetails).to.have.property('address');
-                        if (item.contactDetails.address !== null)
-                        {
-                        expect(item.contactDetails.address).to.have.property('city');
-                        if (item.contactDetails.address.city !== null) {
-                            expect(item.contactDetails.address.city).to.be.a('string');
-                        }
-                        expect(item.contactDetails.address).to.have.property('country');
-                        if (item.contactDetails.address.country !== null) {
-                            expect(item.contactDetails.address.country).to.be.a('string');
-                        }
-                        expect(item.contactDetails.address).to.have.property('line1');
-                        if (item.contactDetails.address.line1 !== null) {
-                            expect(item.contactDetails.address.line1).to.be.a('string');
-                        }
-                        expect(item.contactDetails.address).to.have.property('line2');
-                        if (item.contactDetails.address.line2 !== null) {
-                            expect(item.contactDetails.address.line2).to.be.a('string');
-                        }
-                        expect(item.contactDetails.address).to.have.property('postalCode');
-                        if (item.contactDetails.address.postalCode !== null) {
-                            expect(item.contactDetails.address.postalCode).to.be.a('string');
-                        }
-                        expect(item.contactDetails.address).to.have.property('region');
-                        if (item.contactDetails.address.region !== null) {
-                            expect(item.contactDetails.address.region).to.be.a('string');
-                        }
-                    }
-                    if (item.contactDetails.phone !== null){
-                        item.contactDetails.phone.forEach((item1) =>{
-                        expect(item1).to.have.property('phoneType');
-                        if (item1.phoneType !== null) {
-                            expect(item1.phoneType).to.be.a('string');
-                        }
-                        expect(item1).to.have.property('phoneNumber');
-                        if (item1.phoneNumber !== null) {
-                            expect(item1.phoneNumber).to.be.a('string');
-                        }
-                        expect(item1).to.have.property('countryCode');
-                        if (item1.countryCode !== null) {
-                            expect(item1.countryCode).to.be.a('string');
-                        }
-                    });             
-                }
+                    });
                 }
             });
-            }
         });
     });
-});
 
-context("Testing company/customer with no associated addresses", () => {
-    it('Query address with Company Id with no associated Items , returns empty nodes' , () => {
-        var extraItemPath1 = "company";
-        var extraItemCreate1 = "createCompany"
-        const extraItemCreateInput1 =  `{name:"Cypress Address New Company" integrationKey: "${Math.random().toString(36).slice(2)}"}`
-        cy.createAndGetId(extraItemCreate1, extraItemPath1, extraItemCreateInput1).then((id)=>{
-            const gqlQuery = `{
+    context("Testing company/customer with no associated addresses", () => {
+        it('Query address with Company Id with no associated Items , returns empty nodes', () => {
+            var extraItemPath1 = "company";
+            var extraItemCreate1 = "createCompany"
+            const extraItemCreateInput1 = `{name:"Cypress Address New Company" integrationKey: "${Math.random().toString(36).slice(2)}"}`
+            cy.createAndGetId(extraItemCreate1, extraItemPath1, extraItemCreateInput1).then((id) => {
+                const gqlQuery = `{
                 ${queryName}(orderBy: {direction: ASC, field: NAME} companyId: "${id}" ) {
                     ${standardQueryBody}
                 }
             }`;
-        cy.postAndValidate(gqlQuery,queryName).then((res) => {
-            expect(res.body.data[queryName].totalCount).to.be.eql(0, "Expect no Items to be associated"); 
-         }); 
+                cy.postAndValidate(gqlQuery, queryName).then((res) => {
+                    expect(res.body.data[queryName].totalCount).to.be.eql(0, "Expect no Items to be associated");
+                });
+            });
         });
-    });
 
-    it('Query address with Customer Id with no associated Items, returns empty nodes' , () => {
-        var extraItemPath2 = "customer";
-        var extraItemCreate2 = "createCustomer"
-        const extraItemCreateInput2 =  `{firstName:"Cypress Address New Customer" lastName:"Test" email: "Cypress${Math.random().toString(36).slice(2)}Test@email.com"}`
-        cy.createAndGetId(extraItemCreate2, extraItemPath2, extraItemCreateInput2).then((id)=>{
-            const gqlQuery = `{
+        it('Query address with Customer Id with no associated Items, returns empty nodes', () => {
+            var extraItemPath2 = "customer";
+            var extraItemCreate2 = "createCustomer"
+            const extraItemCreateInput2 = `{firstName:"Cypress Address New Customer" lastName:"Test" email: "Cypress${Math.random().toString(36).slice(2)}Test@email.com"}`
+            cy.createAndGetId(extraItemCreate2, extraItemPath2, extraItemCreateInput2).then((id) => {
+                const gqlQuery = `{
                 ${queryName}(orderBy: {direction: ASC, field: NAME} customerId: "${id}" ) {
                     ${standardQueryBody}
                 }
             }`;
-        cy.postAndValidate(gqlQuery,queryName).then((res) => {
-            expect(res.body.data[queryName].totalCount).to.be.eql(0, "Expect no Items to be associated"); 
-         }); 
+                cy.postAndValidate(gqlQuery, queryName).then((res) => {
+                    expect(res.body.data[queryName].totalCount).to.be.eql(0, "Expect no Items to be associated");
+                });
+            });
         });
     });
-});
 
-context("Testing 'Deleted Ids' input", () => {
-    it('Query will fail with deleted Company Id ' , () => {
-        const extraItemPath1 = "company";
-        const extraItemCreate1 = "createCompany"
-        const extraItemCreateInput1 =  `{name:"Cypress Address New Company" integrationKey: "${Math.random().toString(36).slice(2)}"}`
-        cy.createAndGetId(extraItemCreate1, extraItemPath1, extraItemCreateInput1).then((id)=>{
-            const gqlQuery = `{
+    context("Testing 'Deleted Ids' input", () => {
+        it('Query will fail with deleted Company Id ', () => {
+            const extraItemPath1 = "company";
+            const extraItemCreate1 = "createCompany"
+            const extraItemCreateInput1 = `{name:"Cypress Address New Company" integrationKey: "${Math.random().toString(36).slice(2)}"}`
+            cy.createAndGetId(extraItemCreate1, extraItemPath1, extraItemCreateInput1).then((id) => {
+                const gqlQuery = `{
                 ${queryName}(orderBy: {direction: ASC, field: NAME} companyId: "${id}" ) {
                     ${standardQueryBody}
                 }
             }`;
-         cy.deleteItem(deleteMutName1, id)
-         cy.postAndConfirmError(gqlQuery,true).then((res) => {
-            expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
-            expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR")  
-         }); 
+                cy.deleteItem(deleteMutName1, id)
+                cy.postAndConfirmError(gqlQuery, true).then((res) => {
+                    expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
+                    expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR")
+                });
+            });
         });
-    });
 
-    it('Query  will fail with deleted Customer Id' , () => {
-        const extraItemPath2 = "customer";
-        const extraItemCreate2 = "createCustomer"
-        const extraItemCreateInput2 =  `{firstName:"Cypress Address New Customer" lastName:"Test" email: "Cypress${Math.random().toString(36).slice(2)}Test@email.com"}`
-       
-        cy.createAndGetId(extraItemCreate2, extraItemPath2, extraItemCreateInput2).then((id)=>{
-            const  gqlQuery = `{
+        it('Query  will fail with deleted Customer Id', () => {
+            const extraItemPath2 = "customer";
+            const extraItemCreate2 = "createCustomer"
+            const extraItemCreateInput2 = `{firstName:"Cypress Address New Customer" lastName:"Test" email: "Cypress${Math.random().toString(36).slice(2)}Test@email.com"}`
+
+            cy.createAndGetId(extraItemCreate2, extraItemPath2, extraItemCreateInput2).then((id) => {
+                const gqlQuery = `{
                 ${queryName}(orderBy: {direction: ASC, field: NAME} customerId: "${id}" ) {
                     ${standardQueryBody}
                 }
             }`;
-         cy.deleteItem(deleteMutName2, id)
-         cy.postAndConfirmError(gqlQuery,true).then((res) => {
-            expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
-            expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR")  
-         }); 
+                cy.deleteItem(deleteMutName2, id)
+                cy.postAndConfirmError(gqlQuery, true).then((res) => {
+                    expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
+                    expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR")
+                });
+            });
         });
     });
-});
 
 });
