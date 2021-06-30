@@ -915,7 +915,6 @@ Cypress.Commands.add("validateValues", (res, queryName: string) => {
             assert.exists(item.values);
             // validate values as an array
             assert.isArray(item.values);
-            expect(item.values.length).to.be.gte(1);
             item.values.forEach((val) => {
                 expect(val).to.have.property('displayOrder');
                 if (val.displayOrder !== null) {

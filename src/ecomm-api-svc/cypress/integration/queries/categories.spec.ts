@@ -616,7 +616,7 @@ describe('Query: categories', () => {
             });
         });
 
-        it.only("Query with both 'before' and 'after' input arguments will fail", () => {
+        it("Query with both 'before' and 'after' input arguments will fail", () => {
             const gqlQuery = `{
                 ${queryName}(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
