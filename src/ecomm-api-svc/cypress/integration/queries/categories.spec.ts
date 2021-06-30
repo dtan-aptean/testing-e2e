@@ -616,14 +616,14 @@ describe('Query: categories', () => {
             });
         });
 
-        it("Query with both 'before' and 'after' input arguments will fail", () => {
+        it.only("Query with both 'before' and 'after' input arguments will fail", () => {
             const gqlQuery = `{
                 ${queryName}(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
             cy.postAndConfirmError(gqlQuery, true).then((res) => {
-                expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
+                expect(res.body.errors[0].message[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
             });
         });
     });
