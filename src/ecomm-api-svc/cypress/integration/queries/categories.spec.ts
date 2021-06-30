@@ -46,7 +46,7 @@ describe('Query: categories', () => {
             const { nodes, edges, totalCount } = res.body.data[queryName];
             expect(nodes.length).to.be.eql(edges.length);
             if (totalCount > nodes.length) {
-                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", ": "";
+                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", " : "";
             }
         });
     });
@@ -64,7 +64,7 @@ describe('Query: categories', () => {
         it("Query with valid 'orderBy' input argument returns valid data types", () => {
             cy.postAndValidate(standardQuery, queryName);
         });
-        
+
         it("Query will fail without 'orderBy' input argument", () => {
             const gqlQuery = `{
                 ${queryName} {
@@ -134,7 +134,7 @@ describe('Query: categories', () => {
     context("Testing 'productId' input", () => {
         // Items created for the productId test
         const createdItems = [] as SupplementalItemRecord[];
-        const createdProducts =  [] as SupplementalItemRecord[];
+        const createdProducts = [] as SupplementalItemRecord[];
         const deleteName = "deleteCategory";
         const createMutName = "createCategory";
         const createPath = "category";
@@ -152,7 +152,7 @@ describe('Query: categories', () => {
                 }
             });
         };
-        
+
         var deleteItemsAfter = undefined as boolean | undefined;
         before(() => {
             deleteItemsAfter = Cypress.env("deleteItemsAfter");
@@ -171,7 +171,7 @@ describe('Query: categories', () => {
         });
 
         it("Query with valid 'productId' input will return only the items connected with that productId", () => {
-            const extraItemInput = { categoryInfo: [{name: `Cypress productId ${queryName} test`, languageCode: "Standard"}] };
+            const extraItemInput = { categoryInfo: [{ name: `Cypress productId ${queryName} test`, languageCode: "Standard" }] };
             cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
                 addCreated(false, deletionIds);
@@ -248,7 +248,7 @@ describe('Query: categories', () => {
         });
 
         it("Query using the 'productId' of a deleted product will return an error", () => {
-            const extraItemInput = {categoryInfo: [{name: `Cypress productId ${queryName} delete`, languageCode: "Standard"}]};
+            const extraItemInput = { categoryInfo: [{ name: `Cypress productId ${queryName} delete`, languageCode: "Standard" }] };
             cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput).then((results) => {
                 const { deletionIds, itemIds } = results;
                 addCreated(false, deletionIds);
@@ -282,143 +282,143 @@ describe('Query: categories', () => {
         });
     });
 
-    context("Testing 'startDate' and 'endDate' inputs", () => {
-        const createdDateQueryBody = `edges {
-            cursor
-            node {
-                id
-            }
-        }
-        nodes {
-            id
-            ${infoName} {
-                name
-            }
-            createdDate
-        }
-        pageInfo {
-            endCursor
-            hasNextPage
-            hasPreviousPage
-            startCursor
-        }
-        totalCount`;
+    // context("Testing 'startDate' and 'endDate' inputs", () => {
+    //     const createdDateQueryBody = `edges {
+    //         cursor
+    //         node {
+    //             id
+    //         }
+    //     }
+    //     nodes {
+    //         id
+    //         ${infoName} {
+    //             name
+    //         }
+    //         createdDate
+    //     }
+    //     pageInfo {
+    //         endCursor
+    //         hasNextPage
+    //         hasPreviousPage
+    //         startCursor
+    //     }
+    //     totalCount`;
 
-        it("Query using valid 'startDate' input will return only items with a createdDate >= that startDate", () => {
-            const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-                    ${createdDateQueryBody}
-                }
-            }`;
-            cy.returnRandomDate(query, queryName).then((randomDate: string) => {
-                const startDateQuery = `{
-                    ${queryName}(${trueTotalInput}startDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
-                        ${createdDateQueryBody}
-                    }
-                }`;
-                cy.postAndValidate(startDateQuery, queryName).then((res) => {
-                    cy.verifyDateInput(res, queryName, randomDate);
-                });
-            });
-        });
+    //     it("Query using valid 'startDate' input will return only items with a createdDate >= that startDate", () => {
+    //         const query = `{
+    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+    //                 ${createdDateQueryBody}
+    //             }
+    //         }`;
+    //         cy.returnRandomDate(query, queryName).then((randomDate: string) => {
+    //             const startDateQuery = `{
+    //                 ${queryName}(${trueTotalInput}startDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
+    //                     ${createdDateQueryBody}
+    //                 }
+    //             }`;
+    //             cy.postAndValidate(startDateQuery, queryName).then((res) => {
+    //                 cy.verifyDateInput(res, queryName, randomDate);
+    //             });
+    //         });
+    //     });
 
-        it("Query using valid 'endDate' input will return only items with a createdDate <= that endDate", () => {
-            const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-                    ${createdDateQueryBody}
-                }
-            }`;
-            cy.returnRandomDate(query, queryName).then((randomDate: string) => {
-                const startDateQuery = `{
-                    ${queryName}(${trueTotalInput}endDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
-                        ${createdDateQueryBody}
-                    }
-                }`;
-                cy.postAndValidate(startDateQuery, queryName).then((res) => {
-                    cy.verifyDateInput(res, queryName, undefined, randomDate);
-                });
-            });
-        });
+    //     it("Query using valid 'endDate' input will return only items with a createdDate <= that endDate", () => {
+    //         const query = `{
+    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+    //                 ${createdDateQueryBody}
+    //             }
+    //         }`;
+    //         cy.returnRandomDate(query, queryName).then((randomDate: string) => {
+    //             const startDateQuery = `{
+    //                 ${queryName}(${trueTotalInput}endDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
+    //                     ${createdDateQueryBody}
+    //                 }
+    //             }`;
+    //             cy.postAndValidate(startDateQuery, queryName).then((res) => {
+    //                 cy.verifyDateInput(res, queryName, undefined, randomDate);
+    //             });
+    //         });
+    //     });
 
-        it("Query using valid 'startDate' and 'endDate' input will return only items that obey startDate <= createdDate <= endDate", () => {
-            const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-                    ${createdDateQueryBody}
-                }
-            }`;
-            cy.returnRandomDate(query, queryName, true).then((startDate: string) => {
-                cy.returnRandomDate(query, queryName, undefined, startDate).then((endDate: string) => {
-                    const startEndQuery = `{
-                        ${queryName}(${trueTotalInput}startDate: "${startDate}", endDate: "${endDate}", orderBy: {direction: ASC, field: NAME}) {
-                            ${createdDateQueryBody}
-                        }
-                    }`;
-                    cy.postAndValidate(startEndQuery, queryName).then((res) => {
-                        cy.verifyDateInput(res, queryName, startDate, endDate);
-                    });
-                });
-            });
-        });
+    //     it("Query using valid 'startDate' and 'endDate' input will return only items that obey startDate <= createdDate <= endDate", () => {
+    //         const query = `{
+    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+    //                 ${createdDateQueryBody}
+    //             }
+    //         }`;
+    //         cy.returnRandomDate(query, queryName, true).then((startDate: string) => {
+    //             cy.returnRandomDate(query, queryName, undefined, startDate).then((endDate: string) => {
+    //                 const startEndQuery = `{
+    //                     ${queryName}(${trueTotalInput}startDate: "${startDate}", endDate: "${endDate}", orderBy: {direction: ASC, field: NAME}) {
+    //                         ${createdDateQueryBody}
+    //                     }
+    //                 }`;
+    //                 cy.postAndValidate(startEndQuery, queryName).then((res) => {
+    //                     cy.verifyDateInput(res, queryName, startDate, endDate);
+    //                 });
+    //             });
+    //         });
+    //     });
 
-        it("Query using an invalid 'startDate' input will return an error", () => {
-            const query = `{
-                ${queryName}(startDate: false, orderBy: {direction: ASC, field: NAME}) {
-                    ${createdDateQueryBody}
-                }
-            }`;
-            cy.postAndConfirmError(query);
-        });
+    //     it("Query using an invalid 'startDate' input will return an error", () => {
+    //         const query = `{
+    //             ${queryName}(startDate: false, orderBy: {direction: ASC, field: NAME}) {
+    //                 ${createdDateQueryBody}
+    //             }
+    //         }`;
+    //         cy.postAndConfirmError(query);
+    //     });
 
-        it("Query using an invalid 'endDate' input will return an error", () => {
-            const query = `{
-                ${queryName}(endDate: false, orderBy: {direction: ASC, field: NAME}) {
-                    ${createdDateQueryBody}
-                }
-            }`;
-            cy.postAndConfirmError(query);
-        });
+    //     it("Query using an invalid 'endDate' input will return an error", () => {
+    //         const query = `{
+    //             ${queryName}(endDate: false, orderBy: {direction: ASC, field: NAME}) {
+    //                 ${createdDateQueryBody}
+    //             }
+    //         }`;
+    //         cy.postAndConfirmError(query);
+    //     });
 
-        it("Query using invalid 'startDate' and 'endDate' inputs will return an error", () => {
-            const query = `{
-                ${queryName}(startDate: [], endDate: false, orderBy: {direction: ASC, field: NAME}) {
-                    ${createdDateQueryBody}
-                }
-            }`;
-            cy.postAndConfirmError(query);
-        });
+    //     it("Query using invalid 'startDate' and 'endDate' inputs will return an error", () => {
+    //         const query = `{
+    //             ${queryName}(startDate: [], endDate: false, orderBy: {direction: ASC, field: NAME}) {
+    //                 ${createdDateQueryBody}
+    //             }
+    //         }`;
+    //         cy.postAndConfirmError(query);
+    //     });
 
-        it("Query using valid 'startDate' and invalid 'endDate' inputs will return an error", () => {
-            const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-                    ${createdDateQueryBody}
-                }
-            }`;
-            cy.returnRandomDate(query, queryName).then((randomDate: string) => {
-                const invalidQuery = `{
-                    ${queryName}(startDate: "${randomDate}", endDate: false, orderBy: {direction: ASC, field: NAME}) {
-                        ${createdDateQueryBody}
-                    }
-                }`;
-                cy.postAndConfirmError(invalidQuery);
-            });
-        });
+    //     it("Query using valid 'startDate' and invalid 'endDate' inputs will return an error", () => {
+    //         const query = `{
+    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+    //                 ${createdDateQueryBody}
+    //             }
+    //         }`;
+    //         cy.returnRandomDate(query, queryName).then((randomDate: string) => {
+    //             const invalidQuery = `{
+    //                 ${queryName}(startDate: "${randomDate}", endDate: false, orderBy: {direction: ASC, field: NAME}) {
+    //                     ${createdDateQueryBody}
+    //                 }
+    //             }`;
+    //             cy.postAndConfirmError(invalidQuery);
+    //         });
+    //     });
 
-        it("Query using invalid 'startDate' and valid 'endDate' inputs will return an error", () => {
-            const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-                    ${createdDateQueryBody}
-                }
-            }`;
-            cy.returnRandomDate(query, queryName).then((randomDate: string) => {
-                const invalidQuery = `{
-                    ${queryName}(startDate: false, endDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
-                        ${createdDateQueryBody}
-                    }
-                }`;
-                cy.postAndConfirmError(invalidQuery);
-            });
-        });
-    });
+    //     it("Query using invalid 'startDate' and valid 'endDate' inputs will return an error", () => {
+    //         const query = `{
+    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+    //                 ${createdDateQueryBody}
+    //             }
+    //         }`;
+    //         cy.returnRandomDate(query, queryName).then((randomDate: string) => {
+    //             const invalidQuery = `{
+    //                 ${queryName}(startDate: false, endDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
+    //                     ${createdDateQueryBody}
+    //                 }
+    //             }`;
+    //             cy.postAndConfirmError(invalidQuery);
+    //         });
+    //     });
+    // });
 
     context("Testing 'first' and 'last' inputs", () => {
         it("Query without 'first' or 'last' input arguments will return up to 25 items", () => {
@@ -428,7 +428,7 @@ describe('Query: categories', () => {
                 });
             });
         });
-        
+
         it("Query with valid 'first' input argument will return only that amount of items", () => {
             cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
                 // If there's only one item, we can't do any pagination
@@ -570,7 +570,7 @@ describe('Query: categories', () => {
                 });
             });
         });
-        
+
         it("Query with a valid 'after' input argument will return all items after that value", () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
@@ -633,7 +633,7 @@ describe('Query: categories', () => {
             cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const first = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `first: ${first}`});
+                    Cypress.log({ message: `first: ${first}` });
                     const beforeQuery = `{
                         ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
@@ -658,8 +658,8 @@ describe('Query: categories', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const first = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `first: ${first}`});
+                        const first = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `first: ${first}` });
                         const afterQuery = `{
                             ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                                 ${standardQueryBody}
@@ -684,7 +684,7 @@ describe('Query: categories', () => {
             cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const last = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `last: ${last}`});
+                    Cypress.log({ message: `last: ${last}` });
                     const beforeQuery = `{
                         ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
@@ -709,8 +709,8 @@ describe('Query: categories', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const last = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `last: ${last}`});
+                        const last = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `last: ${last}` });
                         const afterQuery = `{
                             ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                                 ${standardQueryBody}
