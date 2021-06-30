@@ -21,7 +21,7 @@ const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/li
 /**
  * @type {Cypress.PluginConfig}
  */
-module.exports = (on, config) => {
+module.exports = async (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
   const dateSubFolder = new Date().toISOString().substring(0,19);
