@@ -3,12 +3,16 @@
 describe("Payer Portal - Payments Due Table", function () {
   let merchantIndex = 0;
   let merchantLength = 0;
+  let consolidated = false;
+  let partial = false;
   before(() => {
     cy.login();
-    cy.wait(10000);
+    cy.waitForRootPageLoading(1);
     cy.getMerchantIndex().then((resp) => {
       merchantIndex = resp.merchantIndex;
       merchantLength = resp.merchantLength;
+      consolidated = resp.consolidatedPayment;
+      partial = resp.partialPayment;
     });
   });
 
@@ -16,7 +20,7 @@ describe("Payer Portal - Payments Due Table", function () {
     beforeEach(() => {
       cy.visit("/");
       cy.wait(5000);
-      if (merchantLength > 1) {
+      if (merchantLength > 0) {
         cy.get("h6:contains(Balance Due)")
           .eq(merchantIndex)
           .parent()
@@ -24,7 +28,7 @@ describe("Payer Portal - Payments Due Table", function () {
           .within(() => {
             cy.get("button").click({ force: true });
           });
-        cy.wait(12000);
+        cy.waitForRequestLoading(1);
       }
     });
 
@@ -36,8 +40,8 @@ describe("Payer Portal - Payments Due Table", function () {
     it("Creating the payment request add the data in recent payments table", () => {
       cy.createPaymentRequest(661).then((response) => {
         cy.visit("/");
-        cy.wait(5000);
-        if (merchantLength > 1) {
+        cy.waitForRootPageLoading(1);
+        if (merchantLength > 0) {
           cy.get("h6:contains(Balance Due)")
             .eq(merchantIndex)
             .parent()
@@ -45,7 +49,7 @@ describe("Payer Portal - Payments Due Table", function () {
             .within(() => {
               cy.get("button").click({ force: true });
             });
-          cy.wait(12000);
+          cy.waitForRequestLoading(1);
         }
         cy.get("[data-cy=payments-due-list").should("be.visible");
         cy.wait(3000);
@@ -120,7 +124,7 @@ describe("Payer Portal - Payments Due Table", function () {
         });
     });
 
-    it("Payment deatils dialog should have make payment button", () => {
+    it("Payment details dialog should have make payment button", () => {
       cy.get("[data-cy=payments-due-list").should("be.visible");
       cy.wait(5000);
       //opening the payment details modal
@@ -141,7 +145,7 @@ describe("Payer Portal - Payments Due Table", function () {
         .should("contain", "MAKE PAYMENT");
     });
 
-    it("Unpaid Payment deatils dialog should not contain payment history", () => {
+    it("Unpaid Payment details dialog should not contain payment history", () => {
       cy.get("[data-cy=payments-due-list").should("be.visible");
       cy.wait(5000);
       //opening the payment details modal
@@ -158,12 +162,11 @@ describe("Payer Portal - Payments Due Table", function () {
         .should("not.contain", "Payment History");
     });
 
-    // Test only if your account is failing 6.61 as payment amount
-    it("Failed Payment should have status as failed and button as retry payment", () => {
-      cy.makePayment(merchantIndex, merchantLength);
+    it("Failed Payment should have button as retry payment", () => {
+      cy.makePayment(merchantIndex, merchantLength, consolidated, partial, 1);
       cy.visit("/");
-      cy.wait(5000);
-      if (merchantLength > 1) {
+      cy.waitForRootPageLoading(1);
+      if (merchantLength > 0) {
         cy.get("h6:contains(Balance Due)")
           .eq(merchantIndex)
           .parent()
@@ -171,23 +174,15 @@ describe("Payer Portal - Payments Due Table", function () {
           .within(() => {
             cy.get("button").click({ force: true });
           });
-        cy.wait(12000);
+        cy.waitForRequestLoading(1);
       }
       cy.get("[data-cy=payments-due-list").should("be.visible");
-      cy.wait(10000);
-      //checking status as failed
-      cy.get("table")
-        .find("tr")
-        .eq(1)
-        .find("td")
-        .eq(3)
-        .should("contain", "Failed");
+      cy.wait(5000);
+
       //checking button as retry payment
       cy.get("table")
         .find("tr")
         .eq(1)
-        .find("td")
-        .eq(5)
         .find("button")
         .should("contain", "RETRY PAYMENT");
     });
@@ -228,6 +223,216 @@ describe("Payer Portal - Payments Due Table", function () {
         .should("be.visible")
         .should("be.enabled")
         .should("contain", "RETRY PAYMENT");
+    });
+
+    it("If consolidated allowed should be able to select more then one payment request and other functionalities should work as expected", () => {
+      if (consolidated === true) {
+        cy.createPaymentRequest(1000).then((response) => {
+          cy.visit("/");
+          cy.waitForRootPageLoading(1);
+          if (merchantLength > 0) {
+            cy.get("h6:contains(Balance Due)")
+              .eq(merchantIndex)
+              .parent()
+              .parent()
+              .within(() => {
+                cy.get("button").click({ force: true });
+              });
+            cy.waitForRequestLoading(1);
+          }
+          cy.get("[data-cy=payments-due-list").should("be.visible");
+          cy.wait(3000);
+          //confirming the payment request has been created
+          cy.get("table")
+            .find("tr")
+            .eq(1)
+            .find("td")
+            .eq(1)
+            .should("contain", response.referenceNumber);
+
+          //selecting payment request change pay all button to pay selected and also shows hide unselected option
+          cy.get("button:contains(PAY ALL)")
+            .should("exist")
+            .should("be.visible");
+          cy.get("div:contains(Hide Unselected)").should("not.exist");
+
+          cy.get("table")
+            .find("tr")
+            .eq(1)
+            .find("button:contains(PAYMENT)")
+            .click({ force: true });
+
+          cy.get("table")
+            .find("tr")
+            .eq(1)
+            .find("button:contains(PAYMENT)")
+            .should("not.exist");
+
+          cy.get("button:contains(PAY ALL)").should("not.exist");
+
+          cy.get("button:contains(PAY SELECTED)")
+            .should("exist")
+            .should("be.visible");
+
+          cy.get("div:contains(Hide Unselected)").should("exist");
+
+          //can select using checkbox as well
+          cy.get("table")
+            .find("tr")
+            .eq(2)
+            .find("td")
+            .eq(0)
+            .find('[type="checkbox"]')
+            .check();
+
+          cy.get("table")
+            .find("tr")
+            .eq(2)
+            .find("button:contains(PAYMENT)")
+            .should("not.exist");
+
+          //can unselect the row using checkbox
+          cy.get("table")
+            .find("tr")
+            .eq(2)
+            .find("td")
+            .eq(0)
+            .find('[type="checkbox"]')
+            .uncheck();
+
+          cy.get("table")
+            .find("tr")
+            .eq(2)
+            .find("button:contains(PAYMENT)")
+            .should("exist");
+
+          //can unselect the row using cross button
+          cy.get("table")
+            .find("tr")
+            .eq(2)
+            .find("td")
+            .eq(0)
+            .find('[type="checkbox"]')
+            .check();
+
+          cy.get("table")
+            .find("tr")
+            .eq(2)
+            .find("button:contains(PAYMENT)")
+            .should("not.exist");
+
+          cy.get("table")
+            .find("tr")
+            .eq(2)
+            .find("button")
+            .click({ force: true });
+
+          cy.get("table")
+            .find("tr")
+            .eq(2)
+            .find("button:contains(PAYMENT)")
+            .should("exist");
+
+          //pay selected should redirect to make-payment route
+          cy.get("button:contains(PAY SELECTED)").click({ force: true });
+          cy.wait(3000);
+          cy.location().should((loc) => {
+            expect(loc.pathname).to.eq("/make-payment");
+          });
+        });
+      }
+    });
+
+    it("If partial allowed the payments due table should work as expected", () => {
+      if (partial) {
+        //should be able to select using make/retry payment button
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find("button:contains(PAYMENT)")
+          .click({ force: true });
+
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find("button:contains(PAYMENT)")
+          .should("not.exist");
+
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find("[data-cy=amount-edit]")
+          .should("exist")
+          .should("be.visible");
+
+        //can unselect using checkbox
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find("td")
+          .eq(0)
+          .find('[type="checkbox"]')
+          .uncheck();
+
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find("[data-cy=amount-edit]")
+          .should("not.exist");
+
+        //can select using checkbox
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find("td")
+          .eq(0)
+          .find('[type="checkbox"]')
+          .check();
+
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find("[data-cy=amount-edit]")
+          .should("exist")
+          .should("be.visible");
+
+        //can unselect using close button
+        cy.get("table").find("tr").eq(1).find("button").click({ force: true });
+
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find("[data-cy=amount-edit]")
+          .should("not.exist");
+
+        //amount exceeding total due and no amount should make pay button diabled
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find("td")
+          .eq(0)
+          .find('[type="checkbox"]')
+          .check();
+
+        cy.get("table").find("tr").eq(1).find('input[type="text"]').clear();
+        cy.get("button:contains(PAY)").last().should("be.disabled");
+
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find('input[type="text"]')
+          .type("1000");
+        cy.get("button:contains(PAY)").last().should("be.disabled");
+
+        //making amount in limit should enable the pay button
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find('input[type="text"]')
+          .clear()
+          .type("1");
+        cy.get("button:contains(PAY)").last().should("be.enabled");
+      }
     });
   });
 });
