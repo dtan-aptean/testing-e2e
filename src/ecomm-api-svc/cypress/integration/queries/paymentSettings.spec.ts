@@ -59,7 +59,7 @@ describe('Query: paymentSettings', () => {
         });
 
         it("Query will fail without 'orderBy' input argument", () => {
-            cy.queryNoOrderBy(queryName, standardQueryBody)
+            cy.queryNoOrderBy(queryName, standardQueryBody);
         });
 
         it("Query fails if the 'orderBy' input argument is null", () => {
@@ -79,7 +79,7 @@ describe('Query: paymentSettings', () => {
         });
 
         it("Query with orderBy direction: DESC, field: COMPANY_NAME will return items in a reverse order from direction: ASC", () => {
-            cy.queryReverseOrder(queryName, standardQueryBody, trueTotalInput)
+            cy.queryReverseOrder(queryName, standardQueryBody, trueTotalInput);
         });
     });
 
@@ -290,23 +290,27 @@ describe('Query: paymentSettings', () => {
 
         it("Using ids from a different item as 'ids' input returns an error", () => {
             const extraQueryName = "returnReasons";
-            const extraStandardQueryBody = `edges {
-                cursor
-                node {
-                    id
+            const extraQuery = `{
+                ${extraQueryName}(orderBy: {direction: ASC, field: NAME}) {
+                    edges {
+                        cursor
+                        node {
+                            id
+                        }
+                    }
+                    nodes {
+                        id
+                    }
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                        hasPreviousPage
+                        startCursor
+                    }
+                    totalCount
                 }
-            }
-            nodes {
-                id
-            }
-            pageInfo {
-                endCursor
-                hasNextPage
-                hasPreviousPage
-                startCursor
-            }
-            totalCount`;
-            cy.queryAndValidateDifferentItemIds(extraQueryName, extraStandardQueryBody, queryName, standardQueryBody);
+            }`;
+            cy.queryAndValidateDifferentItemIds(extraQueryName, extraQuery, queryName, standardQueryBody);
         });
     });
 
