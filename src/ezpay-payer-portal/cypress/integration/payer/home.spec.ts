@@ -5,7 +5,7 @@ describe("Payer Portal - Logged in user", function () {
   let merchantLength = 0;
   before(() => {
     cy.login();
-    cy.wait(5000);
+    cy.waitForRootPageLoading(1);
     cy.getMerchantIndex().then((resp) => {
       merchantIndex = resp.merchantIndex;
       merchantLength = resp.merchantLength;
@@ -15,7 +15,7 @@ describe("Payer Portal - Logged in user", function () {
   context("Logged In", () => {
     beforeEach(() => {
       cy.visit("/");
-      cy.wait(5000);
+      cy.wait(7000);
     });
 
     it("If merchant length greater than 1 the owed companies should show else table should show", () => {
@@ -28,7 +28,7 @@ describe("Payer Portal - Logged in user", function () {
     });
 
     it("shows the payments due list", () => {
-      if (merchantLength > 1) {
+      if (merchantLength > 0) {
         cy.get("h6:contains(Balance Due)")
           .eq(merchantIndex)
           .parent()
@@ -43,7 +43,7 @@ describe("Payer Portal - Logged in user", function () {
     });
 
     it("clicks on the recent transactions tab and shows the recent transactions list", () => {
-      if (merchantLength > 1) {
+      if (merchantLength > 0) {
         cy.get("h6:contains(Balance Due)")
           .eq(merchantIndex)
           .parent()

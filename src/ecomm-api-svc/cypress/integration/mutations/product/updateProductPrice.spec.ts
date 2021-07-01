@@ -106,9 +106,7 @@ describe('Mutation: updateProductPrice', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
-                expect(res.body.data[mutationName].errors[0].message).to.eql("Currency is Required");
-            });
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will fail if 'price' input does not have an 'amount' property", () => {
@@ -117,8 +115,8 @@ describe('Mutation: updateProductPrice', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
-                expect(res.body.data[mutationName].errors[0].message).to.eql("Amount is Required");
+            cy.postAndConfirmError(mutation).then((res) => {
+                expect(res.body.errors[0].message).to.eql('Field "UpdatePriceInput.amount" of required type "Int!" was not provided.');
             });
         });
 
@@ -128,8 +126,8 @@ describe('Mutation: updateProductPrice', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
-                expect(res.body.data[mutationName].errors[0].message).to.eql("Currency is Required");
+            cy.postAndConfirmError(mutation).then((res) => {
+                expect(res.body.errors[0].message).to.eql('Field "UpdatePriceInput.currency" of required type "String!" was not provided.');
             });
         });
 

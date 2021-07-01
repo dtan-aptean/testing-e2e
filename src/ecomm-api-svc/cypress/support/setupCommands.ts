@@ -41,7 +41,7 @@ const performDelete = (deleteName: string, id: string, altUrl?: string) => {
 };
 
 // Make sure each item is a Cypress item, and if it is, call command to delete it
-const deleteItems = (nodes, deleteName: string, searchBy: string, infoName?: string, altUrl?: string) => {
+const deleteItems = (nodes, deleteName: string, searchBy: string, infoName?: string, altUrl?: string, descendingName?:string) => {
     nodes.forEach((item) => {
         var id = item.id;
         if (infoName) {
@@ -53,6 +53,15 @@ const deleteItems = (nodes, deleteName: string, searchBy: string, infoName?: str
             }
         } else if (deleteName === "deletePaymentSettings") {
             var name = item.company.name;
+            if (name.includes(searchBy)) {
+                performDelete(deleteName, id, altUrl);
+            }
+        } else if (descendingName) {
+            var levels = descendingName.split(".");
+            var name = item;
+            levels.forEach((nam) => {
+                name = name[nam];
+            });
             if (name.includes(searchBy)) {
                 performDelete(deleteName, id, altUrl);
             }
@@ -83,10 +92,11 @@ const getNodes = (
     searchBy: string,
     infoName?: string,
     additionalFields?: string,
-    altUrl?: string
+    altUrl?: string,
+    additionalInput?: string
 ) => {
-    const nameField = queryName === "paymentSettings" ? "" : getNameField(infoName);
-    const queryBody = `searchString: "${searchBy}", orderBy: {direction: ASC, field: ${queryName === "paymentSettings" ? "COMPANY_NAME" : "NAME"}}) {
+    const nameField = (queryName === "paymentSettings" || queryName === "addresses") ? "" : getNameField(infoName);
+    const queryBody = `${additionalInput ? additionalInput + ", " : ""}searchString: "${searchBy}", orderBy: {direction: ASC, field: ${queryName === "paymentSettings" ? "COMPANY_NAME" : "NAME"}}) {
         totalCount
         nodes {
             id
@@ -171,6 +181,57 @@ Cypress.Commands.add("deleteCypressItems", (
                 }
             } else {
                 deleteItems(nodes, deleteName, searchBy, infoName, altUrl);
+            }
+        }
+    });
+});
+
+// Command to delete items that require special search input
+Cypress.Commands.add("deleteSpecialCypressItems", (
+    queryName: string,
+    deleteName: string,
+    specialInput: string,   // EX: a companyId or customerId
+    specialInputName: string,   // What the special input is: if it's a companyId, pass in 'companyId'
+    searchString?: string,
+    altUrl?: string
+) => {
+    const searchBy = searchString ? searchString : "Cypress";
+    var extraField;
+    if (specialInputName === "customerId") {
+        extraField = `customer {
+            id
+            email
+            firstName
+            lastName
+        }`
+    } else if (specialInputName === "companyId") {
+        extraField = `company {
+            id
+            name
+        }`
+    }
+    Cypress.log({name: "deleteSpecialCypressItems", message: `Using ${queryName} to search for "${searchBy}"`});
+    const input = typeof specialInput === "string" ? `${specialInputName}: "${specialInput}"` : `${specialInputName}: ${specialInput}`;
+    getNodes(queryName, searchBy, undefined, extraField, altUrl, input).then((nodes) => {
+        if (nodes) {
+            if (specialInputName === "customerId") {
+                const validNodes = nodes.filter((node) => {
+                    return node.customer.email.toLowerCase().includes("cypress") || node.customer.firstName.toLowerCase().includes("cypress") || node.customer.lastName.toLowerCase().includes("cypress");
+                });
+                if (validNodes.length > 0) {
+                    deleteItems(validNodes, deleteName, searchBy, undefined, altUrl, "customer.email");
+                } else {
+                    Cypress.log({message: "No Cypress items found"});
+                }
+            } else if (specialInputName === "companyId") {
+                const validNodes = nodes.filter((node) => {
+                    return node.company.name.toLowerCase().includes("cypress");
+                });
+                if (validNodes.length > 0) {
+                    deleteItems(validNodes, deleteName, searchBy, undefined, altUrl, "company.name");
+                } else {
+                    Cypress.log({message: "No Cypress items found"});
+                }
             }
         }
     });

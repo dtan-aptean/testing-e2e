@@ -4,7 +4,7 @@
 
 import { toFormattedString } from "./commands";
 
-const defaultField = (queryName: string) => {
+export const defaultField = (queryName: string) => {
     var field = "NAME";
     switch(queryName) {
         case ("orders" || "refunds"):

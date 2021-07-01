@@ -252,7 +252,7 @@ describe("All Payments Table", function () {
 
     it("Failed payment should not have refund option", () => {
       cy.createAndPay(1, "6.61", "payment");
-      cy.wait(5000);
+      cy.wait(7000);
       cy.waitAfterLogIn(0, 5);
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
@@ -269,6 +269,71 @@ describe("All Payments Table", function () {
         .should("exist")
         .should("be.visible");
       cy.get("[data-cy=payment-details-refund]").should("not.exist");
+    });
+
+    it("Consolidated payment should have invoices section", () => {
+      cy.createAndPay(2, "10.00", "payment", 1, 2);
+      cy.wait(7000);
+      cy.waitAfterLogIn(0, 5);
+      cy.wait(35000);
+      cy.get("[data-cy=payment-tab]").click();
+      cy.get("[data-cy=refresh]").click();
+      cy.wait(5000);
+
+      //checking if status is still pending and then waiting accordingly
+      cy.get("body").then(($body) => {
+        if (
+          $body
+            .find("[data-cy=payments-table-body]")
+            .find("tr")
+            .eq(0)
+            .find("td:contains(Pending)").length
+        ) {
+          cy.wait(35000);
+          cy.get("[data-cy=refresh]").click();
+          cy.wait(5000);
+        }
+      });
+
+      cy.get("@firstRow").click();
+      cy.get("[data-cy=view-details]").should("be.enabled").click();
+      cy.get("[data-cy=payment-details-modal]")
+        .should("exist")
+        .should("be.visible");
+
+      cy.get("[data-cy=payment-details-modal]")
+        .parent()
+        .parent()
+        .within(() => {
+          cy.get('a[href="#"]').should("have.length.above", 1);
+        });
+
+      cy.get("[data-cy=request-refund]").should("have.length.above", 1);
+
+      //clicking refund button should open the refund modal
+      cy.get("[data-cy=request-refund]").first().click({ force: true });
+      cy.get('[data-cy="refund-dialog-title"]')
+        .should("exist")
+        .and("be.visible");
+      cy.get("[data-cy=cancel-refund]").click({ force: true });
+
+      //opening request modal from invoices section
+      cy.get("[data-cy=view-details]").should("be.enabled").click();
+      cy.get("[data-cy=payment-details-modal]")
+        .should("exist")
+        .should("be.visible");
+
+      cy.get("[data-cy=payment-details-modal]")
+        .parent()
+        .parent()
+        .within(() => {
+          cy.get('a[href="#"]').first().click({ force: true });
+        });
+
+      cy.get("[data-cy=payment-request-details-modal]")
+        .should("exist")
+        .and("be.visible");
+      cy.get("[data-cy=pr-details-close]").click({ force: true });
     });
   });
 });

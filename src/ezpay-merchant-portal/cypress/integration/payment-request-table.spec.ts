@@ -144,7 +144,7 @@ describe("Payment Request Table", function () {
       });
     });
 
-    it("should pass if the modal refund button is disabled for anything other than completed, partially refunded, or failed refunded", () => {
+    it("should pass if the modal refund button does not exist for anything other than completed, partially refunded, or failed refunded", () => {
       cy.wait(4000);
       cy.get("@rows").then(($el, index, $list) => {
         cy.wrap($el).find("td").eq(2).as("statusCell");
@@ -162,9 +162,9 @@ describe("Payment Request Table", function () {
             status === "Partially Refunded" ||
             status === "Refund Failed"
           ) {
-            cy.get("[data-cy=pr-details-refund]").should("exist");
+            cy.get("[data-cy=payment-history-refund]").should("exist");
           } else {
-            cy.get("[data-cy=pr-details-refund]").should("not.exist");
+            cy.get("[data-cy=payment-history-refund]").should("not.exist");
           }
           cy.get("[data-cy=pr-details-close]").click({ force: true });
         });
@@ -200,7 +200,9 @@ describe("Payment Request Table", function () {
           expect($cell.eq(0)).to.contain("Unpaid");
         })
         .click();
-      cy.get("[data-cy=refund]").should("be.disabled");
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]").should("not.exist");
+      cy.get("[data-cy=pr-details-close]").click({ force: true });
 
       //Checking in case of Completed
       cy.makePayment(1);
@@ -231,14 +233,16 @@ describe("Payment Request Table", function () {
           expect($cell.eq(0)).to.contain("Completed");
         })
         .click();
-      cy.get("[data-cy=refund]").should("exist");
-      cy.get("[data-cy=refund]")
-        .scrollIntoView()
-        .should("be.visible")
-        .should("be.enabled");
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]").should("exist");
+      cy.get("[data-cy=pr-details-close]").click({ force: true });
 
       //checking in case of patially refunded
-      cy.get("[data-cy=refund").click({ force: true });
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]")
+        .should("exist")
+        .first()
+        .click({ force: true });
       cy.get("[data-cy=partial-refund]").find("input").check();
       cy.get("[data-cy=refund-amount]").find("input").clear();
       cy.get("[data-cy=refund-amount]").find("input").type("5");
@@ -254,11 +258,9 @@ describe("Payment Request Table", function () {
           expect($cell.eq(0)).to.contain("Partially Refunded");
         })
         .click();
-      cy.get("[data-cy=refund]").should("exist");
-      cy.get("[data-cy=refund]")
-        .scrollIntoView()
-        .should("be.visible")
-        .should("be.enabled");
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]").should("exist");
+      cy.get("[data-cy=pr-details-close]").click({ force: true });
 
       //checking in case of refund failed
       // Is using intercept to stimulate the response for payment request with refund failed response
@@ -294,7 +296,18 @@ describe("Payment Request Table", function () {
                 referenceNumber: "invoice",
                 status: "REFUND_FAILED",
                 statusReason: null,
-                payments: [],
+                payments: [
+                  {
+                    amount: 100,
+                    amountRefunded: 0,
+                    attemptTimestamp: "2021-06-18T11:53:29.000Z",
+                    createdAt: "2021-06-18T11:53:28.620Z",
+                    id: "payment-id",
+                    refunds: [],
+                    status: "COMPLETED",
+                    __typename: "Payment",
+                  },
+                ],
                 owner: {
                   paymentId: null,
                   tenantId: "tenant-id",
@@ -332,14 +345,12 @@ describe("Payment Request Table", function () {
           expect($cell.eq(0)).to.contain("Refund Failed");
         })
         .click();
-      cy.get("[data-cy=refund]").should("exist");
-      cy.get("[data-cy=refund]")
-        .scrollIntoView()
-        .should("be.visible")
-        .should("be.enabled");
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]").should("exist");
+      cy.get("[data-cy=pr-details-close]").click({ force: true });
     });
 
-    it("should pass if the refund button opens the refund modal", () => {
+    it("should pass if the refund button opens the refund modal and payment link opens the payment details modal", () => {
       cy.wait(4000);
       // creating the completed payment request record to check the refund modal
       cy.createAndPay(1, "1.00", "refund");
@@ -368,40 +379,39 @@ describe("Payment Request Table", function () {
       cy.get("[data-cy=payment-request-table-body]")
         .find("tr")
         .eq(0)
-        .find("td")
-        .as("newCells");
+        .click({ force: true });
 
-      //Checking via refund button
-      cy.get("@newCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
-      cy.get("[data-cy=refund]").should("exist");
-      cy.get("[data-cy=refund]")
-        .scrollIntoView()
-        .should("be.visible")
-        .should("be.enabled");
-      cy.get("[data-cy=refund").click({ force: true });
-      cy.get("[data-cy=cancel-refund]").should("exist").and("be.visible");
-      cy.get("[data-cy=cancel-refund]").click();
-      cy.get("[data-cy=cancel-refund]").should("not.exist");
-
-      //checking via info modal
+      //checking for refund modal
       cy.wait(2000);
       cy.get("[data-cy=view-details]")
         .scrollIntoView()
         .should("be.visible")
         .should("be.enabled");
       cy.get("[data-cy=view-details]").click({ force: true });
-      cy.get("[data-cy=pr-details-refund]")
+      cy.get("[data-cy=payment-history-refund]")
         .should("exist")
-        .should("not.be.disabled")
-        .click();
-      cy.get("[data-cy=cancel-refund]").should("exist").and("be.visible");
-      cy.get("[data-cy=cancel-refund]").click();
+        .first()
+        .click({ force: true });
+      cy.get("[data-cy=cancel-refund]").should("exist");
+      cy.get("[data-cy=cancel-refund]").click({ force: true });
       cy.get("[data-cy=cancel-refund]").should("not.exist");
+
+      //checking for payment details modal
+      cy.wait(2000);
+      cy.get("[data-cy=view-details]")
+        .scrollIntoView()
+        .should("be.visible")
+        .should("be.enabled");
+      cy.get("[data-cy=view-details]").click({ force: true });
+      cy.get("[data-cy=payment-history-id]")
+        .should("exist")
+        .first()
+        .click({ force: true });
+      cy.get("[data-cy=payment-details-modal]")
+        .should("exist")
+        .should("be.visible");
+      cy.get("[data-cy=payment-details-close]").should("be.enabled").click();
+      cy.get("[data-cy=payment-details-modal]").should("not.exist");
     });
 
     it("should pass if a new request shows in the table", () => {
