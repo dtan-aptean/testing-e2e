@@ -282,143 +282,143 @@ describe('Query: categories', () => {
         });
     });
 
-    // context("Testing 'startDate' and 'endDate' inputs", () => {
-    //     const createdDateQueryBody = `edges {
-    //         cursor
-    //         node {
-    //             id
-    //         }
-    //     }
-    //     nodes {
-    //         id
-    //         ${infoName} {
-    //             name
-    //         }
-    //         createdDate
-    //     }
-    //     pageInfo {
-    //         endCursor
-    //         hasNextPage
-    //         hasPreviousPage
-    //         startCursor
-    //     }
-    //     totalCount`;
+    context("Testing 'startDate' and 'endDate' inputs", () => {
+        const createdDateQueryBody = `edges {
+            cursor
+            node {
+                id
+            }
+        }
+        nodes {
+            id
+            ${infoName} {
+                name
+            }
+            createdDate
+        }
+        pageInfo {
+            endCursor
+            hasNextPage
+            hasPreviousPage
+            startCursor
+        }
+        totalCount`;
 
-    //     it("Query using valid 'startDate' input will return only items with a createdDate >= that startDate", () => {
-    //         const query = `{
-    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-    //                 ${createdDateQueryBody}
-    //             }
-    //         }`;
-    //         cy.returnRandomDate(query, queryName).then((randomDate: string) => {
-    //             const startDateQuery = `{
-    //                 ${queryName}(${trueTotalInput}startDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
-    //                     ${createdDateQueryBody}
-    //                 }
-    //             }`;
-    //             cy.postAndValidate(startDateQuery, queryName).then((res) => {
-    //                 cy.verifyDateInput(res, queryName, randomDate);
-    //             });
-    //         });
-    //     });
+        it("Query using valid 'startDate' input will return only items with a createdDate >= that startDate", () => {
+            const query = `{
+                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                    ${createdDateQueryBody}
+                }
+            }`;
+            cy.returnRandomDate(query, queryName).then((randomDate: string) => {
+                const startDateQuery = `{
+                    ${queryName}(${trueTotalInput}startDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
+                        ${createdDateQueryBody}
+                    }
+                }`;
+                cy.postAndValidate(startDateQuery, queryName).then((res) => {
+                    cy.verifyDateInput(res, queryName, randomDate);
+                });
+            });
+        });
 
-    //     it("Query using valid 'endDate' input will return only items with a createdDate <= that endDate", () => {
-    //         const query = `{
-    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-    //                 ${createdDateQueryBody}
-    //             }
-    //         }`;
-    //         cy.returnRandomDate(query, queryName).then((randomDate: string) => {
-    //             const startDateQuery = `{
-    //                 ${queryName}(${trueTotalInput}endDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
-    //                     ${createdDateQueryBody}
-    //                 }
-    //             }`;
-    //             cy.postAndValidate(startDateQuery, queryName).then((res) => {
-    //                 cy.verifyDateInput(res, queryName, undefined, randomDate);
-    //             });
-    //         });
-    //     });
+        it("Query using valid 'endDate' input will return only items with a createdDate <= that endDate", () => {
+            const query = `{
+                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                    ${createdDateQueryBody}
+                }
+            }`;
+            cy.returnRandomDate(query, queryName).then((randomDate: string) => {
+                const startDateQuery = `{
+                    ${queryName}(${trueTotalInput}endDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
+                        ${createdDateQueryBody}
+                    }
+                }`;
+                cy.postAndValidate(startDateQuery, queryName).then((res) => {
+                    cy.verifyDateInput(res, queryName, undefined, randomDate);
+                });
+            });
+        });
 
-    //     it("Query using valid 'startDate' and 'endDate' input will return only items that obey startDate <= createdDate <= endDate", () => {
-    //         const query = `{
-    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-    //                 ${createdDateQueryBody}
-    //             }
-    //         }`;
-    //         cy.returnRandomDate(query, queryName, true).then((startDate: string) => {
-    //             cy.returnRandomDate(query, queryName, undefined, startDate).then((endDate: string) => {
-    //                 const startEndQuery = `{
-    //                     ${queryName}(${trueTotalInput}startDate: "${startDate}", endDate: "${endDate}", orderBy: {direction: ASC, field: NAME}) {
-    //                         ${createdDateQueryBody}
-    //                     }
-    //                 }`;
-    //                 cy.postAndValidate(startEndQuery, queryName).then((res) => {
-    //                     cy.verifyDateInput(res, queryName, startDate, endDate);
-    //                 });
-    //             });
-    //         });
-    //     });
+        it("Query using valid 'startDate' and 'endDate' input will return only items that obey startDate <= createdDate <= endDate", () => {
+            const query = `{
+                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                    ${createdDateQueryBody}
+                }
+            }`;
+            cy.returnRandomDate(query, queryName, true).then((startDate: string) => {
+                cy.returnRandomDate(query, queryName, undefined, startDate).then((endDate: string) => {
+                    const startEndQuery = `{
+                        ${queryName}(${trueTotalInput}startDate: "${startDate}", endDate: "${endDate}", orderBy: {direction: ASC, field: NAME}) {
+                            ${createdDateQueryBody}
+                        }
+                    }`;
+                    cy.postAndValidate(startEndQuery, queryName).then((res) => {
+                        cy.verifyDateInput(res, queryName, startDate, endDate);
+                    });
+                });
+            });
+        });
 
-    //     it("Query using an invalid 'startDate' input will return an error", () => {
-    //         const query = `{
-    //             ${queryName}(startDate: false, orderBy: {direction: ASC, field: NAME}) {
-    //                 ${createdDateQueryBody}
-    //             }
-    //         }`;
-    //         cy.postAndConfirmError(query);
-    //     });
+        it("Query using an invalid 'startDate' input will return an error", () => {
+            const query = `{
+                ${queryName}(startDate: false, orderBy: {direction: ASC, field: NAME}) {
+                    ${createdDateQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(query);
+        });
 
-    //     it("Query using an invalid 'endDate' input will return an error", () => {
-    //         const query = `{
-    //             ${queryName}(endDate: false, orderBy: {direction: ASC, field: NAME}) {
-    //                 ${createdDateQueryBody}
-    //             }
-    //         }`;
-    //         cy.postAndConfirmError(query);
-    //     });
+        it("Query using an invalid 'endDate' input will return an error", () => {
+            const query = `{
+                ${queryName}(endDate: false, orderBy: {direction: ASC, field: NAME}) {
+                    ${createdDateQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(query);
+        });
 
-    //     it("Query using invalid 'startDate' and 'endDate' inputs will return an error", () => {
-    //         const query = `{
-    //             ${queryName}(startDate: [], endDate: false, orderBy: {direction: ASC, field: NAME}) {
-    //                 ${createdDateQueryBody}
-    //             }
-    //         }`;
-    //         cy.postAndConfirmError(query);
-    //     });
+        it("Query using invalid 'startDate' and 'endDate' inputs will return an error", () => {
+            const query = `{
+                ${queryName}(startDate: [], endDate: false, orderBy: {direction: ASC, field: NAME}) {
+                    ${createdDateQueryBody}
+                }
+            }`;
+            cy.postAndConfirmError(query);
+        });
 
-    //     it("Query using valid 'startDate' and invalid 'endDate' inputs will return an error", () => {
-    //         const query = `{
-    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-    //                 ${createdDateQueryBody}
-    //             }
-    //         }`;
-    //         cy.returnRandomDate(query, queryName).then((randomDate: string) => {
-    //             const invalidQuery = `{
-    //                 ${queryName}(startDate: "${randomDate}", endDate: false, orderBy: {direction: ASC, field: NAME}) {
-    //                     ${createdDateQueryBody}
-    //                 }
-    //             }`;
-    //             cy.postAndConfirmError(invalidQuery);
-    //         });
-    //     });
+        it("Query using valid 'startDate' and invalid 'endDate' inputs will return an error", () => {
+            const query = `{
+                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                    ${createdDateQueryBody}
+                }
+            }`;
+            cy.returnRandomDate(query, queryName).then((randomDate: string) => {
+                const invalidQuery = `{
+                    ${queryName}(startDate: "${randomDate}", endDate: false, orderBy: {direction: ASC, field: NAME}) {
+                        ${createdDateQueryBody}
+                    }
+                }`;
+                cy.postAndConfirmError(invalidQuery);
+            });
+        });
 
-    //     it("Query using invalid 'startDate' and valid 'endDate' inputs will return an error", () => {
-    //         const query = `{
-    //             ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-    //                 ${createdDateQueryBody}
-    //             }
-    //         }`;
-    //         cy.returnRandomDate(query, queryName).then((randomDate: string) => {
-    //             const invalidQuery = `{
-    //                 ${queryName}(startDate: false, endDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
-    //                     ${createdDateQueryBody}
-    //                 }
-    //             }`;
-    //             cy.postAndConfirmError(invalidQuery);
-    //         });
-    //     });
-    // });
+        it("Query using invalid 'startDate' and valid 'endDate' inputs will return an error", () => {
+            const query = `{
+                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                    ${createdDateQueryBody}
+                }
+            }`;
+            cy.returnRandomDate(query, queryName).then((randomDate: string) => {
+                const invalidQuery = `{
+                    ${queryName}(startDate: false, endDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
+                        ${createdDateQueryBody}
+                    }
+                }`;
+                cy.postAndConfirmError(invalidQuery);
+            });
+        });
+    });
 
     context("Testing 'first' and 'last' inputs", () => {
         it("Query without 'first' or 'last' input arguments will return up to 25 items", () => {

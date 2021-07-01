@@ -189,7 +189,7 @@ export const createMutResMessage = (isSuccess: boolean, mutationName: string): s
             message = "returnReason";
             break;
         case "paymentSettings":
-            message = "paymentSettings";
+            message = "payment settings";
             break;
         case "inventory":
             message = "product quantity";

@@ -226,7 +226,11 @@ Cypress.Commands.add('returnRandomDate', (gqlQuery: string, queryName: string, g
         const { nodes } = res.body.data[queryName];
         assert.isNotEmpty(nodes, "Query returned nodes");
         const validValues = nodes.filter((node) => {
-            return node.created.startsWith("20");
+            if (node.created) {
+                return node.created.startsWith("20");
+            } else {
+                return node.createdDate.startsWith("20");
+            }
         });
         assert.isNotEmpty(validValues, "There are existing valid items");
         validValues.sort(function (a, b) {

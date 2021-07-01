@@ -44,7 +44,7 @@ describe('Query: paymentSettings', () => {
             const { nodes, edges, totalCount } = res.body.data[queryName];
             expect(nodes.length).to.be.eql(edges.length);
             if (totalCount > nodes.length) {
-                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", ": "";
+                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", " : "";
             }
         });
     });
@@ -87,7 +87,7 @@ describe('Query: paymentSettings', () => {
         it("Query without 'first' or 'last' input arguments will return up to 25 items", () => {
             cy.queryUpTo25(queryName, standardQuery);
         });
-        
+
         it("Query with valid 'first' input argument will return only that amount of items", () => {
             cy.queryFirst(queryName, standardQuery, standardQueryBody);
         });
@@ -191,7 +191,7 @@ describe('Query: paymentSettings', () => {
         it("Query with a valid 'before' input argument will return all items before that value", () => {
             cy.queryBefore(queryName, standardQuery, standardQueryBody);
         });
-        
+
         it("Query with a valid 'after' input argument will return all items after that value", () => {
             cy.queryAfter(queryName, standardQueryBody, trueTotalInput);
         });
@@ -313,7 +313,7 @@ describe('Query: paymentSettings', () => {
     context("Testing 'companyIds' input", () => {
         // Items created for the companyIds test
         const createdItems = [] as SupplementalItemRecord[];
-        const createdCompanies =  [] as SupplementalItemRecord[];
+        const createdCompanies = [] as SupplementalItemRecord[];
         const deleteName = "deletePaymentSettings";
         const createMutName = "createPaymentSettings";
         const createPath = "paymentSettings";
@@ -382,7 +382,7 @@ describe('Query: paymentSettings', () => {
                 }
             }`;
             cy.postAndConfirmError(gqlQuery).then((res) => {
-                expect(res.body.errors[0].message).to.have.string("String cannot represent a non string value: "+ companyIds[0]);
+                expect(res.body.errors[0].message).to.have.string("String cannot represent a non string value: " + companyIds[0]);
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
             });
         });
@@ -441,7 +441,7 @@ describe('Query: paymentSettings', () => {
                 const { deletionIds, itemIds } = results;
                 addCreated(true, deletionIds);
                 const companyId = itemIds[0];
-                const paymentSettingsInput =  {
+                const paymentSettingsInput = {
                     companyId: companyId
                 };
                 cy.createAssociatedItems(1, createMutName, createPath, queryName, paymentSettingsInput, additionalRes).then((results) => {
@@ -477,7 +477,7 @@ describe('Query: paymentSettings', () => {
                 addCreated(true, deletionIds);
                 const companyIdOne = itemIds[0];
                 const companyIdTwo = itemIds[1];
-                const inputOne =  {
+                const inputOne = {
                     companyId: companyIdOne
                 };
                 cy.createAssociatedItems(1, createMutName, createPath, queryName, inputOne, additionalRes).then((results) => {
@@ -518,7 +518,7 @@ describe('Query: paymentSettings', () => {
         });
 
         it("Query with 'companyId' input that has no associated items will return an empty array", () => {
-            const companyInput = {name: `Cypress ${queryName} no association test`, integrationKey: `CypressUnaffiliated${Cypress._.random(10000, 100000)}`};
+            const companyInput = { name: `Cypress ${queryName} no association test`, integrationKey: `CypressUnaffiliated${Cypress._.random(10000, 100000)}` };
             cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, companyInput).then((results) => {
                 const { deletionIds, itemIds } = results;
                 addCreated(true, deletionIds);
@@ -539,12 +539,12 @@ describe('Query: paymentSettings', () => {
         });
 
         it("Query using the 'productId' of a deleted product will return an error", () => {
-            const companyInput = {name: `Cypress ${queryName} deleted test`, integrationKey: `CypressDeleted${Cypress._.random(10000, 100000)}`};
+            const companyInput = { name: `Cypress ${queryName} deleted test`, integrationKey: `CypressDeleted${Cypress._.random(10000, 100000)}` };
             cy.createAssociatedItems(1, companyMutName, companyPath, companyQuery, companyInput).then((results) => {
                 const { deletionIds, itemIds } = results;
                 addCreated(true, deletionIds);
                 const companyId = itemIds[0];
-                const paymentSettingsInput =  {
+                const paymentSettingsInput = {
                     companyId: companyId
                 };
                 cy.createAssociatedItems(1, createMutName, createPath, queryName, paymentSettingsInput, additionalRes).then((results) => {

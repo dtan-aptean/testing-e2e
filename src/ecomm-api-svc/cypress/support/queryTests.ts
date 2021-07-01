@@ -254,7 +254,7 @@ Cypress.Commands.add("queryBeforeAfter", (queryName: string, standardQueryBody: 
         }
     }`;
     cy.postAndConfirmError(gqlQuery, true).then((res) => {
-        expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
+        expect(res.body.errors[0].message[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
     });
 });
 
