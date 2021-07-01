@@ -135,7 +135,7 @@ describe('Mutation: updateInventory', () => {
                         details {
                             code
                             message
-                            targetS
+                            target
                         }
                     }
                 }
