@@ -6,11 +6,15 @@ import { mainCategory, mainCategorySeo, mainProductOne, secondCategory, secondPr
 Cypress.Commands.add("allowLoad", () => {
   var loadId = "#ajaxBusy";
   // Accounts for public store where the busy symbol has a different identifier
-  if (Cypress.$("#ajaxBusy").length === 0) {
-    if (Cypress.$(".ajax-loading-block-window").length > 0) {
+  if (Cypress.$("#ajaxBusy:visible").length === 0) {
+    if (Cypress.$(".ajax-loading-block-window:visible").length > 0) {
       loadId = ".ajax-loading-block-window";
+    } else if (Cypress.$(".nopAjaxCartPanelAjaxBusy:visible").length > 0) {
+      loadId = ".nopAjaxCartPanelAjaxBusy";
+    } else if (Cypress.$("#cciframe-processing:visible").length > 0) {
+      loadId = "#cciframe-processing";
     } else {
-      return;
+      return; 
     }
   }
   // No need to wait 10 seconds if the symbol isn't there
@@ -199,12 +203,12 @@ Cypress.Commands.add("addToCart", { prevSubject: 'element' }, (subject, optionOb
       clickOptions = optionObject;
       clickOptions.log = false;
   } else {
-      //clickOptions = { log: false };
+      clickOptions = { log: false };
   }
   cy.wrap(subject, { log: false }).click(clickOptions);
   cy.wait(1000);
   return cy.allowLoad().then(() => {
-      if (Cypress.$(".productAddedToCartWindow:visible").length > 0) {
+      if (Cypress.$(".productAddedToCartWindow").parent(".ajaxCart:visible").length > 0) {
           cy.get(".continueShoppingLink").click(clickOptions);
           cy.wait(200);
       }
@@ -384,6 +388,7 @@ Cypress.Commands.add("addToCartAndCheckout", (productName?: string) => {
   return cy.contains(product).parents(".product-item").then(($product) => {
     if ($product.find(".product-box-add-to-cart-button:visible").length > 0) {
       cy.wrap($product).find(".product-box-add-to-cart-button").click();
+      cy.allowLoad();
     } else {
       cy.contains(product).click();
       cy.wait(1000);
@@ -1146,42 +1151,88 @@ Cypress.Commands.add("addNewDiscount", (options) => {
 });
 
 // Fills out billing information
-Cypress.Commands.add("fillOutBilling", () => {
+Cypress.Commands.add("fillOutBilling", (
+  billingInfo?: {
+    firstName: string,
+    lastName: string,
+    email: string,
+    country: string,
+    region: string,
+    city: string,
+    address1: string,
+    postal: string,
+    phoneNum: string,
+    uncheckShipping?: boolean,
+    company?: string,
+    address2?: string,
+    faxNum?: string
+  }
+) => {
   Cypress.log({
     name: "fillOutBilling"
   });
   cy.intercept("/checkout/OpcSaveBilling/").as("billingSaved");
   cy.get("#co-billing-form").then(($el) => {
     const select = $el.find(".select-billing-address");
-    const userDetails = Cypress.env("userDetails");
-    var alphaAddress = `${userDetails.first} ${userDetails.last}, 4325 Alexander Dr #100, Alpharetta, Georgia 30022, United States`;
-    if (select.length === 0) {
-      // Inputting Aptean's address
-      cy.get("#BillingNewAddress_CountryId").select("United States");
-      cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
-      cy.get("#BillingNewAddress_City").type("Alpharetta");
-      cy.get("#BillingNewAddress_Address1").type("4321 Alexander Dr #100");
-      cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
-      cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
-      cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
-      cy.get(".field-validation-error").should("have.length", 0);
-    } else if (!Cypress.$("#billing-address-select").text().includes(alphaAddress)) {
-      cy.get("#billing-address-select").select("New Address");
-      // Inputting Aptean's address
-      cy.get("#BillingNewAddress_FirstName").clear().type(userDetails.first);
-      cy.get("#BillingNewAddress_LastName").clear().type(userDetails.last);
-      cy.get("#BillingNewAddress_Email").clear().type(Cypress.config("username"));
-      cy.get("#BillingNewAddress_Company").clear().type(userDetails.company);
-      cy.get("#BillingNewAddress_CountryId").select("United States");
-      cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
-      cy.get("#BillingNewAddress_City").type("Alpharetta");
-      cy.get("#BillingNewAddress_Address1").type("4325 Alexander Dr #100");
-      cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
-      cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
-      cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
-      cy.get(".field-validation-error").should("have.length", 0);
-    } else if (!Cypress.$("#billing-address-select > option:selected").text().includes(alphaAddress)) {
-      cy.get("#billing-address-select").select(alphaAddress);
+    if (billingInfo) {
+      if (select.length > 0) {
+        cy.get("#billing-address-select").select("New Address");
+        cy.wait(200);
+      }
+      if (billingInfo.uncheckShipping) {
+        if (Cypress.$("#ShipToSameAddress").length > 0 && Cypress.$("#ShipToSameAddress").prop("checked") === true) {
+          cy.get("#ShipToSameAddress").toggle();
+        }
+      }
+      cy.get("#BillingNewAddress_FirstName").clear().type(billingInfo.firstName);
+      cy.get("#BillingNewAddress_LastName").clear().type(billingInfo.lastName);
+      cy.get("#BillingNewAddress_Email").clear().type(billingInfo.email);
+      if (billingInfo.company) {
+        cy.get("#BillingNewAddress_Company").clear().type(billingInfo.company);
+      }
+      cy.get("#BillingNewAddress_CountryId").select(billingInfo.country);
+      cy.get("#BillingNewAddress_StateProvinceId").select(billingInfo.region);
+      cy.get("#BillingNewAddress_City").type(billingInfo.city);
+      cy.get("#BillingNewAddress_Address1").type(billingInfo.address1);
+      if (billingInfo.address2) {
+        cy.get("#BillingNewAddress_Address2").type(billingInfo.address2);
+      }
+      cy.get("#BillingNewAddress_ZipPostalCode").type(billingInfo.postal);
+      cy.get("#BillingNewAddress_PhoneNumber").type(billingInfo.phoneNum);
+      if (billingInfo.faxNum) {
+        cy.get("#BillingNewAddress_FaxNumber").type(billingInfo.faxNum);
+      }
+    } else {
+      const userDetails = Cypress.env("userDetails");
+      var alphaAddress = `${userDetails.first} ${userDetails.last}, 4325 Alexander Dr #100, Alpharetta, Georgia 30022, United States`;
+      if (select.length === 0) {
+        // Inputting Aptean's address
+        cy.get("#BillingNewAddress_CountryId").select("United States");
+        cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
+        cy.get("#BillingNewAddress_City").type("Alpharetta");
+        cy.get("#BillingNewAddress_Address1").type("4321 Alexander Dr #100");
+        cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
+        cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
+        cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
+        cy.get(".field-validation-error").should("have.length", 0);
+      } else if (!Cypress.$("#billing-address-select").text().includes(alphaAddress)) {
+        cy.get("#billing-address-select").select("New Address");
+        // Inputting Aptean's address
+        cy.get("#BillingNewAddress_FirstName").clear().type(userDetails.first);
+        cy.get("#BillingNewAddress_LastName").clear().type(userDetails.last);
+        cy.get("#BillingNewAddress_Email").clear().type(Cypress.config("username"));
+        cy.get("#BillingNewAddress_Company").clear().type(userDetails.company);
+        cy.get("#BillingNewAddress_CountryId").select("United States");
+        cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
+        cy.get("#BillingNewAddress_City").type("Alpharetta");
+        cy.get("#BillingNewAddress_Address1").type("4325 Alexander Dr #100");
+        cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
+        cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
+        cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
+        cy.get(".field-validation-error").should("have.length", 0);
+      } else if (!Cypress.$("#billing-address-select > option:selected").text().includes(alphaAddress)) {
+        cy.get("#billing-address-select").select(alphaAddress);
+      }
     }
   });
   cy.get(".new-address-next-step-button").eq(0).click();

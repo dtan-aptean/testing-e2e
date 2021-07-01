@@ -177,7 +177,11 @@ describe("Ecommerce", function () {
       cy.get(".checkout-as-guest-button").click();
       cy.wait(500);
 
-      cy.get("#ShipToSameAddress").uncheck();
+      cy.get("#co-billing-form").then(($el) => {
+        if ($el.find("#ShipToSameAddress").length > 0 && $el.find("#ShipToSameAddress").prop("checked") === true) {
+          cy.get("#ShipToSameAddress").uncheck();
+        }
+      });
       // Test Billing Validation, should get errors
       cy.get(".new-address-next-step-button").eq(0).click();
       cy.get(".field-validation-error").should("have.length", 8);
@@ -240,7 +244,11 @@ describe("Ecommerce", function () {
       cy.get(".checkout-as-guest-button").click();
       cy.wait(500);
 
-      cy.get("#ShipToSameAddress").uncheck();
+      cy.get("#co-billing-form").then(($el) => {
+        if ($el.find("#ShipToSameAddress").length > 0 && $el.find("#ShipToSameAddress").prop("checked") === true) {
+          cy.get("#ShipToSameAddress").uncheck();
+        }
+      });
       // Input billing info, using Aptean's address
       cy.get("#BillingNewAddress_FirstName").type("Cypress");
       cy.get("#BillingNewAddress_LastName").type("Guest");
