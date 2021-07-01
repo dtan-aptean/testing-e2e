@@ -613,69 +613,8 @@ describe('Query: vendors', () => {
             });
         });
 
-        it('Query with address field will return valid data and correct fields', () => {
-            const gqlQuery = `{
-                ${queryName}(orderBy: {direction: ASC, field: NAME}) {
-                    edges {
-                        cursor
-                        node {
-                            id
-                        }
-                    }
-                    nodes {
-                        address {
-                            city
-                            country
-                            line1
-                            line2
-                            postalCode
-                            region
-                        }
-                    }
-                    pageInfo {
-                        endCursor
-                        hasNextPage
-                        hasPreviousPage
-                        startCursor
-                    }
-                    totalCount
-                }
-            }`;
-            cy.postAndValidate(gqlQuery, queryName).then((res) => {
-                if (res.body.data[queryName].nodes.length > 0) {
-                    const nodesPath = res.body.data[queryName].nodes;
-                    nodesPath.forEach((item) => {
-                        // has address field
-                        expect(item).to.have.property('address');
-                        if (item.address !== null) {
-                            expect(item.address).to.have.property('city');
-                            if (item.address.city !== null) {
-                                expect(item.address.city).to.be.a('string');
-                            }
-                            expect(item.address).to.have.property('country');
-                            if (item.address.country !== null) {
-                                expect(item.address.country).to.be.a('string');
-                            }
-                            expect(item.address).to.have.property('line1');
-                            if (item.address.line1 !== null) {
-                                expect(item.address.line1).to.be.a('string');
-                            }
-                            expect(item.address).to.have.property('line2');
-                            if (item.address.line2 !== null) {
-                                expect(item.address.line2).to.be.a('string');
-                            }
-                            expect(item.address).to.have.property('postalCode');
-                            if (item.address.postalCode !== null) {
-                                expect(item.address.postalCode).to.be.a('string');
-                            }
-                            expect(item.address).to.have.property('region');
-                            if (item.address.region !== null) {
-                                expect(item.address.region).to.be.a('string');
-                            }
-                        }
-                    });
-                }
-            });
+        it("Query with address field will return valid data and correct fields", () => {
+            cy.queryForAddress(queryName);
         });
     });
 
@@ -710,23 +649,27 @@ describe('Query: vendors', () => {
 
         it("Using ids from a different item as 'ids' input returns an error", () => {
             const extraQueryName = "taxCategories";
-            const extraStandardQueryBody = `edges {
-                cursor
-                node {
-                    id
+            const extraQuery = `{
+                ${extraQueryName}(orderBy: {direction: ASC, field: NAME}) {
+                    edges {
+                        cursor
+                        node {
+                            id
+                        }
+                    }
+                    nodes {
+                        id
+                    }
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                        hasPreviousPage
+                        startCursor
+                    }
+                    totalCount
                 }
-            }
-            nodes {
-                id
-            }
-            pageInfo {
-                endCursor
-                hasNextPage
-                hasPreviousPage
-                startCursor
-            }
-            totalCount`;
-            cy.queryAndValidateDifferentItemIds(extraQueryName, extraStandardQueryBody, queryName, standardQueryBody);
+            }`;
+            cy.queryAndValidateDifferentItemIds(extraQueryName, extraQuery, queryName, standardQueryBody);
         });
     });
 });

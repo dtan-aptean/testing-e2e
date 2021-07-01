@@ -334,6 +334,12 @@ Cypress.Commands.add("getMerchantIndex", (amount) => {
               owner{
                 tenantId
               }
+              features {
+                paymentRequests {
+                  consolidatedPayment
+                  partialPayment
+                }
+              }
             }
           }
         }
@@ -341,16 +347,16 @@ Cypress.Commands.add("getMerchantIndex", (amount) => {
   cy.postGQL(gqlQuery).then((resp) => {
     // should be 200 ok
     cy.expect(resp.isOkStatusCode).to.be.equal(true);
+    let consolidatedPayment = null;
+    let partialPayment = null;
     let merchantIndex = 0;
     const userTenant = Cypress.env("x-aptean-tenant");
     const merchantSummary =
       resp.body.data.payerTransactionSummaryByMerchant.merchantSummary;
 
-    console.log(merchantSummary);
-
     const sortedMerchantSummary = merchantSummary.slice().sort((a, b) => {
       if (a.merchantInfo.name && b.merchantInfo.name) {
-        return a.merchantInfo.namee > b.merchantInfo.name ? 1 : -1;
+        return a.merchantInfo.name > b.merchantInfo.name ? 1 : -1;
       }
       return 0;
     });
@@ -358,12 +364,18 @@ Cypress.Commands.add("getMerchantIndex", (amount) => {
     sortedMerchantSummary.forEach((element, index) => {
       if (element.merchantInfo.owner.tenantId === userTenant) {
         merchantIndex = index;
+        consolidatedPayment =
+          element.merchantInfo.features.paymentRequests.consolidatedPayment;
+        partialPayment =
+          element.merchantInfo.features.paymentRequests.partialPayment;
       }
     });
 
     const response = {
-      merchantIndex: merchantIndex,
+      merchantIndex,
       merchantLength: sortedMerchantSummary.length,
+      consolidatedPayment,
+      partialPayment,
     };
     return response;
   });
@@ -373,7 +385,7 @@ Cypress.Commands.add("getMerchantIndex", (amount) => {
 /**
  * count - the number of payment requests that should be paid
  */
-Cypress.Commands.add("makePayment", (count) => {
+Cypress.Commands.add("makePayment", (count, consolidatedPaymentCount) => {
   const waitAfterRootPageVisit = (waitCount: number) => {
     if (waitCount > 10) {
       return;
@@ -400,7 +412,7 @@ Cypress.Commands.add("makePayment", (count) => {
         !$rootBody.find("div:contains(Unpaid Invoices)").length
       ) {
         cy.wait(10000);
-        waitAfterSignInClick(0);
+        waitAfterSignInClick(waitCount + 1);
       }
       return;
     });
@@ -555,14 +567,29 @@ Cypress.Commands.add("makePayment", (count) => {
                 cy.wait(18000);
               }
               // Let table load
-              // Grab the first payment from the table and pay by credit card
+              // Grab the payment from the table according to consolidated check and pay by credit card
               waitForRequestLoading(0);
-              cy.get("table")
-                .find("tr")
-                .eq(0)
-                .within(() => {
-                  cy.get("button").click({ force: true });
-                });
+              const consolidated =
+                consolidatedPaymentCount && resp.consolidatedPayment === true
+                  ? consolidatedPaymentCount
+                  : 1;
+
+              for (let i = 0; i < consolidated; i++) {
+                cy.get("table")
+                  .find("tr")
+                  .eq(i)
+                  .within(() => {
+                    cy.get("button").click({ force: true });
+                  });
+              }
+
+              if (resp.consolidatedPayment === true) {
+                cy.get("button:contains('PAY SELECTED')")
+                  .last()
+                  .click({ force: true });
+              } else if (resp.partialPayment === true) {
+                cy.get("button:contains('PAY')").last().click({ force: true });
+              }
 
               // Wait for page to load
               cy.wait(5000);
@@ -618,7 +645,7 @@ Cypress.Commands.add("makePayment", (count) => {
  */
 Cypress.Commands.add(
   "createAndPay",
-  (requestCount, amount, refPrefix, paymentCount) => {
+  (requestCount, amount, refPrefix, paymentCount, consolidatedPaymentCount) => {
     Cypress.log({
       name: "createAndPay",
       message: `|${requestCount}|${amount ? amount + "|" : ""}${
@@ -661,7 +688,7 @@ Cypress.Commands.add(
     // Give it a moment to make sure all requests got in
     cy.wait(3000);
     // Call the payment function
-    cy.makePayment(paymentCount || requestCount);
+    cy.makePayment(paymentCount || 1, consolidatedPaymentCount);
     // Give it time to get in
     cy.wait(5000);
     // Return to merchant portal

@@ -375,8 +375,8 @@ Cypress.Commands.add("validateNameSearch", (res, queryName: string, searchValue:
     const totalCount = res.body.data[queryName].totalCount;
     const nodes = res.body.data[queryName].nodes;
     const edges = res.body.data[queryName].edges;
-    expect(totalCount).to.be.eql(nodes.length);
-    expect(totalCount).to.be.eql(edges.length);
+    expect(totalCount).to.be.gte(nodes.length);
+    expect(totalCount).to.be.gte(edges.length);
     for (var i = 0; i < nodes.length; i++) {
         if(queryName=="addresses"){
             expect(nodes[i].contactDetails.firstName.toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);

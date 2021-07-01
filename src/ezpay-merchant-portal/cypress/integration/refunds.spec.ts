@@ -11,7 +11,7 @@ describe("Merchant portal", function () {
     beforeEach(() => {
       // navigate to home screen
       cy.visit("/");
-      cy.wait(5000);
+      cy.wait(7000);
       cy.waitAfterLogIn(0, 5);
 
       cy.get("[data-cy=payment-tab]").click();
@@ -33,7 +33,7 @@ describe("Merchant portal", function () {
         .as("firstPaymentRequestCells");
     });
     //need to change to general user
-    it("Unpaid payment cannot refund", () => {
+    it("Unpaid payment request cannot refund", () => {
       const amount = 10;
       const invoicePath = "sample.pdf";
       const referenceNumber = `${Date.now()
@@ -56,12 +56,9 @@ describe("Merchant portal", function () {
         })
         .click();
 
-      // checking via refund button
-      cy.get("[data-cy=refund]").should("be.disabled");
-
       // checking via info modal
       cy.get("[data-cy=view-details]").should("be.visible").click();
-      cy.get("[data-cy=pr-details-refund]").should("not.exist");
+      cy.get("[data-cy=payment-history-refund]").should("not.exist");
     });
 
     it("Merchant clicks the refund button and an issue refund modal opens", () => {
@@ -102,8 +99,8 @@ describe("Merchant portal", function () {
         .should("exist")
         .and("be.visible");
       // Close the modal
-      cy.get("[data-cy=cancel-refund]").should("exist").and("be.visible");
-      cy.get("[data-cy=cancel-refund]").click();
+      cy.get("[data-cy=cancel-refund]").should("exist");
+      cy.get("[data-cy=cancel-refund]").click({ force: true });
 
       //Checking in payment requests
       cy.get("[data-cy=payment-requests-tab]").click();
@@ -116,14 +113,20 @@ describe("Merchant portal", function () {
           expect($cell.eq(0)).to.contain("Completed");
         })
         .click();
-      cy.get('[data-cy="refund"]').should("exist").click();
+
+      //opening refund modal from payment request
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]")
+        .should("exist")
+        .first()
+        .click({ force: true });
       // Make sure the modal is showing
       cy.get('[data-cy="refund-dialog-title"]')
         .should("exist")
         .and("be.visible");
       // Close the modal
-      cy.get("[data-cy=cancel-refund]").should("exist").and("be.visible");
-      cy.get("[data-cy=cancel-refund]").click();
+      cy.get("[data-cy=cancel-refund]").should("exist");
+      cy.get("[data-cy=cancel-refund]").click({ force: true });
     });
 
     it("User clicks full refund and the amount is disabled", () => {
@@ -161,7 +164,11 @@ describe("Merchant portal", function () {
           expect($cell.eq(0)).to.contain("Completed");
         })
         .click();
-      cy.get('[data-cy="refund"]').should("exist").click();
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]")
+        .should("exist")
+        .first()
+        .click({ force: true });
       // Make sure the modal is showing
       cy.get('[data-cy="refund-dialog-title"]')
         .should("exist")
@@ -209,7 +216,11 @@ describe("Merchant portal", function () {
           expect($cell.eq(0)).to.contain("Completed");
         })
         .click();
-      cy.get('[data-cy="refund"]').should("exist").click();
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]")
+        .should("exist")
+        .first()
+        .click({ force: true });
       // Make sure the modal is showing
       cy.get('[data-cy="refund-dialog-title"]')
         .should("exist")
@@ -268,7 +279,11 @@ describe("Merchant portal", function () {
           expect($cell.eq(0)).to.contain("Completed");
         })
         .click();
-      cy.get('[data-cy="refund"]').should("exist").click();
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]")
+        .should("exist")
+        .first()
+        .click({ force: true });
       // Make sure the modal is showing
       cy.get('[data-cy="refund-dialog-title"]')
         .should("exist")
@@ -332,7 +347,11 @@ describe("Merchant portal", function () {
           expect($cell.eq(0)).to.contain("Completed");
         })
         .click();
-      cy.get('[data-cy="refund"]').should("exist").click();
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]")
+        .should("exist")
+        .first()
+        .click({ force: true });
       // Make sure the modal is showing
       cy.get('[data-cy="refund-dialog-title"]')
         .should("exist")
@@ -383,7 +402,11 @@ describe("Merchant portal", function () {
           expect($cell.eq(0)).to.contain("Completed");
         })
         .click();
-      cy.get('[data-cy="refund"]').should("exist").click();
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]")
+        .should("exist")
+        .first()
+        .click({ force: true });
       // Make sure the modal is showing
       cy.get("[data-cy=refund-dialog-title]").should("exist").and("be.visible");
       // Close the modal
@@ -407,8 +430,11 @@ describe("Merchant portal", function () {
         })
         .click();
 
-      cy.get("[data-cy=refund]").should("not.be.disabled");
-      cy.get("[data-cy=refund]").click();
+      cy.get("[data-cy=view-details]").should("be.visible").click();
+      cy.get("[data-cy=payment-history-refund]")
+        .should("exist")
+        .first()
+        .click({ force: true });
       // Make sure the modal is showing
       cy.get("[data-cy=refund-dialog-title]").should("exist").and("be.visible");
       // Select full refund
@@ -428,7 +454,7 @@ describe("Merchant portal", function () {
       cy.get("@firstPaymentRequestCells")
         .eq(2)
         .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Refund Pending");
+          expect($cell.eq(0)).to.contain("Refund");
         });
 
       cy.get("[data-cy=payment-tab]").click();
@@ -438,7 +464,7 @@ describe("Merchant portal", function () {
       cy.get("@firstPaymentCells")
         .eq(2)
         .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Refund Pending");
+          expect($cell.eq(0)).to.contain("Refund");
         });
     });
 
@@ -487,7 +513,7 @@ describe("Merchant portal", function () {
       cy.get("@firstPaymentCells")
         .eq(2)
         .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Refund Pending");
+          expect($cell.eq(0)).to.contain("Refund");
         });
 
       //checking payment request status
