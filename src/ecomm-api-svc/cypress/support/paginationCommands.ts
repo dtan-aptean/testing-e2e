@@ -161,9 +161,10 @@ Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number
             expect(fOL.toLowerCase()).to.be.eql("last");
         }
     });
-    const nodes = res.body.data[queryName].nodes;
-    const edges = res.body.data[queryName].edges;
-    const pageInfo = res.body.data[queryName].pageInfo;
+    const items = res.body.data[queryName];
+    const nodes = items.nodes;
+    const edges = items.edges;
+    const pageInfo = items.pageInfo;
     expect(nodes.length).to.be.eql(value);
     expect(edges.length).to.be.eql(value);
     cy.get('@orgData').then((orgRes) => {
@@ -190,16 +191,20 @@ Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number
                 f = value;
             }
             expect(pageInfo.startCursor).not.to.be.eql(orgPageInfo.startCursor, 'Verify startCursor');
-            expect(pageInfo.startCursor).to.be.eql(orgEdges[f].cursor, 'Verify startCursor');
-            expect(pageInfo.endCursor).to.be.eql(orgPageInfo.endCursor, 'Verify endCursor');
-            for (var i = 0; i < value; i++) {
-                expect(nodes[i][idFormat]).to.be.eql(orgNodes[f][idFormat], 'Verifying included nodes');
-                expect(edges[i].cursor).to.be.eql(orgEdges[f].cursor, 'Verifying included cursors');
-                expect(edges[i].node[idFormat]).to.be.eql(orgEdges[f].node[idFormat], "Verifying edge's included nodes");
-                expect(nodes[i][idFormat]).to.be.eql(orgEdges[f].node[idFormat], `Verifying node[${i}] matches original edge[${f}].node`);
-                f++;
-            }
-        }
+            // The following only works when assuming we return all items and use specific subsets of the full list. 
+            // Querying large lists is problematic and non-implemented, so this will not necessarily be used.
+            if (items.totalCount === totalLength) {
+                expect(pageInfo.startCursor).to.be.eql(orgEdges[f].cursor, 'Verify startCursor');
+                expect(pageInfo.endCursor).to.be.eql(orgPageInfo.endCursor, 'Verify endCursor');
+                for (var i = 0; i < value; i++) {
+                    expect(nodes[i][idFormat]).to.be.eql(orgNodes[f][idFormat], 'Verifying included nodes');
+                    expect(edges[i].cursor).to.be.eql(orgEdges[f].cursor, 'Verifying included cursors');
+                    expect(edges[i].node[idFormat]).to.be.eql(orgEdges[f].node[idFormat], "Verifying edge's included nodes");
+                    expect(nodes[i][idFormat]).to.be.eql(orgEdges[f].node[idFormat], `Verifying node[${i}] matches original edge[${f}].node`);
+                    f++;
+                };
+            };
+        };
     });
 });
 
