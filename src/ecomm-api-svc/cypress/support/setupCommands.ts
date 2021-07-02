@@ -5,24 +5,15 @@
  * Since API tests don't rely on existing items, it doesn't matter if the ENV isn't perfectly cleared beforehand
  */
 
+import { codeMessageError } from "./mutationTests";
+
 // Call the mutation to delete an item. Will not fail if the item isn't successfully deleted.
 // Will log success or failure and include errors in the log
 const performDelete = (deleteName: string, id: string, altUrl?: string) => {
     cy.wait(2000);
     var mutation = `mutation {
         ${deleteName}(input: {id: "${id}"}){
-            code
-            message
-            errors {
-                code
-                message
-                domain
-                details {
-                    code
-                    message
-                    target
-                }
-            }
+            ${codeMessageError}
         }
     }`;
     cy.postGQL(mutation, altUrl).then((res) => {
