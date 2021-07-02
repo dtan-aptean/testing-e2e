@@ -99,23 +99,57 @@ Cypress.Commands.add("addToCart", { prevSubject: 'element' }, (subject, optionOb
 });
 
 // Log in to the storefront
-Cypress.Commands.add("storefrontLogin", () => {
+Cypress.Commands.add("storefrontLogin", (loginEmail?: string, loginPassword?: string) => {
     Cypress.log({
         name: "storefrontLogin"
     });
     cy.on("uncaught:exception", (err, runnable) => {
         return false;
     });
+    var email = loginEmail ? loginEmail : Cypress.env("storefrontLogin");
+    var password = loginPassword ? loginPassword : Cypress.env("storefrontPassword");    
     cy.get(".header-links").then(($el) => {
         if (!$el[0].innerText.includes('LOG OUT')) {
             cy.wrap($el).find(".ico-login").click({force: true});
             cy.wait(200);
-            cy.get("#Email").type(Cypress.env("storefrontLogin"), {force: true});
-            cy.get("#Password").type(Cypress.env("storefrontPassword"), {force: true});
+            cy.get("#Email").type(email, {force: true});
+            cy.get("#Password").type(password, {force: true});
             cy.get(".login-button").click({force: true});
             cy.wait(200);
             cy.setTheme();
         }
+    });
+});
+
+// Register in to the storefront
+Cypress.Commands.add("storefrontRegister", (registerEmail?: string, registerPassword?: string) => {
+    Cypress.log({
+        name: "storefrontRegister"
+    });
+    cy.on("uncaught:exception", (err, runnable) => {
+        return false;
+    });
+    var email = registerEmail ? registerEmail : "cypress.tester" + Cypress._.random(0, 1000000) + "@email.com";
+    var password = registerPassword ? registerPassword : "CypressUser";
+    cy.get(".header-links").then(($el) => {
+        if (!$el[0].innerText.includes('LOG OUT')) {
+            cy.wrap($el).find(".ico-register").click({force: true});
+            cy.wait(200);
+            cy.get("#FirstName").type("Cypress", {force: true});
+            cy.get("#LastName").type("Tester", {force: true});
+            cy.get("#Email").type(email, {force: true});
+            cy.get("#StreetAddress").type("5343 Northlake Blvd Palm Beach Gardens", {force: true});
+            cy.get("#ZipPostalCode").type("33418", {force: true});
+            cy.get("#County").type("United States", {force: true});
+            cy.get("#City").type("Florida", {force: true});
+            cy.get("#Password").type(password, {force: true});
+            cy.get("#ConfirmPassword").type(password, {force: true});
+            cy.get("#register-button").click({force: true});
+            cy.wait(200);
+            cy.get(".result").should("contain.text", "Your registration completed");
+            cy.setTheme();
+        }
+        cy.wrap({ loginEmail: email, loginPassword: password });
     });
 });
 
@@ -153,6 +187,27 @@ Cypress.Commands.add("openParentTree", (parentName, force?: boolean) => {
             var clickOptions = force ? { force: true } : undefined;
             return cy.get(".nav-sidebar").find("li").contains(parentName).click(clickOptions);
         }
+    });
+});
+
+// Get to the companies page in the admin store 
+Cypress.Commands.add("verifyCompanyDetails", (companyName, companyKey, loginEmail, loginPassword) => {
+    Cypress.log({
+        displayName: " ",
+        message: "verifyCompanyDetails"
+    });
+    cy.visit("/");
+    cy.storefrontLogin(loginEmail, loginPassword).then(() => {
+        cy.visit("/Admin/Company/List");
+        cy.get("#SearchCompanyName").type(companyName);
+        cy.get("#SearchIntegrationKey").type(companyKey);
+        cy.get("#search-companies").click();
+        cy.wait(2000);
+        cy.get("#companies-grid").get("tbody").find("tr").find("td").eq(0).should("have.text", companyName);
+        cy.get("#companies-grid").get("tbody").find("tr").find("td").eq(1).should("have.text", companyKey);
+        cy.get(".button-column > .btn").click();
+        cy.get("#Name").should("have.value", companyName);
+        cy.get("#IntegrationKey").should("have.value", companyKey);
     });
 });
 
