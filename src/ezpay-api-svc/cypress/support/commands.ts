@@ -39,6 +39,22 @@ Cypress.Commands.add("postGQL", (query) => {
   });
 });
 
+// -- This will post GQL query for checkout service --
+Cypress.Commands.add("postGQLCheckoutConsumer", (query) => {
+  return cy.request({
+    method: "POST",
+    url: "/graphql",
+    headers: {
+      "x-aptean-apim": Cypress.env("x-aptean-apim-checkout-consumer"),
+      "x-aptean-tenant": Cypress.env("x-aptean-tenant"),
+      "x-aptean-tenant-secret": Cypress.env("x-aptean-tenant-secret"),
+      "x-aptean-product": Cypress.env("x-aptean-product"),
+    },
+    body: { query },
+    failOnStatusCode: false,
+  });
+});
+
 // -- This will post GQL query without tenant secret --
 Cypress.Commands.add("postGQLWithoutTenantSecret", (query) => {
   return cy.request({
@@ -655,3 +671,48 @@ Cypress.Commands.add(
     }
   }
 );
+
+// -- This will create a checkout session --
+Cypress.Commands.add("createCheckoutSession", () => {
+  const mutation = `mutation {
+    createCheckoutSession(
+      input: {
+        amount: 1200
+        cancelUrl: "www.youtube.com"
+        successUrl: "www.google.com"
+        currency: USD
+        failOnReview: true
+        immediateCapture: true
+        orderDetails: {
+          customerReferenceNumber: "ref"
+          lineItems: [
+            {
+              currency: USD
+              description: "desc"
+              quantity: 1
+              totalAmount: 100
+              unitOfMeasure: "pieces"
+              unitPrice: 100
+            }
+          ]
+          orderType: GOODS
+          shortDescription: "SHORTDESC"
+          taxAmount: 2
+        }
+        payerDetails: {
+          address: { country: "NL", postalCode: "4711 JJ" }
+          email: "fjongmans@aptean.com"
+          name: "Ferry Jongmans"
+          phone: { countryCode: "+31", number: "0623963878" }
+        }
+      }
+    ) {
+      checkoutSession {
+        id
+      }
+    }
+  }
+  `;
+
+  return cy.postGQLCheckoutConsumer(mutation);
+});
