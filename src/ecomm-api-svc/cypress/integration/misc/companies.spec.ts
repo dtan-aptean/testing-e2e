@@ -15,7 +15,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
     const deleteMutName = "deleteCompany";
     const itemPath = 'company';
     const loginEmail = generateRandomString("b2btester") + "@maildrop.com";
-    const loginPassword = generateRandomString("Cypress"); 
+    const loginPassword = generateRandomString("Cypress");
     const standardMutationBody = `${codeMessageError}
         ${itemPath} {
             id
@@ -30,7 +30,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
         });
     };
 
-    function generateRandomString (value: string) {
+    function generateRandomString(value: string) {
         let key = Cypress._.random(0, 1000000);
         let integrationKey = value + key;
         return integrationKey;
@@ -44,7 +44,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
             const companyId = itemIds[0];
             const company = items[0];
             return cy.wrap({
-                companyId: companyId, 
+                companyId: companyId,
                 company: company
             });
         });
@@ -58,10 +58,10 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
         before(() => {
             deleteItemsAfter = Cypress.env("deleteItemsAfter");
             cy.deleteCypressItems(queryName, deleteMutName, undefined, undefined, originalBaseUrl);
-            cy.deleteCypressItems("customerRoles", "deleteCustomerRole", undefined, undefined, originalBaseUrl);    
+            cy.deleteCypressItems("customerRoles", "deleteCustomerRole", undefined, undefined, originalBaseUrl);
             cy.deleteCypressItems("customers", "deleteCustomer", undefined, "@email", originalBaseUrl);
         });
-            
+
         afterEach(() => {
             if (!deleteItemsAfter) {
                 return;
@@ -78,7 +78,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
         });
 
         it("Mutation will associate newly created customer with a company so that companies tab will be visible", () => {
-            const companyName  = generateRandomString("B2B Test Company");
+            const companyName = generateRandomString("B2B Test Company");
             const companyKey = generateRandomString("cypress");
             const extraQuery = "customers";
             cy.visit("/");
@@ -86,18 +86,18 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 const { loginEmail, loginPassword } = createdUser;
                 cy.log(loginEmail);
                 cy.log(loginPassword);
-                cy.get(".ico-logout").click({force: true});
+                cy.get(".ico-logout").click({ force: true });
                 cy.storefrontLogin();
                 cy.visit("/Admin/Customer/List");
                 cy.get("#SearchEmail").type(loginEmail);
-                cy.get("#search-customers").click({force: true});
+                cy.get("#search-customers").click({ force: true });
                 cy.wait(2000);
-                cy.get(".button-column > .btn").click({force: true});
-                cy.get("#SelectedCustomerRoleIds_taglist").click({force: true});
-                cy.get("li").contains("Administrators").click({force: true});
+                cy.get(".button-column > .btn").click({ force: true });
+                cy.get("#SelectedCustomerRoleIds_taglist").click({ force: true });
+                cy.get("li").contains("Administrators").click({ force: true });
                 cy.get("[name='save']").click();
                 cy.get(".alert").should("be.visible");
-                cy.get("a").contains("Logout").click({force: true});
+                cy.get("a").contains("Logout").click({ force: true });
                 cy.storefrontLogin(loginEmail, loginPassword);
                 cy.visit("/Admin/Company/List");
                 cy.get(".alert").should("contain.text", "You do not have permission to perform the selected operation");
@@ -161,7 +161,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
         });
 
         it("Mutation creates and updates a company and validates it with storefront admin", () => {
-            const companyName  = generateRandomString("Cypress API Company");
+            const companyName = generateRandomString("Cypress API Company");
             const companyKey = generateRandomString("cypress");
             const mutation = `mutation {
                 ${createMutName}(input: { name: "${companyName}", integrationKey: "${companyKey}" }) {
@@ -184,7 +184,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
                     }`;
                     cy.confirmUsingQuery(query, queryName, id, propNames, propValues, originalBaseUrl);
                     cy.verifyCompanyDetails(companyName, companyKey, loginEmail, loginPassword);
-                    const companyUpdateName  = generateRandomString("Cypress API Company");
+                    const companyUpdateName = generateRandomString("Cypress API Company");
                     const mutation = `mutation {
                         ${updateMutName}(input: { id: "${id}", name: "${companyUpdateName}" }) {
                             ${standardMutationBody}
@@ -225,7 +225,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
             const extraQueryCustomer = "customers";
             const noToMake = 3;
             const extraItemInputCustomerRole = { name: customerRoleName, isActive: true, isTaxExempt: false, systemName: "Cypress", isSystemRole: true, hasFreeShipping: false };
-            const extraItemInputCustomer = { firstName: "Cypress", lastName: "Tester", email: customerEmail+".tester@email.com" };
+            const extraItemInputCustomer = { firstName: "Cypress", lastName: "Tester", email: customerEmail + ".tester@email.com" };
             cy.createAssociatedItems(noToMake, extraCreateCustomerRole, extraPathCustomerRole, extraQueryCustomerRole, extraItemInputCustomerRole, undefined, originalBaseUrl).then((resultsCusRole) => {
                 const { deletionIds, items, itemIds } = resultsCusRole;
                 addExtraItemIds(deletionIds);
@@ -276,7 +276,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
                             freeShipping.push(items.hasFreeShipping);
                         });
                         let respCust = res.body.data[createMutName][itemPath].customers;
-                        const firstName  = [], lastName = [], email = [];
+                        const firstName = [], lastName = [], email = [];
                         respCust.forEach((items) => {
                             firstName.push(items.firstName);
                             lastName.push(items.lastName);
@@ -317,7 +317,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
                             cy.verifyCompanyDetails(companyName, companyKey, loginEmail, loginPassword);
                             cy.get("#company-customerroles > .card-header > .card-tools").click();
                             cy.get("#company-customers > .card-header > .card-tools").click();
-                            cy.get(".k-select").click({force: true});
+                            cy.get(".k-select").click({ force: true });
                             cy.get("#search-company-customers").click();
                             cy.wait(2000);
                             let count = 0, oddEvenRow = 0;
@@ -330,10 +330,10 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
                                 cy.get("#customerroles-grid").get("tbody").eq(1).find("." + trClass).eq(count).find("td").eq(4).find("i").invoke("attr", "nop-value").should("include", systemRole[i]);
                                 cy.get("#company-customers-grid").get("tbody").eq(3).find("." + trClass).eq(count).find("td").eq(1).should("have.text", "Guest");
                                 cy.get("#company-customers-grid").get("tbody").eq(3).find("." + trClass).eq(count).find("td").eq(2).should("have.text", firstName[i] + " " + lastName[i]);
-                                oddEvenRow = oddEvenRow+1;
-                                if(oddEvenRow % 2 === 0) {
+                                oddEvenRow = oddEvenRow + 1;
+                                if (oddEvenRow % 2 === 0) {
                                     count++;
-                                } 
+                                }
                             }
                         });
                     });
@@ -342,7 +342,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
         });
 
         it("Mutation will create and delete a company and verifies if the company is deleted in the storefront", () => {
-            const companyName  = generateRandomString("Cypress API Company");
+            const companyName = generateRandomString("Cypress API Company");
             const companyKey = generateRandomString("cypress");
             const mutation = `mutation {
                 ${createMutName}(input: { name: "${companyName}", integrationKey: "${companyKey}" }) {
@@ -370,7 +370,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
                             ${codeMessageError}
                         }
                     }`;
-                    cy.postMutAndValidate(mutation, deleteMutName, "deleteMutation", originalBaseUrl);                    
+                    cy.postMutAndValidate(mutation, deleteMutName, "deleteMutation", originalBaseUrl);
                     cy.visit("/");
                     cy.storefrontLogin().then(() => {
                         cy.visit("/Admin/Company/List");
@@ -421,7 +421,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
         });
 
         it("Mutation will create a Payment Settings for a company and validates them in storefront", () => {
-            const companyName  = generateRandomString("Cypress API Company");
+            const companyName = generateRandomString("Cypress API Company");
             const companyKey = generateRandomString("cypress");
             const immediateCapture = true, hasTerms = false;
             let cardType: (string) = ["Discover", "Master", "Amex", "Visa", "Discover", "Master", "Amex", "Visa", "Discover", "Master"];
@@ -464,7 +464,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 cy.postMutAndValidate(mutation, paymentSettingsCreateMutName, paymentSettingsItemPath, originalBaseUrl).then((res) => {
                     id = res.body.data[paymentSettingsCreateMutName][paymentSettingsItemPath].id;
                     const propNames = ["company", "hasTerms", "immediateCapture", "paymentData"];
-                    const propValues = [company, hasTerms, immediateCapture, paymentData ];
+                    const propValues = [company, hasTerms, immediateCapture, paymentData];
                     cy.confirmMutationSuccess(res, paymentSettingsCreateMutName, paymentSettingsItemPath, propNames, propValues).then(() => {
                         const query = `{
                             ${paymentSettingsQueryName}(ids: "${id}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
@@ -483,26 +483,26 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
                         cy.confirmUsingQuery(query, paymentSettingsQueryName, id, propNames, propValues, originalBaseUrl);
                         cy.verifyCompanyDetails(companyName, companyKey, loginEmail, loginPassword);
                         cy.get("#company-savedcards > .card-header > .card-tools").click();
-                        if(hasTerms) {
-                        cy.get("#HasTerms").invoke("attr", "checked").should("include", "checked");
-                        } else if(!hasTerms) {
+                        if (hasTerms) {
+                            cy.get("#HasTerms").invoke("attr", "checked").should("include", "checked");
+                        } else if (!hasTerms) {
                             cy.get("#HasTerms").should("not.have.attr", "checked");
-                        } 
-                        if(immediateCapture) {
+                        }
+                        if (immediateCapture) {
                             cy.get("#ImmediateCapture").invoke("attr", "checked").should("include", "checked");
-                        } else if(!immediateCapture) {
+                        } else if (!immediateCapture) {
                             cy.get("#ImmediateCapture").should("not.have.attr", "checked");
-                        } 
+                        }
                         let oddEvenRow = 0, count = 0;
                         for (let i = 0; i < 2; i++) {
                             let trClass = i % 2 === 0 ? "odd" : "even";
                             cy.get("#cards-grid").get("tbody").eq(4).find("." + trClass).eq(count).find("td").eq(0).should("have.text", cardType[i]);
                             cy.get("#cards-grid").get("tbody").eq(4).find("." + trClass).eq(count).find("td").eq(1).should("have.text", "XXXX-XXXX-XXXX-" + lastFour[i]);
-                            oddEvenRow = oddEvenRow+1;
-                            if(oddEvenRow % 2 === 0) {
+                            oddEvenRow = oddEvenRow + 1;
+                            if (oddEvenRow % 2 === 0) {
                                 count++;
                             }
-                        }   
+                        }
                     });
                 });
             });
@@ -524,7 +524,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
         before(() => {
             deleteItemsAfter = Cypress.env("deleteItemsAfter");
             // cy.deleteCypressItems(addressesQueryName, addressDeleteMutName, undefined, undefined, originalBaseUrl).then(() => {
-                cy.deleteCypressItems(queryName, deleteMutName, undefined, undefined, originalBaseUrl);
+            cy.deleteCypressItems(queryName, deleteMutName, undefined, undefined, originalBaseUrl);
             // });
         });
 
@@ -541,7 +541,7 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
             cy.deleteSupplementalItems(extraIds).then(() => {
                 extraIds = [];
             });
-        });   
+        });
 
         const firstName = "Cypress", lastName = "Tester", email = "cypress.tester" + Cypress._.random(0, 1000000) + "@email.com";
         const line1 = "5343", line2 = "Northlake Blvd", city = "Palm Beach Gardens", region = "Florida", postalCode = "33418", country = "US";
@@ -613,9 +613,9 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 });
             });
         };
-        
+
         it("Mutation creates a new shipping and billling address and validates it in storefront", () => {
-            const companyName  = generateRandomString("Cypress API Company");
+            const companyName = generateRandomString("Cypress API Company");
             const companyKey = generateRandomString("cypress");
             const addressTypeShipping = `SHIPPING`;
             const addressTypeBilling = `BILLING`;
@@ -633,11 +633,11 @@ describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` 
                     cy.get("#company-addresses-grid").get("tbody").eq(0).find("." + trClass).eq(count).find("td").eq(0).should("have.text", addressDescription[i]);
                     cy.get("#company-addresses-grid").get("tbody").eq(0).find("." + trClass).eq(count).find("td").eq(1).should("have.text", addressType[i]);
                     cy.get("#company-addresses-grid").get("tbody").eq(0).find("." + trClass).eq(count).find("td").eq(2).find("div").should("have.text", line1 + line2 + city + "," + region + "," + postalCode + "United States");
-                    oddEvenRow = oddEvenRow+1;
-                    if(oddEvenRow % 2 === 0) {
+                    oddEvenRow = oddEvenRow + 1;
+                    if (oddEvenRow % 2 === 0) {
                         count++;
                     }
-                }          
+                }
             });
         });
     });
