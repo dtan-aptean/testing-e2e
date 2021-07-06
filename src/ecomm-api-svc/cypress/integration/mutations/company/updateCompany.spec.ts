@@ -102,6 +102,7 @@ describe('Mutation: updateCompany', () => {
             }`;
             cy.postAndValidate(mutation, mutationName).then((res) => {
                 expect(res.body.data[mutationName].message).to.have.string("Error updating company");
+                expect(res.body.data[mutationName].errors[0].message).to.have.string("No Information was Provided to update");
             });
         });
 
