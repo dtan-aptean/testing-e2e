@@ -1,0 +1,32 @@
+{
+	"baseUrl": "#{CHECKOUT_PAGE_URL}#",
+	"chromeWebSecurity": false,
+	"defaultCommandTimeout": 10000,
+	"env": {
+		"api-svc-url": "#{EZPAY_API_URL}#",
+		"authorization": "bearer --BEARER_TOKEN---",
+		"email-of-bearer-token-user": "#{EMAIL_OF_BEARER_TOKEN_USER}#",
+		"x-aptean-apim-checkout-consumer": "#{X_APTEAN_APIM_CHECKOUT_CONSUMER}#",
+		"x-aptean-apim": "#{X_APTEAN_APIM}#",
+		"x-aptean-tenant": "#{X_APTEAN_TENANT}#",
+		"x-aptean-tenant-secret": "#{X_APTEAN_TENANT_SECRET}#",
+		"x-aptean-account": "#{X_APTEAN_ACCOUNT}",
+		"wepay-base-url": "#{WEPAY_API_URL}#",
+		"wepay-app-id": "#{WEPAY_APP_ID}#",
+		"wepay-app-secret": "#{WEPAY_APP_SECRET}#",
+		"wepay-api-version": "#{WEPAY_API_VERSION}#",
+		"wepay-account-id": "#{WEPAY_ACCOUNT_ID}#",
+		"currency": "#{CURRENCY}#",
+		"runtimeEnv": "local",
+		"storageAccountConnString": ""
+	},
+	"supportFile": "cypress/support/index.ts",
+	"reporter": "../../node_modules/cypress-mochawesome-reporter",
+	"reporterOptions": {
+		"reportDir": "cypress/report",
+		"charts": true,
+		"reportPageTitle": "ezpay-api-svc",
+		"embeddedScreenshots": false
+	},
+	"video": false
+}
