@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 9
 describe('Mutation: deleteCategory', () => {
@@ -11,20 +12,7 @@ describe('Mutation: deleteCategory', () => {
     const createName = 'createCategory';
     const queryName = "categories";
     const infoName = 'categoryInfo';
-    const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
-    `;
+
     const queryInformation = {
         queryName: queryName, 
         itemId: id, 
@@ -87,52 +75,26 @@ describe('Mutation: deleteCategory', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, codeMessageError);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, codeMessageError);
         });
 
         it("Mutation will fail with invalid 'id' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: true }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidId(mutationName, codeMessageError);
         });
 
         it("Mutation will succeed with valid 'id' input from an existing item", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: "${id}" }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+            cy.mutationBasicDelete(id, mutationName, codeMessageError, queryInformation).then(() => {
                 updateIdAndName();
             });
         });
 
         it("Mutation will fail when given 'id' input from an deleted item", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: "${id}" }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+            cy.mutationAlreadyDeleted(id, mutationName, codeMessageError, queryInformation).then(() => {
                 updateIdAndName();
-                cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
     });
@@ -156,7 +118,7 @@ describe('Mutation: deleteCategory', () => {
                     // Now attempt to delete the parent
                     const mutation = `mutation {
                         ${mutationName}(input: { id: "${id}" }) {
-                            ${standardMutationBody}
+                            ${codeMessageError}
                         }
                     }`;
                     cy.postAndConfirmMutationError(mutation, mutationName);
@@ -184,14 +146,14 @@ describe('Mutation: deleteCategory', () => {
                     // Now attempt to delete the parent
                     const mutation = `mutation {
                         ${mutationName}(input: { id: "${id}" }) {
-                            ${standardMutationBody}
+                            ${codeMessageError}
                         }
                     }`;
                     cy.postAndConfirmMutationError(mutation, mutationName).then(() => {
                         // Delete childCatTwo (Just because it's easier to pop the most recent child from the array)
                         const firstDeletion = `mutation {
                             ${mutationName}(input: { id: "${catTwoId}" }) {
-                                ${standardMutationBody}
+                                ${codeMessageError}
                             }
                         }`;
                         const queryInfoOne = {
@@ -207,7 +169,7 @@ describe('Mutation: deleteCategory', () => {
                                 // Delete childCatOne
                                 const secondMutation = `mutation {
                                     ${mutationName}(input: { id: "${catOneId}" }) {
-                                        ${standardMutationBody}
+                                        ${codeMessageError}
                                     }
                                 }`;
                                 const queryInfoTwo = {
@@ -254,18 +216,7 @@ describe('Mutation: deleteCategory', () => {
                         discountType: ${discountType}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${extraItemPath} {
                         id
                         discountAmount {
@@ -313,7 +264,7 @@ describe('Mutation: deleteCategory', () => {
                     cy.confirmUsingQuery(query, extraQueryName, discountId, propNames, propValues).then(() => {
                         const mutation = `mutation {
                             ${mutationName}(input: { id: "${id}" }) {
-                                ${standardMutationBody}
+                                ${codeMessageError}
                             }
                         }`;
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
@@ -339,18 +290,7 @@ describe('Mutation: deleteCategory', () => {
                         categoryIds: ["${id}"]
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${extraItemPath} {
                         id
                         ${productInfoName} {
@@ -374,7 +314,7 @@ describe('Mutation: deleteCategory', () => {
                     cy.queryByProductId("categories", queryBody, productId, categories).then(() => {
                         const mutation = `mutation {
                             ${mutationName}(input: { id: "${id}" }) {
-                                ${standardMutationBody}
+                                ${codeMessageError}
                             }
                         }`;
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {

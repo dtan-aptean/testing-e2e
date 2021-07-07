@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 13
 describe('Mutation: updateProductPrice', () => {
@@ -16,18 +17,7 @@ describe('Mutation: updateProductPrice', () => {
     const secondaryItemPath = "product";
     const infoName = "productInfo";
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             productId
             price {
@@ -67,21 +57,11 @@ describe('Mutation: updateProductPrice', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail if the only input provided is 'productId'", () => {
@@ -126,9 +106,7 @@ describe('Mutation: updateProductPrice', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
-                expect(res.body.data[mutationName].errors[0].message).to.eql("Currency is Required");
-            });
+            cy.postAndConfirmError(mutation);
         });
 
         it("Mutation will fail if 'price' input does not have an 'amount' property", () => {
@@ -137,8 +115,8 @@ describe('Mutation: updateProductPrice', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
-                expect(res.body.data[mutationName].errors[0].message).to.eql("Amount is Required");
+            cy.postAndConfirmError(mutation).then((res) => {
+                expect(res.body.errors[0].message).to.eql('Field "UpdatePriceInput.amount" of required type "Int!" was not provided.');
             });
         });
 
@@ -148,8 +126,8 @@ describe('Mutation: updateProductPrice', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
-                expect(res.body.data[mutationName].errors[0].message).to.eql("Currency is Required");
+            cy.postAndConfirmError(mutation).then((res) => {
+                expect(res.body.errors[0].message).to.eql('Field "UpdatePriceInput.currency" of required type "String!" was not provided.');
             });
         });
 
@@ -174,18 +152,7 @@ describe('Mutation: updateProductPrice', () => {
         it("Mutation will fail if using a deleted product's id as 'productId' input", () => {
             const mutation = `mutation {
                 ${deleteMutName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                 }
             }`;
             cy.postAndConfirmDelete(mutation, deleteMutName, { queryName: queryName, itemId: id, itemName: itemName, infoName: infoName, asTest: true }).then(() => {

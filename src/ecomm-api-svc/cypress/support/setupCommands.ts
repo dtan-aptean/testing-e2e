@@ -5,24 +5,15 @@
  * Since API tests don't rely on existing items, it doesn't matter if the ENV isn't perfectly cleared beforehand
  */
 
+import { codeMessageError } from "./mutationTests";
+
 // Call the mutation to delete an item. Will not fail if the item isn't successfully deleted.
 // Will log success or failure and include errors in the log
 const performDelete = (deleteName: string, id: string, altUrl?: string) => {
     cy.wait(2000);
     var mutation = `mutation {
         ${deleteName}(input: {id: "${id}"}){
-            code
-            message
-            errors {
-                code
-                message
-                domain
-                details {
-                    code
-                    message
-                    target
-                }
-            }
+            ${codeMessageError}
         }
     }`;
     cy.postGQL(mutation, altUrl).then((res) => {
@@ -193,6 +184,57 @@ Cypress.Commands.add("deleteCypressItems", (
                 }
             } else {
                 deleteItems(nodes, deleteName, searchBy, infoName, altUrl);
+            }
+        }
+    });
+});
+
+// Command to delete items that require special search input
+Cypress.Commands.add("deleteSpecialCypressItems", (
+    queryName: string,
+    deleteName: string,
+    specialInput: string,   // EX: a companyId or customerId
+    specialInputName: string,   // What the special input is: if it's a companyId, pass in 'companyId'
+    searchString?: string,
+    altUrl?: string
+) => {
+    const searchBy = searchString ? searchString : "Cypress";
+    var extraField;
+    if (specialInputName === "customerId") {
+        extraField = `customer {
+            id
+            email
+            firstName
+            lastName
+        }`
+    } else if (specialInputName === "companyId") {
+        extraField = `company {
+            id
+            name
+        }`
+    }
+    Cypress.log({name: "deleteSpecialCypressItems", message: `Using ${queryName} to search for "${searchBy}"`});
+    const input = typeof specialInput === "string" ? `${specialInputName}: "${specialInput}"` : `${specialInputName}: ${specialInput}`;
+    getNodes(queryName, searchBy, undefined, extraField, altUrl, input).then((nodes) => {
+        if (nodes) {
+            if (specialInputName === "customerId") {
+                const validNodes = nodes.filter((node) => {
+                    return node.customer.email.toLowerCase().includes("cypress") || node.customer.firstName.toLowerCase().includes("cypress") || node.customer.lastName.toLowerCase().includes("cypress");
+                });
+                if (validNodes.length > 0) {
+                    deleteItems(validNodes, deleteName, searchBy, undefined, altUrl, "customer.email");
+                } else {
+                    Cypress.log({message: "No Cypress items found"});
+                }
+            } else if (specialInputName === "companyId") {
+                const validNodes = nodes.filter((node) => {
+                    return node.company.name.toLowerCase().includes("cypress");
+                });
+                if (validNodes.length > 0) {
+                    deleteItems(validNodes, deleteName, searchBy, undefined, altUrl, "company.name");
+                } else {
+                    Cypress.log({message: "No Cypress items found"});
+                }
             }
         }
     });

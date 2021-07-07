@@ -200,7 +200,7 @@ describe('Payer Portal - Guest User', function() {
     })
 
     it('should not be able to make the payment without holder name', () => {
-      cy.wait(5000);
+      cy.wait(7000);
       getIframeBody()
         .find('#text-input-cc-number')
         .type('4003830171874018');
@@ -241,6 +241,7 @@ describe('Payer Portal - Guest User', function() {
         .type('123');
       cy.get('[data-cy=make-payment]').click();
       cy.get('[data-cy=pay-now').click();
+      cy.wait(5000);
       cy.get('[data-cy=payment-success-message]').should('be.visible');
     });
   });

@@ -89,13 +89,13 @@ describe("Payer Portal - Hamburger Menu", () => {
 
     before(() => {
         cy.login();
-        cy.wait(10000);
+        cy.waitForRootPageLoading(1);
     });
 
     context("Logged in", () => {
         beforeEach(() => {
             cy.visit("/");
-            cy.wait(5000);
+            cy.wait(7000);
         });
 
         it('Pressing the menu icon should show the sign out button', () => {
