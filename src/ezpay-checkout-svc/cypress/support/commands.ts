@@ -47,8 +47,8 @@ Cypress.Commands.add("createCheckoutSession", () => {
    createCheckoutSession(
      input: {
        amount: 1200
-       cancelUrl: "www.youtube.com"
-       successUrl: "www.google.com"
+       cancelUrl: "https://www.youtube.com/"
+       successUrl: "https://www.google.com/"
        currency: USD
        failOnReview: true
        immediateCapture: true
@@ -78,6 +78,7 @@ Cypress.Commands.add("createCheckoutSession", () => {
    ) {
      checkoutSession {
        id
+       cancelUrl
      }
    }
  }
