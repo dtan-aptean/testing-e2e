@@ -93,4 +93,29 @@ describe('Checkout service: hosted page', () => {
             });            
         }); 
     });
+
+    it('should pass if payment summary is on the page', () => {
+        cy.createCheckoutSession().then((res)=>{
+            const sessionId = res.body.data.createCheckoutSession.checkoutSession.id;
+
+            // go to checkout page
+            cy.visit(`/${sessionId}`);
+            
+            cy.get(".article-content").should("be.visible");
+
+            // iframe input should be visible
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-cc-number").should("be.visible");
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-expiration-month").should("be.visible");
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-expiration-year").should("be.visible");
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-cvv-number").should("be.visible");       
+            
+            // contact information form should be visible
+            cy.get("#name").should("be.visible");
+            cy.get("#country").should("be.visible");
+            cy.get("#zip-code").should("be.visible");
+            cy.get("#email").should("be.visible");
+            cy.get("#country-code").should("be.visible");
+            cy.get("#phone").should("be.visible"); 
+        }); 
+    });
 });
