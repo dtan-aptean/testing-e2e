@@ -427,14 +427,13 @@ Cypress.Commands.add("queryCompanyCustomerWithAddresses", (queryName: string, se
     const searchBy = searchString ? searchString : "Cypress Address";
     var ids = [];
         getNodes(queryName, searchBy, undefined, undefined, altUrl).then((nodes) => {
-            cy.log(nodes)
-    if(nodes){
-        if (nodes.length > 0) {
-            nodes.forEach((node) => {
-                    ids.push(node.id)
-                });  
-            }  
-        }
+            if(nodes){
+                if (nodes.length > 0) {
+                    nodes.forEach((node) => {
+                        ids.push(node.id)
+                    });  
+                }  
+            }
         cy.wrap(ids);
     });
 });

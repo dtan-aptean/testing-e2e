@@ -512,7 +512,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
         });
     });
 
-    context.skip("Addresses", () => {
+    context("Addresses", () => {
         const queryName = "addresses";
         const itemPath = "addressInfo";
         const deleteMutName = "deleteAddress";
@@ -572,7 +572,6 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                 cy.postAndValidate(query, queryName, altUrl).then((res) => {
                     nodes = res.body.data[queryName].nodes;
                     if (nodes.length > 0) {
-                        cy.log("customerWithAddresses in pagination file Increment" + customerWithAddresses)
                         customerWithAddresses += 1;
                         nodes.forEach((node, index) => {
                             const country = node.contactDetails.address.country;
