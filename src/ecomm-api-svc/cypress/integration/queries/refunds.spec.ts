@@ -336,7 +336,7 @@ describe('Query: refunds', () => {
                 }
             }`;
             cy.postAndConfirmError(gqlQuery, true).then((res) => {
-                expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
+                expect(res.body.errors[0].message[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
             });
         });
     });
@@ -684,7 +684,7 @@ describe('Query: refunds', () => {
             });
         });
 
-        it.only('Query with ids from a different item as "ids" input, returns error ', () => {
+        it('Query with ids from a different item as "ids" input, returns error ', () => {
 
             const extraqueryName = "categories";
             // Standard query body to get id from diff item 
