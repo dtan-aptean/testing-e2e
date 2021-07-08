@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { confirmStorefrontEnvValues, createInfoDummy, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 17
 describe('Mutation: createCategory', () => {
@@ -12,18 +13,7 @@ describe('Mutation: createCategory', () => {
     const itemPath = 'category';
     const infoName = "categoryInfo";
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             ${infoName} {
@@ -82,21 +72,11 @@ describe('Mutation: createCategory', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail with no 'languageCode' input", () => {
@@ -175,18 +155,7 @@ describe('Mutation: createCategory', () => {
                         customData: ${toFormattedString(customData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -251,18 +220,7 @@ describe('Mutation: createCategory', () => {
                         createdDate: "${createdDate}"
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         displayOrder
@@ -338,18 +296,7 @@ describe('Mutation: createCategory', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -393,18 +340,7 @@ describe('Mutation: createCategory', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -473,18 +409,7 @@ describe('Mutation: createCategory', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -560,18 +485,7 @@ describe('Mutation: createCategory', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -677,18 +591,7 @@ describe('Mutation: createCategory', () => {
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             discounts {
@@ -757,18 +660,7 @@ describe('Mutation: createCategory', () => {
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             roleBasedAccess {
@@ -838,18 +730,7 @@ describe('Mutation: createCategory', () => {
                         showInTopMenu: ${showInTopMenu}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {

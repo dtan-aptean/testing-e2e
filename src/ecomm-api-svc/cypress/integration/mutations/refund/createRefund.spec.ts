@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 12
 var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
@@ -32,18 +33,7 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                     currency
                 }`;
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             ${responseBody}
         }
@@ -75,18 +65,7 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             const deletionName = "deleteRefund";
             const removalMutation = `mutation {
                 ${deletionName}(input: { orderId: "${id}" }) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                 }
             }`;
             const queryInformation = {queryName: queryName, itemId: id, searchParameter: "ids"};

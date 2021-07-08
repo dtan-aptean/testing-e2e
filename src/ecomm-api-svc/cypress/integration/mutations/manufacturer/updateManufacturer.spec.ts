@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { createMutResMessage, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 18
 describe('Mutation: updateManufacturer', () => {
@@ -15,18 +16,7 @@ describe('Mutation: updateManufacturer', () => {
     const itemPath = 'manufacturer';
     const infoName = "manufacturerInfo";
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             ${infoName} {
@@ -75,30 +65,16 @@ describe('Mutation: updateManufacturer', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, standardMutationBody);
         });
 
+
         it("Mutation will fail with invalid 'id' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: true }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail if the only input provided is 'id'", () => {
@@ -188,18 +164,7 @@ describe('Mutation: updateManufacturer', () => {
                         customData: ${toFormattedString(customData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -246,18 +211,7 @@ describe('Mutation: updateManufacturer', () => {
                             customData: ${toFormattedString(newCustomData)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -321,18 +275,7 @@ describe('Mutation: updateManufacturer', () => {
                         published: ${published}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         displayOrder
@@ -406,18 +349,7 @@ describe('Mutation: updateManufacturer', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -479,18 +411,7 @@ describe('Mutation: updateManufacturer', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -595,18 +516,7 @@ describe('Mutation: updateManufacturer', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -682,18 +592,7 @@ describe('Mutation: updateManufacturer', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -767,18 +666,7 @@ describe('Mutation: updateManufacturer', () => {
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             discounts {
@@ -848,18 +736,7 @@ describe('Mutation: updateManufacturer', () => {
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             roleBasedAccess {

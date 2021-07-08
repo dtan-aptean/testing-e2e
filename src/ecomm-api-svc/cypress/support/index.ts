@@ -14,11 +14,13 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
+import 'cypress-mochawesome-reporter/register';
 import './commands';
 import './paginationCommands';
 import './storefrontCommands';
 import './setupCommands';
 import './queryTests';
+import './mutationTests';
 
 /**
  * Runs before all tests to decide whether or not to delete items after a test file runs

@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 6
 describe('Mutation: deleteProduct', () => {
@@ -11,20 +12,6 @@ describe('Mutation: deleteProduct', () => {
     const createName = 'createProduct';
     const queryName = "products";
     const infoName = 'productInfo';
-    const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
-    `;
 
     const queryInformation = {
         queryName: queryName, 
@@ -72,52 +59,26 @@ describe('Mutation: deleteProduct', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, codeMessageError);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, codeMessageError);
         });
 
         it("Mutation will fail with invalid 'id' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: true }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidId(mutationName, codeMessageError);
         });
 
         it("Mutation will succeed with valid 'id' input from an existing item", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: "${id}" }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
+            cy.mutationBasicDelete(id, mutationName, codeMessageError, queryInformation).then(() => {
                 updateIdAndName();
             });
         });
 
         it("Mutation will fail when given 'id' input from an deleted item", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: "${id}" }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+            cy.mutationAlreadyDeleted(id, mutationName, codeMessageError, queryInformation).then(() => {
                 updateIdAndName();
-                cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
     });
@@ -149,18 +110,7 @@ describe('Mutation: deleteProduct', () => {
                         discountType: ${discountType}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${extraItemPath} {
                         id
                         discountAmount {
@@ -208,7 +158,7 @@ describe('Mutation: deleteProduct', () => {
                     cy.confirmUsingQuery(query, extraQueryName, discountId, propNames, propValues).then(() => {
                         const mutation = `mutation {
                             ${mutationName}(input: { id: "${id}" }) {
-                                ${standardMutationBody}
+                                ${codeMessageError}
                             }
                         }`;
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {

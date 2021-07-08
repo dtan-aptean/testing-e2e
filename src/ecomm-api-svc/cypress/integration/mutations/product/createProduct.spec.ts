@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 21
 describe('Mutation: createProduct', () => {
@@ -13,18 +14,7 @@ describe('Mutation: createProduct', () => {
     const itemPath = 'product';
     const infoName = "productInfo";
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             ${infoName} {
@@ -176,18 +166,7 @@ describe('Mutation: createProduct', () => {
                         customData: ${toFormattedString(customData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -231,18 +210,7 @@ describe('Mutation: createProduct', () => {
                         seoData: ${toFormattedString(seoData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         seoData {
@@ -282,18 +250,7 @@ describe('Mutation: createProduct', () => {
                         seoData: ${toFormattedString(seoData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         seoData {
@@ -333,18 +290,7 @@ describe('Mutation: createProduct', () => {
                         seoData: ${toFormattedString(seoData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         seoData {
@@ -385,18 +331,7 @@ describe('Mutation: createProduct', () => {
                         inventoryInformation: ${toFormattedString(inventoryInfo)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -452,18 +387,7 @@ describe('Mutation: createProduct', () => {
                         inventoryInformation: ${toFormattedString(inventoryInfo)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -515,18 +439,7 @@ describe('Mutation: createProduct', () => {
                         inventoryInformation: ${toFormattedString(inventoryInfo)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -647,18 +560,7 @@ describe('Mutation: createProduct', () => {
                             seoData: ${toFormattedString(seoData)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             sku
@@ -809,18 +711,7 @@ describe('Mutation: createProduct', () => {
                             vendorId: "${itemIds[0]}"
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             vendor {
@@ -884,18 +775,7 @@ describe('Mutation: createProduct', () => {
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             priceInformation {
@@ -955,18 +835,7 @@ describe('Mutation: createProduct', () => {
                             categoryIds: ${toFormattedString(itemIds)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -1008,18 +877,7 @@ describe('Mutation: createProduct', () => {
                             manufacturerIds: ${toFormattedString(itemIds)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -1061,18 +919,7 @@ describe('Mutation: createProduct', () => {
                             attributeIds: ${toFormattedString(itemIds)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -1128,18 +975,7 @@ describe('Mutation: createProduct', () => {
                             specificationOptionIds: ${toFormattedString(specificationOptionIds)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             ${infoName} {

@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { confirmStorefrontEnvValues, createInfoDummy, createMutResMessage, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 20
 describe('Mutation: updateCategory', () => {
@@ -14,18 +15,7 @@ describe('Mutation: updateCategory', () => {
     const itemPath = 'category';
     const infoName = "categoryInfo";
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             ${infoName} {
@@ -96,30 +86,15 @@ describe('Mutation: updateCategory', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail with invalid 'id' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: true }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail if the only input provided is 'id'", () => {
@@ -210,18 +185,7 @@ describe('Mutation: updateCategory', () => {
                         customData: ${toFormattedString(customData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -268,18 +232,7 @@ describe('Mutation: updateCategory', () => {
                             customData: ${toFormattedString(newCustomData)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -345,18 +298,7 @@ describe('Mutation: updateCategory', () => {
                         showOnHomePage: ${showOnHomePage}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         displayOrder
@@ -432,18 +374,7 @@ describe('Mutation: updateCategory', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -505,18 +436,7 @@ describe('Mutation: updateCategory', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -621,18 +541,7 @@ describe('Mutation: updateCategory', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -708,18 +617,7 @@ describe('Mutation: updateCategory', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -789,18 +687,7 @@ describe('Mutation: updateCategory', () => {
                             ${infoName}: ${toFormattedString(input.categoryInfo)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             ${infoName} {
@@ -865,18 +752,7 @@ describe('Mutation: updateCategory', () => {
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             discounts {
@@ -946,18 +822,7 @@ describe('Mutation: updateCategory', () => {
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             roleBasedAccess {
@@ -1034,18 +899,7 @@ describe('Mutation: updateCategory', () => {
                             showInTopMenu: ${showInTopMenu}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             ${infoName} {
