@@ -1,5 +1,5 @@
 {
-    "baseUrl": "#{ECOMM_API_URL}#", 
+    "baseUrl": "#{ECOMM_API_SVC_BASE_URL}#", 
     "chromeWebSecurity": false,
     "defaultCommandTimeout": 10000,
     "env": {
