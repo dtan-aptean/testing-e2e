@@ -25,6 +25,7 @@ let accountNum = 1;
 
 describe("Customer Role Access", function () {
     before(() => {
+        debugger;
         cy.visit(loginUrl);
         cy.login();
 
