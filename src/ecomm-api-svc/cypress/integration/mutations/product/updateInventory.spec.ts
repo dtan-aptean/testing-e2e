@@ -1,5 +1,7 @@
 /// <reference types="cypress" />
 
+import { codeMessageError } from "../../../support/mutationTests";
+
 const getNewQuantity = (quantity: number) => {
     if (quantity > 50) {
         return quantity - Cypress._.random(1, 50);
@@ -22,18 +24,7 @@ describe('Mutation: updateInventory', () => {
     const secondaryItemPath = "product";
     const infoName = "productInfo";
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             productId
             productQuantity
@@ -70,22 +61,13 @@ describe('Mutation: updateInventory', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, standardMutationBody);
         });
+
 
         it("Mutation will fail if the only input provided is 'productId'", () => {
             const mutation = `mutation {
@@ -126,18 +108,7 @@ describe('Mutation: updateInventory', () => {
         it("Mutation will fail if using a deleted product's id as 'productId' input", () => {
             const mutation = `mutation {
                 ${deleteMutName}(input: { id: "${id}" }) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                 }
             }`;
             cy.postAndConfirmDelete(mutation, deleteMutName, { queryName: queryName, itemId: id, itemName: itemName, infoName: infoName, asTest: true }).then(() => {

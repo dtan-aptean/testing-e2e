@@ -1,8 +1,8 @@
 /// <reference types="cypress" />
 // @ts-check
 
-describe('Query: paymentRequests', () => {
-  it('should pass if the query has an orderBy argument and returns valid return types', () => {
+describe("Query: paymentRequests", () => {
+  it("should pass if the query has an orderBy argument and returns valid return types", () => {
     const gqlQuery = `{
   	paymentRequests(orderBy: { direction: ASC, field: TIMESTAMP }) {
         edges {
@@ -116,12 +116,15 @@ describe('Query: paymentRequests', () => {
       }
   	}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then((res) => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
       // no errors
-      assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+      assert.notExists(
+        res.body.errors,
+        `One or more errors ocuured while executing query: ${gqlQuery}`
+      );
 
       // has data
       assert.exists(res.body.data);
@@ -141,33 +144,36 @@ describe('Query: paymentRequests', () => {
     });
   });
 
-  it('should pass if the query has an orderBy argument and at least one return type is provided', () => {
+  it("should pass if the query has an orderBy argument and at least one return type is provided", () => {
     const gqlQuery = `{
   		paymentRequests(orderBy: { direction: ASC, field: TIMESTAMP }) {
         totalCount
       }
   	}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then((res) => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
       // no errors
-      assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+      assert.notExists(
+        res.body.errors,
+        `One or more errors ocuured while executing query: ${gqlQuery}`
+      );
 
       // has data
       assert.exists(res.body.data);
     });
   });
 
-  it('should fail if the query has only direction provided in orderBy argument', () => {
+  it("should fail if the query has only direction provided in orderBy argument", () => {
     const gqlQuery = `{
   		paymentRequests(orderBy: { direction: ASC }) {
         totalCount
       }
     }`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then((res) => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -179,14 +185,14 @@ describe('Query: paymentRequests', () => {
     });
   });
 
-  it('should fail if the query has only field provided in orderBy argument', () => {
+  it("should fail if the query has only field provided in orderBy argument", () => {
     const gqlQuery = `{
   		paymentRequests(orderBy: { field: TIMESTAMP }) {
         totalCount
       }
   	}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then((res) => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -198,16 +204,17 @@ describe('Query: paymentRequests', () => {
     });
   });
 
-  it('it should fail if no argument passed', () => {
+  it("it should fail if no argument passed", () => {
     const gqlQuery = `{
   		paymentRequests {
         totalCount
       }
   	}`;
 
-    cy.postGQL(gqlQuery).then(res => {
-      // should not be 200 ok
-      cy.expect(res.isOkStatusCode).to.be.equal(false);
+    cy.postGQL(gqlQuery).then((res) => {
+      console.log(res);
+      // should be 200 ok
+      cy.expect(res.isOkStatusCode).to.be.equal(true);
 
       // should have errors
       assert.exists(res.body.errors);
@@ -217,26 +224,29 @@ describe('Query: paymentRequests', () => {
     });
   });
 
-  it('should pass if the query has at least one return type', () => {
+  it("should pass if the query has at least one return type", () => {
     const gqlQuery = `{
   		paymentRequests(orderBy: { direction: ASC, field: TIMESTAMP }) {
         totalCount
       }
   	}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then((res) => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
       // no errors
-      assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+      assert.notExists(
+        res.body.errors,
+        `One or more errors ocuured while executing query: ${gqlQuery}`
+      );
 
       // has data
       assert.exists(res.body.data);
     });
   });
 
-  it('should pass if the query returns the latest completed order', () => {
+  it("should pass if the query returns the latest completed order", () => {
     const endDate = new Date();
     endDate.setFullYear(endDate.getFullYear() + 1);
 
@@ -255,13 +265,15 @@ describe('Query: paymentRequests', () => {
       }
 		}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then((res) => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
-      console.log(res);
 
       // no errors
-      assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+      assert.notExists(
+        res.body.errors,
+        `One or more errors ocuured while executing query: ${gqlQuery}`
+      );
 
       // has data
       assert.exists(res.body.data);
@@ -270,8 +282,8 @@ describe('Query: paymentRequests', () => {
     });
   });
 
-  it('should pass if the querystring parameter filters the order by the reference number', () => {
-    cy.generatePaymentRequest().then(paymentRequest => {
+  it("should pass if the querystring parameter filters the order by the reference number", () => {
+    cy.generatePaymentRequest().then((paymentRequest) => {
       const gqlQuery = `{
           paymentRequests(
             orderBy: { direction: DESC, field: TIMESTAMP }
@@ -284,23 +296,29 @@ describe('Query: paymentRequests', () => {
           }
         }`;
 
-      cy.postGQL(gqlQuery).then(res => {
+      cy.postGQL(gqlQuery).then((res) => {
         // should be 200 ok
         cy.expect(res.isOkStatusCode).to.be.equal(true);
 
         // no errors
-        assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+        assert.notExists(
+          res.body.errors,
+          `One or more errors ocuured while executing query: ${gqlQuery}`
+        );
 
         // has data
         assert.exists(res.body.data);
 
         assert.equal(res.body.data.paymentRequests.nodes.length, 1);
-        assert.equal(res.body.data.paymentRequests.nodes[0].referenceNumber, paymentRequest.referenceNumber);
+        assert.equal(
+          res.body.data.paymentRequests.nodes[0].referenceNumber,
+          paymentRequest.referenceNumber
+        );
       });
     });
   });
 
-  it('should pass if the paging works using cursor(before & after)', () => {
+  it("should pass if the paging works using cursor(before & after)", () => {
     const gqlQuery = `{
 			paymentRequests(
         orderBy: { direction: DESC, field: TIMESTAMP }
@@ -313,20 +331,25 @@ describe('Query: paymentRequests', () => {
       }
 		}`;
 
-    cy.postGQL(gqlQuery).then(res => {
+    cy.postGQL(gqlQuery).then((res) => {
       // should be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(true);
 
       // no errors
-      assert.notExists(res.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+      assert.notExists(
+        res.body.errors,
+        `One or more errors ocuured while executing query: ${gqlQuery}`
+      );
 
       // has data
       assert.exists(res.body.data);
 
       cy.expect(res.body.data.paymentRequests.totalCount).to.be.least(2);
 
-      const firstRefNumber = res.body.data.paymentRequests.nodes[0].referenceNumber;
-      const secondRefNumber = res.body.data.paymentRequests.nodes[1].referenceNumber;
+      const firstRefNumber =
+        res.body.data.paymentRequests.nodes[0].referenceNumber;
+      const secondRefNumber =
+        res.body.data.paymentRequests.nodes[1].referenceNumber;
 
       // get first page request
       const gqlFirstPageQuery = `{
@@ -346,20 +369,34 @@ describe('Query: paymentRequests', () => {
           }
         }
       }`;
-      cy.postGQL(gqlFirstPageQuery).then(firstPage => {
+      cy.postGQL(gqlFirstPageQuery).then((firstPage) => {
         // should be 200 ok
         cy.expect(firstPage.isOkStatusCode).to.be.equal(true);
 
         // no errors
-        assert.notExists(firstPage.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+        assert.notExists(
+          firstPage.body.errors,
+          `One or more errors ocuured while executing query: ${gqlQuery}`
+        );
 
         // has data
         assert.exists(firstPage.body.data);
 
-        cy.expect(firstPage.body.data.paymentRequests.nodes.length).to.be.equal(1);
-        assert.equal(firstPage.body.data.paymentRequests.nodes[0].referenceNumber, firstRefNumber);
-        assert.equal(firstPage.body.data.paymentRequests.pageInfo.hasNextPage, true);
-        assert.equal(firstPage.body.data.paymentRequests.pageInfo.hasPreviousPage, false);
+        cy.expect(firstPage.body.data.paymentRequests.nodes.length).to.be.equal(
+          1
+        );
+        assert.equal(
+          firstPage.body.data.paymentRequests.nodes[0].referenceNumber,
+          firstRefNumber
+        );
+        assert.equal(
+          firstPage.body.data.paymentRequests.pageInfo.hasNextPage,
+          true
+        );
+        assert.equal(
+          firstPage.body.data.paymentRequests.pageInfo.hasPreviousPage,
+          false
+        );
 
         // get second page request
         const gqlSecondPageQuery = `{
@@ -380,19 +417,30 @@ describe('Query: paymentRequests', () => {
             }
           }
         }`;
-        cy.postGQL(gqlSecondPageQuery).then(secondPage => {
+        cy.postGQL(gqlSecondPageQuery).then((secondPage) => {
           // should be 200 ok
           cy.expect(secondPage.isOkStatusCode).to.be.equal(true);
 
           // no errors
-          assert.notExists(secondPage.body.errors, `One or more errors ocuured while executing query: ${gqlQuery}`);
+          assert.notExists(
+            secondPage.body.errors,
+            `One or more errors ocuured while executing query: ${gqlQuery}`
+          );
 
           // has data
           assert.exists(secondPage.body.data);
 
-          cy.expect(secondPage.body.data.paymentRequests.nodes.length).to.be.equal(1);
-          assert.equal(secondPage.body.data.paymentRequests.nodes[0].referenceNumber, secondRefNumber);
-          assert.equal(secondPage.body.data.paymentRequests.pageInfo.hasPreviousPage, true);
+          cy.expect(
+            secondPage.body.data.paymentRequests.nodes.length
+          ).to.be.equal(1);
+          assert.equal(
+            secondPage.body.data.paymentRequests.nodes[0].referenceNumber,
+            secondRefNumber
+          );
+          assert.equal(
+            secondPage.body.data.paymentRequests.pageInfo.hasPreviousPage,
+            true
+          );
         });
       });
     });

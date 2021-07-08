@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 7
 describe('Mutation: deleteTaxCategory', () => {
@@ -10,20 +11,6 @@ describe('Mutation: deleteTaxCategory', () => {
     const mutationName = 'deleteTaxCategory';
     const createName = 'createTaxCategory';
     const queryName = "taxCategories";
-    const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
-    `;
 
     const queryInformation = {
         queryName: queryName, 
@@ -74,52 +61,26 @@ describe('Mutation: deleteTaxCategory', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, codeMessageError);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, codeMessageError);
         });
 
         it("Mutation will fail with invalid 'id' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: true }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidId(mutationName, codeMessageError);
         });
 
         it("Mutation will succeed with valid 'id' input from an existing item", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: "${id}" }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+            cy.mutationBasicDelete(id, mutationName, codeMessageError, queryInformation).then(() => {
                 updateIdAndName();
             });
         });
 
         it("Mutation will fail when given 'id' input from an deleted item", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: "${id}" }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
+            cy.mutationAlreadyDeleted(id, mutationName, codeMessageError, queryInformation).then(() => {
                 updateIdAndName();
-                cy.postAndConfirmMutationError(mutation, mutationName);
             });
         });
     });
@@ -141,18 +102,7 @@ describe('Mutation: deleteTaxCategory', () => {
                         taxCategoryId: "${id}"
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${extraItemPath} {
                         id
                         name
@@ -190,7 +140,7 @@ describe('Mutation: deleteTaxCategory', () => {
                     cy.confirmUsingQuery(query, extraQueryName, attributeId, propNames, propValues).then(() => {
                         const mutation = `mutation {
                             ${mutationName}(input: { id: "${id}" }) {
-                                ${standardMutationBody}
+                                ${codeMessageError}
                             }
                         }`;
                         cy.postAndConfirmMutationError(mutation, mutationName).then((erRes) => {
@@ -198,7 +148,7 @@ describe('Mutation: deleteTaxCategory', () => {
                             expect(errorMessage).to.contain("TaxCategory is Associated with Checkout Attributes");
                             const deleteExtra = `mutation {
                                 ${extraDeleteName}(input: { id: "${attributeId}" }) {
-                                    ${standardMutationBody}
+                                    ${codeMessageError}
                                 }
                             }`;
                             const extraQueryInfo = {queryName: extraQueryName, itemId: attributeId, itemName: name}
@@ -231,18 +181,7 @@ describe('Mutation: deleteTaxCategory', () => {
                         priceInformation: ${toFormattedString(inputPriceInformation)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${extraItemPath} {
                         id
                         priceInformation {
@@ -284,7 +223,7 @@ describe('Mutation: deleteTaxCategory', () => {
                     cy.confirmUsingQuery(query, extraQueryName, productId, propNames, propValues).then(() => {
                         const mutation = `mutation {
                             ${mutationName}(input: { id: "${id}" }) {
-                                ${standardMutationBody}
+                                ${codeMessageError}
                             }
                         }`;
                         cy.postAndConfirmMutationError(mutation, mutationName).then((erRes) => {
@@ -292,7 +231,7 @@ describe('Mutation: deleteTaxCategory', () => {
                             expect(errorMessage).to.contain("TaxCategory is Associated with Products");
                             const deleteExtra = `mutation {
                                 ${extraDeleteName}(input: { id: "${productId}" }) {
-                                    ${standardMutationBody}
+                                    ${codeMessageError}
                                 }
                             }`;
                             const extraQueryInfo = {queryName: extraQueryName, itemId: productId, itemName: info[0].name, infoName: productInfoName};

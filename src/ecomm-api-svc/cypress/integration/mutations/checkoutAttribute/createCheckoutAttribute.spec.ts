@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 10
 describe('Mutation: createCheckoutAttribute', () => {
@@ -10,18 +11,7 @@ describe('Mutation: createCheckoutAttribute', () => {
     const queryName = "checkoutAttributes";
     const itemPath = 'checkoutAttribute';
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             name
@@ -58,21 +48,11 @@ describe('Mutation: createCheckoutAttribute', () => {
     
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail with no 'Name' input", () => {
@@ -90,12 +70,7 @@ describe('Mutation: createCheckoutAttribute', () => {
         });
 
         it("Mutation will fail with invalid 'Name' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { name: 7 }) {
-                    ${standardMutationBody}
-                }
-            }`
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidName(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail with valid 'Name' input but no 'Values' input", () => {
@@ -168,18 +143,7 @@ describe('Mutation: createCheckoutAttribute', () => {
                         customData: ${toFormattedString(customData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -251,18 +215,7 @@ describe('Mutation: createCheckoutAttribute', () => {
                         values: ${toFormattedString(values)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         displayOrder
@@ -340,18 +293,7 @@ describe('Mutation: createCheckoutAttribute', () => {
                             taxCategoryId: "${itemIds[0]}"
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name

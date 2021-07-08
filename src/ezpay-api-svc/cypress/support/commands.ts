@@ -39,6 +39,22 @@ Cypress.Commands.add("postGQL", (query) => {
   });
 });
 
+// -- This will post GQL query for checkout service --
+Cypress.Commands.add("postGQLCheckoutConsumer", (query) => {
+  return cy.request({
+    method: "POST",
+    url: "/graphql",
+    headers: {
+      "x-aptean-apim": Cypress.env("x-aptean-apim-checkout-consumer"),
+      "x-aptean-tenant": Cypress.env("x-aptean-tenant"),
+      "x-aptean-tenant-secret": Cypress.env("x-aptean-tenant-secret"),
+      "x-aptean-product": Cypress.env("x-aptean-product"),
+    },
+    body: { query },
+    failOnStatusCode: false,
+  });
+});
+
 // -- This will post GQL query without tenant secret --
 Cypress.Commands.add("postGQLWithoutTenantSecret", (query) => {
   return cy.request({
@@ -98,7 +114,7 @@ Cypress.Commands.add("generatePaymentRequest", (requestAmount: Number = 0) => {
     .then((uniqueId) => {
       let amount = requestAmount;
       if (amount === 0) {
-        amount = Cypress._.random(100, 1e3);
+        amount = Cypress._.random(300, 1e3);
       }
       const referenceNumber = Cypress._.random(0, 1e20);
       const gqlQuery = `mutation {
@@ -388,7 +404,13 @@ Cypress.Commands.add("getPaymentMethodById", (id: string) => {
       }
     }
   }`;
-  cy.postGQL(gqlQuery).then((res) => {
+
+  cy.while(
+    gqlQuery,
+    CommandType.PostGQL,
+    (res) => res.body.data.paymentMethods.nodes[0].status !== "PROCESSING",
+    1000
+  ).then((res) => {
     return res.body.data.paymentMethods.nodes[0];
   });
 });
@@ -553,7 +575,7 @@ Cypress.Commands.add(
     options: { idempotencyKey: string; debug: boolean },
     currentElapsed: number = 0
   ) => {
-    const { idempotencyKey = "", debug = false } = options || {};
+    const { idempotencyKey = "", debug = true } = options || {};
     if (currentElapsed > timeout) {
       throw new Error(
         `Timeout limit reached for the while command. Timeout was: ${timeout}`
@@ -655,3 +677,48 @@ Cypress.Commands.add(
     }
   }
 );
+
+// -- This will create a checkout session --
+Cypress.Commands.add("createCheckoutSession", () => {
+  const mutation = `mutation {
+    createCheckoutSession(
+      input: {
+        amount: 1200
+        cancelUrl: "www.youtube.com"
+        successUrl: "www.google.com"
+        currency: USD
+        failOnReview: true
+        immediateCapture: true
+        orderDetails: {
+          customerReferenceNumber: "ref"
+          lineItems: [
+            {
+              currency: USD
+              description: "desc"
+              quantity: 1
+              totalAmount: 100
+              unitOfMeasure: "pieces"
+              unitPrice: 100
+            }
+          ]
+          orderType: GOODS
+          shortDescription: "SHORTDESC"
+          taxAmount: 2
+        }
+        payerDetails: {
+          address: { country: "NL", postalCode: "4711 JJ" }
+          email: "fjongmans@aptean.com"
+          name: "Ferry Jongmans"
+          phone: { countryCode: "+31", number: "0623963878" }
+        }
+      }
+    ) {
+      checkoutSession {
+        id
+      }
+    }
+  }
+  `;
+
+  return cy.postGQLCheckoutConsumer(mutation);
+});

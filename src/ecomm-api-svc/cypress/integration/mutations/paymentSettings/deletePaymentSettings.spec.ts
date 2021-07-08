@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { SupplementalItemRecord } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 5
 describe('Mutation: deletePaymentSettings', () => {
@@ -13,20 +14,6 @@ describe('Mutation: deletePaymentSettings', () => {
     const companyMutName = "createCompany";
     const companyDelete = "deleteCompany";
     const companyQuery = "companies";
-    const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
-    `;
 
     const queryInformation = {
         queryName: queryName, 
@@ -76,30 +63,15 @@ describe('Mutation: deletePaymentSettings', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, codeMessageError);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, codeMessageError);
         });
 
         it("Mutation will fail with invalid 'id' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: true }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidId(mutationName, codeMessageError);
         });
 
         it("Mutation will succeed with valid 'id' input from an existing item", () => {
@@ -113,7 +85,7 @@ describe('Mutation: deletePaymentSettings', () => {
                     updateIdAndName(returnedId, extraItemInput.name);
                     const mutation = `mutation {
                         ${mutationName}(input: { id: "${id}" }) {
-                            ${standardMutationBody}
+                            ${codeMessageError}
                         }
                     }`;
                     cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
@@ -158,7 +130,7 @@ describe('Mutation: deletePaymentSettings', () => {
                     updateIdAndName(returnedId, extraItemInput.name);
                     const mutation = `mutation {
                         ${mutationName}(input: { id: "${id}" }) {
-                            ${standardMutationBody}
+                            ${codeMessageError}
                         }
                     }`;
                     cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then(() => {
