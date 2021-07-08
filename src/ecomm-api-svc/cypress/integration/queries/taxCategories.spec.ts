@@ -28,14 +28,14 @@ describe('Query: taxCategories', () => {
             ${standardQueryBody}
         }
     }`;
-    var trueTotalInput = "";
+    var inputNum = "";
 
     before(() => {
         cy.postAndValidate(standardQuery, queryName).then((res) => {
             const { nodes, edges, totalCount } = res.body.data[queryName];
             expect(nodes.length).to.be.eql(edges.length);
             if (totalCount > nodes.length) {
-                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", ": "";
+                inputNum = totalCount > 50 ? 50 : totalCount;
             }
         });
     });
@@ -102,13 +102,13 @@ describe('Query: taxCategories', () => {
 
         it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(first: ${inputNum}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
             cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
                 const descQuery = `{
-                    ${queryName}(${trueTotalInput}orderBy: {direction: DESC, field: NAME}) {
+                    ${queryName}(last: ${inputNum}, orderBy: {direction: DESC, field: NAME}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -127,7 +127,7 @@ describe('Query: taxCategories', () => {
                 });
             });
         });
-    
+
         it("Query with valid 'first' input argument will return only that amount of items", () => {
             cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
                 // If there's only one item, we can't do any pagination
@@ -149,7 +149,7 @@ describe('Query: taxCategories', () => {
 
         it("Query with valid 'last' input argument will return only that amount of items", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(first: ${inputNum}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -269,10 +269,10 @@ describe('Query: taxCategories', () => {
                 });
             });
         });
-        
+
         it("Query with a valid 'after' input argument will return all items after that value", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(first: ${inputNum}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -283,6 +283,7 @@ describe('Query: taxCategories', () => {
                     }
                 }`;
                 cy.postAndValidate(afterQuery, queryName).then((resp) => {
+                    debugger;
                     const hasNextPage = resp.body.data[queryName].totalCount > resp.body.data[queryName].nodes.length;
                     // Verify that the pageInfo's cursors match up with the edges array's cursors
                     cy.verifyPageInfo(resp, queryName, hasNextPage, true);
@@ -314,7 +315,7 @@ describe('Query: taxCategories', () => {
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
             });
         });
-        
+
         it("Query with both 'before' and 'after' input arguments will fail", () => {
             const gqlQuery = `{
                 ${queryName}(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: NAME}) {
@@ -322,7 +323,7 @@ describe('Query: taxCategories', () => {
                 }
             }`;
             cy.postAndConfirmError(gqlQuery, true).then((res) => {
-                expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
+                expect(res.body.errors[0].message[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
             });
         });
     });
@@ -332,7 +333,7 @@ describe('Query: taxCategories', () => {
             cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const first = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `first: ${first}`});
+                    Cypress.log({ message: `first: ${first}` });
                     const beforeQuery = `{
                         ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
@@ -349,7 +350,7 @@ describe('Query: taxCategories', () => {
 
         it("Query with both 'after' and 'first' input will arguments return a specific amount of items after that value", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(first: ${inputNum}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -357,8 +358,8 @@ describe('Query: taxCategories', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const first = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `first: ${first}`});
+                        const first = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `first: ${first}` });
                         const afterQuery = `{
                             ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                                 ${standardQueryBody}
@@ -376,14 +377,14 @@ describe('Query: taxCategories', () => {
 
         it("Query with both 'before' and 'last' input arguments will return a specific amount of items before that value", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(first: ${inputNum}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
             cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const last = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `last: ${last}`});
+                    Cypress.log({ message: `last: ${last}` });
                     const beforeQuery = `{
                         ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
@@ -400,7 +401,7 @@ describe('Query: taxCategories', () => {
 
         it("Query with both 'after' and 'last' input will return a specific amount of items after that value", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(first: ${inputNum}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -408,8 +409,8 @@ describe('Query: taxCategories', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const last = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `last: ${last}`});
+                        const last = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `last: ${last}` });
                         const afterQuery = `{
                             ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                                 ${standardQueryBody}
@@ -477,7 +478,7 @@ describe('Query: taxCategories', () => {
 
         it('Query with valid "After" input and invalid "first" input will fail', () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(first: ${inputNum}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -496,7 +497,7 @@ describe('Query: taxCategories', () => {
 
         it('Query with invalid "Before" input and valid "last" input will fail', () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(first: ${inputNum}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -519,7 +520,7 @@ describe('Query: taxCategories', () => {
 
         it('Query with valid "Before" input and invalid "last" input will fail', () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(first: ${inputNum}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -538,7 +539,7 @@ describe('Query: taxCategories', () => {
 
         it('Query with invalid "After" input and valid "last" input will fail', () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(first: ${inputNum}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -561,7 +562,7 @@ describe('Query: taxCategories', () => {
 
         it('Query with valid "After" input and invalid "last" input will fail', () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(first: ${inputNum}, orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
