@@ -862,8 +862,10 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
         }
     }
     if (nodes.length !== 1 && edges.length !== 1) {
-        expect(pageInfo.startCursor).not.to.be.eql(sCursor);
-        expect(pageInfo.endCursor).to.eql(eCursor);
+        if (data.totalCount <= 50) {
+            expect(pageInfo.startCursor).not.to.be.eql(sCursor);
+            expect(pageInfo.endCursor).to.eql(eCursor);
+        }
     }
 });
 

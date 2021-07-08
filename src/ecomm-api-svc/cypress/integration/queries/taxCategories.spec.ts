@@ -283,7 +283,6 @@ describe('Query: taxCategories', () => {
                     }
                 }`;
                 cy.postAndValidate(afterQuery, queryName).then((resp) => {
-                    debugger;
                     const hasNextPage = resp.body.data[queryName].totalCount > resp.body.data[queryName].nodes.length;
                     // Verify that the pageInfo's cursors match up with the edges array's cursors
                     cy.verifyPageInfo(resp, queryName, hasNextPage, true);
