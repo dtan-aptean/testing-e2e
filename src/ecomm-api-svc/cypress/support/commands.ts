@@ -2,10 +2,13 @@
  * HELPER FUNCTIONS
  */
 
+import { codeMessageError } from "./mutationTests";
+import { defaultField } from "./queryTests";
+
 // Turns an array or object into a string to use as gql input or with a custom command's consoleProps logging functionality
 export const toFormattedString = (item, isMessage?: boolean, indentation?: number): string => {
     // Names of fields that are enum types and should not be wrapped in quotations.
-    const enumTypes = ["discountType", "discountLimitationType", "manageInventoryMethod", "backOrderMode"];
+    const enumTypes = ["discountType", "discountLimitationType", "manageInventoryMethod", "backOrderMode", "action"];
     function addTabs(depthLevel: number) {
         var indent = '  ';
         for (var i = 1; i < depthLevel; i++) {
@@ -184,12 +187,6 @@ export const createMutResMessage = (isSuccess: boolean, mutationName: string): s
     switch (mutationFeature) {
         case "category":
             message = "categories";
-            break;
-        case "returnReason":
-            message = "returnReason";
-            break;
-        case "paymentSettings":
-            message = "paymentSettings";
             break;
         case "inventory":
             message = "product quantity";
@@ -640,18 +637,7 @@ Cypress.Commands.add("createAndGetId", (mutationName: string, itemPath: string, 
     }`;
     const mutation = `mutation {
         ${mutationName}(input: ${input}) {
-            code
-            message
-            errors {
-                code
-                message
-                domain
-                details {
-                    code
-                    message
-                    target
-                }
-            }
+            ${codeMessageError}
             ${itemPath} {
                 ${itemPath === "refund" ? refundIdFormat : "id"}
                 ${additionalFields ? additionalFields : ""}
@@ -787,18 +773,7 @@ Cypress.Commands.add("createParentAndChildCat", (
                     categoryInfo: [{ name: "${newChildName}", languageCode: "Standard" }]
                 }
             ) {
-                code
-                message
-                errors {
-                    code
-                    message
-                    domain
-                    details {
-                        code
-                        message
-                        target
-                    }
-                }
+                ${codeMessageError}
                 category {
                     id
                     categoryInfo {
@@ -861,9 +836,13 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
             name
             languageCode
         }`;
+    } else if (queryName === "paymentSettings") {
+        nameField = `company {
+            name
+        }`;
     }
     var searchQuery = `{
-        ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: NAME}) {
+        ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
             totalCount
             nodes {
                 id
@@ -898,7 +877,7 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
             } else {
                 matchingItems = nodes.filter((item) => {
                     if (validName) {
-                        return item.id.toUpperCase() === itemId.toUpperCase() && item.name === itemName;
+                        return item.id.toUpperCase() === itemId.toUpperCase() && (queryName === "paymentSettings" ? item.company.name : item.name) === itemName;
                     } else {
                         return item.id.toUpperCase() === itemId.toUpperCase();
                     }
@@ -931,7 +910,7 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
 // Same as above but for items that don't have a name and instead works by the id field
 Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, searchParameter: string, queryName: string, altUrl?: string) => {
     Cypress.log({
-        name: "queryForDeleted",
+        name: "queryForDeletedById",
         message: `querying ${queryName} for deleted item "${itemId}"`,
         consoleProps: () => {
             return {
@@ -945,7 +924,7 @@ Cypress.Commands.add("queryForDeletedById", (asTest: boolean, itemId: string, se
     });
     var idField = queryName === "refunds" ? "order { id }" : "id";
     const searchQuery = `{
-        ${queryName}(${searchParameter}: "${itemId}", orderBy: {direction: ASC, field: ${queryName === "refunds" ? "TIMESTAMP" : "NAME"}}) {
+        ${queryName}(${searchParameter}: "${itemId}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
             nodes {
                 ${idField}
             }
@@ -1029,18 +1008,7 @@ Cypress.Commands.add("deleteItem", (mutationName: string, id: string, altUrl?: s
     });
     var mutation = `mutation {
         ${mutationName}(input: { id: "${id}" }) {
-            code
-            message
-            errors {
-                code
-                message
-                domain
-                details {
-                    code
-                    message
-                    target
-                }
-            }
+            ${codeMessageError}
         }
     }`;
     return cy.postMutAndValidate(mutation, mutationName, "deleteMutation", altUrl);
@@ -1256,11 +1224,13 @@ const matchObject = (item, itemToMatch, failOnNoMatch?: boolean, parentPropName?
             var useAsFilter = props[p].includes("Info");
             // If the property value is an array, start the whole process over again to verify the array's items
             propMatches = matchArrayItems(item[props[p]], itemToMatch[props[p]], descendingPropName, useAsFilter);
-        } else if (typeof itemToMatch[props[p]] === 'object') {
+        } else if (typeof itemToMatch[props[p]] === 'object' && itemToMatch[props[p]] !== null) {
             // If the property value is an object, verify the object's properties match
             propMatches = matchObject(item[props[p]], itemToMatch[props[p]], !!failOnNoMatch, descendingPropName);
         } else {
-            if (failOnNoMatch) {
+            if (failOnNoMatch && props[p] === "id") {
+                expect(item[props[p]].toUpperCase()).to.be.eql(itemToMatch[props[p]].toUpperCase(), `Verify ${descendingPropName}`);
+            } else if (failOnNoMatch) {
                 expect(item[props[p]]).to.be.eql(itemToMatch[props[p]], `Verify ${descendingPropName}`);
             }
             propMatches = item[props[p]] === itemToMatch[props[p]];
@@ -1310,6 +1280,8 @@ const compareExpectedToResults = (subject, propertyNames: string[], expectedValu
                 return name.includes("Info");
             }));
             verifySeoData(subject[propertyNames[i]], expectedValues[i], expectedValues[infoIndex]);
+        } else if (propertyNames[i] === "id") {
+            expect(subject[propertyNames[i]].toUpperCase()).to.be.eql(expectedValues[i].toUpperCase(), `Verify ${propertyNames[i]}`);
         } else {
             if (expectedValues[i] && subject[propertyNames[i]] === null) {
                 assert.exists(subject[propertyNames[i]], `${propertyNames[i]} should not be null`);
@@ -1382,6 +1354,8 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, itemP
                 }
             } else if (itemToMatch[props[p]] !== null && typeof itemToMatch[props[p]] === 'object') {
                 matchObject(item[props[p]], itemToMatch[props[p]], descendingPropName);
+            } else if (props[p] === "id") {
+                expect(item[props[p]].toUpperCase()).to.be.eql(itemToMatch[props[p]].toUpperCase(), `Verify ${descendingPropName}`);
             } else {
                 expect(item[props[p]]).to.be.eql(itemToMatch[props[p]], `Verify ${descendingPropName}`);
             }
@@ -1403,6 +1377,8 @@ Cypress.Commands.add("confirmMutationSuccess", (res, mutationName: string, itemP
                 return name.includes("Info");
             }));
             verifySeoData(result[propNames[i]], values[i], values[infoIndex]);
+        } else if (propNames[i] === "id") {
+            expect(result[propNames[i]].toUpperCase()).to.be.eql(values[i].toUpperCase(), `Verifying ${propNames[i]}`);
         } else {
             if (values[i] && result[propNames[i]] === null) {
                 assert.exists(result[propNames[i]], `${propNames[i]} should not be null`);

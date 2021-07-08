@@ -3,12 +3,16 @@
 describe("Payer Portal - Recent Payments Table", function () {
   let merchantIndex = 0;
   let merchantLength = 0;
+  let consolidated = false;
+  let partial = false;
   before(() => {
     cy.login();
-    cy.wait(10000);
+    cy.waitForRootPageLoading(1);
     cy.getMerchantIndex().then((resp) => {
       merchantIndex = resp.merchantIndex;
       merchantLength = resp.merchantLength;
+      consolidated = resp.consolidatedPayment;
+      partial = resp.partialPayment;
     });
   });
 
@@ -16,7 +20,7 @@ describe("Payer Portal - Recent Payments Table", function () {
     beforeEach(() => {
       cy.visit("/");
       cy.wait(5000);
-      if (merchantLength > 1) {
+      if (merchantLength > 0) {
         cy.get("h6:contains(Balance Due)")
           .eq(merchantIndex)
           .parent()
@@ -24,7 +28,7 @@ describe("Payer Portal - Recent Payments Table", function () {
           .within(() => {
             cy.get("button").click({ force: true });
           });
-        cy.wait(12000);
+        cy.waitForRequestLoading(1);
       }
     });
 
@@ -36,8 +40,8 @@ describe("Payer Portal - Recent Payments Table", function () {
     it("Creating and paying the payment request add the data in recent payments table", () => {
       cy.createPaymentRequest(1000).then((response) => {
         // Creating the recent payment
-        cy.makePayment(merchantIndex, merchantLength);
-        if (merchantLength > 1) {
+        cy.makePayment(merchantIndex, merchantLength, consolidated, partial, 1);
+        if (merchantLength > 0) {
           cy.get("h6:contains(Balance Due)")
             .eq(merchantIndex)
             .parent()
@@ -45,7 +49,7 @@ describe("Payer Portal - Recent Payments Table", function () {
             .within(() => {
               cy.get("button").click({ force: true });
             });
-          cy.wait(18000);
+          cy.waitForRequestLoading(1);
         }
         cy.get("[id=disputes-tab]").should("be.visible").click();
         cy.get("[data-cy=recent-transactions-list]").should("be.visible");
@@ -55,7 +59,7 @@ describe("Payer Portal - Recent Payments Table", function () {
           .find("tr")
           .eq(1)
           .find("td")
-          .eq(1)
+          .eq(0)
           .should("contain", response.referenceNumber);
       });
     });
@@ -69,9 +73,9 @@ describe("Payer Portal - Recent Payments Table", function () {
         .find("tr")
         .eq(1)
         .find("td")
-        .eq(1)
+        .eq(0)
         .within(() => cy.get('a[href="#"]').click());
-      cy.get("[data-cy=payment-details-modal]")
+      cy.get("[data-cy=recent-payment-details-modal]")
         .should("exist")
         .should("be.visible");
     });
@@ -85,32 +89,51 @@ describe("Payer Portal - Recent Payments Table", function () {
         .find("tr")
         .eq(1)
         .find("td")
-        .eq(1)
+        .eq(0)
         .within(() => cy.get('a[href="#"]').click());
-      cy.get("[data-cy=payment-details-modal]")
+      cy.get("[data-cy=recent-payment-details-modal]")
         .should("exist")
         .should("be.visible");
 
       //closes the payment details dialog
-      cy.get("[data-cy=payment-details-close]")
+      cy.get("[data-cy=recent-payment-details-close]")
         .should("be.visible")
         .should("be.enabled")
         .click();
-      cy.get("[data-cy=payment-details-modal]").should("not.exist");
+      cy.get("[data-cy=recent-payment-details-modal]").should("not.exist");
     });
 
     it('should have a working "Download Invoice" link', () => {
       cy.get("[id=disputes-tab]").should("be.visible").click();
       cy.get("[data-cy=recent-transactions-list]").should("be.visible");
       cy.wait(5000);
-      //opening the payment details modal
+
+      //checking in table
       cy.get("table")
         .find("tr")
         .eq(1)
         .find("td")
         .eq(1)
+        .within(() =>
+          cy
+            .get("a")
+            .should("have.attr", "href")
+            .then((href) => {
+              cy.request("GET", href).then((response) => {
+                cy.expect(response.status).to.eq(200);
+              });
+            })
+        );
+
+      //checking in modal
+      //opening the payment details modal
+      cy.get("table")
+        .find("tr")
+        .eq(1)
+        .find("td")
+        .eq(0)
         .within(() => cy.get('a[href="#"]').click());
-      cy.get("[data-cy=payment-details-modal]")
+      cy.get("[data-cy=recent-payment-details-modal]")
         .should("exist")
         .should("be.visible");
 
@@ -133,9 +156,9 @@ describe("Payer Portal - Recent Payments Table", function () {
         .find("tr")
         .eq(1)
         .find("td")
-        .eq(1)
+        .eq(0)
         .within(() => cy.get('a[href="#"]').click());
-      cy.get("[data-cy=payment-details-modal]")
+      cy.get("[data-cy=recent-payment-details-modal]")
         .should("exist")
         .should("be.visible");
 
@@ -152,10 +175,10 @@ describe("Payer Portal - Recent Payments Table", function () {
         .find("tr")
         .eq(1)
         .find("td")
-        .eq(1)
+        .eq(0)
         .within(() => cy.get('a[href="#"]').click());
       //contains payment history
-      cy.get("[data-cy=payment-details-modal]")
+      cy.get("[data-cy=recent-payment-details-modal]")
         .should("exist")
         .should("be.visible")
         .should("contain", "Payment History");

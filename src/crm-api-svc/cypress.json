@@ -2,6 +2,10 @@
   "baseUrl": "#{CRM_SVC_BASE_URL}#",
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
-  "env": {},
+  "env": {
+    "x-aptean-apim": "#{X_APTEAN_APIM}#", 
+    "x-aptean-tenant": "#{X_CRM_TENANT}#",
+    "x-aptean-tenant-secret": "#{X_CRM_TENANT_SECRET}#"
+  },
   "supportFile": "cypress/support/index.ts"
 }

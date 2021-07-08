@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 13
 describe('Mutation: createVendor', () => {
@@ -11,18 +12,7 @@ describe('Mutation: createVendor', () => {
     const itemPath = 'vendor';
     const infoName = "vendorInfo";
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             ${infoName} {
@@ -144,18 +134,7 @@ describe('Mutation: createVendor', () => {
                         customData: ${toFormattedString(customData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -226,18 +205,7 @@ describe('Mutation: createVendor', () => {
                         seoData: ${toFormattedString(seoData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         active
@@ -327,18 +295,7 @@ describe('Mutation: createVendor', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -382,18 +339,7 @@ describe('Mutation: createVendor', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -462,18 +408,7 @@ describe('Mutation: createVendor', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {
@@ -549,18 +484,7 @@ describe('Mutation: createVendor', () => {
                         priceRange: ${toFormattedString(priceRange)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         ${infoName} {

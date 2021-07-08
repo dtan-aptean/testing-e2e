@@ -1,4 +1,7 @@
 /// <reference types="cypress" />
+
+import { codeMessageError } from "../../../support/mutationTests";
+
 // TEST COUNT: 7
 describe('Mutation: createCustomerRole', () => {
     var id = '';
@@ -7,18 +10,7 @@ describe('Mutation: createCustomerRole', () => {
     const queryName = "customerRoles";
     const itemPath = 'customerRole';
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+    ${codeMessageError}
         ${itemPath} {
             id
             name
@@ -62,12 +54,7 @@ describe('Mutation: createCustomerRole', () => {
         });
 
         it("Mutation will fail with invalid 'Name' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { name: 7 }) {
-                    ${standardMutationBody}
-                }
-            }`
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidName(mutationName, standardMutationBody);
         });
 
         it("Mutation with valid 'Name' input will create a new item", () => {
@@ -147,18 +134,7 @@ describe('Mutation: createCustomerRole', () => {
                         customData: {data: "${customData.data}", canDelete: ${customData.canDelete}}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -209,18 +185,7 @@ describe('Mutation: createCustomerRole', () => {
                         systemName: "${systemName}"
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         isTaxExempt

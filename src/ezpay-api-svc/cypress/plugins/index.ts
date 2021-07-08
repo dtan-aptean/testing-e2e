@@ -12,6 +12,7 @@
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
 import axios from 'axios';
+import * as helper from '../support/getAuthToken';
 import * as fs from 'fs';
 import * as mime from 'mime-types';
 import { BlobServiceClient } from "@azure/storage-blob";
@@ -20,13 +21,16 @@ const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/li
 /**
  * @type {Cypress.PluginConfig}
  */
-module.exports = (on, config) => {
+module.exports = async (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
   const dateSubFolder = new Date().toISOString().substring(0,19);
   const storageConnString = config.env.storageAccountConnString;
   config.screenshotsFolder = `${config.screenshotsFolder}/${dateSubFolder}`;
   config.reporterOptions.reportDir = `${config.reporterOptions.reportDir}/${dateSubFolder}`
+
+  const token = await helper.getAdToken(config.env.username, config.env.password, config.env.tokenUrl);
+  config.env.authorization = token;
 
   on('before:run', async (details) => {
     console.log('override before:run');

@@ -157,11 +157,11 @@ Cypress.Commands.add("createPaymentRequest", (amount) => {
 // -- This will make payment for the first due payment in payments due table --
 Cypress.Commands.add(
   "makePayment",
-  (merchantIndex: number, merchantLength: number) => {
+  (merchantIndex, merchantLength, consolidated, partial, consolidatedCount) => {
     // Let table load
     cy.wait(5000);
     cy.visit("/");
-    cy.wait(5000);
+    cy.waitForRootPageLoading(1);
 
     cy.get("body").then(($body) => {
       //Adding payment method according to our need
@@ -214,6 +214,9 @@ Cypress.Commands.add(
         cy.get("[data-cy=menu-options]").should("have.length", length + 1);
       };
 
+      cy.get("[data-cy=menu-icon]").click();
+      cy.wait(1000);
+
       if (
         $body.find("[data-cy=menu-options]").length === 1 &&
         !$body.find("[data-cy=add-bank-account]").length
@@ -221,12 +224,10 @@ Cypress.Commands.add(
         addCreditCard($body.find("[data-cy=menu-options]").length);
       } else if (!$body.find("[data-cy=menu-options]").length) {
         addCreditCard(0);
-      } else {
-        cy.wait(10000);
       }
 
       //click on merchant tile
-      if (merchantLength > 1) {
+      if (merchantLength > 0) {
         cy.get("h6:contains(Balance Due)")
           .eq(merchantIndex)
           .parent()
@@ -234,17 +235,28 @@ Cypress.Commands.add(
           .within(() => {
             cy.get("button").click({ force: true });
           });
-        cy.wait(18000);
+        cy.waitForRequestLoading(1);
       }
 
       // Grab the first payment from the table and pay by credit card
-      cy.get("table")
-        .find("tr")
-        .eq(1)
-        .find("td")
-        .eq(5)
-        .find("button")
-        .click({ force: true });
+      if (consolidated === true && consolidatedCount > 1) {
+        for (var count = 0; count < consolidatedCount; count++) {
+          cy.get("table")
+            .find("tr")
+            .eq(count)
+            .find("button")
+            .click({ force: true });
+        }
+      } else {
+        cy.get("table").find("tr").eq(0).find("button").click({ force: true });
+      }
+
+      if (consolidated === true) {
+        cy.get("button:contains(PAY SELECTED)").last().click({ force: true });
+      } else if (partial === true) {
+        cy.get("button:contains(PAY)").last().click({ force: true });
+      }
+
       // Wait for page to load
       cy.wait(5000);
       cy.get("body").then(($makePaymentBody) => {
@@ -253,14 +265,20 @@ Cypress.Commands.add(
             .find("[data-cy=submit-payment-button]")
             .is(":disabled")
         ) {
-          $makePaymentBody.find("div:contains(Card ending in)").last().click();
+          cy.get("p:contains(Card ending in)")
+            .first()
+            .parent()
+            .click({ force: true });
         } else if (
           $makePaymentBody.find("div:contains(Account ending in)").length
         ) {
           cy.get(".MuiIconButton-label > .MuiSvgIcon-root").click({
             force: true,
           });
-          $makePaymentBody.find("div:contains(Card ending in)").last().click();
+          cy.get("p:contains(Card ending in)")
+            .first()
+            .parent()
+            .click({ force: true });
         }
       });
       cy.get("[data-cy=submit-payment-button]").click();
@@ -268,18 +286,25 @@ Cypress.Commands.add(
       cy.get("[data-cy=pay-now]").click();
       cy.wait(5000);
       cy.visit("/");
-      cy.wait(5000);
+      cy.waitForRootPageLoading(1);
     });
   }
 );
 
-Cypress.Commands.add("getMerchantIndex", (amount) => {
+Cypress.Commands.add("getMerchantIndex", () => {
   const gqlQuery = `query {
         payerTransactionSummaryByMerchant{
           merchantSummary{
             merchantInfo{
+              name
               owner{
                 tenantId
+              }
+              features {
+                paymentRequests {
+                  consolidatedPayment
+                  partialPayment
+                }
               }
             }
           }
@@ -288,21 +313,62 @@ Cypress.Commands.add("getMerchantIndex", (amount) => {
   cy.postGQL(gqlQuery).then((resp) => {
     // should be 200 ok
     cy.expect(resp.isOkStatusCode).to.be.equal(true);
+    let consolidatedPayment = null;
+    let partialPayment = null;
     let merchantIndex = 0;
     const userTenant = Cypress.env("x-aptean-tenant");
     const merchantSummary =
       resp.body.data.payerTransactionSummaryByMerchant.merchantSummary;
 
-    merchantSummary.forEach((element, index) => {
+    const sortedMerchantSummary = merchantSummary.slice().sort((a, b) => {
+      if (a.merchantInfo.name && b.merchantInfo.name) {
+        return a.merchantInfo.name > b.merchantInfo.name ? 1 : -1;
+      }
+      return 0;
+    });
+
+    sortedMerchantSummary.forEach((element, index) => {
       if (element.merchantInfo.owner.tenantId === userTenant) {
         merchantIndex = index;
+        consolidatedPayment =
+          element.merchantInfo.features.paymentRequests.consolidatedPayment;
+        partialPayment =
+          element.merchantInfo.features.paymentRequests.partialPayment;
       }
     });
 
     const response = {
-      merchantIndex: merchantIndex,
-      merchantLength: merchantSummary.length,
+      merchantIndex,
+      merchantLength: sortedMerchantSummary.length,
+      consolidatedPayment,
+      partialPayment,
     };
     return response;
+  });
+});
+
+Cypress.Commands.add("waitForRootPageLoading", (waitCount: number) => {
+  if (waitCount > 5) {
+    return;
+  }
+  cy.get("body").then(($rootBody) => {
+    if (!$rootBody.find("h6:contains(Balance Due)").length) {
+      cy.wait(10000);
+      cy.waitForRootPageLoading(waitCount + 1);
+    }
+    return;
+  });
+});
+
+Cypress.Commands.add("waitForRequestLoading", (waitCount: number) => {
+  if (waitCount > 5) {
+    return;
+  }
+  cy.get("body").then(($rootBody) => {
+    if (!$rootBody.find("button:contains(MAKE PAYMENT)").length) {
+      cy.wait(10000);
+      cy.waitForRequestLoading(waitCount + 1);
+    }
+    return;
   });
 });

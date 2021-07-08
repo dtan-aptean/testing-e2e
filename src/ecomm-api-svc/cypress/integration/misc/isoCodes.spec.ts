@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { confirmStorefrontEnvValues, toFormattedString } from "../../support/commands";
+import { codeMessageError } from "../../support/mutationTests";
 
 var originalBaseUrl = Cypress.config("baseUrl");
 confirmStorefrontEnvValues();
@@ -202,18 +203,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             address {
@@ -254,18 +244,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             address {
@@ -306,18 +285,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             address {
@@ -408,18 +376,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             address {
@@ -461,18 +418,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             address {
@@ -514,18 +460,7 @@ describe("Misc. Tests: isoCodes", { baseUrl: `${Cypress.env("storefrontUrl")}` }
                             ${infoName}: ${toFormattedString(info)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             address {
