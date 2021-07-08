@@ -15,7 +15,7 @@ jobs:
       Contents: '**'
       TargetFolder: $(Pipeline.Workspace)/${{ parameters.packageName }}/cypress
 
-  - script: mv $(System.DefaultWorkingDirectory)/src/${{ parameters.packageName }}/.cypress.json $(Pipeline.Workspace)/${{ parameters.packageName }}/cypress.json
+  - script: mv $(System.DefaultWorkingDirectory)/src/${{ parameters.packageName }}/cypress.json $(Pipeline.Workspace)/${{ parameters.packageName }}/cypress.json
     displayName: ${{ parameters.packageName }} - Add cypress.json
 
   - task: replacetokens@3
