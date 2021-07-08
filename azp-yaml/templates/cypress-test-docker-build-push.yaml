@@ -1,0 +1,54 @@
+parameters:
+  packageName: ''
+  repositoryName: ''
+  tags: 'latest'
+    
+jobs:
+- job: BuildAndPush
+  steps:
+  - checkout: self
+
+  - task: CopyFiles@2
+    displayName: ${{ parameters.packageName }} - Copy test files
+    inputs:
+      SourceFolder: $(System.DefaultWorkingDirectory)/testing-e2e/src/${{ parameters.packageName }}/cypress
+      Contents: '**'
+      TargetFolder: $(Pipeline.Workspace)/${{ parameters.packageName }}/cypress
+
+  - script: mv $(System.DefaultWorkingDirectory)/testing-e2e/src/${{ parameters.packageName }}/.cypress.json $(Pipeline.Workspace)/${{ parameters.packageName }}/cypress.json
+    displayName: ${{ parameters.packageName }} - Add cypress.json
+
+  - task: replacetokens@3
+    displayName: ${{ parameters.packageName }} - Replace tokens in cypress.json
+    inputs:
+      rootDirectory: $(Pipeline.Workspace)/${{ parameters.packageName }}
+      targetFiles: cypress.json
+      encoding: auto
+      writeBOM: true
+      actionOnMissing: fail
+      keepToken: false
+      tokenPrefix: '#{'
+      tokenSuffix: '}#'
+
+  - task: Docker@2
+    displayName: Build Docker Image
+    name: buildDockerImage
+    inputs:
+      containerRegistry: 'Pipeline-ACR-SHR'
+      repository: ${{ parameters.repositoryName }}
+      command: 'build'
+      Dockerfile: $(System.DefaultWorkingDirectory)/testing-e2e/azp-yaml/Dockerfile
+      tags: ${{ parameters.tags }}
+      buildContext: $(Pipeline.Workspace)/${{ parameters.packageName }} 
+      #arguments: ${{ parameters.dockerBuildArguments }}
+      addPipelineData: false
+
+  - task: Docker@2
+    displayName: Push Docker Image
+    name: pushDockerImage
+    inputs:
+      containerRegistry: 'Pipeline-ACR-SHR'
+      repository: ${{ parameters.repositoryName }}
+      command: 'push'
+      tags: ${{ parameters.tags }}
+      addPipelineData: false    

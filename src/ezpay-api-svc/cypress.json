@@ -14,6 +14,7 @@
     "x-aptean-tenant": "#{X_APTEAN_TENANT}#",
     "x-aptean-tenant-secret": "#{X_APTEAN_TENANT_SECRET}#",
     "x-aptean-account": "#{X_APTEAN_ACCOUNT}",
+    "x-aptean-product": "#{X_APTEAN_PRODUCT}#",    
     "wepay-base-url": "#{WEPAY_API_URL}#",
     "wepay-app-id": "#{WEPAY_APP_ID}#",
     "wepay-app-secret": "#{WEPAY_APP_SECRET}#",
@@ -21,15 +22,16 @@
     "wepay-account-id": "#{WEPAY_ACCOUNT_ID}#",
     "currency": "#{CURRENCY}#",
     "runtimeEnv": "local",
-    "storageAccountConnString": ""
+    "storageAccountConnString": "#{STORAGE_ACCOUNT_CONN_STRING}#"
   },
   "supportFile": "cypress/support/index.ts",
-  "reporter": "../../node_modules/cypress-mochawesome-reporter",
+  "reporter": "cypress-mochawesome-reporter",
   "reporterOptions": {
-    "reportDir": "cypress/report",
+    "reportDir": "/e2e/cypress/report",
     "charts": true,
     "reportPageTitle": "ezpay-api-svc",
     "embeddedScreenshots": false
   },
-  "video": false  
+  "video": false,
+  "screenshotsFolder": "/e2e/cypress/screenshots"  
 }
