@@ -11,11 +11,11 @@ jobs:
   - task: CopyFiles@2
     displayName: ${{ parameters.packageName }} - Copy test files
     inputs:
-      SourceFolder: $(System.DefaultWorkingDirectory)/testing-e2e/src/${{ parameters.packageName }}/cypress
+      SourceFolder: $(System.DefaultWorkingDirectory)/src/${{ parameters.packageName }}/cypress
       Contents: '**'
       TargetFolder: $(Pipeline.Workspace)/${{ parameters.packageName }}/cypress
 
-  - script: mv $(System.DefaultWorkingDirectory)/testing-e2e/src/${{ parameters.packageName }}/.cypress.json $(Pipeline.Workspace)/${{ parameters.packageName }}/cypress.json
+  - script: mv $(System.DefaultWorkingDirectory)/src/${{ parameters.packageName }}/.cypress.json $(Pipeline.Workspace)/${{ parameters.packageName }}/cypress.json
     displayName: ${{ parameters.packageName }} - Add cypress.json
 
   - task: replacetokens@3
@@ -37,7 +37,7 @@ jobs:
       containerRegistry: 'Pipeline-ACR-SHR'
       repository: ${{ parameters.repositoryName }}
       command: 'build'
-      Dockerfile: $(System.DefaultWorkingDirectory)/testing-e2e/azp-yaml/Dockerfile
+      Dockerfile: $(System.DefaultWorkingDirectory)/azp-yaml/Dockerfile
       tags: ${{ parameters.tags }}
       buildContext: $(Pipeline.Workspace)/${{ parameters.packageName }} 
       #arguments: ${{ parameters.dockerBuildArguments }}
