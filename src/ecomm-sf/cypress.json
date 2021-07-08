@@ -1,7 +1,7 @@
 {
   "baseUrl": "#{ECOMM_PORTAL_BASE_URL}#",
-  "username": "#{USERNAME}#",
-  "password": "#{PASSWORD}#",
+  "username": "#{ECOMM_USERNAME}#",
+  "password": "#{ECOMM_PASSWORD}#",
   "campaignReceiver": "#{ECOMM_CAMPAIGN_RECEIVER}#",  
   "doNotPrepEnv": false,
   "doNotResetEnv": false,

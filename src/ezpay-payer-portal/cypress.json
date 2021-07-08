@@ -1,5 +1,5 @@
 {
-  "baseUrl": "#{PAYER_PORTAL_BASE_URL}#",
+  "baseUrl": "#{EZPAY_PAYER_PORTAL_URL}#",
   "clientId": "#{MSAL_CLIENTID_PAYER_PORTAL}#",
   "username": "#{EZPAY_TOKEN_USER}#",
   "password": "#{EZPAY_TOKEN_PASS}#",
