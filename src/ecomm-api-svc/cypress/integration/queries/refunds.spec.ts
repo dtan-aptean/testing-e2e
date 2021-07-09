@@ -121,24 +121,6 @@ describe('Query: refunds', () => {
                 });
             });
         });
-
-        // it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
-        //     const trueTotalQuery = `{
-        //         ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
-        //             ${standardQueryBody}
-        //         }
-        //     }`;
-        //     cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
-        //         const descQuery = `{
-        //             ${queryName}(${trueTotalInput}orderBy: {direction: DESC, field: NAME}) {
-        //                 ${standardQueryBody}
-        //             }
-        //         }`;
-        //         cy.postAndValidate(descQuery, queryName).then((descRes) => {
-        //             cy.verifyReverseOrder(queryName, ascRes, descRes);
-        //         });
-        //     });
-        // });
     });
 
     context("Testing 'first' and 'last' inputs", () => {
@@ -737,48 +719,6 @@ describe('Query: refunds', () => {
     });
 
     context("Testing response values for specific fields", () => {
-        // it("Query returns a refundAmount that matches the refundedAmount field on the corresponding order", () => {
-        //     const gqlQuery = `{
-        //         ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: TIMESTAMP}) {
-        //             edges {
-        //                 cursor
-        //                 node {
-        //                     order {
-        //                         id
-        //                     }
-        //                 }
-        //             }
-        //             nodes {
-        //                 order {
-        //                     id  
-        //                     refundedAmount {
-        //                         amount
-        //                         currency
-        //                     }                  
-        //                 }
-        //                 refundAmount {
-        //                     amount
-        //                     currency
-        //                 }
-        //             }
-        //             pageInfo {
-        //                 endCursor
-        //                 hasNextPage
-        //                 hasPreviousPage
-        //                 startCursor
-        //             }
-        //             totalCount
-        //         }
-        //     }`;
-        //     cy.postAndValidate(gqlQuery, queryName).then((res) => {
-        //         const nodes = res.body.data[queryName].nodes;
-        //         nodes.forEach((node, index) => {
-        //             expect(node.refundAmount.currency).to.be.eql(node.order.refundedAmount.currency, "Expect the same refunded currency");
-        //             expect(node.refundAmount.amount).to.be.eql(node.order.refundedAmount.amount, "Expect the same refunded amount");
-        //         });
-        //     });
-        // });
-
         const partialRefundQuery = `{
             ${queryName}(orderBy: {direction: ASC, field: TIMESTAMP}) {
                 edges {
