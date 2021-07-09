@@ -46,7 +46,7 @@ describe('Query: categories', () => {
             const { nodes, edges, totalCount } = res.body.data[queryName];
             expect(nodes.length).to.be.eql(edges.length);
             if (totalCount > nodes.length) {
-                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", ": "";
+                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", " : "";
             }
         });
     });
@@ -64,7 +64,7 @@ describe('Query: categories', () => {
         it("Query with valid 'orderBy' input argument returns valid data types", () => {
             cy.postAndValidate(standardQuery, queryName);
         });
-        
+
         it("Query will fail without 'orderBy' input argument", () => {
             const gqlQuery = `{
                 ${queryName} {
@@ -134,7 +134,7 @@ describe('Query: categories', () => {
     context("Testing 'productId' input", () => {
         // Items created for the productId test
         const createdItems = [] as SupplementalItemRecord[];
-        const createdProducts =  [] as SupplementalItemRecord[];
+        const createdProducts = [] as SupplementalItemRecord[];
         const deleteName = "deleteCategory";
         const createMutName = "createCategory";
         const createPath = "category";
@@ -152,7 +152,7 @@ describe('Query: categories', () => {
                 }
             });
         };
-        
+
         var deleteItemsAfter = undefined as boolean | undefined;
         before(() => {
             deleteItemsAfter = Cypress.env("deleteItemsAfter");
@@ -171,7 +171,7 @@ describe('Query: categories', () => {
         });
 
         it("Query with valid 'productId' input will return only the items connected with that productId", () => {
-            const extraItemInput = { categoryInfo: [{name: `Cypress productId ${queryName} test`, languageCode: "Standard"}] };
+            const extraItemInput = { categoryInfo: [{ name: `Cypress productId ${queryName} test`, languageCode: "Standard" }] };
             cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
                 addCreated(false, deletionIds);
@@ -248,7 +248,7 @@ describe('Query: categories', () => {
         });
 
         it("Query using the 'productId' of a deleted product will return an error", () => {
-            const extraItemInput = {categoryInfo: [{name: `Cypress productId ${queryName} delete`, languageCode: "Standard"}]};
+            const extraItemInput = { categoryInfo: [{ name: `Cypress productId ${queryName} delete`, languageCode: "Standard" }] };
             cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput).then((results) => {
                 const { deletionIds, itemIds } = results;
                 addCreated(false, deletionIds);
@@ -428,7 +428,7 @@ describe('Query: categories', () => {
                 });
             });
         });
-        
+
         it("Query with valid 'first' input argument will return only that amount of items", () => {
             cy.returnCount(standardQuery, queryName).then((totalCount: number) => {
                 // If there's only one item, we can't do any pagination
@@ -570,7 +570,7 @@ describe('Query: categories', () => {
                 });
             });
         });
-        
+
         it("Query with a valid 'after' input argument will return all items after that value", () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
@@ -623,7 +623,7 @@ describe('Query: categories', () => {
                 }
             }`;
             cy.postAndConfirmError(gqlQuery, true).then((res) => {
-                expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
+                expect(res.body.errors[0].message[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
             });
         });
     });
@@ -633,7 +633,7 @@ describe('Query: categories', () => {
             cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const first = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `first: ${first}`});
+                    Cypress.log({ message: `first: ${first}` });
                     const beforeQuery = `{
                         ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
@@ -658,8 +658,8 @@ describe('Query: categories', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const first = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `first: ${first}`});
+                        const first = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `first: ${first}` });
                         const afterQuery = `{
                             ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                                 ${standardQueryBody}
@@ -684,7 +684,7 @@ describe('Query: categories', () => {
             cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const last = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `last: ${last}`});
+                    Cypress.log({ message: `last: ${last}` });
                     const beforeQuery = `{
                         ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
@@ -709,8 +709,8 @@ describe('Query: categories', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const last = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `last: ${last}`});
+                        const last = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `last: ${last}` });
                         const afterQuery = `{
                             ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                                 ${standardQueryBody}
