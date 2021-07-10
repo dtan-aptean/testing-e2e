@@ -74,7 +74,7 @@ module.exports = (on, config) => {
               "name": "See Details",
               "targets": [{
                   "os": "default",
-                  "uri": `https://stecommercetenanttst001.blob.core.windows.net/ecomm-sf-cypress-report/${dateSubFolder}/index.html`
+                  "uri": `https://stcypressdev001.blob.core.windows.net/ecomm-sf-cypress-report/${dateSubFolder}/index.html`
               }]
           }]
       });
