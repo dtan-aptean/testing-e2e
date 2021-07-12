@@ -7,7 +7,7 @@ var originalBaseUrl = Cypress.config("baseUrl");
 confirmStorefrontEnvValues();
 
 // TEST COUNT: 6
-describe("Misc. Tests: companies", { baseUrl: `${Cypress.env("storefrontUrl")}` }, () => {
+describe("Misc. Tests: companiesAdmin", { baseUrl: `${Cypress.env("storefrontUrl")}` }, () => {
     var id = '';
     var extraIds = [] as SupplementalItemRecord[];
     const queryName = "companies";
