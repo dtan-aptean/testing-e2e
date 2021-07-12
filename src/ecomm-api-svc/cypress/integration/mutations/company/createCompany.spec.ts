@@ -6,6 +6,7 @@ import { codeMessageError } from "../../../support/mutationTests";
 //TEST COUNT: 16
 describe('Mutation: createCompany', () => {
     var id = '';
+    var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'createCompany';
     const deleteMutName = 'deleteCompany';
     const queryName = 'companies';
@@ -38,6 +39,12 @@ describe('Mutation: createCompany', () => {
             cy.wait(1000);
         }
     });
+
+    const addExtraItemIds = (extIds: SupplementalItemRecord[]) => {
+        extIds.forEach((id) => {
+            extraIds.push(id);
+        });
+    };
 
     function generateRandomString (value: string) {
         let key = Cypress._.random(0, 1000000);
@@ -175,8 +182,9 @@ describe('Mutation: createCompany', () => {
             const extraQuery = "customers";
             const extraItemInput = { firstName: "Cypress", lastName: "Tester", email: randomEmail+".tester@email.com" };
             cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
-                const { items, itemIds } = results;
-                customerRoleIds = itemIds[0];
+                const { deletionIds, items, itemIds } = results;
+                addExtraItemIds(deletionIds);
+                customerIds = itemIds[0];
                 const mutation = `mutation {
                     ${mutationName}(input: {
                         name: "${companyName}", integrationKey: "${companyKey}"
@@ -231,7 +239,8 @@ describe('Mutation: createCompany', () => {
             const extraQuery = "customers";
             const extraItemInput = { firstName: "Cypress", lastName: "Tester", email: randomEmail+".tester@email.com" };
             cy.createAssociatedItems(3, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
-                const { items, itemIds } = results;
+                const { deletionIds, items, itemIds } = results;
+                addExtraItemIds(deletionIds);
                 customerIds = itemIds;
                 const mutation = `mutation {
                     ${mutationName}(input: {
@@ -288,7 +297,8 @@ describe('Mutation: createCompany', () => {
             const extraItemInput = { name: customerRoleName };
             cy.log(extraItemInput);
             cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
-                const { items, itemIds } = results;
+                const { deletionIds, items, itemIds } = results;
+                addExtraItemIds(deletionIds);
                 customerRoleIds = itemIds[0];
                 const mutation = `mutation {
                     ${mutationName}(input: {
@@ -351,7 +361,8 @@ describe('Mutation: createCompany', () => {
             const extraQuery = "customerRoles";
             const extraItemInput = { name: customerRoleName };
             cy.createAssociatedItems(1, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
-                const { items, itemIds } = results;
+                const { deletionIds, items, itemIds } = results;
+                addExtraItemIds(deletionIds);
                 customerRoleIds = itemIds[0];
                 const mutation = `mutation {
                     ${mutationName}(input: {
@@ -396,7 +407,8 @@ describe('Mutation: createCompany', () => {
             const extraQuery = "customerRoles";
             const extraItemInput = { name: customerRoleName };
             cy.createAssociatedItems(3, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
-                const { items, itemIds } = results;
+                const { deletionIds, items, itemIds } = results;
+                addExtraItemIds(deletionIds);
                 customerRoleIds = itemIds;
                 const mutation = `mutation {
                     ${mutationName}(input: {
@@ -506,11 +518,13 @@ describe('Mutation: createCompany', () => {
             const extraItemInputCustomerRole = { name: customerRoleName };
             const extraItemInputCustomer = { firstName: "Cypress", lastName: "Tester", email: customerEmail+".tester@email.com" };
             cy.createAssociatedItems(1, extraCreateCustomerRole, extraPathCustomerRole, extraQueryCustomerRole, extraItemInputCustomerRole).then((resultsCusRole) => {
-                const { items, itemIds } = resultsCusRole;
+                const { deletionIds, items, itemIds } = resultsCusRole;
+                addExtraItemIds(deletionIds);
                 customerRoleIds = itemIds[0];
                 const dummyCustomerRole = items;
                 cy.createAssociatedItems(1, extraCreateCustomer, extraPathCustomer, extraQueryCustomer, extraItemInputCustomer).then((resultsCust) => {
-                    const { items, itemIds } = resultsCust;
+                    const { deletionIds, items, itemIds } = resultsCust;
+                    addExtraItemIds(deletionIds);
                     customerIds = itemIds[0];
                     const dummyCustomer = items;
                     const mutation = `mutation {
