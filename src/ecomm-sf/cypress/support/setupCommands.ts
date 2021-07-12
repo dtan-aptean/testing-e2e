@@ -16,7 +16,7 @@ Cypress.Commands.add("prepareEnvironment", () => {
   Cypress.log({
     displayName: "prepareEnv",
     message: "Cleaning env and creating required items"
-  });    
+  });
   // Delete any previous Cypress discounts, products, or categories. We cannot reuse these in case there's an issue with them.
   cy.cleanupEnvironment().then(() => {
     // Create the categories we need.
@@ -35,7 +35,7 @@ Cypress.Commands.add("revertEnvironment", () => {
   Cypress.log({
     displayName: "revertEnv",
     message: "Post suite cleanup, deleting items and restoring original settings."
-  }); 
+  });
   cy.cleanupEnvironment().then(() => {
     var disableDiscounts = Cypress.env("envDisableDiscounts");
     if (disableDiscounts === true) {
@@ -61,7 +61,7 @@ Cypress.Commands.add("revertDiscounts", () => {
   }
 });
 
-const goToCategories =() => {
+const goToCategories = () => {
   cy.location("pathname").then((loc) => {
     cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
     if (!loc.includes("Category/List")) {
@@ -69,14 +69,14 @@ const goToCategories =() => {
         cy.goToAdmin();
         cy.correctLanguage(); // Fail safe to make sure we can effectively navigate
       }
-      cy.get(".nav-sidebar").find("li").contains("Catalog").click({force: true});
+      cy.get(".nav-sidebar").find("li").contains("Catalog").click({ force: true });
     }
     cy.get(".nav-sidebar")
       .find("li")
       .find(".nav-treeview")
       .find("li")
       .contains("Categories")
-      .click({force: true});
+      .click({ force: true });
     cy.wait(2000);
     cy.allowLoad();
   });
@@ -89,25 +89,29 @@ Cypress.Commands.add("cleanupEnvironment", () => {
       if ($li.length === 2) {
         return;
       } else {
+        var hasChildren = false;
+        if (isCategory){
+          var pageText = Cypress.$("#categories-grid").find("tbody").find("tr").text();
+          hasChildren = pageText.toLowerCase().includes("cypress") && pageText.includes(">>");
+        }
         cy.get(isCategory ? "#categories-grid" : "#products-grid")
           .find("tbody")
           .find("tr")
           .each(($row) => {
             const text = $row[0].innerText.toLowerCase();
             expect(text).to.include("cypress");
-            // TODO: Condense this if / else statement. Goal is to avoid deleting parent/children categories so this doesn't cause issues
-            if (isCategory) {
-              if (!$row.text().includes("parent") && !$row.text().includes(">>")) {
-                cy.wrap($row).find("input").check({force: true});   
+            if (isCategory && hasChildren) {
+              if ($row.text().includes(">>")) {
+                cy.wrap($row).find("input").check({ force: true });
               }
             } else {
-              cy.wrap($row).find("input").check({force: true});              
+              cy.wrap($row).find("input").check({ force: true });
             }
           }).then(() => {
-            cy.get("#delete-selected").click({force: true})
+            cy.get("#delete-selected").click({ force: true })
             cy.wait(500);
-            cy.get("#delete-selected-action-confirmation-submit-button").click({force: true});
-            cy.wait(1000);
+            cy.get("#delete-selected-action-confirmation-submit-button").click({ force: true });
+            cy.wait(2000);
             cy.allowLoad();
             cleanupCatalog(isCategory);
           });
@@ -122,8 +126,8 @@ Cypress.Commands.add("cleanupEnvironment", () => {
       inputId = "#SearchCategoryName";
       buttonId = "#search-categories";
     }
-    cy.get(inputId).type("Cypress", {force: true});
-    cy.get(buttonId).click({force: true});
+    cy.get(inputId).type("Cypress", { force: true });
+    cy.get(buttonId).click({ force: true });
     cy.allowLoad();
     return cleanupCatalog(isCategory);
   };
@@ -134,12 +138,12 @@ Cypress.Commands.add("cleanupEnvironment", () => {
   cy.clearCart();
   // Clean up discounts
   cy.cleanupDiscounts().then(() => {
-    Cypress.log({displayName: "cleanupProducts", message: "Deleting Cypress products"});
+    Cypress.log({ displayName: "cleanupProducts", message: "Deleting Cypress products" });
     // Clean up products
     cy.visit("/Admin/Product/List");
     cy.allowLoad();
     searchCatalog(false).then(() => {
-      Cypress.log({displayName: "cleanupCategories", message: "Deleting Cypress categories"});
+      Cypress.log({ displayName: "cleanupCategories", message: "Deleting Cypress categories" });
       //cy.visit("/Admin/Category/List");
       //cy.allowLoad();
       goToCategories();
@@ -154,13 +158,13 @@ const deleteItem = (row, deleteId: string, pathName: string) => {
   cy.wrap(row)
     .find(".button-column")
     .find("a")
-    .click({force: true});
+    .click({ force: true });
   cy.wait(5000);
   cy.wait("@editPageLoaded");
-  cy.get(`#${deleteId}-delete`).click({force: true});
+  cy.get(`#${deleteId}-delete`).click({ force: true });
   cy.get(`#${deleteId}model-Delete-delete-confirmation`)
     .find("button[type=submit]")
-    .click({force: true});
+    .click({ force: true });
   cy.wait(10000);
   cy.location("pathname").should("eql", `/Admin/${pathName}/List`);
 };
@@ -178,10 +182,10 @@ const openEditableItem = (tableId: string, deleteId: string, pathName: string, f
 
 // Delete any Cypress discounts
 Cypress.Commands.add("cleanupDiscounts", () => {
-  Cypress.log({displayName: "cleanupDiscounts", message: "Deleting Cypress discounts"});
+  Cypress.log({ displayName: "cleanupDiscounts", message: "Deleting Cypress discounts" });
   const cleanupDiscounts = () => {
-    cy.get("#SearchDiscountName").type("Cypress", {force: true});
-    cy.get("#search-discounts").click({force: true});
+    cy.get("#SearchDiscountName").type("Cypress", { force: true });
+    cy.get("#search-discounts").click({ force: true });
     cy.allowLoad();
     return cy.get(".pagination").invoke('children').then(($li) => {
       if ($li.length === 2) {
@@ -203,15 +207,15 @@ Cypress.Commands.add("cleanupDiscounts", () => {
 
 // Delete any Cypress customers
 Cypress.Commands.add("cleanupCustomers", () => {
-  Cypress.log({displayName: "cleanupCustomers", message: "Deleting Cypress customers"});
+  Cypress.log({ displayName: "cleanupCustomers", message: "Deleting Cypress customers" });
   const cleanupCustomers = () => {
     cy.get('#SelectedCustomerRoleIds_taglist').within(() => {
-      if(Cypress.$("span[title=delete]").length > 0) {
-        cy.get("span[title=delete]").click({force: true});
+      if (Cypress.$("span[title=delete]").length > 0) {
+        cy.get("span[title=delete]").click({ force: true });
       }
     });
-    cy.get("#SearchFirstName").clear({force: true}).type("Cypress", {force: true});
-    cy.get("#search-customers").click({force: true});
+    cy.get("#SearchFirstName").clear({ force: true }).type("Cypress", { force: true });
+    cy.get("#search-customers").click({ force: true });
     cy.allowLoad();
     return cy.get(".pagination").invoke('children').then(($li) => {
       if ($li.length === 2) {
@@ -234,7 +238,7 @@ Cypress.Commands.add("cleanupCustomers", () => {
       }
     });
   };
-  
+
   cy.visit("/Admin/Customer/List")
   cy.allowLoad();
   cleanupCustomers();
@@ -242,7 +246,7 @@ Cypress.Commands.add("cleanupCustomers", () => {
 
 // Delete any Cypress campaigns
 Cypress.Commands.add("cleanupCampaigns", () => {
-  Cypress.log({displayName: "cleanupCampaigns", message: "Deleting Cypress campaigns"});
+  Cypress.log({ displayName: "cleanupCampaigns", message: "Deleting Cypress campaigns" });
   const cleanupCampaigns = () => {
     cy.allowLoad();
     return cy.get(".pagination").invoke('children').then(($li) => {
@@ -271,7 +275,7 @@ Cypress.Commands.add("cleanupCampaigns", () => {
 
 // Delete any Cypress emails in the message queue
 Cypress.Commands.add("cleanupMessageQueue", () => {
-  Cypress.log({displayName: "cleanupMessageQueue", message: "Deleting queued Cypress messages"});
+  Cypress.log({ displayName: "cleanupMessageQueue", message: "Deleting queued Cypress messages" });
   const cleanupEmails = () => {
     cy.get("#queuedEmails-grid").find("tbody").find("tr").then(($rows) => {
       var cypressEmails = $rows.filter((index, item) => {
@@ -281,15 +285,15 @@ Cypress.Commands.add("cleanupMessageQueue", () => {
         cy.wrap(cypressEmails).each(($row, index, $list) => {
           const subject = $row[0].cells[2].innerText;
           if (subject.includes("Cypress") || subject.includes("cypress")) {
-            cy.wrap($row).find("input[name=checkbox_queuedemails]").check({force: true});
+            cy.wrap($row).find("input[name=checkbox_queuedemails]").check({ force: true });
           }
         }).then(() => {
           const boxes = Cypress.$("input[name=checkbox_queuedemails]");
-          const checkedBoxes = boxes.filter((index, $box) => {return $box.checked === true});
+          const checkedBoxes = boxes.filter((index, $box) => { return $box.checked === true });
           if (checkedBoxes.length > 0) {
-            cy.get("#delete-selected").click({force: true});
+            cy.get("#delete-selected").click({ force: true });
             cy.wait(200);
-            cy.get("#delete-selected-action-confirmation-submit-button").click({force: true});
+            cy.get("#delete-selected-action-confirmation-submit-button").click({ force: true });
           }
           cy.allowLoad();
           cleanupEmails();
@@ -302,8 +306,8 @@ Cypress.Commands.add("cleanupMessageQueue", () => {
   cy.visit("/Admin/QueuedEmail/List");
   cy.allowLoad();
   const today = new Date();
-  cy.get("#SearchStartDate").type(today.toLocaleString(undefined, {dateStyle: "short"}), {force: true});
-  cy.get("#search-queuedemails").click({force: true});
+  cy.get("#SearchStartDate").type(today.toLocaleString(undefined, { dateStyle: "short" }), { force: true });
+  cy.get("#search-queuedemails").click({ force: true });
   cy.allowLoad();
   cleanupEmails();
 });
@@ -311,40 +315,40 @@ Cypress.Commands.add("cleanupMessageQueue", () => {
 const enableAdvancedSettings = () => {
   return cy.get("body").then(($el) => {
     if ($el.hasClass("basic-settings-mode")) {
-      cy.get("#advanced-settings-mode").click({force: true});
+      cy.get("#advanced-settings-mode").click({ force: true });
       cy.wait(500);
     }
   });
 };
-  
+
 Cypress.Commands.add("openPanel", (panelId: string) => {
   return cy.get(panelId).then(($el) => {
     if ($el.hasClass("collapsed-card")) {
-      cy.wrap($el).find(".card-header").find("button").click({force: true});
+      cy.wrap($el).find(".card-header").find("button").click({ force: true });
       cy.wait(500);
     }
   });
 });
 
 Cypress.Commands.add("switchEnabledDiscounts", (disableDiscounts: boolean) => {
-  Cypress.log({displayName: "switchEnabledDiscounts", message: "Verifying that discounts are enabled"});
+  Cypress.log({ displayName: "switchEnabledDiscounts", message: "Verifying that discounts are enabled" });
   cy.visit("/Admin/Setting/Catalog");
   enableAdvancedSettings().then(() => {
     cy.openPanel("#catalogsettings-performance").then(() => {
       if (disableDiscounts) {
-        Cypress.log({displayName: "switchEnabledDiscounts", message: "Disabling discounts"});
+        Cypress.log({ displayName: "switchEnabledDiscounts", message: "Disabling discounts" });
         // Disable the discounts, as part of post-test clean up.
         if (Cypress.$("#IgnoreDiscounts").prop("checked") !== true) {
-          cy.get("#IgnoreDiscounts").check({force: true});
-          cy.get("button[name=save]").click({force: true});
+          cy.get("#IgnoreDiscounts").check({ force: true });
+          cy.get("button[name=save]").click({ force: true });
           cy.wait(10000);
         }
       } else {
         // Check that discounts aren't disabled, as that would interfere with our tests
         // If they are disabled, enabled them and save an env variable so that post-test clean up will disable them again once we're done
         if (Cypress.$("#IgnoreDiscounts").prop("checked") === true) {
-          cy.get("#IgnoreDiscounts").uncheck({force: true});
-          cy.get("button[name=save]").click({force: true});
+          cy.get("#IgnoreDiscounts").uncheck({ force: true });
+          cy.get("button[name=save]").click({ force: true });
           Cypress.env("envDisableDiscounts", true);
           cy.wait(10000);
         }
@@ -360,7 +364,7 @@ Cypress.Commands.add("checkAvailableLanguages", () => {
   });
   const publishLanguage = (unpubLang: string[], neededLangs: number, affectedLangs: string[]) => {
     Cypress.log({
-        message: `Publishing language: ${unpubLang[0]}`
+      message: `Publishing language: ${unpubLang[0]}`
     });
     cy.get("#languages-grid")
       .find("tbody")
@@ -369,10 +373,10 @@ Cypress.Commands.add("checkAvailableLanguages", () => {
       .parent()
       .find(".button-column")
       .find("a")
-      .click({force: true});
+      .click({ force: true });
     cy.wait(5000);
-    cy.get("#Published").check({force: true});
-    cy.get("button[name=save]").click({force: true});
+    cy.get("#Published").check({ force: true });
+    cy.get("button[name=save]").click({ force: true });
     cy.wait(5000);
     return cy.location("pathname").should("eql", "/Admin/Language/List").then(() => {
       affectedLangs.push(unpubLang[0]);
@@ -392,7 +396,7 @@ Cypress.Commands.add("checkAvailableLanguages", () => {
       });
       return langNames;
     } else {
-        return [];
+      return [];
     }
   };
   cy.visit("/");
@@ -407,7 +411,7 @@ Cypress.Commands.add("checkAvailableLanguages", () => {
         expect($rows.length).to.be.greaterThan(1, "No additional languages available. Cannot run language-functionality tests.");
       } else {
         const nonEnglishRows = $rows.filter((index, item) => {
-            return !item.cells[0].innerText.includes("English");
+          return !item.cells[0].innerText.includes("English");
         });
         if (nonEnglishRows.length < 2) {
           expect(nonEnglishRows.length).to.be.greaterThan(2, "Not enough additional languages available. Cannot run language-functionality tests.");
@@ -430,7 +434,7 @@ Cypress.Commands.add("checkAvailableLanguages", () => {
             publishLanguage(originalUnpublished.slice(0), countToPublish, []).then((newlyPublished) => {
               return originalPublished.concat(newlyPublished);
             });
-          }   
+          }
         }
       }
     });
@@ -441,20 +445,20 @@ Cypress.Commands.add("storeLanguageProperties", (languageNames: string[]) => {
   cy.login();
   cy.visit("/Admin/Language/List");
   cy.allowLoad();
-  const languageProperties = [] as {name: string, currency: string, displayOrder: string}[];
+  const languageProperties = [] as { name: string, currency: string, displayOrder: string }[];
   cy.wrap(languageNames).each((lang, index, langNames) => {
     const langFilter = (index, item) => {
       return item.cells[0].innerText === lang;
     };
-    cy.findTableItem("#languages-grid","#languages-grid_next", langFilter).then((row) => {
-      cy.wrap(row).find(".button-column").find("a").click({force: true});
+    cy.findTableItem("#languages-grid", "#languages-grid_next", langFilter).then((row) => {
+      cy.wrap(row).find(".button-column").find("a").click({ force: true });
       cy.wait(5000)
       cy.location("pathname").should("include", "/Admin/Language/Edit").then(() => {
-        var langObject = {name: lang, currency: "", displayOrder: ""};
+        var langObject = { name: lang, currency: "", displayOrder: "" };
         langObject.currency = Cypress.$("#DefaultCurrencyId").prop("selectedOptions")[0].innerText;
         langObject.displayOrder = Cypress.$("#DisplayOrder").val();
         languageProperties.push(langObject);
-        cy.get(".content-header").find("small").find("a").click({force: true});
+        cy.get(".content-header").find("small").find("a").click({ force: true });
         cy.wait(5000);
         cy.location("pathname").should("eql", "/Admin/Language/List");
         cy.allowLoad();
@@ -472,23 +476,23 @@ Cypress.Commands.add("setShippingOrigin", () => {
     var saveNeeded = false;
     // Set shipping address to a public park in Atlanta
     if (Cypress.$("#ShippingOriginAddress_CountryId > option:selected").text() !== "United States") {
-      cy.get("#ShippingOriginAddress_CountryId").select("United States", {force: true});
+      cy.get("#ShippingOriginAddress_CountryId").select("United States", { force: true });
       saveNeeded = true;
     }
     if (Cypress.$("#ShippingOriginAddress_StateProvinceId > option:selected").text() !== "Georgia") {
-      cy.get("#ShippingOriginAddress_StateProvinceId").select("Georgia", {force: true});
+      cy.get("#ShippingOriginAddress_StateProvinceId").select("Georgia", { force: true });
       saveNeeded = true;
     }
     if (Cypress.$("#ShippingOriginAddress_City").val() !== "Atlanta") {
-      cy.get("#ShippingOriginAddress_City").clear({force: true}).type("Atlanta", {force: true});
+      cy.get("#ShippingOriginAddress_City").clear({ force: true }).type("Atlanta", { force: true });
       saveNeeded = true;
     }
     if (Cypress.$("#ShippingOriginAddress_Address1").val() !== "180 Central Ave SW") {
-      cy.get("#ShippingOriginAddress_Address1").clear({force: true}).type("180 Central Ave SW", {force: true});
+      cy.get("#ShippingOriginAddress_Address1").clear({ force: true }).type("180 Central Ave SW", { force: true });
       saveNeeded = true;
     }
     if (Cypress.$("#ShippingOriginAddress_ZipPostalCode").val() !== "30303") {
-      cy.get("#ShippingOriginAddress_ZipPostalCode").clear({force: true}).type("30303", {force: true});
+      cy.get("#ShippingOriginAddress_ZipPostalCode").clear({ force: true }).type("30303", { force: true });
       saveNeeded = true;
     }
     if (saveNeeded) {
@@ -560,13 +564,13 @@ Cypress.Commands.add("checkAvailableShippers", (providerName?: string) => {
 
 // Stores original shipping provider properties
 Cypress.Commands.add("storeShipperProperties", (providerNames: string[]) => {
-  const shipperProperties = [] as {name: string, displayOrder: string, isActive: boolean}[];
+  const shipperProperties = [] as { name: string, displayOrder: string, isActive: boolean }[];
   cy.wrap(providerNames).each((prov: string, index, provNames) => {
     const shipFilter = (index, item) => {
       return item.cells[0].innerText === prov;
     };
     cy.findTableItem("#shippingproviders-grid", "#shippingproviders-grid_next", shipFilter).then((row) => {
-      var shipObject = {name: prov, displayOrder: "", isActive: false};
+      var shipObject = { name: prov, displayOrder: "", isActive: false };
       cy.wrap(row).find("td[data-columnname=DisplayOrder]").invoke("text").then((text) => {
         shipObject.displayOrder = text;
         cy.wrap(row).find("td[data-columnname=IsActive]").find("i").invoke("hasClass", "true-icon").then((htmlVal) => {
@@ -582,7 +586,7 @@ Cypress.Commands.add("storeShipperProperties", (providerNames: string[]) => {
 
 // Creates an array of the original config values for a single provider and returns that array.
 Cypress.Commands.add("saveProviderConfiguration", (providerName) => {
-  Cypress.log({name: "saveProviderConfiguration", message: providerName});
+  Cypress.log({ name: "saveProviderConfiguration", message: providerName });
   return cy.goToShippingProviders().then(() => {
     var providerConfig = [];
     cy.allowLoad();
@@ -601,7 +605,7 @@ Cypress.Commands.add("saveProviderConfiguration", (providerName) => {
         } else if (type === "text") {
           value = input.val();
         }
-        return {inputType: type, inputValue: value};
+        return { inputType: type, inputValue: value };
       };
       inputRows.each((index, row) => {
         if (row.innerHTML.includes("k-widget")) {
@@ -612,7 +616,7 @@ Cypress.Commands.add("saveProviderConfiguration", (providerName) => {
           var inputs = Cypress.$(row).find("input");
           if (inputs.length === 0) {
             var select = Cypress.$(row).find("select");
-            providerConfig.push({inputType: "select", inputValue: select.val()});
+            providerConfig.push({ inputType: "select", inputValue: select.val() });
           } else if (inputs.length === 1) {
             providerConfig.push(getTypeAndValue(inputs));
           } else {
@@ -620,7 +624,7 @@ Cypress.Commands.add("saveProviderConfiguration", (providerName) => {
             inputs.each((index, input) => {
               configGroup.push(getTypeAndValue(Cypress.$(input)));
             });
-            providerConfig.push({inputType: "group", inputValue: configGroup});
+            providerConfig.push({ inputType: "group", inputValue: configGroup });
           }
         }
       });
@@ -641,9 +645,9 @@ Cypress.Commands.add("resetLanguages", () => {
     if (langNames.length > 0) {
       langNames.forEach((lang) => {
         if (expectPublished) {
-            cy.publishLanguage(lang);
+          cy.publishLanguage(lang);
         } else {
-            cy.unpublishLanguage(lang);
+          cy.unpublishLanguage(lang);
         }
       });
     }
@@ -654,7 +658,7 @@ Cypress.Commands.add("resetLanguages", () => {
   cy.wait(5000);
   cy.visit("/Admin/Language/List");
   cy.allowLoad();
- const publishedLangs = Cypress.env("publishedLangs");
+  const publishedLangs = Cypress.env("publishedLangs");
   if (publishedLangs) {
     checkTableRows(publishedLangs, true);
   }
@@ -668,10 +672,10 @@ Cypress.Commands.add("resetLanguages", () => {
     cy.wrap(languagePropertyValues).each((lang, index, langValues) => {
       const langFilter = (index, item) => {
         return item.cells[0].innerText === lang.name;
-        };
+      };
       cy.findTableItem("#languages-grid", "#languages-grid_next", langFilter).then(($row) => {
         if ($row) {
-          cy.wrap($row).find(".button-column").find("a").click({force: true});
+          cy.wrap($row).find(".button-column").find("a").click({ force: true });
           cy.wait(5000);
           cy.location("pathname").should("include", "/Admin/Language/Edit").then(() => {
             const selected = Cypress.$("#DefaultCurrencyId").prop("selectedOptions");
@@ -684,7 +688,7 @@ Cypress.Commands.add("resetLanguages", () => {
               cy.get("#DisplayOrder").siblings(".k-input").clear();
               cy.get("#DisplayOrder").type(lang.displayOrder);
             }
-            cy.get("button[name=save]").click({force: true});
+            cy.get("button[name=save]").click({ force: true });
             cy.wait(5000);
             cy.location("pathname").should("eql", "/Admin/Language/List");
             cy.allowLoad();
@@ -701,7 +705,7 @@ Cypress.Commands.add("resetShippingProviders", () => {
     displayName: "resetShippingProviders",
     message: "Resetting provider properties"
   });
-  const checkTableRows = (providers: {name: string, displayOrder: string, isActive: boolean}[]) => {
+  const checkTableRows = (providers: { name: string, displayOrder: string, isActive: boolean }[]) => {
     if (providers.length > 0) {
       providers.forEach((prov) => {
         cy.changeProviderProps(prov.name, prov.isActive, prov.displayOrder);
@@ -722,7 +726,7 @@ Cypress.Commands.add("resetShippingProviders", () => {
 
 // Sets a single shipping provider back to its original configuration with the provided array
 Cypress.Commands.add("resetProviderConfig", (providerName: string, providerConfig) => {
-  Cypress.log({name: "resetProviderConfig", message: providerName});
+  Cypress.log({ name: "resetProviderConfig", message: providerName });
   cy.goToShippingProviders();
   cy.wait(1000);
   cy.allowLoad().then(() => {
@@ -733,7 +737,7 @@ Cypress.Commands.add("resetProviderConfig", (providerName: string, providerConfi
     const checkAndCorrect = (input, configType, configValue) => {
       if (configType === "text") {
         if (input.val() !== configValue) {
-          cy.wrap(input).clear({force: true}).type(configValue, {force: true});
+          cy.wrap(input).clear({ force: true }).type(configValue, { force: true });
           valueChanged = true;
         }
       } else if (configType === "checkbox") {
@@ -750,7 +754,7 @@ Cypress.Commands.add("resetProviderConfig", (providerName: string, providerConfi
     cy.wrap(providerConfig).each((config, index) => {
       cy.wait(100);
       cy.get(".card-body").get(".form-group:visible").eq(index).then((formRow) => {
-      Cypress.log({displayName: " ", message: config.inputValue});
+        Cypress.log({ displayName: " ", message: config.inputValue });
         if (config.inputType !== "group") {
           if (formRow[0].innerHTML.includes("k-widget")) {
             const input = formRow.find("input[id]");
@@ -771,9 +775,9 @@ Cypress.Commands.add("resetProviderConfig", (providerName: string, providerConfi
       });
     }).then(() => {
       if (valueChanged) {
-        cy.get("input[name=save]").click({force: true});
+        cy.get("input[name=save]").click({ force: true });
         cy.allowLoad();
-        cy.get(".content-header").find("small").find("a").click({force: true});
+        cy.get(".content-header").find("small").find("a").click({ force: true });
       }
     });
   });
@@ -794,14 +798,14 @@ Cypress.Commands.add("fillInNames", ($tab, name: string) => {
           var currentTab = $li.index(eligibleTabs[0]);
           const fillInTab = (tabIndex: number) => {
             var language = $li[tabIndex].innerText;
-            cy.wrap($li[tabIndex]).find("a").click({force: true});
+            cy.wrap($li[tabIndex]).find("a").click({ force: true });
             cy.wait(500);
             cy.get("#category-name-localized-standard-tab")
               .siblings()
               .eq(tabIndex)
               .find("input")
               .eq(0)
-              .type(name + ` (${language})`, {force: true});
+              .type(name + ` (${language})`, { force: true });
             if (tabIndex !== tabCount) {
               fillInTab(tabIndex + 1);
             }
@@ -814,38 +818,38 @@ Cypress.Commands.add("fillInNames", ($tab, name: string) => {
 
 // Set up categories that tests depend on
 Cypress.Commands.add("setupCategories", () => {
-  Cypress.log({displayName: "setupCategories", message: "Creating 2 Cypress categories"});
+  Cypress.log({ displayName: "setupCategories", message: "Creating 2 Cypress categories" });
   const addCategory = (name: string, desc: string, displayOrder: string, seoName: string, getTrueSeo?: boolean) => {
-    cy.get("a").contains("Add new").click({force: true});
+    cy.get("a").contains("Add new").click({ force: true });
     cy.wait(5000);
     return cy.location("pathname").should("eql", "/Admin/Category/Create").then(() => {
       enableAdvancedSettings().then(() => {
         cy.wait(2000);
         // Fill in name and description
         cy.openPanel("#category-info").then(() => {
-          cy.get("#Name").type(name, {force: true});
-          cy.getIframeBody("#Description_ifr").find("p").type(desc, {force: true}).then(() => {
+          cy.get("#Name").type(name, { force: true });
+          cy.getIframeBody("#Description_ifr").find("p").type(desc, { force: true }).then(() => {
             var standardTab = Cypress.$("a[data-tab-name=category-name-localized-standard-tab]");
             cy.fillInNames(standardTab, name).then(() => {
               // Publish, menu, and display order
               cy.openPanel("#category-display").then(() => {
                 if (Cypress.$("#Published").prop("checked") !== true) {
-                  cy.get("#Published").check({force: true});
+                  cy.get("#Published").check({ force: true });
                 }
                 if (Cypress.$("#ShowOnHomepage").prop("checked") !== true) {
-                  cy.get("#ShowOnHomepage").check({force: true});
+                  cy.get("#ShowOnHomepage").check({ force: true });
                 }
                 if (Cypress.$("#IncludeInTopMenu").prop("checked") !== true) {
-                  cy.get("#IncludeInTopMenu").check({force: true});
+                  cy.get("#IncludeInTopMenu").check({ force: true });
                 }
-                cy.get("#DisplayOrder").clear({force: true}).type(displayOrder, {force: true});
+                cy.get("#DisplayOrder").clear({ force: true }).type(displayOrder, { force: true });
 
                 // seo codes
                 cy.openPanel("#category-seo").then(() => {
-                  cy.get("#SeName").type(seoName, {force: true});
-                  cy.get("#MetaTitle").type(seoName, {force: true});
+                  cy.get("#SeName").type(seoName, { force: true });
+                  cy.get("#MetaTitle").type(seoName, { force: true });
                   if (getTrueSeo) {
-                    cy.get("button[name=save-continue]").click({force: true});
+                    cy.get("button[name=save-continue]").click({ force: true });
                     cy.wait(5000);
                     cy.get("#SeName").invoke("val").then((value: string) => {
                       mainCategorySeo = value;
@@ -854,7 +858,7 @@ Cypress.Commands.add("setupCategories", () => {
                       cy.location("pathname").should("eql", "/Admin/Category/List");
                     });
                   } else {
-                    cy.get("button[name=save]").click({force: true});
+                    cy.get("button[name=save]").click({ force: true });
                     cy.wait(5000);
                     cy.location("pathname").should("eql", "/Admin/Category/List");
                   }
@@ -877,19 +881,19 @@ Cypress.Commands.add("setupCategories", () => {
 
 // Set up products that tests depend on
 Cypress.Commands.add("setupProducts", () => {
-  Cypress.log({displayName: "setupProducts", message: "Creating 3 Cypress products"});
+  Cypress.log({ displayName: "setupProducts", message: "Creating 3 Cypress products" });
   cy.intercept("/Admin/Product/Create").as("productCreation");
   const addProduct = (
-    name: string, 
-    desc: string, 
-    fullDesc: string, 
-    category: string, 
-    price: string, 
+    name: string,
+    desc: string,
+    fullDesc: string,
+    category: string,
+    price: string,
     seoName: string,
     pictureFile: string,
     pictureAlt: string
   ) => {
-    cy.get("a").contains("Add new").click({force: true});
+    cy.get("a").contains("Add new").click({ force: true });
     cy.wait(5000);
     cy.wait("@productCreation");
     return cy.location("pathname").should("eql", "/Admin/Product/Create").then(() => {
@@ -899,40 +903,40 @@ Cypress.Commands.add("setupProducts", () => {
         cy.openPanel("#product-info").then(() => {
           cy.get("#product-info")
             .find("#Name")
-            .type(name, {force: true});
+            .type(name, { force: true });
           cy.get("#product-info")
             .find("#ShortDescription")
-            .type(desc, {force: true});
-          cy.getIframeBody("#FullDescription_ifr").find("p").type(fullDesc, {force: true});
+            .type(desc, { force: true });
+          cy.getIframeBody("#FullDescription_ifr").find("p").type(fullDesc, { force: true });
           // Add category
-          cy.get("#SelectedCategoryIds").select(category, {force: true});
+          cy.get("#SelectedCategoryIds").select(category, { force: true });
           // Make sure it's published
           if (Cypress.$("#Published").prop("checked") !== true) {
-            cy.get("#Published").check({force: true});
+            cy.get("#Published").check({ force: true });
           }
           // Price
           cy.openPanel("#product-price").then(() => {
-            cy.get("#Price").clear({force: true}).type(price, {force: true});
+            cy.get("#Price").clear({ force: true }).type(price, { force: true });
             // seo Codes
             cy.openPanel("#product-seo").then(() => {
               cy.get("#product-seo")
                 .find("#SeName")
-                .type(seoName, {force: true});
+                .type(seoName, { force: true });
               cy.get("#product-seo")
                 .find("#MetaTitle")
-                .type(seoName, {force: true});
+                .type(seoName, { force: true });
               // Save and continute editing
-              cy.get("button[name=save-continue]").click({force: true});
+              cy.get("button[name=save-continue]").click({ force: true });
               cy.wait(5000);
               // Add picture
               cy.openPanel("#product-pictures").then(() => {
                 cy.get("#product-pictures").find("input[name=qqfile]").attachFile(pictureFile);
-                cy.get("#AddPictureModel_OverrideAltAttribute").type(pictureAlt, {force: true});
-                cy.get("#AddPictureModel_OverrideTitleAttribute").type(pictureAlt, {force: true});
+                cy.get("#AddPictureModel_OverrideAltAttribute").type(pictureAlt, { force: true });
+                cy.get("#AddPictureModel_OverrideTitleAttribute").type(pictureAlt, { force: true });
                 cy.wait(5000);
-                cy.get("#addProductPicture").click({force: true});
+                cy.get("#addProductPicture").click({ force: true });
                 cy.wait(5000);
-                cy.get("button[name=save]").click({force: true});
+                cy.get("button[name=save]").click({ force: true });
                 cy.wait(5000);
                 cy.location("pathname").should("eql", "/Admin/Product/List");
               });
@@ -946,55 +950,55 @@ Cypress.Commands.add("setupProducts", () => {
   cy.wait(5000);
   // Create the first product
   addProduct(
-    mainProductOne, 
+    mainProductOne,
     "A Bald Cypress tree",
     "A Bald Cypress tree, native to the southeastern United States. This tree can grow in wet, dry, or swampy soil",
-    mainCategory, 
-    "600", 
+    mainCategory,
+    "600",
     "bald-cypress",
     "ThreeBaldCypress.jpg",
     "a bald cypress tree"
   ).then(() => {
-      // Create Second Product
+    // Create Second Product
+    addProduct(
+      mainProductTwo,
+      "A Montezuma Cypress tree",
+      "A Montezuma Cypress tree, native to Mexico and Guatemala. It prefers to grow along upland rivers, but can also grow in springs and marshes.",
+      mainCategory,
+      "750",
+      "montezuma-cypress",
+      "MontezumaCypress.jpg",
+      "montezuma cypress tree"
+    ).then(() => {
+      // Create the third product
       addProduct(
-        mainProductTwo, 
-        "A Montezuma Cypress tree",
-        "A Montezuma Cypress tree, native to Mexico and Guatemala. It prefers to grow along upland rivers, but can also grow in springs and marshes.",
-        mainCategory, 
-        "750", 
-        "montezuma-cypress",
-        "MontezumaCypress.jpg",
-        "montezuma cypress tree"
-      ).then(() => {
-        // Create the third product
-        addProduct(
-          secondProduct, 
-          "Young Mountain Laurel Saplings",
-          "Mountain Laurel produces beautiful cup-shaped flowers. Please note that the pollen and all parts of the plant contain a potent neurotoxin, and should not be consumed or fed to animals. This store is not liable for any injuries.",
-          secondCategory, 
-          "340", 
-          "no-cypress-laurel",
-          "MountainLaurel.jpg",
-          "mountain laurel flowers"
-        );
-      });
+        secondProduct,
+        "Young Mountain Laurel Saplings",
+        "Mountain Laurel produces beautiful cup-shaped flowers. Please note that the pollen and all parts of the plant contain a potent neurotoxin, and should not be consumed or fed to animals. This store is not liable for any injuries.",
+        secondCategory,
+        "340",
+        "no-cypress-laurel",
+        "MountainLaurel.jpg",
+        "mountain laurel flowers"
+      );
+    });
   });
 });
 
 // Set up customers for campaigns
 Cypress.Commands.add("setupCustomers", () => {
-  Cypress.log({displayName: "setupCustomers", message: "Creating 3 Cypress customers"});
+  Cypress.log({ displayName: "setupCustomers", message: "Creating 3 Cypress customers" });
   const addCustomer = (email: string, name: string, custRoles: string[]) => {
     const today = new Date();
     const customer = {
-        email: `cypress.${email}${Cypress._.random(0, 1e9)}@ecommcypresstesting.com`,
-        password: `Cypress${name}`,
-        first: "Cypress",
-        last: name,
-        gender: Cypress._.random(0, 1) === 1 ? "Female" : "Male",
-        dob: today.toLocaleString(undefined, {dateStyle: "short"}),
-        newsletter: ["Your store name"],
-        roles: custRoles
+      email: `cypress.${email}${Cypress._.random(0, 1e9)}@ecommcypresstesting.com`,
+      password: `Cypress${name}`,
+      first: "Cypress",
+      last: name,
+      gender: Cypress._.random(0, 1) === 1 ? "Female" : "Male",
+      dob: today.toLocaleString(undefined, { dateStyle: "short" }),
+      newsletter: ["Your store name"],
+      roles: custRoles
     };
     return cy.addNewCustomer(customer).then(() => {
       cy.wait(5000);
@@ -1018,8 +1022,8 @@ Cypress.Commands.add("setupCustomers", () => {
           // Verify newsletter subscription?
           cy.visit("/Admin/NewsLetterSubscription/List");
           cy.allowLoad();
-          cy.get("#SearchEmail").type("cypress", {force: true});
-          cy.get("#search-subscriptions").click({force: true});
+          cy.get("#SearchEmail").type("cypress", { force: true });
+          cy.get("#search-subscriptions").click({ force: true });
           cy.allowLoad();
           cy.wrap(emails).each((email) => {
             cy.get("#newsletter-subscriptions-grid")
@@ -1036,15 +1040,15 @@ Cypress.Commands.add("setupCustomers", () => {
                   cy.wrap($row[0].cells[3])
                     .find("a")
                     .eq(0)
-                    .click({force: true});
+                    .click({ force: true });
                   cy.wait(1000);
                   cy.wrap($row[0].cells[1])
                     .find("input")
-                    .check({force: true});
+                    .check({ force: true });
                   cy.wrap($row[0].cells[3])
                     .find("a")
                     .eq(1)
-                    .click({force: true});
+                    .click({ force: true });
                   cy.wait(8000);
                 }
               });
@@ -1059,7 +1063,7 @@ Cypress.Commands.add("setupCustomers", () => {
 
 // Check that discounts are enabled and then clear any existing cypress discounts
 Cypress.Commands.add("setupDiscounts", () => {
-  Cypress.log({displayName: "setupDiscounts", message: "Check if discounts are enabled and clear old discounts"});
+  Cypress.log({ displayName: "setupDiscounts", message: "Check if discounts are enabled and clear old discounts" });
   cy.visit("/");
   cy.login();
   // Check to make sure that discounts are enabled. If they aren't, enable them and save an env variable so we can disable them again later
@@ -1070,19 +1074,34 @@ Cypress.Commands.add("setupDiscounts", () => {
 
 Cypress.Commands.add("fetchUserDetails", () => {
   const log = Cypress.log({
-    name: "fetchUserDetails", 
+    name: "fetchUserDetails",
     message: "Fetching and storing user's first name, last name, and company"
   });
 
   cy.visit("/");
   cy.login();
   cy.wait(1000);
-  cy.get(".ico-account").click();
-  cy.get("#FirstName").invoke("val").then((userFirstName) => {
-    cy.get("#LastName").invoke("val").then((userLastName) => {
-      cy.get("#Company").invoke("val").then((userCompany) => {
-        Cypress.env("userDetails", { first: userFirstName, last: userLastName, company: userCompany });
+  cy.log("GET THEM DEETS");
+  cy.wait(2000).then(() => {
+    if (Cypress.$("#account-links").length > 0) {
+      cy.get("#account-links").click({ force: true });
+      cy.wait(1000);
+      cy.get(".my-account-link").click({ force: true });
+    } else if (Cypress.$("#header-links-opener").length > 0) {
+      cy.get("#header-links-opener").click({ force: true });
+      cy.wait(1000);
+      cy.get(".header-links").find(".ico-account").click({ force: true });
+    } else {
+      cy.get(".ico-account").click({ force: true });
+    }
+  }).then(() => {
+    cy.get("#FirstName").invoke("val").then((userFirstName) => {
+      cy.get("#LastName").invoke("val").then((userLastName) => {
+        cy.get("#Company").invoke("val").then((userCompany) => {
+          Cypress.env("userDetails", { first: userFirstName, last: userLastName, company: userCompany });
+        });
       });
     });
-  });
+  })
+
 });

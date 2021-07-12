@@ -4,6 +4,7 @@
 describe("Ecommerce", function () {
   context("Guest Checkout", () => {
     beforeEach(() => {
+      cy.logout();
       cy.visit("/");
       cy.clearCart();
       cy.visit("/");
@@ -34,29 +35,27 @@ describe("Ecommerce", function () {
       cy.get(".add-to-cart-button").addToCart();
       cy.wait(10000);
       // Get current amount of shopping cart
-      cy.get(".header-links")
-        .find(".cart-qty")
+      cy.get(".cart-qty")
         .then(($amt) => {
           const quantity = $amt.text().replace("(", "").replace(")", "");
-          cy.get(".header-links").find(".ico-cart").click();
+          cy.goToCart();
           cy.wait(1000).then(() => {
             cy.getCartBtn().then(($el) => {
-              if ($el[0].innerHTML.includes("input")) {
-                cy.wrap($el).check();
-                cy.get(".update-cart-button").click();
+              if ($el[0].tagName === "INPUT") {
+                cy.wrap($el).check({ force: true });
+                cy.get(".update-cart-button").click({ force: true });
               } else {
-                cy.wrap($el).click();
+                cy.wrap($el).click({ force: true });
               }
               cy.wait(1000);
               cy.contains("Your Shopping Cart is empty!");
-              cy.get(".header-links")
-                .find(".cart-qty")
+              cy.get(".cart-qty")
                 .then(($qty) => {
                   const newQty = $qty.text().replace("(", "").replace(")", "");
                   expect(parseInt(newQty)).to.be.lessThan(parseFloat(quantity));
                 });
             });
-          });  
+          });
         });
     });
 
@@ -71,8 +70,7 @@ describe("Ecommerce", function () {
       cy.wait(10000);
       cy.goToCart();
       cy.get(".cart > tbody").find("tr").eq(0).as("target");
-      cy.get(".header-links")
-        .find(".cart-qty")
+      cy.get(".cart-qty")
         .then(($amt) => {
           const quantity = $amt.text().replace("(", "").replace(")", "");
           cy.get("@target")
@@ -113,8 +111,7 @@ describe("Ecommerce", function () {
                           const cartTotal = $newRows.filter(".order-total")[0].cells[1].innerText
                             .replace(",", "")
                             .replace("$", "");
-                          cy.get(".header-links")
-                            .find(".cart-qty")
+                          cy.get(".cart-qty")
                             .then(($qty) => {
                               const newQuantity = $qty
                                 .text()
@@ -129,7 +126,7 @@ describe("Ecommerce", function () {
                                 "Cart item quantity should have decreased"
                               );
                               expect(parseFloat(orgSubtotal)).to.be.greaterThan(
-                                parseFloat(subtotal),           
+                                parseFloat(subtotal),
                                 "Cart item subtotal should have decreased"
                               );
                               expect(
@@ -172,7 +169,7 @@ describe("Ecommerce", function () {
       cy.clearCart();
     });
 
-    it("Empty fields show errors during checkout", () => {
+    it.only("Empty fields show errors during checkout", () => {
       cy.addToCartAndCheckout();
       cy.get(".checkout-as-guest-button").click();
       cy.wait(500);
