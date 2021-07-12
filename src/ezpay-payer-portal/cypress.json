@@ -1,5 +1,5 @@
 {
-  "baseUrl": "#{PAYER_PORTAL_BASE_URL}#",
+  "baseUrl": "#{EZPAY_PAYER_PORTAL_URL}#",
   "clientId": "#{MSAL_CLIENTID_PAYER_PORTAL}#",
   "username": "#{EZPAY_TOKEN_USER}#",
   "password": "#{EZPAY_TOKEN_PASS}#",
@@ -18,17 +18,18 @@
     "x-ezpay": "#{X_EZPAY}#",
     "x-ezpay-pmt": "#{X_EZPAY_PMT}#",
     "runtimeEnv": "local",
-    "storageAccountConnString": ""     
+    "storageAccountConnString": "#{STORAGE_ACCOUNT_CONN_STRING}#"    
   },
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
   "supportFile": "cypress/support/index.ts",
   "video": false,
-  "reporter": "../../node_modules/cypress-mochawesome-reporter",
+  "reporter": "cypress-mochawesome-reporter",
   "reporterOptions": {
-    "reportDir": "cypress/report",
+    "reportDir": "/e2e/cypress/report",
     "charts": true,
     "reportPageTitle": "ezpay-payer-portal",
     "embeddedScreenshots": false
-  }  
+  },
+  "screenshotsFolder": "/e2e/cypress/screenshots"   
 }

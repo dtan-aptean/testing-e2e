@@ -74,7 +74,7 @@ const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/li
               "name": "See Details",
               "targets": [{
                   "os": "default",
-                  "uri": `https://stecommercetenanttst001.blob.core.windows.net/ecomm-api-svc-cypress-report/${dateSubFolder}/index.html`
+                  "uri": `https://stcypressdev001.blob.core.windows.net/ecomm-api-svc-cypress-report/${dateSubFolder}/index.html`
               }]
           }]
       });

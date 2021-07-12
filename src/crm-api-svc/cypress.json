@@ -2,6 +2,21 @@
   "baseUrl": "#{CRM_SVC_BASE_URL}#",
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
-  "env": {},
-  "supportFile": "cypress/support/index.ts"
+  "env": {
+    "x-aptean-apim": "#{CRM_APIM}#", 
+    "x-aptean-tenant": "#{CRM_TENANT_ID}#",
+    "x-aptean-tenant-secret": "#{CRM_TENANT_SECRET}#",
+    "runtimeEnv": "local",
+    "storageAccountConnString": "#{STORAGE_ACCOUNT_CONN_STRING}#"
+  },
+  "supportFile": "cypress/support/index.ts",
+  "reporter": "cypress-mochawesome-reporter",
+  "reporterOptions": {
+    "reportDir": "/e2e/cypress/report",
+    "charts": true,
+    "reportPageTitle": "crm-api-svc",
+    "embeddedScreenshots": false
+  },
+  "video": false,
+  "screenshotsFolder": "/e2e/cypress/screenshots"  
 }

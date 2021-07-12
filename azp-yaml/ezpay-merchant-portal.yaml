@@ -1,0 +1,27 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - src/ezpay-merchant-portal/
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: e2e-integration-tests
+
+stages:
+  - stage: ezpay_merchant_portal
+    displayName: Build and push ezpay merchant portal cypress test docker image
+    dependsOn: []
+
+    jobs:
+    - template: ./templates/cypress-test-docker-build-push.yaml
+      parameters:
+        packageName: ezpay-merchant-portal 
+        repositoryName: cypress-ezpay-merchant-portal     
+
+                          
