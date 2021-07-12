@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { createInfoDummy, SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 38
 describe('Mutation: updateDiscount', () => {
@@ -19,18 +20,7 @@ describe('Mutation: updateDiscount', () => {
         currency
     }`;
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             name
@@ -78,30 +68,16 @@ describe('Mutation: updateDiscount', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, standardMutationBody);
         });
 
+
         it("Mutation will fail with invalid 'id' input", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: { id: true }) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail if the only input provided is 'id'", () => {
@@ -206,18 +182,7 @@ describe('Mutation: updateDiscount', () => {
                         customData: ${toFormattedString(customData)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -273,18 +238,7 @@ describe('Mutation: updateDiscount', () => {
                             customData: ${toFormattedString(newCustomData)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             name
@@ -333,18 +287,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -408,18 +351,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(newDiscountAmount)}${usePercentageForDiscount ? `\n\t\t\t\t\tmaximumDiscountAmount: ${toFormattedString(maximumDiscountAmount)}`: ""}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         isCumulative
@@ -478,18 +410,7 @@ describe('Mutation: updateDiscount', () => {
         var aheadString = twoDaysAhead.toISOString();
 
         const discountDateBody = `
-            code
-            message
-            errors {
-                code
-                message
-                domain
-                details {
-                    code
-                    message
-                    target
-                }
-            }
+            ${codeMessageError}
             ${itemPath} {
                 id
                 name
@@ -711,18 +632,7 @@ describe('Mutation: updateDiscount', () => {
                         name: "Cypress updateDiscount Percent Test v1"
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         usePercentageForDiscount
@@ -759,18 +669,7 @@ describe('Mutation: updateDiscount', () => {
                         name: "Cypress updateDiscount Percent Test v2"
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         usePercentageForDiscount
@@ -818,18 +717,7 @@ describe('Mutation: updateDiscount', () => {
                         maximumDiscountAmount: ${toFormattedString(maximumDiscountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -902,18 +790,7 @@ describe('Mutation: updateDiscount', () => {
                         maximumDiscountAmount: ${toFormattedString(inputMaximumDiscountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -976,18 +853,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         discountLimitationCount
@@ -1042,18 +908,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         discountLimitationCount
@@ -1108,18 +963,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         discountLimitationCount
@@ -1188,18 +1032,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         discountType
@@ -1254,18 +1087,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         discountType
@@ -1329,18 +1151,7 @@ describe('Mutation: updateDiscount', () => {
                             discountAmount: ${toFormattedString(discountAmount)}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             discountType
@@ -1411,18 +1222,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -1476,18 +1276,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -1541,18 +1330,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -1606,18 +1384,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -1671,18 +1438,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -1736,18 +1492,7 @@ describe('Mutation: updateDiscount', () => {
                         discountAmount: ${toFormattedString(discountAmount)}
                     }
                 ) {
-                    code
-                    message
-                    errors {
-                        code
-                        message
-                        domain
-                        details {
-                            code
-                            message
-                            target
-                        }
-                    }
+                    ${codeMessageError}
                     ${itemPath} {
                         id
                         name
@@ -1810,18 +1555,7 @@ describe('Mutation: updateDiscount', () => {
                             discountType: ${discountType}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             discountAmount {
@@ -1895,18 +1629,7 @@ describe('Mutation: updateDiscount', () => {
                             discountType: ${discountType}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             discountAmount {
@@ -1980,18 +1703,7 @@ describe('Mutation: updateDiscount', () => {
                             discountType: ${discountType}
                         }
                     ) {
-                        code
-                        message
-                        errors {
-                            code
-                            message
-                            domain
-                            details {
-                                code
-                                message
-                                target
-                            }
-                        }
+                        ${codeMessageError}
                         ${itemPath} {
                             id
                             discountAmount {

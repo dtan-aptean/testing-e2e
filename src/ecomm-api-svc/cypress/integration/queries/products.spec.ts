@@ -35,17 +35,19 @@ describe('Query: products', () => {
     // Name of the info field
     const infoName = "productInfo";
 
-    var trueTotalInput = "";
+    var maxNum = 50;
 
-    before(() => {
-        cy.postAndValidate(standardQuery, queryName).then((res) => {
-            const { nodes, edges, totalCount } = res.body.data[queryName];
-            expect(nodes.length).to.be.eql(edges.length);
-            if (totalCount > nodes.length) {
-                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", ": "";
-            }
-        });
-    });
+    var maxFirstItems = "first: " + maxNum + ", ";
+
+    // before(() => {
+    //     cy.postAndValidate(standardQuery, queryName).then((res) => {
+    //         const { nodes, edges, totalCount } = res.body.data[queryName];
+    //         expect(nodes.length).to.be.eql(edges.length);
+    //         if (totalCount > nodes.length) {
+    //             maxFirstItems = totalCount > 0 ? "first: " + totalCount + ", " : "";
+    //         }
+    //     });
+    // });
 
     context("Testing 'orderBy' input", () => {
         it('Query will fail if no return type is provided', () => {
@@ -110,13 +112,13 @@ describe('Query: products', () => {
 
         it("Query with orderBy direction: DESC, field: NAME will return items in a reverse order from direction: ASC", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
             cy.postAndValidate(trueTotalQuery, queryName).then((ascRes) => {
                 const descQuery = `{
-                    ${queryName}(${trueTotalInput}orderBy: {direction: DESC, field: NAME}) {
+                    ${queryName}(last: ${maxNum}, orderBy: {direction: DESC, field: NAME}) {
                         ${standardQueryBody}
                     }
                 }`;
@@ -151,13 +153,13 @@ describe('Query: products', () => {
 
         it("Query using valid 'startDate' input will return only items with a createdDate >= that startDate", () => {
             const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${createdDateQueryBody}
                 }
             }`;
             cy.returnRandomDate(query, queryName).then((randomDate: string) => {
                 const startDateQuery = `{
-                    ${queryName}(${trueTotalInput}startDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
+                    ${queryName}(${maxFirstItems}startDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
                         ${createdDateQueryBody}
                     }
                 }`;
@@ -169,13 +171,13 @@ describe('Query: products', () => {
 
         it("Query using valid 'endDate' input will return only items with a createdDate <= that endDate", () => {
             const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${createdDateQueryBody}
                 }
             }`;
             cy.returnRandomDate(query, queryName).then((randomDate: string) => {
                 const startDateQuery = `{
-                    ${queryName}(${trueTotalInput}endDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
+                    ${queryName}(${maxFirstItems}endDate: "${randomDate}", orderBy: {direction: ASC, field: NAME}) {
                         ${createdDateQueryBody}
                     }
                 }`;
@@ -187,14 +189,14 @@ describe('Query: products', () => {
 
         it("Query using valid 'startDate' and 'endDate' input will return only items that obey startDate <= createdDate <= endDate", () => {
             const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${createdDateQueryBody}
                 }
             }`;
             cy.returnRandomDate(query, queryName, true).then((startDate: string) => {
                 cy.returnRandomDate(query, queryName, undefined, startDate).then((endDate: string) => {
                     const startEndQuery = `{
-                        ${queryName}(${trueTotalInput}startDate: "${startDate}", endDate: "${endDate}", orderBy: {direction: ASC, field: NAME}) {
+                        ${queryName}(${maxFirstItems}startDate: "${startDate}", endDate: "${endDate}", orderBy: {direction: ASC, field: NAME}) {
                             ${createdDateQueryBody}
                         }
                     }`;
@@ -234,7 +236,7 @@ describe('Query: products', () => {
 
         it("Query using valid 'startDate' and invalid 'endDate' inputs will return an error", () => {
             const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${createdDateQueryBody}
                 }
             }`;
@@ -250,7 +252,7 @@ describe('Query: products', () => {
 
         it("Query using invalid 'startDate' and valid 'endDate' inputs will return an error", () => {
             const query = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${createdDateQueryBody}
                 }
             }`;
@@ -295,7 +297,7 @@ describe('Query: products', () => {
 
         it("Query with valid 'last' input argument will return only that amount of items", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -316,7 +318,7 @@ describe('Query: products', () => {
                 });
             });
         });
-        
+
         it("Query with invalid 'first' input argument will fail", () => {
             const gqlQuery = `{
                 ${queryName}(first: "4", orderBy: {direction: ASC, field: NAME}) {
@@ -340,7 +342,7 @@ describe('Query: products', () => {
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
             });
         });
-        
+
         it("Query with both 'first' and 'last' input arguments will fail", () => {
             const gqlQuery = `{
                 ${queryName}(first: 7, last: 3, orderBy: {direction: ASC, field: NAME}) {
@@ -386,7 +388,7 @@ describe('Query: products', () => {
                 });
             });
         });
-        
+
         it("Query with an invalid 'searchString' input argument will fail", () => {
             const gqlQuery = `{
                 ${queryName}(searchString: 7, orderBy: {direction: ASC, field: NAME}) {
@@ -415,10 +417,10 @@ describe('Query: products', () => {
                 });
             });
         });
-        
+
         it("Query with a valid 'after' input argument will return all items after that value", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -460,7 +462,7 @@ describe('Query: products', () => {
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
             });
         });
-        
+
         it("Query with both 'before' and 'after' input arguments will fail", () => {
             const gqlQuery = `{
                 ${queryName}(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: NAME}) {
@@ -468,7 +470,7 @@ describe('Query: products', () => {
                 }
             }`;
             cy.postAndConfirmError(gqlQuery, true).then((res) => {
-                expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
+                expect(res.body.errors[0].message[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
             });
         });
     });
@@ -478,7 +480,7 @@ describe('Query: products', () => {
             cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const first = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `first: ${first}`});
+                    Cypress.log({ message: `first: ${first}` });
                     const beforeQuery = `{
                         ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
@@ -495,7 +497,7 @@ describe('Query: products', () => {
 
         it("Query with both 'after' and 'first' input will arguments return a specific amount of items after that value", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -503,8 +505,8 @@ describe('Query: products', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const first = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `first: ${first}`});
+                        const first = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `first: ${first}` });
                         const afterQuery = `{
                             ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                                 ${standardQueryBody}
@@ -522,14 +524,14 @@ describe('Query: products', () => {
 
         it("Query with both 'before' and 'last' input arguments will return a specific amount of items before that value", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
             cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const last = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `last: ${last}`});
+                    Cypress.log({ message: `last: ${last}` });
                     const beforeQuery = `{
                         ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
@@ -546,7 +548,7 @@ describe('Query: products', () => {
 
         it("Query with both 'after' and 'last' input will return a specific amount of items after that value", () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -554,8 +556,8 @@ describe('Query: products', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const last = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `last: ${last}`});
+                        const last = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `last: ${last}` });
                         const afterQuery = `{
                             ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                                 ${standardQueryBody}
@@ -623,7 +625,7 @@ describe('Query: products', () => {
 
         it('Query with valid "After" input and invalid "first" input will fail', () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -642,7 +644,7 @@ describe('Query: products', () => {
 
         it('Query with invalid "Before" input and valid "last" input will fail', () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -665,7 +667,7 @@ describe('Query: products', () => {
 
         it('Query with valid "Before" input and invalid "last" input will fail', () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -684,7 +686,7 @@ describe('Query: products', () => {
 
         it('Query with invalid "After" input and valid "last" input will fail', () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -707,7 +709,7 @@ describe('Query: products', () => {
 
         it('Query with valid "After" input and invalid "last" input will fail', () => {
             const trueTotalQuery = `{
-                ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
+                ${queryName}(${maxFirstItems}orderBy: {direction: ASC, field: NAME}) {
                     ${standardQueryBody}
                 }
             }`;
@@ -725,35 +727,34 @@ describe('Query: products', () => {
         });
     });
 
-    context('Testing "ID" input' , () => {
+    context('Testing "ID" input', () => {
 
         it('Query with an array of one or more valid ids as "ids" input, returns relevant items ', () => {
-           
-            var ids="";
 
-            cy.returnMultipleRandomIds(40,standardQuery,queryName).then((idValues:[]) =>{
-                
-              ids ="["
-              for(var i=0;i<idValues.length;i++)
-              {
-                ids+='"'+idValues[i]+'"'+",";
-              
-              }
-              ids+="]"
-         
-             const gqlQuery = `{
+            var ids = "";
+
+            cy.returnMultipleRandomIds(40, standardQuery, queryName).then((idValues: []) => {
+
+                ids = "["
+                for (var i = 0; i < idValues.length; i++) {
+                    ids += '"' + idValues[i] + '"' + ",";
+
+                }
+                ids += "]"
+
+                const gqlQuery = `{
                 ${queryName}( orderBy: {direction: ASC, field: NAME} ids:${ids}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(gqlQuery, queryName).then((resp) => {
-                cy.validateMultipleIdSearch(resp, queryName,idValues);
+                cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                    cy.validateMultipleIdSearch(resp, queryName, idValues);
+                });
             });
         });
-    });
         //not placed inside the array
         it('Query with single id as "ids" input, returns relevant item ', () => {
-            cy.returnRandomId(standardQuery,queryName).then((id: string) =>{
+            cy.returnRandomId(standardQuery, queryName).then((id: string) => {
                 const gqlQuery = `{
                     ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: NAME}) {
                         ${standardQueryBody}
@@ -781,14 +782,14 @@ describe('Query: products', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery,true).then((res) => {
-               
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
+
                 expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
                 expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
 
             })
         });
-        
+
         it('Query with an array of one or more non-string values as "ids" input, returns error ', () => {
             const gqlQuery = `{
                 ${queryName}(ids:[235], orderBy: {direction: ASC, field: NAME}) {
@@ -796,7 +797,7 @@ describe('Query: products', () => {
                 }
             }`;
             cy.postAndConfirmError(gqlQuery).then((res) => {
-               
+
                 expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
 
@@ -811,7 +812,7 @@ describe('Query: products', () => {
                 }
             }`;
             cy.postAndConfirmError(gqlQuery).then((res) => {
-               
+
                 expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
 
@@ -852,22 +853,22 @@ describe('Query: products', () => {
                     ${extrastandardQueryBody}
                 }
             }`;
-        
 
-            cy.returnRandomId(extrastandardQuery,extraqueryName).then((id: string) =>{
+
+            cy.returnRandomId(extrastandardQuery, extraqueryName).then((id: string) => {
                 const gqlQuery = `{
                     ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: NAME}) {
                         ${standardQueryBody}
                     }
                 }`;
-                cy.postAndConfirmError(gqlQuery,true).then((res) => {
+                cy.postAndConfirmError(gqlQuery, true).then((res) => {
                     expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
                     expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
                 });
             });
 
         });
-    
+
     });
 
     context("Testing response values for customData and other fields", () => {

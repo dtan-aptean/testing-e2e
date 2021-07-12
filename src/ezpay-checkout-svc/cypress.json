@@ -1,0 +1,22 @@
+{
+	"baseUrl": "#{CHECKOUT_PAGE_URL}#",
+	"chromeWebSecurity": false,
+	"defaultCommandTimeout": 10000,
+	"env": {
+		"api-svc-url": "#{EZPAY_API_URL}#",
+		"x-aptean-apim-checkout-consumer": "#{X_APTEAN_APIM_CHECKOUT_CONSUMER}#",
+		"x-aptean-tenant": "#{X_APTEAN_TENANT}#",
+		"x-aptean-tenant-secret": "#{X_APTEAN_TENANT_SECRET}#",
+		"x-aptean-product": "#{X_APTEAN_PRODUCT}#",
+		"runtimeEnv": "local"
+	},
+	"supportFile": "cypress/support/index.ts",
+	"reporter": "../../node_modules/cypress-mochawesome-reporter",
+	"reporterOptions": {
+		"reportDir": "cypress/report",
+		"charts": true,
+		"reportPageTitle": "ezpay-checkout-svc",
+		"embeddedScreenshots": false
+	},
+	"video": false
+}

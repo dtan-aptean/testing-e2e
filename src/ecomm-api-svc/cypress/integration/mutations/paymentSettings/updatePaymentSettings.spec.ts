@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { SupplementalItemRecord, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 20
 describe('Mutation: updatePaymentSettings', () => {
@@ -15,18 +16,7 @@ describe('Mutation: updatePaymentSettings', () => {
     const companyQuery = "companies";
     const companyDelete = "deleteCompany";
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${itemPath} {
             id
             hasTerms
@@ -69,8 +59,8 @@ describe('Mutation: updatePaymentSettings', () => {
                 const { fullItems, items, itemIds } = results;
                 id = itemIds[0];
                 return cy.wrap({
-                    companyId: companyId, 
-                    company: company, 
+                    companyId: companyId,
+                    company: company,
                     paymentSetting: paymentInput ? fullItems[0] : items[0]
                 });
             });
@@ -78,10 +68,10 @@ describe('Mutation: updatePaymentSettings', () => {
     };
 
     const createPaymentDataInput = (amountToMake: number, allTokens?: boolean, allCards?: boolean) => {
-        const paymentDatas = [] as {token?: string, cardType?: string, lastFour?: string}[];
+        const paymentDatas = [] as { token?: string, cardType?: string, lastFour?: string }[];
         var lastType = "";
         if (!allTokens && !allCards) {
-            lastType = Cypress._.random(0, 1) === 1 ? "token": "card"; 
+            lastType = Cypress._.random(0, 1) === 1 ? "token" : "card";
         }
         for (var i = 0; i < amountToMake; i++) {
             var data = {};
@@ -103,8 +93,8 @@ describe('Mutation: updatePaymentSettings', () => {
         return paymentDatas;
     };
 
-    const createDummyPaymentData = (paymentInput: {token?: string, cardType?: string, lastFour?: string}[]) => {
-        const output = [] as {token: string | null, cardType: string | null, lastFour: string | null}[];
+    const createDummyPaymentData = (paymentInput: { token?: string, cardType?: string, lastFour?: string }[]) => {
+        const output = [] as { token: string | null, cardType: string | null, lastFour: string | null }[];
         paymentInput.forEach((item) => {
             output.push({
                 token: item.token ? item.token : null,
@@ -115,27 +105,27 @@ describe('Mutation: updatePaymentSettings', () => {
         return output;
     };
 
-    const removePaymentData = (paymentData: {token?: string, cardType?: string, lastFour?: string}[], removeOne?: boolean) => {
+    const removePaymentData = (paymentData: { token?: string, cardType?: string, lastFour?: string }[], removeOne?: boolean) => {
         // Pick Items and remove them to an array: create assignment input and the dummyPaymentData.
         const paymentDataCopy = paymentData.slice(0);
-        const paymentDataAssignments = [] as {paymentData: {token?: string, cardType?: string, lastFour?: string}, action: string}[];
+        const paymentDataAssignments = [] as { paymentData: { token?: string, cardType?: string, lastFour?: string }, action: string }[];
         const numToRemove = removeOne ? 1 : Cypress._.random(1, paymentData.length - 1);
         for (var i = 0; i < numToRemove; i++) {
             var index = Cypress._.random(0, paymentDataCopy.length - 1);
             paymentDataAssignments.push({ paymentData: paymentDataCopy.splice(index, 1)[0], action: "REMOVE" });
         }
-        return {assignments: paymentDataAssignments, dummyPaymentData: createDummyPaymentData(paymentDataCopy)};
+        return { assignments: paymentDataAssignments, dummyPaymentData: createDummyPaymentData(paymentDataCopy) };
     };
 
-    const formatAssignment = (paymentData: {token?: string, cardType?: string, lastFour?: string}[], action: string) => {
-        const paymentDataAssignments = [] as {paymentData: {token?: string, cardType?: string, lastFour?: string}, action: string}[];
+    const formatAssignment = (paymentData: { token?: string, cardType?: string, lastFour?: string }[], action: string) => {
+        const paymentDataAssignments = [] as { paymentData: { token?: string, cardType?: string, lastFour?: string }, action: string }[];
         paymentData.forEach((data) => {
             paymentDataAssignments.push({ paymentData: data, action: action });
         });
         return paymentDataAssignments;
     };
 
-    const addPaymentData = (paymentData: {token?: string, cardType?: string, lastFour?: string}[]) => {
+    const addPaymentData = (paymentData: { token?: string, cardType?: string, lastFour?: string }[]) => {
         const createCount = Cypress._.random(1, Math.ceil(paymentData.length / 2));
         const newData = createPaymentDataInput(createCount);
         return { assignments: formatAssignment(newData, "ASSIGN"), dummyPaymentData: createDummyPaymentData(paymentData.concat(newData)) };
@@ -166,21 +156,11 @@ describe('Mutation: updatePaymentSettings', () => {
 
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
-            const mutation = `mutation {
-                ${mutationName} {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationNoInput(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail when input is an empty object", () => {
-            const mutation = `mutation {
-                ${mutationName}(input: {}) {
-                    ${standardMutationBody}
-                }
-            }`;
-            cy.postAndConfirmError(mutation);
+            cy.mutationEmptyObject(mutationName, standardMutationBody);
         });
 
         it("Mutation will fail with invalid 'id' input", () => {
@@ -265,7 +245,7 @@ describe('Mutation: updatePaymentSettings', () => {
             });
         });
 
-        it("Mutation will succeed with valid 'id' and 'companyId' input", () => {
+        it("Mutation will fail if only 'id' and 'companyId' is provided as input", () => {
             createCompanyAndSettings("Basic", "basic").then((creations) => {
                 const { companyId, company } = creations;
                 const mutation = `mutation {
@@ -273,24 +253,9 @@ describe('Mutation: updatePaymentSettings', () => {
                         ${standardMutationBody}
                     }
                 }`;
-                cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const propNames = ["id", "company"];
-                    const propValues = [id, company];
-                    cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {
-                        const query = `{
-                            ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: COMPANY_NAME}) {
-                                nodes {
-                                    id
-                                    company {
-                                        id
-                                        name
-                                        integrationKey
-                                    }
-                                }
-                            }
-                        }`;
-                        cy.confirmUsingQuery(query, queryName, id, propNames, propValues);
-                    });
+                cy.postAndValidate(mutation, mutationName).then((res) => {
+                    expect(res.body.data[mutationName].message).to.have.string("Error updating payment settings");
+                    expect(res.body.data[mutationName].errors[0].message).to.have.string("No Information was Provided to update");
                 });
             });
         });
@@ -343,7 +308,7 @@ describe('Mutation: updatePaymentSettings', () => {
         it("Mutation can successfully use 'token' in paymentDataAssigments input (REMOVE)", () => {
             const paymentCount = Cypress._.random(2, 4)
             const paymentData = createPaymentDataInput(paymentCount, true);
-            createCompanyAndSettings("Token REMOVE", "token-remove", {paymentData: paymentData}, paymentFields).then((creations) => {
+            createCompanyAndSettings("Token REMOVE", "token-remove", { paymentData: paymentData }, paymentFields).then((creations) => {
                 const { companyId, company } = creations;
                 const { assignments, dummyPaymentData } = removePaymentData(paymentData);
                 const mutation = `mutation {
@@ -426,7 +391,7 @@ describe('Mutation: updatePaymentSettings', () => {
         it("Mutation can successfully use 'cardType' and 'lastFour' in paymentData input (REMOVE)", () => {
             const paymentCount = Cypress._.random(2, 4)
             const paymentData = createPaymentDataInput(paymentCount, undefined, true);
-            createCompanyAndSettings("Card REMOVE", "card-remove", {paymentData: paymentData}, paymentFields).then((creations) => {
+            createCompanyAndSettings("Card REMOVE", "card-remove", { paymentData: paymentData }, paymentFields).then((creations) => {
                 const { companyId, company } = creations;
                 const { assignments, dummyPaymentData } = removePaymentData(paymentData);
                 const mutation = `mutation {
@@ -470,7 +435,7 @@ describe('Mutation: updatePaymentSettings', () => {
                 const { companyId } = creations;
                 const paymentDataAssigments = [
                     {
-                        paymentData: { 
+                        paymentData: {
                             token: `cypress-token-${Cypress._.random(10000, 100000)}`,
                             cardType: "Visa",
                             lastFour: `${Cypress._.random(0, 9)}${Cypress._.random(1, 9)}${Cypress._.random(1, 9)}${Cypress._.random(1, 9)}`
@@ -498,11 +463,11 @@ describe('Mutation: updatePaymentSettings', () => {
         it("Mutation will fail if using 'token', 'cardType', and 'lastFour' together in paymentData input (REMOVE)", () => {
             const paymentCount = Cypress._.random(2, 4);
             const paymentData = createPaymentDataInput(paymentCount);
-            createCompanyAndSettings("Bad PaymentData REMOVE", "badPayment-remove", {paymentData: paymentData}, paymentFields).then((creations) => {
+            createCompanyAndSettings("Bad PaymentData REMOVE", "badPayment-remove", { paymentData: paymentData }, paymentFields).then((creations) => {
                 const { companyId } = creations;
                 const paymentDataAssigments = [
                     {
-                        paymentData: { 
+                        paymentData: {
                             token: `cypress-token-${Cypress._.random(10000, 100000)}`,
                             cardType: "Visa",
                             lastFour: `${Cypress._.random(0, 9)}${Cypress._.random(1, 9)}${Cypress._.random(1, 9)}${Cypress._.random(1, 9)}`
@@ -530,7 +495,7 @@ describe('Mutation: updatePaymentSettings', () => {
         it("Mutation will fail if attempting to remove more paymentData items than there are", () => {
             const paymentCount = Cypress._.random(3, 6)
             const orginalPaymentData = createPaymentDataInput(paymentCount);
-            createCompanyAndSettings("Bad Removal", "bad-removal", {paymentData: orginalPaymentData}, paymentFields).then((creations) => {
+            createCompanyAndSettings("Bad Removal", "bad-removal", { paymentData: orginalPaymentData }, paymentFields).then((creations) => {
                 const { companyId } = creations;
                 const { assignments } = addPaymentData(orginalPaymentData);
                 assignments.forEach((item) => {
@@ -549,7 +514,7 @@ describe('Mutation: updatePaymentSettings', () => {
                 }`;
                 cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
                     expect(res.body.data[mutationName].errors[0].code).to.eql("Invalid Argument");
-                    expect(res.body.data[mutationName].errors[0].message).to.eql("Cannot Delete Token: Token Not Found");
+                    expect(res.body.data[mutationName].errors[0].details[0].message).to.eql("Cannot Delete Token: Token Not Found");
                 });
             });
         });
@@ -572,7 +537,7 @@ describe('Mutation: updatePaymentSettings', () => {
                 }`;
                 cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((res) => {
                     expect(res.body.data[mutationName].errors[0].code).to.eql("Invalid Argument");
-                    expect(res.body.data[mutationName].errors[0].message).to.eql("Cannot Delete Token: Token Not Found");
+                    expect(res.body.data[mutationName].errors[0].details[0].message).to.eql("Cannot Delete Token: Token Not Found");
                 });
             });
         });
@@ -582,7 +547,7 @@ describe('Mutation: updatePaymentSettings', () => {
         it("Mutation with all required input and 'customData' input updates item with customData", () => {
             createCompanyAndSettings("CustomData", "custom-data").then((creations) => {
                 const { companyId, company } = creations;
-                const customData = {data: `${itemPath} customData`, canDelete: true};
+                const customData = { data: `${itemPath} customData`, canDelete: true };
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -613,10 +578,10 @@ describe('Mutation: updatePaymentSettings', () => {
         });
 
         it("Mutation with all required input and 'customData' input will overwrite the customData on an existing object", () => {
-            const paymentInput = { customData: {data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']} };
+            const paymentInput = { customData: { data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S'] } };
             createCompanyAndSettings("Overwrite CustomData", "rewrite-custom-data", paymentInput, "customData").then((creations) => {
                 const { companyId, company } = creations;
-                const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
+                const newCustomData = { data: `${itemPath} customData`, newDataField: { canDelete: true } };
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -649,7 +614,7 @@ describe('Mutation: updatePaymentSettings', () => {
         it("Mutation creates item that has all included input", () => {
             const paymentCount = Cypress._.random(3, 6)
             const orginalPaymentData = createPaymentDataInput(paymentCount);
-            createCompanyAndSettings("Full", "full", {paymentData: orginalPaymentData}, paymentFields).then((creations) => {
+            createCompanyAndSettings("Full", "full", { paymentData: orginalPaymentData }, paymentFields).then((creations) => {
                 const { companyId, company } = creations;
                 const hasTerms = Cypress._.random(0, 1) === 1;
                 const immediateCapture = Cypress._.random(0, 1) === 1;

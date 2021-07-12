@@ -11,6 +11,7 @@ describe("Mutation: convertPaymentMethodClaim", () => {
       }`;
 
     cy.postGQLWithoutTenantSecret(gqlQuery).then((res) => {
+      cy.log(JSON.stringify(res));
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -25,7 +26,9 @@ describe("Mutation: convertPaymentMethodClaim", () => {
   it("should successfully create a single use payment method claim and convert twice", () => {
     cy.generateWePayToken().then((wepayToken) => {
       cy.convertPayfacPaymentMethodToken(wepayToken).then((id) => {
+        cy.log(JSON.stringify(id));
         cy.getPaymentMethodById(id).then((paymentMethod) => {
+          cy.log(JSON.stringify(paymentMethod));
           let status = paymentMethod.status;
           assert.notEqual(status, "PROCESSING");
           let gqlQuery = `mutation {
@@ -55,6 +58,7 @@ describe("Mutation: convertPaymentMethodClaim", () => {
                         }
                         `;
           cy.postGQLWithoutTenantSecret(gqlQuery).then((res) => {
+            cy.log(JSON.stringify(res));
             cy.expect(res.isOkStatusCode).to.be.equal(true);
             assert.exists(res.body.data);
             assert.exists(res.body.data.createPaymentMethodClaim);
@@ -98,6 +102,7 @@ describe("Mutation: convertPaymentMethodClaim", () => {
                             }
                           }`;
             cy.postGQL(gqlQuery).then((res) => {
+              cy.log(JSON.stringify(res));
               // should 200 ok
               cy.expect(res.isOkStatusCode).to.be.equal(true);
               // should have data
@@ -106,6 +111,7 @@ describe("Mutation: convertPaymentMethodClaim", () => {
               assert.notExists(res.body.error);
 
               cy.postGQL(gqlQuery).then((res) => {
+                cy.log(JSON.stringify(res));
                 // should 200 ok
                 cy.expect(res.isOkStatusCode).to.be.equal(true);
                 // should have data
@@ -131,8 +137,11 @@ describe("Mutation: convertPaymentMethodClaim", () => {
 
   it("should successfully create a payment method claim", () => {
     cy.generateWePayToken().then((wepayToken) => {
+      cy.log(JSON.stringify(wepayToken));
       cy.convertPayfacPaymentMethodToken(wepayToken).then((id) => {
+        cy.log(JSON.stringify(id));
         cy.getPaymentMethodById(id).then((paymentMethod) => {
+          cy.log(JSON.stringify(paymentMethod));
           let status = paymentMethod.status;
           assert.notEqual(status, "PROCESSING");
           let gqlQuery = `mutation {
@@ -162,6 +171,7 @@ describe("Mutation: convertPaymentMethodClaim", () => {
                         }
                         `;
           cy.postGQLWithoutTenantSecret(gqlQuery).then((res) => {
+            cy.log(JSON.stringify(res));
             cy.expect(res.isOkStatusCode).to.be.equal(true);
             assert.exists(res.body.data);
             assert.exists(res.body.data.createPaymentMethodClaim);
@@ -206,6 +216,7 @@ describe("Mutation: convertPaymentMethodClaim", () => {
               }`;
 
             cy.postGQL(gqlQuery).then((res) => {
+              cy.log(JSON.stringify(res));
               // should 200 ok
               cy.expect(res.isOkStatusCode).to.be.equal(true);
               // should have data
@@ -214,6 +225,7 @@ describe("Mutation: convertPaymentMethodClaim", () => {
               assert.notExists(res.body.error);
 
               cy.postGQL(gqlQuery).then((res) => {
+                cy.log(JSON.stringify(res));
                 cy.expect(res.isOkStatusCode).to.be.equal(true);
                 // should have data
                 assert.exists(res.body.data);

@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { confirmStorefrontEnvValues, toFormattedString } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
 confirmStorefrontEnvValues();
@@ -114,18 +115,7 @@ describe('Mutation: updateOrderShippingStatus', { baseUrl: `${Cypress.env("store
     const queryName = 'orders';
     const dataPath = 'orderShippingStatus';
     const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
+        ${codeMessageError}
         ${dataPath} {
             orderId
             orderStatus

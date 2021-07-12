@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { confirmStorefrontEnvValues } from "../../../support/commands";
+import { codeMessageError } from "../../../support/mutationTests";
 
 // TEST COUNT: 6
 var originalBaseUrl = Cypress.config("baseUrl");   // The original baseUrl config. We will need it for making api calls
@@ -13,20 +14,6 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
     const mutationName = 'deleteRefund';
     const createName = 'createRefund';
     const queryName = "refunds";
-    const standardMutationBody = `
-        code
-        message
-        errors {
-            code
-            message
-            domain
-            details {
-                code
-                message
-                target
-            }
-        }
-    `;
 
     const queryInformation = {
         queryName: queryName, 
@@ -43,7 +30,7 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
     const refundOrder = () => {
         const mutation = `mutation {
                 ${createName}(input: {orderId: "${orderInUse}", refundAmount: {amount: ${refund}, currency: "USD"}}) {
-                    ${standardMutationBody}
+                    ${codeMessageError}
                     refund {
                         order {
                             id
@@ -97,7 +84,7 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 if (itemPresent) {
                     const mutation = `mutation {
                         ${mutationName}(input: {orderId: "${id}"}){
-                            ${standardMutationBody}
+                            ${codeMessageError}
                         }
                     }`;
                     cy.postAndConfirmDelete(mutation, mutationName, queryInformation, originalBaseUrl).then(() => {
@@ -112,7 +99,7 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
         it("Mutation will fail without input", () => {
             const mutation = `mutation {
                 ${mutationName} {
-                    ${standardMutationBody}
+                    ${codeMessageError}
                 }
             }`;
             cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
@@ -121,7 +108,7 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
         it("Mutation will fail when input is an empty object", () => {
             const mutation = `mutation {
                 ${mutationName}(input: {}) {
-                    ${standardMutationBody}
+                    ${codeMessageError}
                 }
             }`;
             cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
@@ -130,7 +117,7 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
         it("Mutation will fail with invalid 'id' input", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { orderId: true }) {
-                    ${standardMutationBody}
+                    ${codeMessageError}
                 }
             }`;
             cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
@@ -139,7 +126,7 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
         it("Mutation will fail when given an 'orderId' that doesn't have a refund", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { orderId: "${orderInUse}"}){
-                    ${standardMutationBody}
+                    ${codeMessageError}
                 }
             }`;
             cy.postAndConfirmMutationError(mutation, mutationName, undefined, originalBaseUrl).then((res) => {
@@ -152,7 +139,7 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             refundOrder().then(() => {
                 const mutation = `mutation {
                     ${mutationName}(input: { orderId: "${id}"}){
-                        ${standardMutationBody}
+                        ${codeMessageError}
                     }
                 }`;
                 cy.postAndConfirmDelete(mutation, mutationName, queryInformation, originalBaseUrl).then((res) => {
@@ -195,7 +182,7 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
                 cy.confirmUsingQuery(orderQuery, "orders", orderInUse, Object.getOwnPropertyNames(dummyOrder), Object.values(dummyOrder), originalBaseUrl).then(() => {
                     const mutation = `mutation {
                         ${mutationName}(input: { orderId: "${id}"}){
-                            ${standardMutationBody}
+                            ${codeMessageError}
                         }
                     }`;
                     cy.postAndConfirmDelete(mutation, mutationName, queryInformation, originalBaseUrl).then((res) => {
