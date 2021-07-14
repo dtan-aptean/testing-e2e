@@ -79,6 +79,7 @@ Cypress.Commands.add("createCheckoutSession", () => {
      checkoutSession {
        id
        cancelUrl
+       successUrl
      }
    }
  }
