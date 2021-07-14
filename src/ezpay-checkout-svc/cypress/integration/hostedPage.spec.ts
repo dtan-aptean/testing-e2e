@@ -58,6 +58,29 @@ describe('Checkout service: hosted page', () => {
         });
     });
 
+    it('should pass if cancel button is available and directs to cancel url', () => {
+        cy.createCheckoutSession().then((res)=>{
+            const sessionId = res.body.data.createCheckoutSession.checkoutSession.id;
+            const cancelUrl = res.body.data.createCheckoutSession.checkoutSession.cancelUrl;
+
+            // go to checkout page
+            cy.visit(`/${sessionId}`);
+
+            let cancelButton = cy.get("#cancel-payment");
+            // cancel button should be available
+            cancelButton.should("exist");
+            cancelButton.should("not.be.disabled");
+
+            // click the button
+            cancelButton.click();
+
+            cy.wait(2000);
+
+            // after button click browser must navigate to cancel url
+            cy.url().should("equal", cancelUrl);
+        });
+    });
+
     it('should pass if a completed session is not processed', () => {
         cy.createCheckoutSession().then((res)=>{
             const sessionId = res.body.data.createCheckoutSession.checkoutSession.id;
