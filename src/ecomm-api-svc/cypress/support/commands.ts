@@ -660,7 +660,8 @@ Cypress.Commands.add("createAssociatedItems", (
     itemPath: string,
     queryName: string,
     inputBase,
-    additionalResFields?
+    additionalResFields?,
+    altUrl?: string
 ) => {
     Cypress.log({
         name: "createAssociatedItems",
@@ -672,7 +673,8 @@ Cypress.Commands.add("createAssociatedItems", (
                 "Query name": queryName,
                 "Item path": itemPath,
                 "Input base": toFormattedString(inputBase, true),
-                "Additional response fields": additionalResFields ? additionalResFields : "Not provided"
+                "Additional response fields": additionalResFields ? additionalResFields : "Not provided",
+                "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
             };
         }
     });
@@ -725,8 +727,8 @@ Cypress.Commands.add("createAssociatedItems", (
     const fullResBodies = [];
     var infoName = getInfoName(inputBase);
     var nameBase = infoName ? inputBase[infoName][0].name : getNameBase();
-    const createAndPush = (item, name) => {
-        cy.createAndGetId(createName, itemPath, toFormattedString(item), additionalResFields).then((returnedBody) => {
+    const createAndPush = (item, name, altUrl) => {
+        cy.createAndGetId(createName, itemPath, toFormattedString(item), additionalResFields, altUrl).then((returnedBody) => {
             const returnedId = additionalResFields ? returnedBody.id : returnedBody;
             createdIds.push(returnedId);
             item.id = returnedId;
@@ -749,7 +751,7 @@ Cypress.Commands.add("createAssociatedItems", (
         var name = numberToMake !== 1 ? incrementNameBase(nameBase, i) : nameBase;
         var item = createInput(inputBase, name, infoName);
         cy.wait(4000);
-        createAndPush(item, name);
+        createAndPush(item, name, altUrl);
     };
     const resObject = { deletionIds: deletionIds, items: createdItems, itemIds: createdIds } as { deletionIds: SupplementalItemRecord[], items: any[], itemIds: string[], fullItems?: any[] };
     if (additionalResFields) {

@@ -11,8 +11,8 @@ describe('Mutation: deleteCompany', () => {
     const queryName = "companies";
 
     const queryInformation = {
-        queryName: queryName, 
-        itemId: id, 
+        queryName: queryName,
+        itemId: id,
         itemName: currentItemName
     };
 
@@ -40,8 +40,8 @@ describe('Mutation: deleteCompany', () => {
 
     afterEach(() => {
         if (!deleteItemsAfter) {
-			return;
-		}
+            return;
+        }
         if (id !== '') {
             // Querying for the deleted item keeps us from trying to delete an already deleted item, which would return an error and stop the entire test suite.
             cy.safeDelete(queryName, mutationName, id, currentItemName).then(() => {
@@ -50,7 +50,7 @@ describe('Mutation: deleteCompany', () => {
         }
     });
 
-    function generateRandomString (value: string) {
+    function generateRandomString(value: string) {
         let key = Cypress._.random(0, 1000000);
         let integrationKey = value + key;
         return integrationKey;

@@ -1,0 +1,27 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - src/ezpay-api-svc/
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: e2e-integration-tests
+
+stages:
+  - stage: ezpay_api_svc
+    displayName: Build and push ezpay api svc cypress test docker image
+    dependsOn: []
+
+    jobs:
+    - template: ./templates/cypress-test-docker-build-push.yaml
+      parameters:
+        packageName: ezpay-api-svc 
+        repositoryName: cypress-ezpay-api-svc     
+
+                          
