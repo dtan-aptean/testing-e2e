@@ -1297,7 +1297,7 @@ describe('Mutation: createDiscount', () => {
         it("Mutation will successfully save the maximumDiscountQuantity with a discountType input of 'ASSIGNED_TO_CATEGORIES'", () => {
             const name = `Cypress ${mutationName} mDQ Categories`;
             const maximumDiscountQuantity = Cypress._.random(10, 50);
-            const discountType = "ASSIGNED_TO_PRODUCTS";
+            const discountType = "ASSIGNED_TO_CATEGORIES";
             const discountAmount = {
                 amount: Cypress._.random(1000, 10000),
                 currency: "USD"

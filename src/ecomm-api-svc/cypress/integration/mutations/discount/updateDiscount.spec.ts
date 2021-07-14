@@ -9,10 +9,10 @@ describe('Mutation: updateDiscount', () => {
     var updateCount = 0;	// TODO: Appraise whether this is really useful or not
     var itemCount = 1;
     var extraIds = [] as SupplementalItemRecord[];
-    var discountAmount = {} as {amount: number, currency: string};
+    var discountAmount = {} as { amount: number, currency: string };
     const mutationName = 'updateDiscount';
-    const createName = "createDiscount";   
-	const deleteMutName = "deleteDiscount";
+    const createName = "createDiscount";
+    const deleteMutName = "deleteDiscount";
     const queryName = "discounts";
     const itemPath = 'discount';
     const additionalFields = `discountAmount {
@@ -34,13 +34,13 @@ describe('Mutation: updateDiscount', () => {
         });
     };
 
-	var deleteItemsAfter = undefined as boolean | undefined;
+    var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
-		deleteItemsAfter = Cypress.env("deleteItemsAfter");
-		cy.deleteCypressItems(queryName, deleteMutName);
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems(queryName, deleteMutName);
     });
 
-	beforeEach(() => {
+    beforeEach(() => {
         const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{name: "${name}", discountAmount: {amount: 15, currency: "USD"}}`;
         cy.createAndGetId(createName, itemPath, input, additionalFields).then((createdItem) => {
@@ -50,12 +50,12 @@ describe('Mutation: updateDiscount', () => {
             itemCount++;
             discountAmount = createdItem.discountAmount;
         });
-	});
+    });
 
     afterEach(() => {
-		if (!deleteItemsAfter) {
-			return;
-		}
+        if (!deleteItemsAfter) {
+            return;
+        }
         if (id !== "") {
             // Delete any supplemental items we created
             cy.deleteSupplementalItems(extraIds).then(() => {
@@ -172,7 +172,7 @@ describe('Mutation: updateDiscount', () => {
                 amount: discountAmount.amount + Cypress._.random(1, 5),
                 currency: "USD"
             };
-            const customData = {data: `${itemPath} customData`, canDelete: true};
+            const customData = { data: `${itemPath} customData`, canDelete: true };
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -213,7 +213,7 @@ describe('Mutation: updateDiscount', () => {
 
         it("Mutation with all required input and 'customData' input will overwrite the customData on an existing object", () => {
             const name = `Cypress ${mutationName} customData extra`;
-            const customData = {data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+            const customData = { data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S'] };
             const extraDiscountAmount = {
                 amount: Cypress._.random(1, 5),
                 currency: "USD"
@@ -222,9 +222,9 @@ describe('Mutation: updateDiscount', () => {
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName});
+                extraIds.push({ itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName });
                 const newName = `Cypress ${mutationName} CD extra updated`;
-                const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
+                const newCustomData = { data: `${itemPath} customData`, newDataField: { canDelete: true } };
                 const newDiscountAmount = {
                     amount: extraDiscountAmount.amount + Cypress._.random(1, 5),
                     currency: "USD"
@@ -336,7 +336,7 @@ describe('Mutation: updateDiscount', () => {
                 currency: "USD"
             };
             const maximumDiscountAmount = {
-                amount: usePercentageForDiscount ? Cypress._.random(100, 2000): 0,
+                amount: usePercentageForDiscount ? Cypress._.random(100, 2000) : 0,
                 currency: "USD"
             };
             const mutation = `mutation {
@@ -348,7 +348,7 @@ describe('Mutation: updateDiscount', () => {
                         usePercentageForDiscount: ${usePercentageForDiscount}
                         discountPercentage: ${discountPercentage}
                         name: "${newName}"
-                        discountAmount: ${toFormattedString(newDiscountAmount)}${usePercentageForDiscount ? `\n\t\t\t\t\tmaximumDiscountAmount: ${toFormattedString(maximumDiscountAmount)}`: ""}
+                        discountAmount: ${toFormattedString(newDiscountAmount)}${usePercentageForDiscount ? `\n\t\t\t\t\tmaximumDiscountAmount: ${toFormattedString(maximumDiscountAmount)}` : ""}
                     }
                 ) {
                     ${codeMessageError}
@@ -422,7 +422,7 @@ describe('Mutation: updateDiscount', () => {
                 discountEndDate
             }
         `;
-        
+
         // TODO: Come in and fix the specific type of error when the mutation starts returning an error as expected
         it("Mutation will return an error when given invalid 'discountStartDate' input", () => {
             const name = `Cypress ${mutationName} invalid dStartDate`;
@@ -511,7 +511,28 @@ describe('Mutation: updateDiscount', () => {
             cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
-        it("Mutation will successfully save the discountStartDate when given valid 'discountStartDate' as input", () => {
+        it("Mutation will return an error when given a 'discountStartDate' but no 'discountEndDate' input", () => {
+            const name = `Cypress ${mutationName} dStartDate with no dEndDate`;
+            const discountAmount = {
+                amount: Cypress._.random(100, 1000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: { 
+                        id: "${id}"
+                        name: "${name}"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                        discountStartDate: "${todayString}"
+                    }
+                ) {
+                    ${discountDateBody}
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
+        });
+
+        it("Mutation will successfully save the discountStartDate when given valid 'discountStartDate' and 'discountEndDate' as input", () => {
             const name = `Cypress ${mutationName} discountStartDate`;
             const discountAmount = {
                 amount: Cypress._.random(100, 1000),
@@ -524,6 +545,7 @@ describe('Mutation: updateDiscount', () => {
                         name: "${name}"
                         discountAmount: ${toFormattedString(discountAmount)}
                         discountStartDate: "${todayString}"
+                        discountEndDate: "${aheadString}"
                     }
                 ) {
                     ${discountDateBody}
@@ -1010,7 +1032,7 @@ describe('Mutation: updateDiscount', () => {
             if (!deleteItemsAfter) {
                 return;
             }
-            cy.deleteParentAndChildCat({name: childCatName, id: childCatId}, parentCatName, parentCatId);
+            cy.deleteParentAndChildCat({ name: childCatName, id: childCatId }, parentCatName, parentCatId);
         });
 
         it("Mutation will not accept 'applyDiscountToSubCategories' if the discountType isn't set to categories", () => {
@@ -1070,7 +1092,7 @@ describe('Mutation: updateDiscount', () => {
 
         it("Mutation will accept 'applyDiscountToSubCategories' if the discountType is ASSIGNED_TO_CATEGORIES", () => {
             updateCount++;
-            const name =`Cypress discount cat type ${updateCount}`;
+            const name = `Cypress discount cat type ${updateCount}`;
             const discountAmount = {
                 amount: Cypress._.random(1, 200),
                 currency: "USD"
@@ -1132,7 +1154,10 @@ describe('Mutation: updateDiscount', () => {
                 parentCatId = parentId;
                 childCatId = childId;
                 const categories = [createInfoDummy(parentCatName, "categoryInfo", parentCatId), createInfoDummy(childCatName, "categoryInfo", childCatId)];
-                const categoryIds = [parentCatId];
+                const categoryIds = [];
+                for (let i = 0; i < categories.length; i++) {
+                    categoryIds.push(categories[i].id);
+                };
                 const name = `Cypress ${mutationName} subCategories test`;
                 const discountAmount = {
                     amount: Cypress._.random(1, 200),
@@ -1531,10 +1556,10 @@ describe('Mutation: updateDiscount', () => {
 
     context("Testing connecting to other items and features", () => {
         it("Mutation with 'productIds' input will successfully attach the products", () => {
-           const extraCreate = "createProduct";
+            const extraCreate = "createProduct";
             const extraPath = "product";
             const extraQuery = "products";
-            const extraItemInput = {productInfo: [{ name:`Cypress ${mutationName} product`, languageCode: "Standard"}]};
+            const extraItemInput = { productInfo: [{ name: `Cypress ${mutationName} product`, languageCode: "Standard" }] };
             cy.createAssociatedItems(2, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
                 addExtraItemIds(deletionIds);
@@ -1608,7 +1633,7 @@ describe('Mutation: updateDiscount', () => {
             const extraCreate = "createCategory";
             const extraPath = "category";
             const extraQuery = "categories";
-            const extraItemInput = { categoryInfo: [{ name:`Cypress ${mutationName} category`, languageCode: "Standard" }] };
+            const extraItemInput = { categoryInfo: [{ name: `Cypress ${mutationName} category`, languageCode: "Standard" }] };
             cy.createAssociatedItems(2, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
                 addExtraItemIds(deletionIds);
