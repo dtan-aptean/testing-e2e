@@ -657,7 +657,7 @@ Cypress.Commands.add("createAssociatedItems", (
     queryName: string,
     inputBase,
     additionalResFields?,
-    altUrl?: string
+    altUrl?: string
 ) => {
     Cypress.log({
         name: "createAssociatedItems",
@@ -670,7 +670,7 @@ Cypress.Commands.add("createAssociatedItems", (
                 "Item path": itemPath,
                 "Input base": toFormattedString(inputBase, true),
                 "Additional response fields": additionalResFields ? additionalResFields : "Not provided",
-                "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
+                "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
             };
         }
     });
@@ -838,6 +838,8 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
         nameField = `company {
             name
         }`;
+    } else if (queryName === 'customers') {
+        nameField = `email`;
     }
     var searchQuery = `{
         ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
