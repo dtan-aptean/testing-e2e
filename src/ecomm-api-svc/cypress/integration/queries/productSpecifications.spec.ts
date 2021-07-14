@@ -39,7 +39,7 @@ describe('Query: productSpecifications', () => {
             const { nodes, edges, totalCount } = res.body.data[queryName];
             expect(nodes.length).to.be.eql(edges.length);
             if (totalCount > nodes.length) {
-                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", ": "";
+                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", " : "";
             }
         });
     });
@@ -81,7 +81,7 @@ describe('Query: productSpecifications', () => {
     context("Testing 'productId' input", () => {
         // Items created for the productId test
         const createdItems = [] as SupplementalItemRecord[];
-        const createdProducts =  [] as SupplementalItemRecord[];
+        const createdProducts = [] as SupplementalItemRecord[];
         const deleteName = "deleteProductSpecification";
         const createMutName = "createProductSpecification";
         const createPath = "productSpecification";
@@ -93,7 +93,7 @@ describe('Query: productSpecifications', () => {
         const productPath = "product";
         const productQuery = "products";
         const productDelete = "deleteProduct";
-        
+
         const addCreated = (isProduct: boolean, extIds: SupplementalItemRecord[]) => {
             extIds.forEach((id) => {
                 if (isProduct) {
@@ -132,7 +132,7 @@ describe('Query: productSpecifications', () => {
         });
 
         it("Query with valid 'productId' input will return only the items connected with that productId", () => {
-            const extraItemInput = {name: `Cypress productId ${queryName} test`, options: [{name: "Cypress pId option"}]};
+            const extraItemInput = { name: `Cypress productId ${queryName} test`, options: [{ name: "Cypress pId option" }] };
             cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput, extraInput).then((results) => {
                 const { deletionIds, items, itemIds, fullItems } = results;
                 addCreated(false, deletionIds);
@@ -230,7 +230,7 @@ describe('Query: productSpecifications', () => {
         });
 
         it("Query using the 'productId' of a deleted product will return an error", () => {
-            const extraItemInput = {name: `Cypress productId ${queryName} delete`, options: [{name: "Cypress pId option"}]};
+            const extraItemInput = { name: `Cypress productId ${queryName} delete`, options: [{ name: "Cypress pId option" }] };
             cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput, extraInput).then((results) => {
                 const { deletionIds, items, itemIds, fullItems } = results;
                 addCreated(false, deletionIds);
@@ -364,7 +364,7 @@ describe('Query: productSpecifications', () => {
         it("Query with a valid 'before' input argument will return all items before that value", () => {
             cy.queryBefore(queryName, standardQuery, standardQueryBody);
         });
-        
+
         it("Query with a valid 'after' input argument will return all items after that value", () => {
             cy.queryAfter(queryName, standardQueryBody, trueTotalInput);
         });
@@ -481,7 +481,7 @@ describe('Query: productSpecifications', () => {
                                 expect(opt.name).to.be.a('string');
                             }
                         });
-                    });    
+                    });
                 }
             });
         });

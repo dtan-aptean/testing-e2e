@@ -1,0 +1,25 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - src/crm-api-svc/
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: e2e-integration-tests
+
+stages:
+  - stage: crm_api_svc
+    displayName: Build and push crm api svc cypress test docker image
+    dependsOn: []
+
+    jobs:
+    - template: ./templates/cypress-test-docker-build-push.yaml
+      parameters:
+        packageName: crm-api-svc 
+        repositoryName: cypress-crm-api-svc     

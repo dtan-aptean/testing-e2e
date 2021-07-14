@@ -6,7 +6,7 @@ import { toFormattedString } from "./commands";
 
 export const defaultField = (queryName: string) => {
     var field = "NAME";
-    switch(queryName) {
+    switch (queryName) {
         case ("orders" || "refunds"):
             field = "TIMESTAMP"
             break;
@@ -262,7 +262,7 @@ Cypress.Commands.add("queryBeforeFirst", (queryName: string, standardQuery: stri
     cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
         cy.get('@cursorIndex').then((index: number) => {
             const first = index > 1 ? Math.floor(index / 2) : 1;
-            Cypress.log({message: `first: ${first}`});
+            Cypress.log({ message: `first: ${first}` });
             const beforeQuery = `{
                 ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
                     ${standardQueryBody}
@@ -287,8 +287,8 @@ Cypress.Commands.add("queryAfterFirst", (queryName: string, standardQueryBody: s
         cy.get('@cursorIndex').then((index: number) => {
             cy.get('@orgCount').then((count: number) => {
                 const diff = (count - 1) - index;
-                const first = diff >= 2 ? Math.floor(diff / 2): diff;
-                Cypress.log({message: `first: ${first}`});
+                const first = diff >= 2 ? Math.floor(diff / 2) : diff;
+                Cypress.log({ message: `first: ${first}` });
                 const afterQuery = `{
                     ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
                         ${standardQueryBody}
@@ -313,7 +313,7 @@ Cypress.Commands.add("queryBeforeLast", (queryName: string, standardQueryBody: s
     cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
         cy.get('@cursorIndex').then((index: number) => {
             const last = index > 1 ? Math.floor(index / 2) : 1;
-            Cypress.log({message: `last: ${last}`});
+            Cypress.log({ message: `last: ${last}` });
             const beforeQuery = `{
                 ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
                     ${standardQueryBody}
@@ -338,8 +338,8 @@ Cypress.Commands.add("queryAfterLast", (queryName: string, standardQueryBody: st
         cy.get('@cursorIndex').then((index: number) => {
             cy.get('@orgCount').then((count: number) => {
                 const diff = (count - 1) - index;
-                const last = diff >= 2 ? Math.floor(diff / 2): diff;
-                Cypress.log({message: `last: ${last}`});
+                const last = diff >= 2 ? Math.floor(diff / 2) : diff;
+                Cypress.log({ message: `last: ${last}` });
                 const afterQuery = `{
                     ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
                         ${standardQueryBody}
@@ -571,7 +571,7 @@ Cypress.Commands.add("queryAndValidateMultipleIds", (count, queryName, standardQ
                 }
             }`;
             cy.postAndValidate(gqlQuery, queryName).then((res) => {
-                for(let i = 0; i < totalCount; i++){
+                for (let i = 0; i < totalCount; i++) {
                     expect(IDs).contains(res.body.data[queryName].edges[i].node.id);
                     expect(IDs).contains(res.body.data[queryName].nodes[i].id);
                 }
@@ -635,7 +635,7 @@ Cypress.Commands.add("queryAndValidateNonStringValues", (ids, queryName, standar
         }
     }`;
     cy.postAndConfirmError(gqlQuery).then((res) => {
-        expect(res.body.errors[0].message).to.have.string("String cannot represent a non string value: "+ ids[0]);
+        expect(res.body.errors[0].message).to.have.string("String cannot represent a non string value: " + ids[0]);
         expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
     });
 });
@@ -664,7 +664,7 @@ Cypress.Commands.add("queryAndValidateDifferentItemIds", (extraQueryName, extraQ
             }
         }`;
         cy.postAndConfirmError(gqlQuery, true).then((res) => {
-            expect(res.body.errors[0].message[0].details[0].code).to.have.string("Invalid Argument");
+            expect(res.body.errors[0].message[0].details[0].code).to.have.string("Invalid");
             expect(res.body.errors[0].message[0].message).to.have.string("Invalid Aptean Id");
             expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
         });

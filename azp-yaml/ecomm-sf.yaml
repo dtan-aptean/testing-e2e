@@ -1,0 +1,25 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - src/ecomm-sf/
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: e2e-integration-tests
+
+stages:
+  - stage: ecomm_sf
+    displayName: Build and push ecomm storefront cypress test docker image
+    dependsOn: []
+
+    jobs:
+    - template: ./templates/cypress-test-docker-build-push.yaml
+      parameters:
+        packageName: ecomm-sf
+        repositoryName: cypress-ecomm-sf     

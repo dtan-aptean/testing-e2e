@@ -39,7 +39,7 @@ describe('Query: productAttributes', () => {
             const { nodes, edges, totalCount } = res.body.data[queryName];
             expect(nodes.length).to.be.eql(edges.length);
             if (totalCount > nodes.length) {
-                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", ": "";
+                trueTotalInput = totalCount > 0 ? "first: " + totalCount + ", " : "";
             }
         });
     });
@@ -123,11 +123,11 @@ describe('Query: productAttributes', () => {
             });
         });
     });
-    
+
     context("Testing 'productId' input", () => {
         // Items created for the productId test
         const createdItems = [] as SupplementalItemRecord[];
-        const createdProducts =  [] as SupplementalItemRecord[];
+        const createdProducts = [] as SupplementalItemRecord[];
         const deleteName = "deleteProductAttribute";
         const createMutName = "createProductAttribute";
         const createPath = "productAttribute";
@@ -164,7 +164,7 @@ describe('Query: productAttributes', () => {
         });
 
         it("Query with valid 'productId' input will return only the items connected with that productId", () => {
-            const extraItemInput = {name: `Cypress productId ${queryName} test`, values: [{ name: "Cypress pId value"}]};
+            const extraItemInput = { name: `Cypress productId ${queryName} test`, values: [{ name: "Cypress pId value" }] };
             cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
                 addCreated(false, deletionIds);
@@ -261,7 +261,7 @@ describe('Query: productAttributes', () => {
         });
 
         it("Query using the 'productId' of a deleted product will return an error", () => {
-            const extraItemInput = {name: `Cypress productId ${queryName} delete`, values: [{ name: "Cypress pId value"}]};
+            const extraItemInput = { name: `Cypress productId ${queryName} delete`, values: [{ name: "Cypress pId value" }] };
             cy.createAssociatedItems(2, createMutName, createPath, queryName, extraItemInput).then((results) => {
                 const { deletionIds, itemIds } = results;
                 addCreated(false, deletionIds);
@@ -445,7 +445,7 @@ describe('Query: productAttributes', () => {
                 });
             });
         });
-        
+
         it("Query with a valid 'after' input argument will return all items after that value", () => {
             const trueTotalQuery = `{
                 ${queryName}(${trueTotalInput}orderBy: {direction: ASC, field: NAME}) {
@@ -490,7 +490,7 @@ describe('Query: productAttributes', () => {
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
             });
         });
-        
+
         it("Query with both 'before' and 'after' input arguments will fail", () => {
             const gqlQuery = `{
                 ${queryName}(before: "MTow2R1Y3Q=", after: "MTowfjI6fjRCAz", orderBy: {direction: ASC, field: NAME}) {
@@ -498,7 +498,7 @@ describe('Query: productAttributes', () => {
                 }
             }`;
             cy.postAndConfirmError(gqlQuery, true).then((res) => {
-                expect(res.body.errors[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
+                expect(res.body.errors[0].message[0].message).to.include("Both After and Before cursors cannot be provided in the same request");
             });
         });
     });
@@ -508,7 +508,7 @@ describe('Query: productAttributes', () => {
             cy.returnRandomCursor(standardQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const first = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `first: ${first}`});
+                    Cypress.log({ message: `first: ${first}` });
                     const beforeQuery = `{
                         ${queryName}(first: ${first}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
@@ -533,8 +533,8 @@ describe('Query: productAttributes', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const first = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `first: ${first}`});
+                        const first = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `first: ${first}` });
                         const afterQuery = `{
                             ${queryName}(first: ${first}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                                 ${standardQueryBody}
@@ -559,7 +559,7 @@ describe('Query: productAttributes', () => {
             cy.returnRandomCursor(trueTotalQuery, queryName, true).then((cursor: string) => {
                 cy.get('@cursorIndex').then((index: number) => {
                     const last = index > 1 ? Math.floor(index / 2) : 1;
-                    Cypress.log({message: `last: ${last}`});
+                    Cypress.log({ message: `last: ${last}` });
                     const beforeQuery = `{
                         ${queryName}(last: ${last}, before: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                             ${standardQueryBody}
@@ -584,8 +584,8 @@ describe('Query: productAttributes', () => {
                 cy.get('@cursorIndex').then((index: number) => {
                     cy.get('@orgCount').then((count: number) => {
                         const diff = (count - 1) - index;
-                        const last = diff >= 2 ? Math.floor(diff / 2): diff;
-                        Cypress.log({message: `last: ${last}`});
+                        const last = diff >= 2 ? Math.floor(diff / 2) : diff;
+                        Cypress.log({ message: `last: ${last}` });
                         const afterQuery = `{
                             ${queryName}(last: ${last}, after: "${cursor}", orderBy: {direction: ASC, field: NAME}) {
                                 ${standardQueryBody}
@@ -755,35 +755,34 @@ describe('Query: productAttributes', () => {
         });
     });
 
-    context('Testing "ID" input' , () => {
+    context('Testing "ID" input', () => {
 
         it('Query with an array of one or more valid ids as "ids" input, returns relevant items ', () => {
-           
-            var ids="";
 
-            cy.returnMultipleRandomIds(10,standardQuery,queryName).then((idValues:[]) =>{
-                
-              ids ="["
-              for(var i=0;i<idValues.length;i++)
-              {
-                ids+='"'+idValues[i]+'"'+",";
-              
-              }
-              ids+="]"
-         
-             const gqlQuery = `{
+            var ids = "";
+
+            cy.returnMultipleRandomIds(10, standardQuery, queryName).then((idValues: []) => {
+
+                ids = "["
+                for (var i = 0; i < idValues.length; i++) {
+                    ids += '"' + idValues[i] + '"' + ",";
+
+                }
+                ids += "]"
+
+                const gqlQuery = `{
                 ${queryName}( orderBy: {direction: ASC, field: NAME} ids:${ids}) {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndValidate(gqlQuery, queryName).then((resp) => {
-                cy.validateMultipleIdSearch(resp, queryName,idValues);
+                cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                    cy.validateMultipleIdSearch(resp, queryName, idValues);
+                });
             });
         });
-    });
         //not placed inside the array
         it('Query with single id as "ids" input, returns relevant item ', () => {
-            cy.returnRandomId(standardQuery,queryName).then((id: string) =>{
+            cy.returnRandomId(standardQuery, queryName).then((id: string) => {
                 const gqlQuery = `{
                     ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: NAME}) {
                         ${standardQueryBody}
@@ -811,14 +810,14 @@ describe('Query: productAttributes', () => {
                     ${standardQueryBody}
                 }
             }`;
-            cy.postAndConfirmError(gqlQuery,true).then((res) => {
-               
+            cy.postAndConfirmError(gqlQuery, true).then((res) => {
+
                 expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
                 expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
 
             })
         });
-        
+
         it('Query with an array of one or more non-string values as "ids" input, returns error ', () => {
             const gqlQuery = `{
                 ${queryName}(ids:[235], orderBy: {direction: ASC, field: NAME}) {
@@ -826,7 +825,7 @@ describe('Query: productAttributes', () => {
                 }
             }`;
             cy.postAndConfirmError(gqlQuery).then((res) => {
-               
+
                 expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
 
@@ -841,7 +840,7 @@ describe('Query: productAttributes', () => {
                 }
             }`;
             cy.postAndConfirmError(gqlQuery).then((res) => {
-               
+
                 expect(res.body.errors[0].message).to.have.string('String cannot represent a non string value:');
                 expect(res.body.errors[0].extensions.code).to.be.eql("GRAPHQL_VALIDATION_FAILED");
 
@@ -882,22 +881,22 @@ describe('Query: productAttributes', () => {
                     ${extrastandardQueryBody}
                 }
             }`;
-        
 
-            cy.returnRandomId(extrastandardQuery,extraqueryName).then((id: string) =>{
+
+            cy.returnRandomId(extrastandardQuery, extraqueryName).then((id: string) => {
                 const gqlQuery = `{
                     ${queryName}(ids: "${id}", orderBy: {direction: ASC, field: NAME}) {
                         ${standardQueryBody}
                     }
                 }`;
-                cy.postAndConfirmError(gqlQuery,true).then((res) => {
+                cy.postAndConfirmError(gqlQuery, true).then((res) => {
                     expect(res.body.errors[0].message[0].message).to.have.string('Invalid Aptean Id');
                     expect(res.body.errors[0].extensions.code).to.be.eql("INTERNAL_SERVER_ERROR");
                 });
             });
 
         });
-    
+
     });
 
     context("Testing response values for customData and other fields", () => {
