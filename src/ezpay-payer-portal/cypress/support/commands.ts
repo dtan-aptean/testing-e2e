@@ -265,20 +265,14 @@ Cypress.Commands.add(
             .find("[data-cy=submit-payment-button]")
             .is(":disabled")
         ) {
-          cy.get("p:contains(Card ending in)")
-            .first()
-            .parent()
-            .click({ force: true });
+          cy.get('input[type="radio"]:enabled').last().check();
         } else if (
-          $makePaymentBody.find("div:contains(Account ending in)").length
+          $makePaymentBody.find("p:contains(Account ending in)").length
         ) {
-          cy.get(".MuiIconButton-label > .MuiSvgIcon-root").click({
+          cy.get("[data-cy=payment-method-list-icon]").click({
             force: true,
           });
-          cy.get("p:contains(Card ending in)")
-            .first()
-            .parent()
-            .click({ force: true });
+          cy.get('input[type="radio"]:enabled').last().check();
         }
       });
       cy.get("[data-cy=submit-payment-button]").click();
@@ -372,3 +366,42 @@ Cypress.Commands.add("waitForRequestLoading", (waitCount: number) => {
     return;
   });
 });
+
+// -- This will generate a payment request(including email) for the user to make payment --
+Cypress.Commands.add(
+  "createPaymentRequestWithDiscount",
+  (amount, discountAmount, discountEndDate) => {
+    cy.getInvoiceRef()
+      .then((uploadResponse) => {
+        return uploadResponse.data.upload.uniqueId;
+      })
+      .then((uniqueId) => {
+        const referenceNumber = Cypress._.random(0, 1e6);
+        const email = Cypress.config("username");
+        const gqlQuery = `mutation {
+        upsertPaymentRequest(
+          input: {
+            referenceNumber: "${referenceNumber}"
+            type: EMAIL
+            email: "${email}"
+            amount: ${amount}
+            invoiceRef: "${uniqueId}"
+            discountAmount: ${discountAmount}
+            discountEndDate: "${discountEndDate}"
+          }
+        ) {
+          paymentRequestId
+        }
+      }`;
+        cy.postGQL(gqlQuery).then((resp) => {
+          // should be 200 ok
+          cy.expect(resp.isOkStatusCode).to.be.equal(true);
+
+          const response = {
+            referenceNumber: referenceNumber,
+          };
+          return response;
+        });
+      });
+  }
+);

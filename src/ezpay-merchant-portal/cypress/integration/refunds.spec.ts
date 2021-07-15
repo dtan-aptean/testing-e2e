@@ -2,6 +2,8 @@
 
 describe("Merchant portal", function () {
   context("Refunds", () => {
+    let globalReferenceNumber = "";
+    let globalPaymentId = "";
     before(() => {
       sessionStorage.clear();
       // navigate to home screen
@@ -49,7 +51,10 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentRequestCells")
+      cy.get("[data-cy=payment-request-table-body]")
+        .find(`tr:contains(${referenceNumber})`)
+        .first()
+        .find("td")
         .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Unpaid");
@@ -62,71 +67,113 @@ describe("Merchant portal", function () {
     });
 
     it("Merchant clicks the refund button and an issue refund modal opens", () => {
-      cy.createAndPay(1, "10", "refund");
-      cy.wait(5000);
-      cy.waitAfterLogIn(0, 5);
-      cy.wait(35000);
+      cy.createAndPay(1, "10", "refund").then((resp) => {
+        globalReferenceNumber = resp[0].toString();
 
-      //Checking in payments
-      cy.get("[data-cy=payment-tab]").click();
-      cy.get("[data-cy=refresh]").click();
-      cy.wait(5000);
+        cy.wait(5000);
+        cy.waitAfterLogIn(0, 5);
 
-      //checking if status is still pending and then waiting accordingly
-      cy.get("body").then(($body) => {
-        if (
-          $body
-            .find("[data-cy=payments-table-body]")
-            .find("tr")
-            .eq(0)
-            .find("td:contains(Pending)").length
-        ) {
-          cy.wait(35000);
-          cy.get("[data-cy=refresh]").click();
-          cy.wait(5000);
-        }
+        cy.get("[data-cy=payment-requests-tab]").click();
+        cy.get("[data-cy=payment-request-table-body]")
+          .find(`tr:contains(${globalReferenceNumber})`)
+          .click({ force: true });
+        cy.get("[data-cy=view-details]").click({ force: true });
+        cy.get("[data-cy=payment-history-id]")
+          .should("exist")
+          .first()
+          .then(($el) => {
+            globalPaymentId = $el.text();
+            cy.get("[data-cy=pr-details-close]").click({ force: true });
+
+            cy.wait(35000);
+
+            //Checking in payments
+            cy.get("[data-cy=payment-tab]").click();
+            cy.get("[data-cy=refresh]").click();
+            cy.wait(5000);
+
+            //checking if status is still pending and then waiting accordingly
+            cy.get("body").then(($body) => {
+              if (
+                $body
+                  .find("[data-cy=payments-table-body]")
+                  .find(`tr:contains(${globalPaymentId})`)
+                  .first()
+                  .find("td:contains(Pending)").length
+              ) {
+                cy.wait(35000);
+                cy.get("[data-cy=refresh]").click();
+                cy.wait(5000);
+              }
+            });
+
+            if (globalPaymentId && globalPaymentId.length > 0) {
+              cy.get("[data-cy=payments-table-body]")
+                .find(`tr:contains(${globalPaymentId})`)
+                .first()
+                .find("td")
+                .eq(2)
+                .should(($cell) => {
+                  expect($cell.eq(0)).to.contain("Completed");
+                })
+                .click();
+            } else {
+              cy.get("@firstPaymentCells")
+                .eq(2)
+                .should(($cell) => {
+                  expect($cell.eq(0)).to.contain("Completed");
+                })
+                .click();
+            }
+
+            cy.get('[data-cy="refund"]').should("exist").click();
+            // Make sure the modal is showing
+            cy.get('[data-cy="refund-dialog-title"]')
+              .should("exist")
+              .and("be.visible");
+            // Close the modal
+            cy.get("[data-cy=cancel-refund]").should("exist");
+            cy.get("[data-cy=cancel-refund]").click({ force: true });
+
+            //Checking in payment requests
+            cy.get("[data-cy=payment-requests-tab]").click();
+            cy.get("[data-cy=refresh]").click();
+            cy.wait(5000);
+
+            if (globalReferenceNumber && globalReferenceNumber.length > 0) {
+              cy.get("[data-cy=payment-request-table-body]")
+                .find(`tr:contains(${globalReferenceNumber})`)
+                .first()
+                .find("td")
+                .eq(2)
+                .should(($cell) => {
+                  expect($cell.eq(0)).to.contain("Completed");
+                })
+                .click();
+            } else {
+              cy.get("@firstPaymentRequestCells")
+                .eq(2)
+                .should(($cell) => {
+                  expect($cell.eq(0)).to.contain("Completed");
+                })
+                .click();
+            }
+
+            //opening refund modal from payment request
+            cy.get("[data-cy=view-details]").should("be.visible").click();
+            cy.get("[data-cy=payment-history-refund]")
+              .should("exist")
+              .first()
+              .click({ force: true });
+            // Make sure the modal is showing
+            cy.get('[data-cy="refund-dialog-title"]')
+              .should("exist")
+              .and("be.visible");
+            // Close the modal
+            cy.get("[data-cy=cancel-refund]").should("exist");
+            cy.get("[data-cy=cancel-refund]").click({ force: true });
+          });
       });
-
-      cy.get("@firstPaymentCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
-      cy.get('[data-cy="refund"]').should("exist").click();
-      // Make sure the modal is showing
-      cy.get('[data-cy="refund-dialog-title"]')
-        .should("exist")
-        .and("be.visible");
-      // Close the modal
-      cy.get("[data-cy=cancel-refund]").should("exist");
-      cy.get("[data-cy=cancel-refund]").click({ force: true });
-
-      //Checking in payment requests
-      cy.get("[data-cy=payment-requests-tab]").click();
-      cy.get("[data-cy=refresh]").click();
-      cy.wait(5000);
-
-      cy.get("@firstPaymentRequestCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
-
-      //opening refund modal from payment request
-      cy.get("[data-cy=view-details]").should("be.visible").click();
-      cy.get("[data-cy=payment-history-refund]")
-        .should("exist")
-        .first()
-        .click({ force: true });
-      // Make sure the modal is showing
-      cy.get('[data-cy="refund-dialog-title"]')
-        .should("exist")
-        .and("be.visible");
-      // Close the modal
-      cy.get("[data-cy=cancel-refund]").should("exist");
-      cy.get("[data-cy=cancel-refund]").click({ force: true });
     });
 
     it("User clicks full refund and the amount is disabled", () => {
@@ -135,12 +182,24 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
+      if (globalPaymentId && globalPaymentId.length > 0) {
+        cy.get("[data-cy=payments-table-body]")
+          .find(`tr:contains(${globalPaymentId})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      } else {
+        cy.get("@firstPaymentCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      }
       cy.get('[data-cy="refund"]').should("exist").click();
       // Make sure the modal is showing
       cy.get('[data-cy="refund-dialog-title"]')
@@ -158,12 +217,24 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentRequestCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
+      if (globalReferenceNumber && globalReferenceNumber.length > 0) {
+        cy.get("[data-cy=payment-request-table-body]")
+          .find(`tr:contains(${globalReferenceNumber})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      } else {
+        cy.get("@firstPaymentRequestCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      }
       cy.get("[data-cy=view-details]").should("be.visible").click();
       cy.get("[data-cy=payment-history-refund]")
         .should("exist")
@@ -187,12 +258,24 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
+      if (globalPaymentId && globalPaymentId.length > 0) {
+        cy.get("[data-cy=payments-table-body]")
+          .find(`tr:contains(${globalPaymentId})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      } else {
+        cy.get("@firstPaymentCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      }
       cy.get('[data-cy="refund"]').should("exist").click();
       // Make sure the modal is showing
       cy.get('[data-cy="refund-dialog-title"]')
@@ -210,12 +293,24 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentRequestCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
+      if (globalReferenceNumber && globalReferenceNumber.length > 0) {
+        cy.get("[data-cy=payment-request-table-body]")
+          .find(`tr:contains(${globalReferenceNumber})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      } else {
+        cy.get("@firstPaymentRequestCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      }
       cy.get("[data-cy=view-details]").should("be.visible").click();
       cy.get("[data-cy=payment-history-refund]")
         .should("exist")
@@ -239,12 +334,24 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
+      if (globalPaymentId && globalPaymentId.length > 0) {
+        cy.get("[data-cy=payments-table-body]")
+          .find(`tr:contains(${globalPaymentId})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      } else {
+        cy.get("@firstPaymentCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      }
       cy.get('[data-cy="refund"]').should("exist").click();
       // Make sure the modal is showing
       cy.get('[data-cy="refund-dialog-title"]')
@@ -273,12 +380,24 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentRequestCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
+      if (globalReferenceNumber && globalReferenceNumber.length > 0) {
+        cy.get("[data-cy=payment-request-table-body]")
+          .find(`tr:contains(${globalReferenceNumber})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      } else {
+        cy.get("@firstPaymentRequestCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      }
       cy.get("[data-cy=view-details]").should("be.visible").click();
       cy.get("[data-cy=payment-history-refund]")
         .should("exist")
@@ -313,12 +432,24 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
+      if (globalPaymentId && globalPaymentId.length > 0) {
+        cy.get("[data-cy=payments-table-body]")
+          .find(`tr:contains(${globalPaymentId})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      } else {
+        cy.get("@firstPaymentCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      }
       cy.get('[data-cy="refund"]').should("exist").click();
       // Make sure the modal is showing
       cy.get('[data-cy="refund-dialog-title"]')
@@ -341,12 +472,24 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentRequestCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
+      if (globalReferenceNumber && globalReferenceNumber.length > 0) {
+        cy.get("[data-cy=payment-request-table-body]")
+          .find(`tr:contains(${globalReferenceNumber})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      } else {
+        cy.get("@firstPaymentRequestCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      }
       cy.get("[data-cy=view-details]").should("be.visible").click();
       cy.get("[data-cy=payment-history-refund]")
         .should("exist")
@@ -375,12 +518,24 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
+      if (globalPaymentId && globalPaymentId.length > 0) {
+        cy.get("[data-cy=payments-table-body]")
+          .find(`tr:contains(${globalPaymentId})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      } else {
+        cy.get("@firstPaymentCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      }
       cy.get('[data-cy="refund"]').should("exist").click();
       // Make sure the modal is showing
       cy.get("[data-cy=refund-dialog-title]").should("exist").and("be.visible");
@@ -396,12 +551,24 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentRequestCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
+      if (globalReferenceNumber && globalReferenceNumber.length > 0) {
+        cy.get("[data-cy=payment-request-table-body]")
+          .find(`tr:contains(${globalReferenceNumber})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      } else {
+        cy.get("@firstPaymentRequestCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      }
       cy.get("[data-cy=view-details]").should("be.visible").click();
       cy.get("[data-cy=payment-history-refund]")
         .should("exist")
@@ -423,12 +590,24 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
-      cy.get("@firstPaymentRequestCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
+      if (globalReferenceNumber && globalReferenceNumber.length > 0) {
+        cy.get("[data-cy=payment-request-table-body]")
+          .find(`tr:contains(${globalReferenceNumber})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      } else {
+        cy.get("@firstPaymentRequestCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Completed");
+          })
+          .click();
+      }
 
       cy.get("[data-cy=view-details]").should("be.visible").click();
       cy.get("[data-cy=payment-history-refund]")
@@ -451,80 +630,152 @@ describe("Merchant portal", function () {
         .should("exist")
         .and("be.visible");
 
-      cy.get("@firstPaymentRequestCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Refund");
-        });
+      if (globalReferenceNumber && globalReferenceNumber.length > 0) {
+        cy.get("[data-cy=payment-request-table-body]")
+          .find(`tr:contains(${globalReferenceNumber})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Refund");
+          });
+      } else {
+        cy.get("@firstPaymentRequestCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Refund");
+          });
+      }
 
       cy.get("[data-cy=payment-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
 
-      cy.get("@firstPaymentCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Refund");
-        });
+      if (globalPaymentId && globalPaymentId.length > 0) {
+        cy.get("[data-cy=payments-table-body]")
+          .find(`tr:contains(${globalPaymentId})`)
+          .first()
+          .find("td")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Refund");
+          });
+      } else {
+        cy.get("@firstPaymentCells")
+          .eq(2)
+          .should(($cell) => {
+            expect($cell.eq(0)).to.contain("Refund");
+          });
+      }
     });
 
     it("Refunding a payment updates the payment and request in the table", () => {
       //creating the payment
-      cy.createAndPay(1, "10.00", "payment");
-      cy.wait(5000);
-      cy.waitAfterLogIn(0, 5);
-      cy.wait(35000);
-      cy.get("[data-cy=payment-tab]").click();
-      cy.get("[data-cy=refresh]").click();
-      cy.wait(5000);
+      cy.createAndPay(1, "10.00", "payment").then((resp) => {
+        globalReferenceNumber = resp[0].toString();
+        cy.wait(5000);
+        cy.waitAfterLogIn(0, 5);
 
-      //checking if status is still pending and then waiting accordingly
-      cy.get("body").then(($body) => {
-        if (
-          $body
-            .find("[data-cy=payments-table-body]")
-            .find("tr")
-            .eq(0)
-            .find("td:contains(Pending)").length
-        ) {
-          cy.wait(35000);
-          cy.get("[data-cy=refresh]").click();
-          cy.wait(5000);
-        }
+        cy.get("[data-cy=payment-requests-tab]").click();
+        cy.get("[data-cy=payment-request-table-body]")
+          .find(`tr:contains(${globalReferenceNumber})`)
+          .click({ force: true });
+        cy.get("[data-cy=view-details]").click({ force: true });
+        cy.get("[data-cy=payment-history-id]")
+          .should("exist")
+          .first()
+          .then(($el) => {
+            globalPaymentId = $el.text();
+            cy.get("[data-cy=pr-details-close]").click({ force: true });
+
+            cy.wait(35000);
+            cy.get("[data-cy=payment-tab]").click();
+            cy.get("[data-cy=refresh]").click();
+            cy.wait(5000);
+
+            //checking if status is still pending and then waiting accordingly
+            cy.get("body").then(($body) => {
+              if (
+                $body
+                  .find("[data-cy=payments-table-body]")
+                  .find(`tr:contains(${globalPaymentId})`)
+                  .first()
+                  .find("td:contains(Pending)").length
+              ) {
+                cy.wait(35000);
+                cy.get("[data-cy=refresh]").click();
+                cy.wait(5000);
+              }
+            });
+
+            //making remaining amount refund
+            if (globalPaymentId && globalPaymentId.length > 0) {
+              cy.get("[data-cy=payments-table-body]")
+                .find(`tr:contains(${globalPaymentId})`)
+                .first()
+                .find("td")
+                .eq(2)
+                .should(($cell) => {
+                  expect($cell.eq(0)).to.contain("Completed");
+                })
+                .click();
+            } else {
+              cy.get("@firstPaymentCells")
+                .eq(2)
+                .should(($cell) => {
+                  expect($cell.eq(0)).to.contain("Completed");
+                })
+                .click();
+            }
+            cy.get("[data-cy=refund]").should("be.enabled").click();
+            cy.get("[data-cy=refund-dialog-title]")
+              .should("exist")
+              .should("be.visible");
+            cy.get("[data-cy=refund-reason]").find("input").type("test");
+            cy.get("[data-cy=process-refund]").click();
+            cy.wait(5000);
+            cy.get("[data-cy=refund-dialog-title]").should("not.exist");
+
+            //checking payment status
+            if (globalPaymentId && globalPaymentId.length > 0) {
+              cy.get("[data-cy=payments-table-body]")
+                .find(`tr:contains(${globalPaymentId})`)
+                .first()
+                .find("td")
+                .eq(2)
+                .should(($cell) => {
+                  expect($cell.eq(0)).to.contain("Refund");
+                });
+            } else {
+              cy.get("@firstPaymentCells")
+                .eq(2)
+                .should(($cell) => {
+                  expect($cell.eq(0)).to.contain("Refund");
+                });
+            }
+
+            //checking payment request status
+            cy.get("[data-cy=payment-requests-tab]").click();
+            cy.get("[data-cy=refresh]").click();
+            cy.wait(5000);
+            if (globalReferenceNumber && globalReferenceNumber.length > 0) {
+              cy.get("[data-cy=payment-request-table-body]")
+                .find(`tr:contains(${globalReferenceNumber})`)
+                .first()
+                .find("td")
+                .eq(2)
+                .should(($cell) => {
+                  expect($cell.eq(0)).to.contain("Refund");
+                });
+            } else {
+              cy.get("@firstPaymentRequestCells")
+                .eq(2)
+                .should(($cell) => {
+                  expect($cell.eq(0)).to.contain("Refund");
+                });
+            }
+          });
       });
-
-      //making remaining amount refund
-      cy.get("@firstPaymentCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Completed");
-        })
-        .click();
-      cy.get("[data-cy=refund]").should("be.enabled").click();
-      cy.get("[data-cy=refund-dialog-title]")
-        .should("exist")
-        .should("be.visible");
-      cy.get("[data-cy=refund-reason]").find("input").type("test");
-      cy.get("[data-cy=process-refund]").click();
-      cy.wait(5000);
-      cy.get("[data-cy=refund-dialog-title]").should("not.exist");
-
-      //checking payment status
-      cy.get("@firstPaymentCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Refund");
-        });
-
-      //checking payment request status
-      cy.get("[data-cy=payment-requests-tab]").click();
-      cy.get("[data-cy=refresh]").click();
-      cy.wait(5000);
-      cy.get("@firstPaymentRequestCells")
-        .eq(2)
-        .should(($cell) => {
-          expect($cell.eq(0)).to.contain("Refund");
-        });
     });
   });
 });

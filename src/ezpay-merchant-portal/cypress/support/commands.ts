@@ -385,257 +385,268 @@ Cypress.Commands.add("getMerchantIndex", (amount) => {
 /**
  * count - the number of payment requests that should be paid
  */
-Cypress.Commands.add("makePayment", (count, consolidatedPaymentCount) => {
-  const waitAfterRootPageVisit = (waitCount: number) => {
-    if (waitCount > 10) {
-      return;
-    }
-    cy.get("body").then(($rootBody) => {
-      if (
-        !$rootBody.find("[data-cy=sign-in]").length &&
-        !$rootBody.find("div:contains(Unpaid Invoices)").length
-      ) {
-        cy.wait(5000);
-        waitAfterRootPageVisit(waitCount + 1);
+Cypress.Commands.add(
+  "makePayment",
+  (count, consolidatedPaymentCount, referenceRecords: string[]) => {
+    const waitAfterRootPageVisit = (waitCount: number) => {
+      if (waitCount > 10) {
+        return;
       }
-      return;
-    });
-  };
+      cy.get("body").then(($rootBody) => {
+        if (
+          !$rootBody.find("[data-cy=sign-in]").length &&
+          !$rootBody.find("div:contains(Unpaid Invoices)").length
+        ) {
+          cy.wait(5000);
+          waitAfterRootPageVisit(waitCount + 1);
+        }
+        return;
+      });
+    };
 
-  const waitAfterSignInClick = (waitCount: number) => {
-    if (waitCount > 10) {
-      return;
-    }
-    cy.get("body").then(($rootBody) => {
-      if (
-        !$rootBody.find("input[id=logonIdentifier]").length &&
-        !$rootBody.find("div:contains(Unpaid Invoices)").length
-      ) {
-        cy.wait(10000);
-        waitAfterSignInClick(waitCount + 1);
+    const waitAfterSignInClick = (waitCount: number) => {
+      if (waitCount > 10) {
+        return;
       }
-      return;
-    });
-  };
+      cy.get("body").then(($rootBody) => {
+        if (
+          !$rootBody.find("input[id=logonIdentifier]").length &&
+          !$rootBody.find("div:contains(Unpaid Invoices)").length
+        ) {
+          cy.wait(10000);
+          waitAfterSignInClick(waitCount + 1);
+        }
+        return;
+      });
+    };
 
-  const waitForRequestLoading = (waitCount: number) => {
-    if (waitCount > 3) {
-      return;
-    }
-    cy.get("body").then(($rootBody) => {
-      if (!$rootBody.find("button:contains(MAKE PAYMENT)").length) {
-        cy.wait(10000);
-        waitForRequestLoading(waitCount + 1);
+    const waitForRequestLoading = (waitCount: number) => {
+      if (waitCount > 3) {
+        return;
       }
-      return;
+      cy.get("body").then(($rootBody) => {
+        if (!$rootBody.find("button:contains(MAKE PAYMENT)").length) {
+          cy.wait(10000);
+          waitForRequestLoading(waitCount + 1);
+        }
+        return;
+      });
+    };
+
+    Cypress.log({
+      name: "makePayment",
+      message: `${count}`,
+      consoleProps: () => {
+        return {
+          "Number to Pay": count,
+        };
+      },
     });
-  };
 
-  Cypress.log({
-    name: "makePayment",
-    message: `${count}`,
-    consoleProps: () => {
-      return {
-        "Number to Pay": count,
-      };
-    },
-  });
+    // Make sure count is a vaild number
+    expect(count).to.not.be.null;
+    expect(count).to.not.be.undefined;
+    assert.isNotNaN(count);
+    assert.isNumber(count);
+    expect(count).to.be.greaterThan(0);
 
-  // Make sure count is a vaild number
-  expect(count).to.not.be.null;
-  expect(count).to.not.be.undefined;
-  assert.isNotNaN(count);
-  assert.isNumber(count);
-  expect(count).to.be.greaterThan(0);
+    cy.get("body").then(($body) => {
+      const appWindow = $body[0].ownerDocument.defaultView;
+      // TODO - switch this to work in all environments
+      appWindow.location = "https://tst.payer.apteanpay.com/";
+      waitAfterRootPageVisit(0);
+      return new Promise((resolve) => {
+        setTimeout((x) => {
+          // Log in - taken from payer portal login command
+          cy.get("body").then(($body) => {
+            if ($body.find("[data-cy=sign-in]").length) {
+              cy.get("[data-cy=sign-in]").click({ force: true });
+              waitAfterSignInClick(0);
 
-  cy.get("body").then(($body) => {
-    const appWindow = $body[0].ownerDocument.defaultView;
-    // TODO - switch this to work in all environments
-    appWindow.location = "https://tst.payer.apteanpay.com/";
-    waitAfterRootPageVisit(0);
-    return new Promise((resolve) => {
-      setTimeout((x) => {
-        // Log in - taken from payer portal login command
-        cy.get("body").then(($body) => {
-          if ($body.find("[data-cy=sign-in]").length) {
-            cy.get("[data-cy=sign-in]").click({ force: true });
-            waitAfterSignInClick(0);
-
-            // check if clicking sign in automatically logs you in, else enter credentials on B2C page
-            cy.get("body").then(($body) => {
-              if ($body.find("input[id=logonIdentifier]").length) {
-                cy.get("input[id=logonIdentifier]").type(
-                  Cypress.config("username")
-                );
-                cy.get("input[id=password]").type(Cypress.config("password"));
-                cy.get("button[id=next]").click();
-                cy.wait(10000);
-              }
-            });
-          }
-        });
-
-        // Wait to finish logging in, or to finish loading
-        cy.get("body").then(($loadingBody) => {
-          if (
-            $loadingBody.find("[data-cy=sign-in]").length > 0 ||
-            $loadingBody.find("div:contains(Loading!)").length > 0
-          ) {
-            cy.wait(7000);
-          }
-        });
-
-        cy.get("div").then(($boday) => {
-          //function to get cc iframe
-          const getIframeBody = () => {
-            return cy
-              .get("#cc_iframe_iframe")
-              .its("0.contentDocument.body")
-              .should("not.be.empty")
-              .then(cy.wrap);
-          };
-
-          //function to add the credit card
-          const addCreditCard = (length: number) => {
-            //opening the modal
-            cy.get("[data-cy=add-credit-card]").click();
-            cy.get("[data-cy=payment-method-add]")
-              .should("exist")
-              .should("be.visible");
-            //opening the add address modal
-            //In case the default address is selected
-            cy.get("[data-cy=payment-method-add]").then(($modal) => {
-              if (!$modal.find("[data-cy=add-address]").length) {
-                cy.get("[data-cy=address-list-icon]").click();
-              }
-            });
-            cy.get("[data-cy=add-address]").click();
-            cy.get("[data-cy=billing-address-modal]").should("be.visible");
-            // Entering the address details
-            cy.get("[data-cy=email]").type("testuser@testusers.com");
-            cy.get("[data-cy=street-address]").type("4324 somewhere st");
-            cy.get("[data-cy=country]").find("select").select("US");
-            cy.get("[data-cy=zipcode]").type("30022");
-            cy.get("[data-cy=phone-number]").type("6784324574");
-            cy.get("[data-cy=continue-to-payment]")
-              .last()
-              .should("be.enabled")
-              .click({ force: true });
-            cy.wait(2000);
-            cy.get("[data-cy=holder-name]").type("Test User");
-            cy.wait(2000);
-            //Entering card details
-            getIframeBody()
-              .find("#text-input-cc-number")
-              .type("4111111111111111");
-            getIframeBody().find("#text-input-expiration-month").type("12");
-            getIframeBody().find("#text-input-expiration-year").type("30");
-            getIframeBody().find("#text-input-cvv-number").type("123");
-            cy.get("[data-cy=continue-to-payment]")
-              .first()
-              .click({ force: true });
-            cy.wait(20000);
-            cy.get("[data-cy=menu-options]").should("have.length", length + 1);
-          };
-
-          cy.get("[data-cy=menu-icon]").click({ force: true });
-
-          if (
-            $boday.find("[data-cy=menu-options]").length === 1 &&
-            !$boday.find("[data-cy=add-bank-account]").length
-          ) {
-            addCreditCard($boday.find("[data-cy=menu-options]").length);
-          } else if (!$boday.find("[data-cy=menu-options]").length) {
-            addCreditCard(0);
-          }
-
-          cy.getMerchantIndex().then((resp) => {
-            const merchantIndex = resp.merchantIndex;
-            const merchantLength = resp.merchantLength;
-
-            // Complete assigned payments
-            for (var i = 0; i < count; i++) {
-              //select the merchant to pay
-              if (merchantLength > 1) {
-                cy.get("h6:contains(Balance Due)")
-                  .eq(merchantIndex)
-                  .parent()
-                  .parent()
-                  .within(() => {
-                    cy.get("button").click({ force: true });
-                  });
-                cy.wait(18000);
-              }
-              // Let table load
-              // Grab the payment from the table according to consolidated check and pay by credit card
-              waitForRequestLoading(0);
-              const consolidated =
-                consolidatedPaymentCount && resp.consolidatedPayment === true
-                  ? consolidatedPaymentCount
-                  : 1;
-
-              for (let i = 0; i < consolidated; i++) {
-                cy.get("table")
-                  .find("tr")
-                  .eq(i)
-                  .within(() => {
-                    cy.get("button").click({ force: true });
-                  });
-              }
-
-              if (resp.consolidatedPayment === true) {
-                cy.get("button:contains('PAY SELECTED')")
-                  .last()
-                  .click({ force: true });
-              } else if (resp.partialPayment === true) {
-                cy.get("button:contains('PAY')").last().click({ force: true });
-              }
-
-              // Wait for page to load
-              cy.wait(5000);
-              // TODO: Set up command to deal when payer has no payment method or doesn't have default payment method, etc
-              cy.get("body").then(($makePaymentBody) => {
-                if (
-                  $makePaymentBody
-                    .find("[data-cy=submit-payment-button]")
-                    .is(":disabled")
-                ) {
-                  $makePaymentBody
-                    .find("div:contains(Card ending in)")
-                    .last()
-                    .click();
-                } else if (
-                  $makePaymentBody.find("div:contains(Account ending in)")
-                    .length
-                ) {
-                  cy.get(".MuiIconButton-label > .MuiSvgIcon-root").click({
-                    force: true,
-                  });
-                  $makePaymentBody
-                    .find("div:contains(Card ending in)")
-                    .last()
-                    .click();
-                }
-              });
-              cy.get("[data-cy=submit-payment-button]").click();
-              cy.wait(500);
-              cy.get("[data-cy=pay-now]").click();
-              cy.wait(15000);
-              cy.wait(5000).then(() => {
-                // If we need to make more than one payment, send us back to the home page
-                if (count > 1) {
-                  cy.wait(5000);
-                  appWindow.location = "https://tst.payer.apteanpay.com/";
+              // check if clicking sign in automatically logs you in, else enter credentials on B2C page
+              cy.get("body").then(($body) => {
+                if ($body.find("input[id=logonIdentifier]").length) {
+                  cy.get("input[id=logonIdentifier]").type(
+                    Cypress.config("username")
+                  );
+                  cy.get("input[id=password]").type(Cypress.config("password"));
+                  cy.get("button[id=next]").click();
+                  cy.wait(10000);
                 }
               });
             }
           });
-        });
-        resolve();
-      }, 2000);
+
+          // Wait to finish logging in, or to finish loading
+          cy.get("body").then(($loadingBody) => {
+            if (
+              $loadingBody.find("[data-cy=sign-in]").length > 0 ||
+              $loadingBody.find("div:contains(Loading!)").length > 0
+            ) {
+              cy.wait(10000);
+            }
+          });
+
+          cy.get("div").then(($boday) => {
+            //function to get cc iframe
+            const getIframeBody = () => {
+              return cy
+                .get("#cc_iframe_iframe")
+                .its("0.contentDocument.body")
+                .should("not.be.empty")
+                .then(cy.wrap);
+            };
+
+            //function to add the credit card
+            const addCreditCard = (length: number) => {
+              //opening the modal
+              cy.get("[data-cy=add-credit-card]").click();
+              cy.get("[data-cy=payment-method-add]")
+                .should("exist")
+                .should("be.visible");
+              //opening the add address modal
+              //In case the default address is selected
+              cy.get("[data-cy=payment-method-add]").then(($modal) => {
+                if (!$modal.find("[data-cy=add-address]").length) {
+                  cy.get("[data-cy=address-list-icon]").click();
+                }
+              });
+              cy.get("[data-cy=add-address]").click();
+              cy.get("[data-cy=billing-address-modal]").should("be.visible");
+              // Entering the address details
+              cy.get("[data-cy=email]").type("testuser@testusers.com");
+              cy.get("[data-cy=street-address]").type("4324 somewhere st");
+              cy.get("[data-cy=country]").find("select").select("US");
+              cy.get("[data-cy=zipcode]").type("30022");
+              cy.get("[data-cy=phone-number]").type("6784324574");
+              cy.get("[data-cy=continue-to-payment]")
+                .last()
+                .should("be.enabled")
+                .click({ force: true });
+              cy.wait(2000);
+              cy.get("[data-cy=holder-name]").type("Test User");
+              cy.wait(2000);
+              //Entering card details
+              getIframeBody()
+                .find("#text-input-cc-number")
+                .type("4111111111111111");
+              getIframeBody().find("#text-input-expiration-month").type("12");
+              getIframeBody().find("#text-input-expiration-year").type("30");
+              getIframeBody().find("#text-input-cvv-number").type("123");
+              cy.get("[data-cy=continue-to-payment]")
+                .first()
+                .click({ force: true });
+              cy.wait(20000);
+              cy.get("[data-cy=menu-options]").should(
+                "have.length",
+                length + 1
+              );
+            };
+
+            cy.get("[data-cy=menu-icon]").click({ force: true });
+
+            if (
+              $boday.find("[data-cy=menu-options]").length === 1 &&
+              !$boday.find("[data-cy=add-bank-account]").length
+            ) {
+              addCreditCard($boday.find("[data-cy=menu-options]").length);
+            } else if (!$boday.find("[data-cy=menu-options]").length) {
+              addCreditCard(0);
+            }
+
+            cy.getMerchantIndex().then((resp) => {
+              const merchantIndex = resp.merchantIndex;
+              const merchantLength = resp.merchantLength;
+
+              // Complete assigned payments
+              for (var i = 0; i < count; i++) {
+                //select the merchant to pay
+                if (merchantLength > 1) {
+                  cy.get("h6:contains(Balance Due)")
+                    .eq(merchantIndex)
+                    .parent()
+                    .parent()
+                    .within(() => {
+                      cy.get("button").click({ force: true });
+                    });
+                  cy.wait(18000);
+                }
+                // Let table load
+                // Grab the payment from the table according to consolidated check and pay by credit card
+                waitForRequestLoading(0);
+                const consolidated =
+                  consolidatedPaymentCount && resp.consolidatedPayment === true
+                    ? consolidatedPaymentCount
+                    : 1;
+
+                for (let i = 0; i < consolidated; i++) {
+                  if (referenceRecords[i]) {
+                    cy.get("table")
+                      .find(`tr:contains(${referenceRecords[i]})`)
+                      .within(() => {
+                        cy.get("button").click({ force: true });
+                      });
+                  } else {
+                    cy.get("table")
+                      .find("tr")
+                      .eq(i)
+                      .within(() => {
+                        cy.get("button").click({ force: true });
+                      });
+                  }
+                }
+
+                if (resp.consolidatedPayment === true) {
+                  cy.get("button:contains('PAY SELECTED')")
+                    .last()
+                    .click({ force: true });
+                } else if (resp.partialPayment === true) {
+                  cy.get("button:contains('PAY')")
+                    .last()
+                    .click({ force: true });
+                }
+
+                // Wait for page to load
+                cy.wait(5000);
+                // TODO: Set up command to deal when payer has no payment method or doesn't have default payment method, etc
+                cy.get("body").then(($makePaymentBody) => {
+                  if (
+                    $makePaymentBody
+                      .find("[data-cy=submit-payment-button]")
+                      .is(":disabled")
+                  ) {
+                    cy.get('input[type="radio"]:enabled').last().check();
+                  } else if (
+                    $makePaymentBody.find("p:contains(Account ending in)")
+                      .length
+                  ) {
+                    cy.get("[data-cy=payment-method-list-icon]").click({
+                      force: true,
+                    });
+                    cy.get('input[type="radio"]:enabled').last().check();
+                  }
+                });
+                cy.get("[data-cy=submit-payment-button]").click();
+                cy.wait(500);
+                cy.get("[data-cy=pay-now]").click();
+                cy.wait(15000);
+                cy.wait(5000).then(() => {
+                  // If we need to make more than one payment, send us back to the home page
+                  if (count > 1) {
+                    referenceRecords.shift();
+                    cy.wait(5000);
+                    appWindow.location = "https://tst.payer.apteanpay.com/";
+                  }
+                });
+              }
+            });
+          });
+          resolve();
+        }, 2000);
+      });
     });
-  });
-});
+  }
+);
 // -- This creates a given number of payment requests, then call the command to pay them
 /**
  * requestCount - how many payment requests to make. Required
@@ -670,6 +681,7 @@ Cypress.Commands.add(
 
     const invoicePath = "sample.pdf";
     const referencePrefix = refPrefix || "cypress";
+    const referenceRecords: string[] = [];
 
     // Make the requests
     for (var i = 0; i < requestCount; i++) {
@@ -682,17 +694,29 @@ Cypress.Commands.add(
       cy.getInput("reference-number").type(referenceNumber);
       cy.getInput("invoice").attachFile(invoicePath);
       cy.wait(3000);
-      cy.get("[data-cy=send-payment]").should("not.be.disabled").click();
+      cy.get("[data-cy=send-payment]")
+        .should("not.be.disabled")
+        .click()
+        .then(() => {
+          referenceRecords.push(referenceNumber);
+        });
       cy.wait(5000);
     }
     // Give it a moment to make sure all requests got in
     cy.wait(3000);
+    const referenceNumbers = referenceRecords;
     // Call the payment function
-    cy.makePayment(paymentCount || 1, consolidatedPaymentCount);
+    cy.makePayment(
+      paymentCount || 1,
+      consolidatedPaymentCount,
+      referenceRecords
+    );
     // Give it time to get in
     cy.wait(5000);
     // Return to merchant portal
-    cy.visit("/");
+    cy.visit("/").then(() => {
+      return referenceNumbers;
+    });
   }
 );
 

@@ -180,9 +180,7 @@ describe("Merchant portal", function () {
           //using view deatils option
           cy.wrap(detailsArray[0]).click();
           cy.get("[data-cy=dispute-details]").should("be.enabled").click();
-          cy.get("[data-cy=dispute-information]")
-            .should("exist")
-            .and("be.visible");
+          cy.get("[data-cy=dispute-information]").should("exist");
           cy.get("[data-cy=close-dispute]").should("exist").and("be.visible");
           cy.get("[data-cy=close-dispute]").click();
           cy.get("[data-cy=dispute-information]").should("not.exist");
@@ -194,9 +192,7 @@ describe("Merchant portal", function () {
             .within(() => {
               cy.get('a[href="#"]').click({ force: true });
             });
-          cy.get("[data-cy=dispute-information]")
-            .should("exist")
-            .and("be.visible");
+          cy.get("[data-cy=dispute-information]").should("exist");
           cy.get("[data-cy=close-dispute]").should("exist").and("be.visible");
           cy.get("[data-cy=close-dispute]").click();
           cy.get("[data-cy=dispute-information]").should("not.exist");
@@ -229,9 +225,7 @@ describe("Merchant portal", function () {
           cy.wrap(detailsArray[0]).trigger("mouseover");
           cy.get("@actionsCell").should("be.empty");
           cy.wrap(detailsArray[0]).dblclick();
-          cy.get("[data-cy=dispute-information]")
-            .should("exist")
-            .and("be.visible");
+          cy.get("[data-cy=dispute-information]").should("exist");
           // Close modal with the close button
           cy.get("[data-cy=close-dispute]").should("exist").and("be.visible");
           cy.get("[data-cy=close-dispute]").click();
@@ -242,9 +236,7 @@ describe("Merchant portal", function () {
           cy.wrap(detailsArray[0]).trigger("mouseover");
           cy.get("@actionsCell").should("be.empty");
           cy.wrap(detailsArray[0]).dblclick();
-          cy.get("[data-cy=dispute-information]")
-            .should("exist")
-            .and("be.visible");
+          cy.get("[data-cy=dispute-information]").should("exist");
           // Close the modal via the backdrop
           cy.get("div.MuiDialog-root")
             .find(".MuiBackdrop-root")
@@ -267,7 +259,7 @@ describe("Merchant portal", function () {
           cy.get('a[href="#"]').click({ force: true });
         });
       cy.wait(1000);
-      cy.get("[data-cy=dispute-information]").should("exist").and("be.visible");
+      cy.get("[data-cy=dispute-information]").should("exist");
       cy.get("[data-cy=download-dispute-invoice]")
         .should("exist")
         .and("be.visible");
@@ -287,9 +279,9 @@ describe("Merchant portal", function () {
       cy.get("@rows")
         .eq(0)
         .find("td")
-        .eq(4)
+        .eq(1)
         .then((el) => {
-          const originalDate = el.text();
+          const originalId = el.text();
 
           // Change the date ordering
           cy.get("[data-cy=payment-disputes-panel]")
@@ -304,10 +296,10 @@ describe("Merchant portal", function () {
             .find("tr")
             .eq(0)
             .find("td")
-            .eq(4)
+            .eq(1)
             .then((newEl) => {
               // Confirm that the new value is different than the previous value
-              cy.expect(newEl.text()).to.not.equal(originalDate);
+              cy.expect(newEl.text()).to.not.equal(originalId);
 
               // Click again and make sure it goes back to the original
               cy.get("@date").click();
@@ -316,9 +308,9 @@ describe("Merchant portal", function () {
                 .find("tr")
                 .eq(0)
                 .find("td")
-                .eq(4)
+                .eq(1)
                 .then((finalEl) => {
-                  cy.expect(finalEl.text()).to.equal(originalDate);
+                  cy.expect(finalEl.text()).to.equal(originalId);
                 });
             });
         });
