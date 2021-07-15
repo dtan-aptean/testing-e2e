@@ -42,6 +42,7 @@ describe('Mutation: deleteAddress', () => {
         postalCode
         region
     `;
+    const description = "The Emperor protects."
 
     before(() => {
         const input = {
@@ -80,6 +81,7 @@ describe('Mutation: deleteAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -93,6 +95,7 @@ describe('Mutation: deleteAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
