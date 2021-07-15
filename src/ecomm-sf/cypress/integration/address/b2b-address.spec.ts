@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+// TEST COUNT: 10
 
 import { toFormattedString } from "../../support/apiCommands";
 import { codeMessageError } from "../../support/apiCommands";
