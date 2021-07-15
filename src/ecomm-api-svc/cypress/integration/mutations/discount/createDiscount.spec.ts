@@ -405,7 +405,6 @@ describe('Mutation: createDiscount', () => {
             cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
-        // TODO: Come in and fix the specific type of error when the mutation starts returning an error as expected
         it("Mutation will return an error when given a non-date string value as 'discountEndDate' input", () => {
             const name = `Cypress ${mutationName} non-date dEndDate`;
             const discountAmount = {
@@ -426,27 +425,7 @@ describe('Mutation: createDiscount', () => {
             cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
-        it("Mutation will return an error when given a 'discountStartDate', but not a 'discountEndDate' input", () => {
-            const name = `Cypress ${mutationName} non-date dEndDate`;
-            const discountAmount = {
-                amount: Cypress._.random(100, 1000),
-                currency: "USD"
-            };
-            const mutation = `mutation {
-                ${mutationName}(
-                    input: { 
-                        name: "${name}"
-                        discountAmount: ${toFormattedString(discountAmount)},
-                        discountStartDate: "${todayString}"
-                    }
-                ) {
-                    ${discountDateBody}
-                }
-            }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
-        });
-
-        it("Mutation will successfully save the discountStartDate when given valid 'discountStartDate' and 'discountEndDate' as input", () => {
+        it("Mutation will successfully save the discountStartDate when given valid 'discountStartDate' as input", () => {
             const name = `Cypress ${mutationName} discountStartDate`;
             const discountAmount = {
                 amount: Cypress._.random(100, 1000),
@@ -458,7 +437,6 @@ describe('Mutation: createDiscount', () => {
                         name: "${name}"
                         discountAmount: ${toFormattedString(discountAmount)}
                         discountStartDate: "${todayString}"
-                        discountEndDate: "${aheadString}"
                     }
                 ) {
                     ${discountDateBody}

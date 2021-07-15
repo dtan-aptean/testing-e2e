@@ -96,8 +96,8 @@ describe('Mutation: updateDiscount', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath )
-            
+            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath)
+
         });
 
 
@@ -532,28 +532,7 @@ describe('Mutation: updateDiscount', () => {
             cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
-        it("Mutation will return an error when given a 'discountStartDate' but no 'discountEndDate' input", () => {
-            const name = `Cypress ${mutationName} dStartDate with no dEndDate`;
-            const discountAmount = {
-                amount: Cypress._.random(100, 1000),
-                currency: "USD"
-            };
-            const mutation = `mutation {
-                ${mutationName}(
-                    input: { 
-                        id: "${id}"
-                        name: "${name}"
-                        discountAmount: ${toFormattedString(discountAmount)}
-                        discountStartDate: "${todayString}"
-                    }
-                ) {
-                    ${discountDateBody}
-                }
-            }`;
-            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
-        });
-
-        it("Mutation will successfully save the discountStartDate when given valid 'discountStartDate' and 'discountEndDate' as input", () => {
+        it("Mutation will successfully save the discountStartDate when given a valid 'discountStartDate' as input", () => {
             const name = `Cypress ${mutationName} discountStartDate`;
             const discountAmount = {
                 amount: Cypress._.random(100, 1000),
@@ -566,7 +545,6 @@ describe('Mutation: updateDiscount', () => {
                         name: "${name}"
                         discountAmount: ${toFormattedString(discountAmount)}
                         discountStartDate: "${todayString}"
-                        discountEndDate: "${aheadString}"
                     }
                 ) {
                     ${discountDateBody}
