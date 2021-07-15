@@ -1009,7 +1009,7 @@ Cypress.Commands.add("deleteItem", (mutationName: string, id: string, altUrl?: s
         },
     });
     var mutation = `mutation {
-        ${mutationName}(input: { id: "${id}" }) {
+        ${mutationName}(input: { ${mutationName === "deleteRefund" ? "orderId" : "id"}: "${id}" }) {
             ${codeMessageError}
         }
     }`;
@@ -1423,30 +1423,4 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, queryName: string, ite
         expect(propNames.length).to.be.eql(values.length, "Same number of properties and values passed in");
         compareExpectedToResults(node, propNames, values);
     });
-});
-
-Cypress.Commands.add("createAndGetMultipleIds", (NumberToMake: number, createName: string, itemPath: string, input: string, altUrl?: String) => {
-    Cypress.log({
-        name: "createAndGetMultipleIds",
-        message: `Creating ${itemPath}`,
-        consoleProps: () => {
-            return {
-                "Mutation": createName,
-                "Response item path": itemPath,
-                "Input string": input,
-                "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
-            };
-        }
-    });
-    const createdIds = [];
-    const createAndPush = () => {
-        cy.createAndGetId(createName, itemPath, input).then((returnedBody) => {
-            const returnedId = returnedBody;
-            createdIds.push(returnedId);
-        });
-    }
-    for (var i = 0; i < NumberToMake; i++) {
-        createAndPush(createName, itemPath, input);
-    }
-    return cy.wrap(createdIds);
 });

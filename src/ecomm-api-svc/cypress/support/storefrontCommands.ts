@@ -439,7 +439,7 @@ Cypress.Commands.add("placeOrder", (checkoutOptions?, productOptions?: { firstCa
     return cy.get(".order-number").find('strong').invoke("text").then(($el) => {
         var orderNumber = $el.slice(0).replace("Order number: ", "");
         cy.get(".order-completed-continue-button").click({ force: true });
-        return cy.wrap(orderNumber);
+        return cy.wrap(orderNumber).as('OrderNumber');
     });
 });
 

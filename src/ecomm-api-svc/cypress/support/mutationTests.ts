@@ -39,6 +39,17 @@ Cypress.Commands.add("mutationInvalidId", (mutationName: string, standardMutatio
     cy.postAndConfirmError(mutation);
 });
 
+Cypress.Commands.add("mutationDeletedId", (id:string , mutationName: string, deleteMutName: string, mutation: string, itemPath: string, altUrl: string) => {
+    cy.deleteItem(deleteMutName, id, altUrl);
+    cy.postAndConfirmMutationError(mutation, mutationName, itemPath, altUrl).then((res) => {
+        if(mutationName =="updateRefund" || mutationName =="deleteRefund" ){
+            expect(res.body.data[mutationName].errors[0].message).to.have.string("Refund does not exist for this order");
+        }else{
+            expect(res.body.data[mutationName].errors[0].message).to.have.string("Invalid Aptean Id");
+        }
+    });
+});
+
 Cypress.Commands.add("mutationOnlyId", (id: string, mutationName: string, standardMutationBody: string) => {
     const mutation = `mutation {
         ${mutationName}(input: { id: "${id}" }) {
