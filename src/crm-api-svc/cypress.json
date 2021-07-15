@@ -1,7 +1,7 @@
 {
   "baseUrl": "#{CRM_SVC_BASE_URL}#",
   "chromeWebSecurity": false,
-  "defaultCommandTimeout": 10000,
+  "defaultCommandTimeout": 30000,
   "env": {
     "x-aptean-apim": "#{CRM_APIM}#", 
     "x-aptean-tenant": "#{CRM_TENANT_ID}#",

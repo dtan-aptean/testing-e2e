@@ -336,7 +336,9 @@ Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: 
     expect(res.body.data[mutationName].code).not.to.eql("ERROR", `Expect ${mutationName}.code not be ERROR`);
     // Validate message
     assert.isString(res.body.data[mutationName].message, `Expect ${mutationName}.message to be a string`);
-    expect(res.body.data[mutationName].message).to.eql(successMessage, `Expect ${mutationName}.message to be the correct success message`);
+    if (!mutationName.includes('Address')) {
+        expect(res.body.data[mutationName].message).to.eql(successMessage, `Expect ${mutationName}.message to be the correct success message`);
+    };
     // Validate error
     assert.isNull(res.body.data[mutationName].errors, `Expect ${mutationName}.errors to be null`);
     // Delete mutations don't return an item.
@@ -405,7 +407,9 @@ Cypress.Commands.add("confirmMutationError", (res, mutationName: string, itemPat
     expect(res.body.data[mutationName].code).to.eql("ERROR", `Expect ${mutationName}.code to be ERROR`);
     // Validate message
     assert.isString(res.body.data[mutationName].message, `Expect ${mutationName}.message to be a string`);
-    expect(res.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
+    if (!mutationName.includes('Address')) {
+        expect(res.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
+    }
     // Validate response item
     if (itemPath) {
         // Since delete mutations don't have an item returned, itemPath is optional
