@@ -1,7 +1,7 @@
 {
   "baseUrl": "#{EZPAY_API_URL}#",
   "chromeWebSecurity": false,
-  "defaultCommandTimeout": 10000,
+  "defaultCommandTimeout": 60000,
   "env": {
     "username": "#{EZPAY_TOKEN_USER}#",
     "password": "#{EZPAY_TOKEN_PASS}#",
