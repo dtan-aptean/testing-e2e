@@ -57,4 +57,88 @@ describe('Checkout service: hosted page', () => {
             cy.contains("body", "session is canceled");
         });
     });
+
+    it('should pass if cancel button is available and directs to cancel url', () => {
+        cy.createCheckoutSession().then((res)=>{
+            const sessionId = res.body.data.createCheckoutSession.checkoutSession.id;
+            const cancelUrl = res.body.data.createCheckoutSession.checkoutSession.cancelUrl;
+
+            // go to checkout page
+            cy.visit(`/${sessionId}`);
+
+            let cancelButton = cy.get("#cancel-payment");
+            // cancel button should be available
+            cancelButton.should("exist");
+            cancelButton.should("not.be.disabled");
+
+            // click the button
+            cancelButton.click();
+
+            cy.wait(2000);
+
+            // after button click browser must navigate to cancel url
+            cy.url().should("equal", cancelUrl);
+        });
+    });
+
+    it('should pass if a completed session is not processed', () => {
+        cy.createCheckoutSession().then((res)=>{
+            const sessionId = res.body.data.createCheckoutSession.checkoutSession.id;
+
+            // go to checkout page
+            cy.visit(`/${sessionId}`);
+            
+            // fill card info
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-cc-number").type("4111111111111111");
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-expiration-month").type("12");
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-expiration-year").type("30");
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-cvv-number").type("123");            
+
+            // click the button
+            cy.get("#submit-payment").click();
+
+            // modal box should be visible
+            cy.get("#confirmationModal", {timeout: 10000}).should("be.visible");
+
+            // click on confirm
+            cy.get("#confirm-payment", {timeout: 20000}).click();
+
+            cy.wait(5000);
+
+            // request completed session and receive 410 Gone
+            cy.request({
+                method: 'GET',
+                url: `/${sessionId}`,
+                failOnStatusCode: false,
+                headers: { 'Content-Type': 'text/plain' }
+            }).then(resp=>{
+                expect(resp.status).to.eq(410);
+            });            
+        }); 
+    });
+
+    it('should pass if payment summary is on the page', () => {
+        cy.createCheckoutSession().then((res)=>{
+            const sessionId = res.body.data.createCheckoutSession.checkoutSession.id;
+
+            // go to checkout page
+            cy.visit(`/${sessionId}`);
+            
+            cy.get(".article-content").should("be.visible");
+
+            // iframe input should be visible
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-cc-number").should("be.visible");
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-expiration-month").should("be.visible");
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-expiration-year").should("be.visible");
+            cy.getIframeBody('#credit-card-capture_iframe').find("#text-input-cvv-number").should("be.visible");       
+            
+            // contact information form should be visible
+            cy.get("#name").should("be.visible");
+            cy.get("#country").should("be.visible");
+            cy.get("#zip-code").should("be.visible");
+            cy.get("#email").should("be.visible");
+            cy.get("#country-code").should("be.visible");
+            cy.get("#phone").should("be.visible"); 
+        }); 
+    });
 });
