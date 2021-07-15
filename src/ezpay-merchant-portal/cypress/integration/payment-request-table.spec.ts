@@ -2,6 +2,7 @@
 
 describe("Payment Request Table", function () {
   context("Payment request table", () => {
+    let globalReferenceNumber: string = "";
     //TODO: 2 tests have been causing errors - fix if possible.
     //11-2-2020: added skips for tests that are erroring, possibly due to service code itself OR could be re-written to re-query when the dom reloads.
     before(() => {
@@ -188,8 +189,7 @@ describe("Payment Request Table", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
       cy.get("[data-cy=payment-request-table-body]")
-        .find("tr")
-        .eq(0)
+        .find(`tr:contains(${referenceNumber})`)
         .find("td")
         .as("newCells");
 
@@ -205,7 +205,7 @@ describe("Payment Request Table", function () {
       cy.get("[data-cy=pr-details-close]").click({ force: true });
 
       //Checking in case of Completed
-      cy.makePayment(1);
+      cy.makePayment(1, undefined, [referenceNumber]);
       cy.visit("/");
       cy.wait(35000);
 
@@ -216,8 +216,7 @@ describe("Payment Request Table", function () {
         if (
           $body
             .find("[data-cy=payments-table-body]")
-            .find("tr")
-            .eq(0)
+            .find(`tr:contains(${referenceNumber})`)
             .find("td:contains(Pending)").length
         ) {
           cy.wait(35000);
@@ -336,10 +335,16 @@ describe("Payment Request Table", function () {
         response
       ).as("refundFailed");
 
+      cy.get("[data-cy=payment-request-table-body]")
+        .find("tr")
+        .eq(0)
+        .find("td")
+        .as("firstCells");
+
       cy.get("[data-cy=payment-requests-tab]").click();
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
-      cy.get("@newCells")
+      cy.get("@firstCells")
         .eq(2)
         .should(($cell) => {
           expect($cell.eq(0)).to.contain("Refund Failed");
@@ -353,65 +358,66 @@ describe("Payment Request Table", function () {
     it("should pass if the refund button opens the refund modal and payment link opens the payment details modal", () => {
       cy.wait(4000);
       // creating the completed payment request record to check the refund modal
-      cy.createAndPay(1, "1.00", "refund");
-      cy.wait(5000);
-      cy.waitAfterLogIn(0, 5);
-      cy.wait(35000);
+      cy.createAndPay(1, "1.00", "refund").then((resp) => {
+        globalReferenceNumber = resp[0].toString();
 
-      //checking if status is still pending and then waiting accordingly
-      cy.get("[data-cy=refresh]").click();
-      cy.wait(5000);
-      cy.get("body").then(($body) => {
-        if (
-          $body
-            .find("[data-cy=payments-table-body]")
-            .find("tr")
-            .eq(0)
-            .find("td:contains(Pending)").length
-        ) {
-          cy.wait(35000);
-        }
+        cy.wait(5000);
+        cy.waitAfterLogIn(0, 5);
+        cy.wait(35000);
+
+        //checking if status is still pending and then waiting accordingly
+        cy.get("[data-cy=refresh]").click();
+        cy.wait(5000);
+        cy.get("body").then(($body) => {
+          if (
+            $body
+              .find("[data-cy=payments-table-body]")
+              .find(`tr:contains(${globalReferenceNumber})`)
+              .find("td:contains(Pending)").length
+          ) {
+            cy.wait(35000);
+          }
+        });
+
+        cy.get("[data-cy=payment-requests-tab]").click();
+        cy.get("[data-cy=refresh]").click();
+        cy.wait(5000);
+        cy.get("[data-cy=payment-request-table-body]")
+          .find(`tr:contains(${globalReferenceNumber})`)
+          .click({ force: true });
+
+        //checking for refund modal
+        cy.wait(2000);
+        cy.get("[data-cy=view-details]")
+          .scrollIntoView()
+          .should("be.visible")
+          .should("be.enabled");
+        cy.get("[data-cy=view-details]").click({ force: true });
+        cy.get("[data-cy=payment-history-refund]")
+          .should("exist")
+          .first()
+          .click({ force: true });
+        cy.get("[data-cy=cancel-refund]").should("exist");
+        cy.get("[data-cy=cancel-refund]").click({ force: true });
+        cy.get("[data-cy=cancel-refund]").should("not.exist");
+
+        //checking for payment details modal
+        cy.wait(2000);
+        cy.get("[data-cy=view-details]")
+          .scrollIntoView()
+          .should("be.visible")
+          .should("be.enabled");
+        cy.get("[data-cy=view-details]").click({ force: true });
+        cy.get("[data-cy=payment-history-id]")
+          .should("exist")
+          .first()
+          .click({ force: true });
+        cy.get("[data-cy=payment-details-modal]")
+          .should("exist")
+          .should("be.visible");
+        cy.get("[data-cy=payment-details-close]").should("be.enabled").click();
+        cy.get("[data-cy=payment-details-modal]").should("not.exist");
       });
-
-      cy.get("[data-cy=payment-requests-tab]").click();
-      cy.get("[data-cy=refresh]").click();
-      cy.wait(5000);
-      cy.get("[data-cy=payment-request-table-body]")
-        .find("tr")
-        .eq(0)
-        .click({ force: true });
-
-      //checking for refund modal
-      cy.wait(2000);
-      cy.get("[data-cy=view-details]")
-        .scrollIntoView()
-        .should("be.visible")
-        .should("be.enabled");
-      cy.get("[data-cy=view-details]").click({ force: true });
-      cy.get("[data-cy=payment-history-refund]")
-        .should("exist")
-        .first()
-        .click({ force: true });
-      cy.get("[data-cy=cancel-refund]").should("exist");
-      cy.get("[data-cy=cancel-refund]").click({ force: true });
-      cy.get("[data-cy=cancel-refund]").should("not.exist");
-
-      //checking for payment details modal
-      cy.wait(2000);
-      cy.get("[data-cy=view-details]")
-        .scrollIntoView()
-        .should("be.visible")
-        .should("be.enabled");
-      cy.get("[data-cy=view-details]").click({ force: true });
-      cy.get("[data-cy=payment-history-id]")
-        .should("exist")
-        .first()
-        .click({ force: true });
-      cy.get("[data-cy=payment-details-modal]")
-        .should("exist")
-        .should("be.visible");
-      cy.get("[data-cy=payment-details-close]").should("be.enabled").click();
-      cy.get("[data-cy=payment-details-modal]").should("not.exist");
     });
 
     it("should pass if a new request shows in the table", () => {
@@ -431,8 +437,7 @@ describe("Payment Request Table", function () {
       cy.get("[data-cy=refresh]").click();
       cy.wait(5000);
       cy.get("[data-cy=payment-request-table-body]")
-        .find("tr")
-        .eq(0)
+        .find(`tr:contains(${referenceNumber})`)
         .find("td")
         .as("newCells");
       cy.get("@newCells")
@@ -664,12 +669,12 @@ describe("Payment Request Table", function () {
       cy.wait(5000);
 
       cy.get("[data-cy=payment-request-table-body]")
-        .get("tr")
-        .eq(0)
+        .get(`tr:contains(${referenceNumber})`)
         .get("td")
         .eq(1)
         .within(() => {
           cy.get('a[href="#"]').click({ force: true });
+          globalReferenceNumber = referenceNumber;
         });
 
       cy.get("[data-cy=payment-request-details-modal]")
@@ -704,8 +709,7 @@ describe("Payment Request Table", function () {
     it("Unpaid payment request should have close request option and should work as expected", () => {
       cy.wait(2000);
       cy.get("[data-cy=payment-request-table-body]")
-        .get("tr")
-        .eq(1)
+        .get(`tr:contains(${globalReferenceNumber})`)
         .click({ force: true });
       //close request option should be enabled
       cy.get("[data-cy=close]").should("be.visible").should("be.enabled");
@@ -724,8 +728,7 @@ describe("Payment Request Table", function () {
 
       //Close request button should exist in payment request modal
       cy.get("[data-cy=payment-request-table-body]")
-        .get("tr")
-        .eq(0)
+        .get(`tr:contains(${globalReferenceNumber})`)
         .get("td")
         .eq(1)
         .within(() => {
@@ -752,8 +755,7 @@ describe("Payment Request Table", function () {
 
       //entering the reason should enable the close request button in close request modal
       cy.get("[data-cy=payment-request-table-body]")
-        .get("tr")
-        .eq(1)
+        .get(`tr:contains(${globalReferenceNumber})`)
         .click({ force: true });
       cy.get("[data-cy=close]").should("be.visible").should("be.enabled");
       cy.get("[data-cy=close]").click();
@@ -770,8 +772,7 @@ describe("Payment Request Table", function () {
       cy.wait(7000);
       cy.get("[data-cy=payment-request-details-modal]").should("not.exist");
       cy.get("[data-cy=payment-request-table-body]")
-        .get("tr")
-        .eq(1)
+        .get(`tr:contains(${globalReferenceNumber})`)
         .get("td")
         .eq(2)
         .should("contain", "Closed");

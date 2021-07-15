@@ -116,6 +116,57 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
         });
 
+        it("Mutation will fail with deleted 'OrderId' input", () => {
+            cy.visit("/");
+            cy.setTheme();
+            cy.storefrontLogin();
+            cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
+                const { orderId, orderAmount } = orderInfo;
+                const localRefundAmount = {
+                    amount: Math.floor(Cypress._.random(1, orderAmount / 10)),
+                    currency: "USD"
+                };
+                cy.get('@OrderNumber').then((orderNo)=>{
+                cy.visit('/');
+                cy.get(".administration").click({ force: true });
+                cy.wait(1000);
+                cy.location("pathname").should("eq", "/Admin");
+                cy.openAdminSidebar();
+                cy.openParentTree("Sales", { force: true });
+                cy.get(".nav-sidebar")
+                    .find("li")
+                    .find(".nav-treeview")
+                    .find("li")
+                    .contains("Orders")
+                    .click({ force: true });
+                cy.location("pathname").should("include", "/Order/List");
+                cy.get("#orders-grid")
+                    .contains(orderNo)
+                    .parent()
+                    .find("a")
+                    .contains("View")
+                    .click({ force: true });
+                });
+                cy.wait(500);
+                //cy.location("pathname").should("include", `/Order/Edit/${orderNo.split("-")[0]}`);
+                cy.get("#order-delete").click();
+                cy.get("button[type = 'submit']").last().click();
+                const mutation = `mutation {
+                    ${mutationName}(
+                        input: {
+                            orderId: "${orderId}"
+                            refundAmount: ${toFormattedString(localRefundAmount)}
+                        }
+                    ) {
+                        ${standardMutationBody}
+                    }
+                }`;
+                cy.postAndConfirmMutationError(mutation, mutationName, itemPath, originalBaseUrl).then((res)=> {
+                    expect(res.body.data[mutationName].errors[0].message).to.have.string("Invalid Aptean Id");
+                });    
+            });  
+        });
+
         it("Mutation will fail with 'orderId' of an unpaid order", () => {
             cy.visit("/").then(() => {
                 cy.get(".header-links").then(($el) => {

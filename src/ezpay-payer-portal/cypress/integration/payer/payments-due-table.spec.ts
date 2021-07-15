@@ -432,7 +432,54 @@ describe("Payer Portal - Payments Due Table", function () {
           .clear()
           .type("1");
         cy.get("button:contains(PAY)").last().should("be.enabled");
+
+        //pay selected should redirect to make-payment route
+        cy.get("button:contains(PAY)").last().click({ force: true });
+        cy.wait(3000);
+        cy.location().should((loc) => {
+          expect(loc.pathname).to.eq("/make-payment");
+        });
       }
+    });
+
+    it("Creating payment request with discount amount and discount end date should add data to discount end column", () => {
+      const discountEndDate = new Date();
+      discountEndDate.setDate(discountEndDate.getDate() + 3);
+      cy.createPaymentRequestWithDiscount(
+        2000,
+        500,
+        discountEndDate.toISOString()
+      ).then((response) => {
+        cy.visit("/");
+        cy.waitForRootPageLoading(1);
+        if (merchantLength > 0) {
+          cy.get("h6:contains(Balance Due)")
+            .eq(merchantIndex)
+            .parent()
+            .parent()
+            .within(() => {
+              cy.get("button").click({ force: true });
+            });
+          cy.waitForRequestLoading(1);
+        }
+        cy.get("[data-cy=payments-due-list").should("be.visible");
+        cy.wait(3000);
+        //confirming the payment request has been created
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find("td")
+          .eq(2)
+          .should("contain", discountEndDate.toLocaleDateString());
+
+        cy.get("table")
+          .find("tr")
+          .eq(1)
+          .find("td")
+          .eq(6)
+          .should("contain", "20.00")
+          .should("contain", "15.00");
+      });
     });
   });
 });
