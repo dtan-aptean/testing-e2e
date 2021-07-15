@@ -404,7 +404,13 @@ Cypress.Commands.add("getPaymentMethodById", (id: string) => {
       }
     }
   }`;
-  cy.postGQL(gqlQuery).then((res) => {
+
+  cy.while(
+    gqlQuery,
+    CommandType.PostGQL,
+    (res) => res.body.data.paymentMethods.nodes[0].status !== "PROCESSING",
+    1000
+  ).then((res) => {
     return res.body.data.paymentMethods.nodes[0];
   });
 });
@@ -569,7 +575,7 @@ Cypress.Commands.add(
     options: { idempotencyKey: string; debug: boolean },
     currentElapsed: number = 0
   ) => {
-    const { idempotencyKey = "", debug = false } = options || {};
+    const { idempotencyKey = "", debug = true } = options || {};
     if (currentElapsed > timeout) {
       throw new Error(
         `Timeout limit reached for the while command. Timeout was: ${timeout}`

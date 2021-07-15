@@ -49,19 +49,7 @@ module.exports = async (on, config) => {
     await uploadBlobs(reportContainer, results.config.reporterOptions.reportDir, dateSubFolder);
     
     if (results) {
-      let facts: Array<any> = [];
-      facts.push({
-        "name": "Total Duration",
-        "value": `${results.totalDuration/1000} seconds`
-      });
-
-      results.runs.forEach((r, index) => {
-        facts.push({
-          "name": `Spec ${index + 1}`,
-          "value": `<b>${r.spec.name}</b><br>Total: ${r.stats.tests}<br>Passing: ${r.stats.passes}<br>Failing: ${r.stats.failures}<br>Pending: ${r.stats.pending}<br>Skipped: ${r.stats.skipped}<br>Duration: ${r.stats.duration/1000} seconds`
-        });
-      });
-      const title = results.totalPassed < results.totalTests ? `<span style='color:red'>**IMPORTANT!<br>${results.totalPassed} out of ${results.totalTests} passed**</span>` : `<span style='color:green'>**${results.totalPassed} out of ${results.totalTests} passed**</span>`;
+      const title = results.totalFailed > 0 ? `<span style='color:red'>**IMPORTANT!<br>${results.totalPassed} out of ${results.totalTests} passed**</span>` : `<span style='color:green'>**${results.totalPassed} out of ${results.totalTests} passed**</span>`;
       await axios.post("https://apteanonline.webhook.office.com/webhookb2/b879817b-ffa3-404c-8f59-37ecabce0a54@560ec2b0-df0c-4e8c-9848-a15718863bb6/IncomingWebhook/2764818da21b4aca81dffb801f2da179/a7c163f2-fcf7-4365-a94c-6d9bf23155cc", {      
           "@type": "MessageCard",
           "@context": "http://schema.org/extensions",
@@ -70,7 +58,7 @@ module.exports = async (on, config) => {
           "sections": [{
               "activityTitle": title,
               "activitySubtitle": "On Ezpay API Services",
-              "facts": facts,
+              "facts": [],
               "markdown": true
           }],
           "potentialAction": [{
@@ -78,7 +66,7 @@ module.exports = async (on, config) => {
               "name": "See Details",
               "targets": [{
                   "os": "default",
-                  "uri": `https://stecommercetenanttst001.blob.core.windows.net/ezpay-api-svc-cypress-report/${dateSubFolder}/index.html`
+                  "uri": `https://stcypressdev001.blob.core.windows.net/ezpay-api-svc-cypress-report/${dateSubFolder}/index.html`
               }]
           }]
       });

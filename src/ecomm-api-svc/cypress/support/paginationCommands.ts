@@ -161,9 +161,10 @@ Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number
             expect(fOL.toLowerCase()).to.be.eql("last");
         }
     });
-    const nodes = res.body.data[queryName].nodes;
-    const edges = res.body.data[queryName].edges;
-    const pageInfo = res.body.data[queryName].pageInfo;
+    const items = res.body.data[queryName];
+    const nodes = items.nodes;
+    const edges = items.edges;
+    const pageInfo = items.pageInfo;
     expect(nodes.length).to.be.eql(value);
     expect(edges.length).to.be.eql(value);
     cy.get('@orgData').then((orgRes) => {
@@ -190,16 +191,20 @@ Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number
                 f = value;
             }
             expect(pageInfo.startCursor).not.to.be.eql(orgPageInfo.startCursor, 'Verify startCursor');
-            expect(pageInfo.startCursor).to.be.eql(orgEdges[f].cursor, 'Verify startCursor');
-            expect(pageInfo.endCursor).to.be.eql(orgPageInfo.endCursor, 'Verify endCursor');
-            for (var i = 0; i < value; i++) {
-                expect(nodes[i][idFormat]).to.be.eql(orgNodes[f][idFormat], 'Verifying included nodes');
-                expect(edges[i].cursor).to.be.eql(orgEdges[f].cursor, 'Verifying included cursors');
-                expect(edges[i].node[idFormat]).to.be.eql(orgEdges[f].node[idFormat], "Verifying edge's included nodes");
-                expect(nodes[i][idFormat]).to.be.eql(orgEdges[f].node[idFormat], `Verifying node[${i}] matches original edge[${f}].node`);
-                f++;
-            }
-        }
+            // The following only works when assuming we return all items and use specific subsets of the full list. 
+            // Querying large lists is problematic and non-implemented, so this will not necessarily be used.
+            if (items.totalCount === totalLength) {
+                expect(pageInfo.startCursor).to.be.eql(orgEdges[f].cursor, 'Verify startCursor');
+                expect(pageInfo.endCursor).to.be.eql(orgPageInfo.endCursor, 'Verify endCursor');
+                for (var i = 0; i < value; i++) {
+                    expect(nodes[i][idFormat]).to.be.eql(orgNodes[f][idFormat], 'Verifying included nodes');
+                    expect(edges[i].cursor).to.be.eql(orgEdges[f].cursor, 'Verifying included cursors');
+                    expect(edges[i].node[idFormat]).to.be.eql(orgEdges[f].node[idFormat], "Verifying edge's included nodes");
+                    expect(nodes[i][idFormat]).to.be.eql(orgEdges[f].node[idFormat], `Verifying node[${i}] matches original edge[${f}].node`);
+                    f++;
+                };
+            };
+        };
     });
 });
 
@@ -207,7 +212,7 @@ Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number
  * COMMANDS FOR STARTDATE/ENDDATE TESTS
  */
 
-// Runs the query and grabs the createdDate from a random node, as long as the created date starts with 20 (aka was created in the 2000s)
+// Runs the query and grabs the created from a random node, as long as the created date starts with 20 (aka was created in the 2000s)
 Cypress.Commands.add('returnRandomDate', (gqlQuery: string, queryName: string, getLowerStart?: boolean, after?: string) => {
     Cypress.log({
         name: "returnRandomDate",
@@ -226,12 +231,16 @@ Cypress.Commands.add('returnRandomDate', (gqlQuery: string, queryName: string, g
         const { nodes } = res.body.data[queryName];
         assert.isNotEmpty(nodes, "Query returned nodes");
         const validValues = nodes.filter((node) => {
-            return node.createdDate.startsWith("20");
+            if (node.created) {
+                return node.created.startsWith("20");
+            } else {
+                return node.createdDate.startsWith("20");
+            }
         });
         assert.isNotEmpty(validValues, "There are existing valid items");
         validValues.sort(function (a, b) {
-            const dateA = new Date(a.createdDate);
-            const dateB = new Date(b.createdDate);
+            const dateA = new Date(a.created);
+            const dateB = new Date(b.created);
             var returnVal;
             if (dateA < dateB) {
                 returnVal = -1;
@@ -247,20 +256,20 @@ Cypress.Commands.add('returnRandomDate', (gqlQuery: string, queryName: string, g
         if (after) {
             const afterDate = new Date(after);
             afterValues = validValues.filter((node) => {
-                const createdDate = new Date(node.createdDate);
-                return createdDate > afterDate;
+                const created = new Date(node.created);
+                return created > afterDate;
             });
             assert.isNotEmpty(afterValues, `There are items with a date after ${after}`);
             upperLimit = afterValues.length - 1;
         }
         const randomIndex = Cypress._.random(0, upperLimit);
         const randomNode = after && afterValues ? afterValues[randomIndex] : validValues[randomIndex];
-        const randomDate = randomNode.createdDate;
+        const randomDate = randomNode.created;
         return cy.wrap(randomDate);
     });
 });
 
-// Verifies that the createdDate of all nodes is before the provided startDate and/or after the provided endDate
+// Verifies that the created of all nodes is before the provided startDate and/or after the provided endDate
 Cypress.Commands.add("verifyDateInput", (res, queryName: string, startDate?: string, endDate?: string) => {
     Cypress.log({
         name: "verifyDateInput",
@@ -278,12 +287,12 @@ Cypress.Commands.add("verifyDateInput", (res, queryName: string, startDate?: str
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
     nodes.forEach((node, index) => {
-        const createdDate = new Date(node.createdDate);
+        const created = new Date(node.created);
         if (startDate && start) {
-            expect(createdDate).to.be.gte(start, `Node[${index}].createdDate should be >= provided startDate`);
+            expect(created).to.be.gte(start, `Node[${index}].created should be >= provided startDate`);
         }
         if (endDate && end) {
-            expect(createdDate).to.be.lte(end, `Node[${index}].createdDate should be <= provided endDate`);
+            expect(created).to.be.lte(end, `Node[${index}].created should be <= provided endDate`);
         }
     });
 });
@@ -716,7 +725,7 @@ Cypress.Commands.add("returnRandomCursor", (gqlQuery: string, queryName: string,
         Cypress.log({ message: `Random Index ${randomIndex}` });
         const randomEdge = res.body.data[queryName].edges[randomIndex];
         cy.wrap(res.body.data[queryName]).as('orgData');
-        cy.wrap(res.body.data[queryName].totalCount).as('orgCount');
+        cy.wrap(res.body.data[queryName].nodes.length).as('orgCount');
         cy.wrap(randomIndex).as('cursorIndex');
         return cy.wrap(randomEdge.cursor);
     });
@@ -852,8 +861,10 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
         }
     }
     if (nodes.length !== 1 && edges.length !== 1) {
-        expect(pageInfo.startCursor).not.to.be.eql(sCursor);
-        expect(pageInfo.endCursor).to.eql(eCursor);
+        if (data.totalCount <= 50) {
+            expect(pageInfo.startCursor).not.to.be.eql(sCursor);
+            expect(pageInfo.endCursor).to.eql(eCursor);
+        }
     }
 });
 
@@ -873,7 +884,6 @@ Cypress.Commands.add("validateCursor", (res, queryName: string, beforeAfter: str
             };
         },
     });
-
     const edges = res.body.data[queryName].edges;
     const nodes = res.body.data[queryName].nodes;
     const totalCount = res.body.data[queryName].totalCount;
@@ -915,7 +925,6 @@ Cypress.Commands.add("validateValues", (res, queryName: string) => {
             assert.exists(item.values);
             // validate values as an array
             assert.isArray(item.values);
-            expect(item.values.length).to.be.gte(1);
             item.values.forEach((val) => {
                 expect(val).to.have.property('displayOrder');
                 if (val.displayOrder !== null) {

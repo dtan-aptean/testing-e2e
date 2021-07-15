@@ -56,6 +56,11 @@ const deleteItems = (nodes, deleteName: string, searchBy: string, infoName?: str
             if (name.includes(searchBy)) {
                 performDelete(deleteName, id, altUrl);
             }
+        } else if (deleteName === "deleteCustomer") {
+            var name = item.email;
+            if (name.includes(searchBy)) {
+                performDelete(deleteName, id, altUrl);
+            } 
         } else if (descendingName) {
             var levels = descendingName.split(".");
             var name = item;
@@ -74,16 +79,13 @@ const deleteItems = (nodes, deleteName: string, searchBy: string, infoName?: str
     });
 };
 
-const getNameField = (infoName?: string,queryName?:String): string => {
+const getNameField = (infoName?: string): string => {
     var nameField = "name";
     if (infoName) {
         nameField = `${infoName} {
             name
             languageCode
         }`;
-    }
-    if(queryName == "customers"){
-        nameField = "firstName"
     }
     return nameField;
 };
@@ -98,7 +100,14 @@ const getNodes = (
     altUrl?: string,
     additionalInput?: string
 ) => {
-    const nameField = (queryName === "paymentSettings" || queryName === "addresses") ? "" : getNameField(infoName, queryName);
+    var nameField;
+    if (queryName === "paymentSettings") {
+        nameField = "";
+    } else if (queryName === "customers") {
+        nameField = "email";
+    } else {
+        nameField = getNameField(infoName);
+    }
     const queryBody = `${additionalInput ? additionalInput + ", " : ""}searchString: "${searchBy}", orderBy: {direction: ASC, field: ${queryName === "paymentSettings" ? "COMPANY_NAME" : "NAME"}}) {
         totalCount
         nodes {
@@ -155,6 +164,8 @@ Cypress.Commands.add("deleteCypressItems", (
         extraField = `company {
             name
         }`;
+    } else if (queryName === "customers") {
+        extraField = `email`;
     }
     Cypress.log({name: "deleteCypressItems", message: `Using ${queryName} to search for "${searchBy}"`});
     getNodes(queryName, searchBy, infoName, extraField, altUrl).then((nodes) => {

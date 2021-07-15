@@ -11,6 +11,7 @@ describe("Mutation: createPaymentMethodClaim", () => {
       }`;
 
     cy.postGQL(gqlQuery).then((res) => {
+      cy.log(JSON.stringify(res));
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 
@@ -24,8 +25,11 @@ describe("Mutation: createPaymentMethodClaim", () => {
 
   it("should successfully create a single use payment method claim", () => {
     cy.generateWePayToken().then((wepayToken) => {
+      cy.log(JSON.stringify(wepayToken));
       cy.convertPayfacPaymentMethodToken(wepayToken).then((id) => {
+        cy.log(JSON.stringify(id));
         cy.getPaymentMethodById(id).then((paymentMethod) => {
+          cy.log(JSON.stringify(paymentMethod));
           let status = paymentMethod.status;
           assert.notEqual(status, "PROCESSING");
           const gqlQuery = `mutation {
@@ -55,6 +59,7 @@ describe("Mutation: createPaymentMethodClaim", () => {
                         }
                         `;
           cy.postGQLWithoutTenantSecret(gqlQuery).then((res) => {
+            cy.log(JSON.stringify(res));
             cy.expect(res.isOkStatusCode).to.be.equal(true);
             assert.exists(res.body.data);
             assert.exists(res.body.data.createPaymentMethodClaim);
@@ -83,8 +88,11 @@ describe("Mutation: createPaymentMethodClaim", () => {
 
   it("should successfully create a payment method claim", () => {
     cy.generateWePayToken().then((wepayToken) => {
+      cy.log(JSON.stringify(wepayToken));
       cy.convertPayfacPaymentMethodToken(wepayToken).then((id) => {
+        cy.log(JSON.stringify(id));
         cy.getPaymentMethodById(id).then((paymentMethod) => {
+          cy.log(JSON.stringify(paymentMethod));
           let status = paymentMethod.status;
           assert.notEqual(status, "PROCESSING");
           const gqlQuery = `mutation {
@@ -114,6 +122,7 @@ describe("Mutation: createPaymentMethodClaim", () => {
                         }
                         `;
           cy.postGQLWithoutTenantSecret(gqlQuery).then((res) => {
+            cy.log(JSON.stringify(res));
             cy.expect(res.isOkStatusCode).to.be.equal(true);
             assert.exists(res.body.data);
             assert.exists(res.body.data.createPaymentMethodClaim);
