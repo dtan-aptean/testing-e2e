@@ -74,6 +74,27 @@ describe('Mutation: updateWarehouse', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
+        it.only("Mutation will fail with deleted 'id' input", () => {
+            const address = {
+                country: "US",
+                postalCode: "30022", 
+                region: "Georgia"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${id}"
+                        name: "Cypress ${mutationName} deleted Id Test"
+                        address: ${toFormattedString(address)}
+                    }
+                ) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath )
+            
+        });
+
         // TODO: failing ecause of 200 status code instead of 400
         it("Mutation will fail if the only input provided is 'id'", () => {
             cy.mutationOnlyId(id, mutationName, standardMutationBody);

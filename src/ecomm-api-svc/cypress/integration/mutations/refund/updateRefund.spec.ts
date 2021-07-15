@@ -154,6 +154,101 @@ describe('Mutation: updateRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             });
         });
 
+        it("Mutation will fail with deleted Refund of 'OrderId' input", () => {
+            const deleteMutName = "deleteRefund"
+            cy.visit("/");
+            cy.setTheme();
+            cy.storefrontLogin();
+            cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
+                const { orderId, orderAmount } = orderInfo;
+                const localRefundAmount = {
+                    amount: Math.floor(Cypress._.random(1, orderAmount / 10)),
+                    currency: "USD"
+                };
+                const input = `{orderId: "${orderId}", refundAmount: ${toFormattedString(localRefundAmount)}}`;
+                cy.createAndGetId(createName, itemPath, input, undefined, originalBaseUrl).then((returnedId: string) => {
+                    assert.exists(returnedId);
+                    id = returnedId;
+                    orderTotal = orderAmount;
+                }).then(()=> {
+                    const mutation = `mutation {
+                        ${mutationName}(
+                            input: {
+                                orderId: "${id}"
+                                refundAmount: ${toFormattedString(localRefundAmount)}
+                            }
+                        ) {
+                            ${standardMutationBody}
+                        }
+                    }`;
+                cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath, originalBaseUrl)
+                })
+            });
+                
+            
+        });
+
+        it.only("Mutation will fail with deleted 'OrderId' input", () => {
+            cy.visit("/");
+            cy.setTheme();
+            cy.storefrontLogin();
+            cy.createOrderRetrieveId(originalBaseUrl).then((orderInfo: {orderId: string, orderAmount: number}) => {
+                const { orderId, orderAmount } = orderInfo;
+                const localRefundAmount = {
+                    amount: Math.floor(Cypress._.random(1, orderAmount / 10)),
+                    currency: "USD"
+                };
+                const input = `{orderId: "${orderId}", refundAmount: ${toFormattedString(localRefundAmount)}}`;
+                cy.createAndGetId(createName, itemPath, input, undefined, originalBaseUrl).then((returnedId: string) => {
+                    assert.exists(returnedId);
+                    id = returnedId;
+                    orderTotal = orderAmount;
+
+                }).then(()=>{
+                    cy.get('@OrderNumber').then((orderNo)=>{
+                    cy.visit('/');
+                    cy.get(".administration").click({ force: true });
+                    cy.wait(1000);
+                    cy.location("pathname").should("eq", "/Admin");
+                    cy.openAdminSidebar();
+                    cy.openParentTree("Sales", { force: true });
+                    cy.get(".nav-sidebar")
+                        .find("li")
+                        .find(".nav-treeview")
+                        .find("li")
+                        .contains("Orders")
+                        .click({ force: true });
+                    cy.location("pathname").should("include", "/Order/List");
+                    cy.get("#orders-grid")
+                        .contains(orderNo)
+                        .parent()
+                        .find("a")
+                        .contains("View")
+                        .click({ force: true });
+                    });
+                    cy.wait(500);
+                    //cy.location("pathname").should("include", `/Order/Edit/${orderNo.split("-")[0]}`);
+                    cy.get("#order-delete").click();
+                    cy.get("button[type = 'submit']").last().click();
+                }).then(()=> {
+                    const mutation = `mutation {
+                        ${mutationName}(
+                            input: {
+                                orderId: "${id}"
+                                refundAmount: ${toFormattedString(localRefundAmount)}
+                            }
+                        ) {
+                            ${standardMutationBody}
+                        }
+                    }`;
+                cy.postAndConfirmMutationError(mutation, mutationName, itemPath, originalBaseUrl).then((res)=> {
+                    expect(res.body.data[mutationName].errors[0].message).to.have.string("Invalid Aptean Id");
+                })
+                })
+            });  
+        });
+
+
         // TODO: Failing with message "Currency is Required"
         it("Mutation will update item to a partial refund with valid 'orderId' and 'isPartialRefund' input", () => {
             cy.visit("/");
@@ -423,7 +518,7 @@ describe('Mutation: updateRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             });
         });
 
-        it.only("Mutation creates item that has all included input", () => {
+        it("Mutation creates item that has all included input", () => {
             const isPartialRefund = Cypress._.random(0, 1) === 1;
             const newRefund = {
                 amount: isPartialRefund ? Math.floor(Cypress._.random(1, orderTotal / 2)) : orderTotal,

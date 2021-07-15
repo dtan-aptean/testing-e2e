@@ -1005,7 +1005,7 @@ Cypress.Commands.add("deleteItem", (mutationName: string, id: string, altUrl?: s
         },
     });
     var mutation = `mutation {
-        ${mutationName}(input: { id: "${id}" }) {
+        ${mutationName}(input: { ${mutationName === "deleteRefund" ? "orderId" : "id"}: "${id}" }) {
             ${codeMessageError}
         }
     }`;

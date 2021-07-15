@@ -65,6 +65,16 @@ describe('Mutation: updateTaxCategory', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
+        it.only("Mutation will fail with deleted 'id' input", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: { id: "${id}", name: "Cypress ${mutationName} deleted Id Test" }) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath )
+            
+        });
+
         it("Mutation will fail if the only input provided is 'id'", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { id: "${id}" }) {

@@ -123,6 +123,64 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
         });
 
+        it.only("Mutation will fail with deleted Refund of 'OrderId' input", () => {
+            refundOrder().then(()=> {
+                    const mutation = `mutation {
+                        ${mutationName}(
+                            input: {
+                                orderId: "${orderInUse}"
+                            }
+                        ) {
+                            ${codeMessageError}
+                        }
+                    }`;
+                cy.mutationDeletedId(orderInUse, mutationName, mutationName, mutation, undefined, originalBaseUrl)
+            });
+                
+            
+        });
+
+        it.only("Mutation will fail with deleted 'OrderId' input", () => {
+            cy.get('@OrderNumber').then((orderNo)=>{
+                cy.visit('/');
+                cy.get(".administration").click({ force: true });
+                cy.wait(1000);
+                cy.location("pathname").should("eq", "/Admin");
+                cy.openAdminSidebar();
+                cy.openParentTree("Sales", { force: true });
+                cy.get(".nav-sidebar")
+                    .find("li")
+                    .find(".nav-treeview")
+                    .find("li")
+                    .contains("Orders")
+                    .click({ force: true });
+                cy.location("pathname").should("include", "/Order/List");
+                cy.get("#orders-grid")
+                    .contains(orderNo)
+                    .parent()
+                    .find("a")
+                    .contains("View")
+                    .click({ force: true });
+            });
+            cy.wait(500);
+            //cy.location("pathname").should("include", `/Order/Edit/${orderNo.split("-")[0]}`);
+            cy.get("#order-delete").click();
+            cy.get("button[type = 'submit']").last().click();
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        orderId: "${orderInUse}"
+                    }
+                ) {
+                    ${codeMessageError}
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, undefined, originalBaseUrl).then((res)=> {
+                expect(res.body.data[mutationName].errors[0].message).to.have.string("Invalid Aptean Id");
+            });      
+        });
+
+
         it("Mutation will fail when given an 'orderId' that doesn't have a refund", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { orderId: "${orderInUse}"}){

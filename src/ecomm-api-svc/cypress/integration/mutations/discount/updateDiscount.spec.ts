@@ -80,6 +80,27 @@ describe('Mutation: updateDiscount', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
+        it.only("Mutation will fail with deleted 'id' input", () => {
+            const discountAmount = {
+                amount: Cypress._.random(100, 1000),
+                currency: "USD"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${id}"
+                        name: "Cypress ${mutationName} deleted Id Test"
+                        discountAmount: ${toFormattedString(discountAmount)}
+                    }
+                ) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath )
+            
+        });
+
+
         it("Mutation will fail if the only input provided is 'id'", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { id: "${id}" }) {

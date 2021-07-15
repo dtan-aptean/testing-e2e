@@ -77,6 +77,16 @@ describe('Mutation: updateManufacturer', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
+        it.only("Mutation will fail with deleted 'id' input", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: { id: "${id}", ${infoName}: [{name: "Cypress ${mutationName} Deleted Id Test", languageCode: "Standard"}] }) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath )
+            
+        });
+
         it("Mutation will fail if the only input provided is 'id'", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { id: "${id}" }) {

@@ -73,6 +73,16 @@ describe('Mutation: updateReturnReason', () => {
             cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
+        it.only("Mutation will fail with deleted 'id' input", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: { id: "${id}", name: "Cypress ${mutationName} deleted Id Test" }) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath )
+            
+        });
+
         it("Mutation will fail with invalid 'Name' input", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { id: "${id}", name: 7 }) {
