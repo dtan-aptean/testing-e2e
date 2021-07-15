@@ -661,7 +661,6 @@ Cypress.Commands.add("validateMultipleIdSearch", (res, queryName: string, idValu
         },
     });
     const totalCount = res.body.data[queryName].totalCount;
-    var node, edge;
     const nodes = res.body.data[queryName].nodes;
     const edges = res.body.data[queryName].edges;
     expect(totalCount).to.be.eql(nodes.length);

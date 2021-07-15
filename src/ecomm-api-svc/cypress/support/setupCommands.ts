@@ -46,7 +46,7 @@ const deleteItems = (nodes, deleteName: string, searchBy: string, infoName?: str
         var id = item.id;
         if (infoName) {
             const nameArray = item[infoName].filter((nameItem) => {
-				return nameItem.name.includes(searchBy) && nameItem.languageCode === "Standard";
+                return nameItem.name.includes(searchBy) && nameItem.languageCode === "Standard";
             });
             if (nameArray.length > 0) {
                 performDelete(deleteName, id, altUrl);
@@ -117,7 +117,7 @@ const getNodes = (
         }
     }`;
     const query = `{
-		${queryName}(${queryBody}
+        ${queryName}(${queryBody}
     }`;
     return cy.postNoFail(query, queryName, altUrl).then((res) => {
         if (res) {
@@ -433,3 +433,20 @@ Cypress.Commands.add("setupRequiredProducts", () => {
         });
     });
 });
+
+Cypress.Commands.add("queryCompanyCustomerWithAddresses", (queryName: string, searchString?: string, altUrl?:string ) => {
+    const searchBy = searchString ? searchString : "Cypress Address";
+    var ids = [];
+        getNodes(queryName, searchBy, undefined, undefined, altUrl).then((nodes) => {
+            if(nodes){
+                if (nodes.length > 0) {
+                    nodes.forEach((node) => {
+                        ids.push(node.id)
+                    });  
+                }  
+            }
+        cy.wrap(ids);
+    });
+});
+
+
