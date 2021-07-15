@@ -40,6 +40,7 @@ describe('Mutation: createAddress', () => {
         postalCode
         region
     `;
+  const description = 'The Emperor protects.';
 
   before(() => {
     const input = {
@@ -48,19 +49,18 @@ describe('Mutation: createAddress', () => {
     };
     const mutationName = 'createCompany';
     const itemPath = 'company';
-    const mutation =
-      `mutation {
-                ${mutationName}(
-                    input:  ${toFormattedString(input)}
-                ) {
-                    ${standardMutationContent}
-                    ${itemPath} {
-                        id
-                        name
-                        integrationKey
-                    }
-                }
-            }`;
+    const mutation = `mutation {
+        ${mutationName}(
+            input:  ${toFormattedString(input)}
+        ) {
+            ${standardMutationContent}
+            ${itemPath} {
+                id
+                name
+                integrationKey
+            }
+        }
+    }`;
     cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
       companyId = res.body.data[mutationName][itemPath].id;
     });
@@ -71,10 +71,10 @@ describe('Mutation: createAddress', () => {
       const mutationName = "deleteCompany";
       const mutation =
         `mutation {
-                    ${mutationName}(input: { id: "${companyId}" }) {
-                        ${standardMutationContent}
-                    }
-                }`;
+            ${mutationName}(input: { id: "${companyId}" }) {
+                ${standardMutationContent}
+            }
+        }`;
       cy.postMutAndValidate(mutation, mutationName, 'deleteMutation').then((res) => {
         companyId = '';
       });
@@ -86,7 +86,7 @@ describe('Mutation: createAddress', () => {
       const mutation = `mutation {
                 ${mutationName}(
                   input: {
-                    companyId: "${companyId}",
+                    companyId: "${companyId}"
                     addressType: ${addressType}
                     contactDetails: {
                       phone: { 
@@ -96,6 +96,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -109,6 +110,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -129,6 +131,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -142,6 +145,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -162,6 +166,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -175,6 +180,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -195,6 +201,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -208,6 +215,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -227,6 +235,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -240,6 +249,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -260,6 +270,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -273,6 +284,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -293,6 +305,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -306,6 +319,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -326,6 +340,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -339,6 +354,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -360,6 +376,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -373,6 +390,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -394,6 +412,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -407,6 +426,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -427,6 +447,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -440,6 +461,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -461,6 +483,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -474,6 +497,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -495,6 +519,7 @@ describe('Mutation: createAddress', () => {
                         region: "Georgia"
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -508,6 +533,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -530,6 +556,7 @@ describe('Mutation: createAddress', () => {
                         region: "Georgia"
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -543,6 +570,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -565,6 +593,7 @@ describe('Mutation: createAddress', () => {
                         region: "Georgia"
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -578,6 +607,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -599,6 +629,7 @@ describe('Mutation: createAddress', () => {
                         region: "Georgia"
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -612,6 +643,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -634,6 +666,7 @@ describe('Mutation: createAddress', () => {
                         region: "Georgia"
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -647,6 +680,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -668,6 +702,7 @@ describe('Mutation: createAddress', () => {
                         postalCode: "Pylons",
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -681,6 +716,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -703,6 +739,7 @@ describe('Mutation: createAddress', () => {
                         region: 4
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -716,6 +753,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -738,6 +776,7 @@ describe('Mutation: createAddress', () => {
                         region: "Cadia"
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -751,10 +790,48 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
       cy.postAndConfirmMutationError(mutation, mutationName);
+    });
+
+    it("Mutation will fail if 'description' is not a valid string", () => {
+      const mutation = `mutation {
+                ${mutationName}(
+                  input: {
+                    companyId: "${companyId}"
+                    addressType: ${addressType}
+                    contactDetails: {
+                      phone: { 
+                        ${reqPhoneInput}
+                      }
+                      address: {
+                        country: "US",
+                        postalCode: "Pylons",
+                        region: "Cadia"
+                      }
+                    }
+                    description: true
+                  }
+                ) {
+                  ${standardMutationContent}
+                  ${itemPath} {
+                    addressType
+                    contactDetails {
+                      phone {
+                        ${reqPhoneInfo}
+                      }
+                      address {
+                        ${reqAddressInfo}
+                      }
+                    }
+                    description
+                  }
+                }
+              }`;
+      cy.postAndConfirmError(mutation);
     });
   });
 
@@ -778,6 +855,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -792,6 +870,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -819,6 +898,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -833,6 +913,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -854,6 +935,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -868,6 +950,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -891,6 +974,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -905,6 +989,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -926,6 +1011,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -940,6 +1026,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -963,6 +1050,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -977,6 +1065,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -998,6 +1087,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -1012,6 +1102,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -1035,6 +1126,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -1049,6 +1141,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -1072,6 +1165,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -1087,6 +1181,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -1110,6 +1205,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -1125,6 +1221,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -1146,6 +1243,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -1161,6 +1259,7 @@ describe('Mutation: createAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -1184,6 +1283,7 @@ describe('Mutation: createAddress', () => {
                         city: "Cadia"
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -1199,6 +1299,7 @@ describe('Mutation: createAddress', () => {
                         city
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -1222,6 +1323,7 @@ describe('Mutation: createAddress', () => {
                         city: 4
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -1237,6 +1339,7 @@ describe('Mutation: createAddress', () => {
                         city
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -1258,6 +1361,7 @@ describe('Mutation: createAddress', () => {
                         line1: "Cadia"
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -1273,6 +1377,7 @@ describe('Mutation: createAddress', () => {
                         line1
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -1296,6 +1401,7 @@ describe('Mutation: createAddress', () => {
                         line1: 4
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -1311,6 +1417,7 @@ describe('Mutation: createAddress', () => {
                         line1
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -1332,6 +1439,7 @@ describe('Mutation: createAddress', () => {
                         line2: "Cadia"
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -1347,6 +1455,7 @@ describe('Mutation: createAddress', () => {
                         line2
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -1370,6 +1479,7 @@ describe('Mutation: createAddress', () => {
                         line2: 4
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -1385,6 +1495,7 @@ describe('Mutation: createAddress', () => {
                         line2
                       }
                     }
+                    description
                   }
                 }
               }`;
