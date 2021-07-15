@@ -177,7 +177,7 @@ describe('Mutation: updatePaymentSettings', () => {
             });
         });
 
-        it.only("Mutation will fail with deleted 'id' input", () => {
+        it("Mutation will fail with deleted 'id' input", () => {
             const extraMutationName = "createCompany"
             const extraItemPath = "company"
             const extraInput = `{ name: "Cypress ${extraMutationName} Test", integrationKey: "Cypress${Math.random().toString(36).slice(2)}" }`

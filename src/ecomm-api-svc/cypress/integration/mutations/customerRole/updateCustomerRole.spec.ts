@@ -67,7 +67,7 @@ describe('Mutation: updateCustomerRole', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
-        it.only("Mutation will fail with deleted 'id' input", () => {
+        it("Mutation will fail with deleted 'id' input", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { id: "${id}", name: "Cypress ${mutationName} Deleted Id Test" }) {
                     ${standardMutationBody}

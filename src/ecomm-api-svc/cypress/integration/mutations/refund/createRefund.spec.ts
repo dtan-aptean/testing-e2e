@@ -116,7 +116,7 @@ describe('Mutation: createRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
         });
 
-        it.only("Mutation will fail with deleted 'OrderId' input", () => {
+        it("Mutation will fail with deleted 'OrderId' input", () => {
             cy.visit("/");
             cy.setTheme();
             cy.storefrontLogin();

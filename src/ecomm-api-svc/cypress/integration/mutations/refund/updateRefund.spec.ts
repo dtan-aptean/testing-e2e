@@ -188,7 +188,7 @@ describe('Mutation: updateRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             
         });
 
-        it.only("Mutation will fail with deleted 'OrderId' input", () => {
+        it("Mutation will fail with deleted 'OrderId' input", () => {
             cy.visit("/");
             cy.setTheme();
             cy.storefrontLogin();

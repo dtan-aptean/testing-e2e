@@ -74,7 +74,7 @@ describe('Mutation: updateProductSpecification', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
-        it.only("Mutation will fail with deleted 'id' input", () => {
+        it("Mutation will fail with deleted 'id' input", () => {
             const options = [{name: 'Cypress PS v1'}, {name: 'Cypress PS v2'}];
             const mutation = `mutation {
                 ${mutationName}(

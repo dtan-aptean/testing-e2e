@@ -80,7 +80,7 @@ describe('Mutation: updateDiscount', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
-        it.only("Mutation will fail with deleted 'id' input", () => {
+        it("Mutation will fail with deleted 'id' input", () => {
             const discountAmount = {
                 amount: Cypress._.random(100, 1000),
                 currency: "USD"

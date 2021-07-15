@@ -74,7 +74,7 @@ describe('Mutation: updateWarehouse', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
-        it.only("Mutation will fail with deleted 'id' input", () => {
+        it("Mutation will fail with deleted 'id' input", () => {
             const address = {
                 country: "US",
                 postalCode: "30022", 

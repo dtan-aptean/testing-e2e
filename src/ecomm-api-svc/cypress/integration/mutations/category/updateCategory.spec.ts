@@ -97,7 +97,7 @@ describe('Mutation: updateCategory', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
-        it.only("Mutation will fail with deleted 'id' input", () => {
+        it("Mutation will fail with deleted 'id' input", () => {
             const info = [{name: `Cypress ${mutationName} Deleted Id Test`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}];
             const mutation = `mutation {
                 ${mutationName}(input: { id: "${id}", ${infoName}: ${toFormattedString(info)}}) {

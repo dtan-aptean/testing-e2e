@@ -123,7 +123,7 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
         });
 
-        it.only("Mutation will fail with deleted Refund of 'OrderId' input", () => {
+        it("Mutation will fail with deleted Refund of 'OrderId' input", () => {
             refundOrder().then(()=> {
                     const mutation = `mutation {
                         ${mutationName}(
@@ -140,7 +140,7 @@ describe('Mutation: deleteRefund', { baseUrl: `${Cypress.env("storefrontUrl")}` 
             
         });
 
-        it.only("Mutation will fail with deleted 'OrderId' input", () => {
+        it("Mutation will fail with deleted 'OrderId' input", () => {
             cy.get('@OrderNumber').then((orderNo)=>{
                 cy.visit('/');
                 cy.get(".administration").click({ force: true });

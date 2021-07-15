@@ -207,7 +207,7 @@ describe('Mutation: updateOrderShippingStatus', { baseUrl: `${Cypress.env("store
             cy.postAndConfirmError(mutation, undefined, originalBaseUrl);
         });
 
-        it.only("Mutation will fail with deleted 'OrderId' input", () => {
+        it("Mutation will fail with deleted 'OrderId' input", () => {
             goHomeAndOrder().then((orderId)=>{
                 cy.get('@OrderNumber').then((orderNo)=>{
                 cy.visit('/');
