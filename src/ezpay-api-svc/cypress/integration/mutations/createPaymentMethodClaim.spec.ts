@@ -3,15 +3,104 @@
 describe("Mutation: createPaymentMethodClaim", () => {
   it("should fail if no argument is provided", () => {
     const gqlQuery = `mutation {
-        createPaymentMethodCaim {
+      createPaymentMethodClaim {
           code
           error
           status
         }
       }`;
 
-    cy.postGQL(gqlQuery).then((res) => {
+    cy.postGQLWithoutTenantSecret(gqlQuery).then((res) => {
       cy.log(JSON.stringify(res));
+      // should not be 200 ok
+      cy.expect(res.isOkStatusCode).to.be.equal(false);
+
+      // should have errors
+      assert.exists(res.body.errors);
+
+      // no data
+      assert.notExists(res.body.data);
+    });
+  });
+
+  it("should fail if no return type is provided", () => {
+    const gqlQuery = `mutation {
+      createPaymentMethodClaim(input: { token: "id", singleUse: true, expirationDate: ""}){}
+    }`;
+
+    cy.postGQLWithoutTenantSecret(gqlQuery).then((res) => {
+      // should not be 200 ok
+      cy.expect(res.isOkStatusCode).to.be.equal(false);
+
+      // should have errors
+      assert.exists(res.body.errors);
+
+      // no data
+      assert.notExists(res.body.data);
+    });
+  });
+
+  it("should fail if no x-aptean-account is passed in the headers", () => {
+    const gqlQuery = `mutation {
+      createPaymentMethodClaim {
+          code
+          message
+          error
+        }
+      }
+      `;
+
+    cy.postGQL(gqlQuery).then((res) => {
+      // should not be 200 ok
+      cy.expect(res.isOkStatusCode).to.be.equal(false);
+
+      // should have errors
+      assert.exists(res.body.errors);
+
+      // no data
+      assert.notExists(res.body.data);
+    });
+  });
+
+  it("should fail if the x-aptean-account header is not the right value", () => {
+    const gqlQuery = `mutation {
+      createPaymentMethodClaim {
+          code
+          message
+          error
+        }
+      }
+      `;
+
+    const headers = {
+      "x-aptean-apim": Cypress.env("x-aptean-apim"),
+      "x-aptean-tenant": Cypress.env("x-aptean-tenant"),
+      "x-aptean-account": "some-wrong-value",
+    };
+
+    cy.postGQLWithHeaders(gqlQuery, headers).then((res) => {
+      // should not be 200 ok
+      cy.expect(res.isOkStatusCode).to.be.equal(false);
+
+      // should have errors
+      assert.exists(res.body.errors);
+
+      // no data
+      assert.notExists(res.body.data);
+    });
+  });
+
+  it("should fail if input argument is empty", () => {
+    const gqlQuery = `mutation {
+      createPaymentMethodClaim {
+          code
+          message
+          error
+        }
+      }
+      `;
+
+    cy.postGQLWithoutTenantSecret(gqlQuery).then((res) => {
       // should not be 200 ok
       cy.expect(res.isOkStatusCode).to.be.equal(false);
 

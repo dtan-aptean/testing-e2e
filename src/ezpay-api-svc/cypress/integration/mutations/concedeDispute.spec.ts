@@ -74,4 +74,64 @@ describe("Mutation: concede dispute", () => {
       });
     });
   });
+
+  it("should fail if no return type is provided", () => {
+    const gqlQuery = `mutation {
+      concedeDispute(input: {id: "id", explanation: "Customer is right"}){}
+    }`;
+
+    cy.postGQL(gqlQuery).then((res) => {
+      // should not be 200 ok
+      cy.expect(res.isOkStatusCode).to.be.equal(false);
+
+      // should have errors
+      assert.exists(res.body.errors);
+
+      // no data
+      assert.notExists(res.body.data);
+    });
+  });
+
+  it("should fail if no argument is provided", () => {
+    const gqlQuery = `mutation {
+        concedeDispute {
+          code
+          error
+          status
+        }
+      }`;
+
+    cy.postGQL(gqlQuery).then((res) => {
+      // should not be 200 ok
+      cy.expect(res.isOkStatusCode).to.be.equal(false);
+
+      // should have errors
+      assert.exists(res.body.errors);
+
+      // no data
+      assert.notExists(res.body.data);
+    });
+  });
+
+  it("should fail if input argument is empty", () => {
+    const gqlQuery = `mutation {
+        concedeDispute {
+          code
+          message
+          error
+        }
+      }
+      `;
+
+    cy.postGQL(gqlQuery).then((res) => {
+      // should not be 200 ok
+      cy.expect(res.isOkStatusCode).to.be.equal(false);
+
+      // should have errors
+      assert.exists(res.body.errors);
+
+      // no data
+      assert.notExists(res.body.data);
+    });
+  });
 });
