@@ -92,7 +92,7 @@ describe("Mutation: createPaymentMethodClaim", () => {
 
   it("should fail if input argument is empty", () => {
     const gqlQuery = `mutation {
-      createPaymentMethodClaim {
+      createPaymentMethodClaim(input:{}) {
           code
           message
           error

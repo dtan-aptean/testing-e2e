@@ -115,7 +115,7 @@ describe("Mutation: concede dispute", () => {
 
   it("should fail if input argument is empty", () => {
     const gqlQuery = `mutation {
-        concedeDispute {
+        concedeDispute(input:{}) {
           code
           message
           error

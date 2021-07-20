@@ -113,7 +113,7 @@ describe("Mutation: updateDispute", () => {
 
   it("should fail if input argument is empty", () => {
     const gqlQuery = `mutation {
-      updateDispute {
+      updateDispute(input:{}) {
           code
           message
           error
