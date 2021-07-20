@@ -481,5 +481,43 @@ describe("Payer Portal - Payments Due Table", function () {
           .should("contain", "15.00");
       });
     });
+
+    it.only("Creating payment request with discount amount and discount end date should add data to discount end column in mobile view", () => {      
+      cy.viewport('iphone-x');
+      let amount = Math.trunc(Math.random() * 10000);
+      let discount = Math.trunc(Math.random() * 500);
+      let addDays = Math.trunc(Math.random() * 10);
+      const discountEndDate = new Date();
+      discountEndDate.setDate(discountEndDate.getDate() + addDays);
+      cy.createPaymentRequestWithDiscount(
+        amount,
+        discount,
+        discountEndDate.toISOString()
+      ).then((response) => {
+        cy.visit("/");
+        cy.waitForRootPageLoading(1);
+        if (merchantLength > 0) {
+          cy.get("h6:contains(Balance Due)")
+            .eq(merchantIndex)
+            .parent()
+            .parent()
+            .within(() => {
+              cy.get("button").click({ force: true });
+            });
+          cy.waitForRequestLoading(1);
+        }
+
+        cy.get("[data-cy=payments-due-list").should("be.visible");
+        cy.wait(3000);
+        //confirming the payment request has been created
+        cy.get("table").find("> tbody > tr > td")
+          .should("contain", "Discount Ends")
+          .should("contain", `${discountEndDate.getMonth() + 1}/${discountEndDate.getDate()}`);
+
+        cy.get("table").find("> tbody > tr > td")
+          .should("contain", `${(amount / 100).toPrecision(2)}`)
+          .should("contain", `${((amount - discount) / 100).toPrecision(2)}`);
+      });
+    });
   });
 });

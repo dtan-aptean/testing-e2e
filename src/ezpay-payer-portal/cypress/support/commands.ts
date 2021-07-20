@@ -38,8 +38,7 @@ Cypress.Commands.add("postGQL", (query) => {
     headers: {
       authorization: Cypress.env("authorization"),
       "x-aptean-apim": Cypress.env("x-aptean-apim"),
-      "x-aptean-tenant": Cypress.env("x-aptean-tenant"),
-      "x-ezpay": Cypress.env("x-ezpay"),
+      "x-aptean-tenant": Cypress.env("x-aptean-tenant")
     },
     body: { query },
     failOnStatusCode: false,
