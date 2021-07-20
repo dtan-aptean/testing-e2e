@@ -22,13 +22,15 @@ describe('Mutation: updateTaxCategory', () => {
         }
     `;
 
-	var deleteItemsAfter = undefined as boolean | undefined;
+    var deleteItemsAfter = undefined as boolean | undefined;
+    var alreadyDeleted = false;
+
     before(() => {
-		deleteItemsAfter = Cypress.env("deleteItemsAfter");
-		cy.deleteCypressItems(queryName, deleteMutName);
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems(queryName, deleteMutName);
     });
 
-	beforeEach(() => {
+    beforeEach(() => {
         const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{name: "${name}"}`;
         cy.createAndGetId(createName, itemPath, input).then((returnedId: string) => {
@@ -36,12 +38,16 @@ describe('Mutation: updateTaxCategory', () => {
             id = returnedId;
             itemCount++;
         });
-	});
+    });
 
     afterEach(() => {
-		if (!deleteItemsAfter) {
-			return;
-		}
+        if (!deleteItemsAfter) {
+            return;
+        }
+        if (alreadyDeleted) {
+            alreadyDeleted = false;
+            return;
+        }
         if (id !== "") {
             // Delete any supplemental items we created
             cy.deleteSupplementalItems(extraIds).then(() => {
@@ -71,8 +77,10 @@ describe('Mutation: updateTaxCategory', () => {
                     ${standardMutationBody}
                 }
             }`;
-            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath )
-            
+            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath).then(() => {
+                alreadyDeleted = true;
+            })
+
         });
 
         it("Mutation will fail if the only input provided is 'id'", () => {
@@ -123,7 +131,7 @@ describe('Mutation: updateTaxCategory', () => {
         it("Mutation with all required input and 'customData' input updates item with customData", () => {
             updateCount++;
             const newName = `Cypress ${mutationName} Update ${updateCount}`;
-            const customData = {data: `${itemPath} customData`, canDelete: true};
+            const customData = { data: `${itemPath} customData`, canDelete: true };
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -159,14 +167,14 @@ describe('Mutation: updateTaxCategory', () => {
 
         it("Mutation with all required input and 'customData' input will overwrite the customData on an existing object", () => {
             const name = `Cypress ${mutationName} customData extra`;
-            const customData = {data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+            const customData = { data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S'] };
             const input = `{name: "${name}", customData: ${toFormattedString(customData)}}`;
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName});
+                extraIds.push({ itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName });
                 const newName = `Cypress ${mutationName} CD extra updated`;
-                const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
+                const newCustomData = { data: `${itemPath} customData`, newDataField: { canDelete: true } };
                 const mutation = `mutation {
                     ${mutationName}(
                         input: {

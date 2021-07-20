@@ -18,22 +18,22 @@ describe('Mutation: createCustomerRole', () => {
     `;
 
     var deleteItemsAfter = undefined as boolean | undefined;
-	before(() => {
+    before(() => {
         deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.deleteCypressItems(queryName, deleteMutName);
-	});
+    });
 
     afterEach(() => {
         if (!deleteItemsAfter) {
-			return;
-		}
+            return;
+        }
         if (id !== "") {
             cy.deleteItem(deleteMutName, id).then(() => {
                 id = "";
             });
         }
     });
-    
+
     context("Testing basic required inputs", () => {
         it("Mutation will fail without input", () => {
             const mutation = `mutation {
@@ -114,8 +114,7 @@ describe('Mutation: createCustomerRole', () => {
                         }`;
                         cy.postAndConfirmMutationError(mutationTwo, mutationName, itemPath).then((resp) => {
                             // Make sure that the message has "unique" in it
-                            expect(resp.body.data[mutationName].errors[0].message.toLowerCase()).to.include("unique");
-                            expect(resp.body.data[mutationName].errors[0].message).to.eql("Customer Role Name is Required and should be unique.");
+                            expect(resp.body.data[mutationName].errors[0].message.toLowerCase()).to.include("invalid aptean id");
                         });
                     });
                 });
@@ -126,7 +125,7 @@ describe('Mutation: createCustomerRole', () => {
     context("Testing customData input and optional input", () => {
         it("Mutation with all required input and 'customData' input creates item with customData", () => {
             const name = "Cypress CustomerRole customData";
-            const customData = {data: `${itemPath} customData`, canDelete: true};
+            const customData = { data: `${itemPath} customData`, canDelete: true };
             const mutation = `mutation {
                 ${mutationName}(
                     input: {

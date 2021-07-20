@@ -40,6 +40,7 @@ describe('Mutation: updateAddress', () => {
         postalCode
         region
     `;
+  const description = 'The Emperor protects.';
 
   before(() => {
     const input = {
@@ -78,6 +79,7 @@ describe('Mutation: updateAddress', () => {
                         ${reqAddressInput}
                       }
                     }
+                    description: "${description}"
                   }
                 ) {
                   ${standardMutationContent}
@@ -91,6 +93,7 @@ describe('Mutation: updateAddress', () => {
                         ${reqAddressInfo}
                       }
                     }
+                    description
                   }
                 }
               }`;
@@ -292,6 +295,41 @@ describe('Mutation: updateAddress', () => {
                     id: "${addressId}",
                     companyId:"${companyId}",
                     addressType: KHORN
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'description' is not included", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                  }
+                ) {
+                ${standardMutationContent}
+                addressInfo {
+                  addressType
+                }
+              }
+            }`;
+      cy.postAndConfirmError(mutation);
+    });
+
+    it("Mutation will fail if 'description' is not a string", () => {
+      const mutation = `mutation {
+                ${mutationName} (
+                  input: {
+                    id: "${addressId}",
+                    companyId:"${companyId}",
+                    description: true
                   }
                 ) {
                 ${standardMutationContent}

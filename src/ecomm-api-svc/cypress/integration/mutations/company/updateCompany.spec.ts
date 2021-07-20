@@ -160,6 +160,7 @@ describe('Mutation: updateCompany', () => {
                 }`;
                 cy.postAndConfirmMutationError(mutation, mutationName, itemPath).then((resp) => {
                     expect(resp.body.data[mutationName].errors[0].message).to.have.string("Invalid Aptean Id");
+                    id = '';
                 });
             });
         });
