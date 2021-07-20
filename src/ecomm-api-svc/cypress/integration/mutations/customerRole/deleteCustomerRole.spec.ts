@@ -14,8 +14,8 @@ describe('Mutation: deleteCustomerRole', () => {
     const queryName = "customerRoles";
 
     const queryInformation = {
-        queryName: queryName, 
-        itemId: id, 
+        queryName: queryName,
+        itemId: id,
         itemName: currentItemName
     };
 
@@ -27,10 +27,10 @@ describe('Mutation: deleteCustomerRole', () => {
     };
 
     var deleteItemsAfter = undefined as boolean | undefined;
-	before(() => {
+    before(() => {
         deleteItemsAfter = Cypress.env("deleteItemsAfter");
         cy.deleteCypressItems(queryName, mutationName);
-	});
+    });
 
     beforeEach(() => {
         const name = `Cypress test: ${mutationName}'s deletee #${itemCount}`;
@@ -43,8 +43,8 @@ describe('Mutation: deleteCustomerRole', () => {
 
     afterEach(() => {
         if (!deleteItemsAfter) {
-			return;
-		}
+            return;
+        }
         // Delete any supplemental items we created
         cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];
@@ -93,9 +93,7 @@ describe('Mutation: deleteCustomerRole', () => {
                 }
             }`;
             cy.postAndConfirmMutationError(createMut, createName, "customerRole").then((resp) => {
-                // Make sure that the message has "unique" in it
-                expect(resp.body.data[createName].errors[0].message.toLowerCase()).to.include("unique");
-                expect(resp.body.data[createName].errors[0].message).to.eql("Customer Role Name is Required and should be unique.");
+                expect(resp.body.data[createName].errors[0].message.toLowerCase()).to.include("invalid aptean id");
                 const mutation = `mutation {
                     ${mutationName}(input: { id: "${id}" }) {
                         ${codeMessageError}
@@ -125,15 +123,15 @@ describe('Mutation: deleteCustomerRole', () => {
     });
 
     context("Testing deletion when connected to other items or features", () => {
-        it("Deleting an item connected to a category will will disassociate the item from the category" , () => {
+        it("Deleting an item connected to a category will will disassociate the item from the category", () => {
             const extraMutationName = "createCategory";
             const extraItemPath = "category";
             const extraQueryName = "categories";
             const infoName = "categoryInfo";
-            const role = {id: id, name: currentItemName};
-            const roleBasedAccess = {enabled: true, roles: [role]};
-            const info = [{name: `Cypress ${mutationName} rBA test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
-            const roleBasedAccessInput = {enabled: true, roleIds: [id]};
+            const role = { id: id, name: currentItemName };
+            const roleBasedAccess = { enabled: true, roles: [role] };
+            const info = [{ name: `Cypress ${mutationName} rBA test`, description: `${mutationName} cypress test`, languageCode: "Standard" }];
+            const roleBasedAccessInput = { enabled: true, roleIds: [id] };
             const mutation = `mutation {
                 ${extraMutationName}(
                     input: { 
@@ -161,7 +159,7 @@ describe('Mutation: deleteCustomerRole', () => {
             }`;
             cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
                 const categoryId = res.body.data[extraMutationName][extraItemPath].id;
-                extraIds.push({itemId: categoryId, deleteName: "deleteCategory", itemName: info[0].name, queryName: extraQueryName});
+                extraIds.push({ itemId: categoryId, deleteName: "deleteCategory", itemName: info[0].name, queryName: extraQueryName });
                 const propNames = [infoName, "roleBasedAccess"];
                 const propValues = [info, roleBasedAccess];
                 cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
@@ -192,7 +190,7 @@ describe('Mutation: deleteCustomerRole', () => {
                         }`;
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
                             updateIdAndName();
-                            const newRoleBasedAccess = {enabled: true, roles: []};
+                            const newRoleBasedAccess = { enabled: true, roles: [] };
                             const newPropValues = [info, newRoleBasedAccess];
                             cy.confirmUsingQuery(query, extraQueryName, categoryId, propNames, newPropValues);
                         });
@@ -201,15 +199,15 @@ describe('Mutation: deleteCustomerRole', () => {
             });
         });
 
-        it("Deleting an item connected to a manufacturer will will disassociate the item from the manufacturer" , () => {
+        it("Deleting an item connected to a manufacturer will will disassociate the item from the manufacturer", () => {
             const extraMutationName = "createManufacturer";
             const extraItemPath = "manufacturer";
             const extraQueryName = "manufacturers";
             const infoName = "manufacturerInfo";
-            const role = {id: id, name: currentItemName};
-            const roleBasedAccess = {enabled: true, roles: [role]};
-            const info = [{name: `Cypress ${mutationName} rBA test`, description: `${mutationName} cypress test`, languageCode: "Standard"}];
-            const roleBasedAccessInput = {enabled: true, roleIds: [id]};
+            const role = { id: id, name: currentItemName };
+            const roleBasedAccess = { enabled: true, roles: [role] };
+            const info = [{ name: `Cypress ${mutationName} rBA test`, description: `${mutationName} cypress test`, languageCode: "Standard" }];
+            const roleBasedAccessInput = { enabled: true, roleIds: [id] };
             const mutation = `mutation {
                 ${extraMutationName}(
                     input: { 
@@ -237,7 +235,7 @@ describe('Mutation: deleteCustomerRole', () => {
             }`;
             cy.postMutAndValidate(mutation, extraMutationName, extraItemPath).then((res) => {
                 const manufacturerId = res.body.data[extraMutationName][extraItemPath].id;
-                extraIds.push({itemId: manufacturerId, deleteName: "deleteManufacturer", itemName: info[0].name, queryName: extraQueryName});
+                extraIds.push({ itemId: manufacturerId, deleteName: "deleteManufacturer", itemName: info[0].name, queryName: extraQueryName });
                 const propNames = [infoName, "roleBasedAccess"];
                 const propValues = [info, roleBasedAccess];
                 cy.confirmMutationSuccess(res, extraMutationName, extraItemPath, propNames, propValues).then(() => {
@@ -268,7 +266,7 @@ describe('Mutation: deleteCustomerRole', () => {
                         }`;
                         cy.postAndConfirmDelete(mutation, mutationName, queryInformation).then((res) => {
                             updateIdAndName();
-                            const newRoleBasedAccess = {enabled: true, roles: []};
+                            const newRoleBasedAccess = { enabled: true, roles: [] };
                             const newPropValues = [info, newRoleBasedAccess];
                             cy.confirmUsingQuery(query, extraQueryName, manufacturerId, propNames, newPropValues);
                         });

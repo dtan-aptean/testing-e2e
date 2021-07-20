@@ -19,6 +19,7 @@ import 'cypress-mochawesome-reporter/register';
 import './commands';
 import './setupCommands';
 import './shippingCommands';
+import './apiCommands';
 
 /**
  * These hooks will prepare the environment with required products and categories before the tests run

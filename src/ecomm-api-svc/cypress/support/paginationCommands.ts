@@ -55,7 +55,7 @@ Cypress.Commands.add("verifyReverseOrder", (queryName: string, ascRes, descRes) 
     const dNoReversed = descNodes.slice(0).reverse();
     expect(descNodes).not.to.be.eql(ascNodes, "DESC nodes !== ASC nodes");
     for (var i = 0; i < descNodes.length; i++) {
-        if (descNodes.length % 2 !== 0 && i !== Math.floor(descNodes.length /2 )) {
+        if (descNodes.length % 2 !== 0 && i !== Math.floor(descNodes.length / 2)) {
             expect(descNodes[i]).not.to.be.eql(ascNodes[i], `DESC nodes !== ASC nodes. index ${i}, id ${descNodes[i].id}`);
         }
         expect(descNodes[i]).to.be.eql(aNoReversed[i], `DESC nodes === ASC nodes. index ${i}, id ${descNodes[i].id}`);
@@ -67,7 +67,7 @@ Cypress.Commands.add("verifyReverseOrder", (queryName: string, ascRes, descRes) 
     const dEdReversed = descEdges.slice(0).reverse();
     expect(descEdges).not.to.be.eql(ascEdges, "DESC edges !== ASC edges");
     for (var i = 0; i < descEdges.length; i++) {
-        if (descEdges.length % 2 !== 0 && i !== Math.floor(descEdges.length /2 )) {
+        if (descEdges.length % 2 !== 0 && i !== Math.floor(descEdges.length / 2)) {
             expect(descEdges[i].node).not.to.be.eql(ascEdges[i].node, `DESC edges !== ASC edges. index ${i}, id ${descEdges[i].node.id}`);
         }
         expect(descEdges[i].node).to.be.eql(aEdReversed[i].node, `DESC edges === ASC edges. index ${i}, id ${descEdges[i].node.id}`);
@@ -161,9 +161,10 @@ Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number
             expect(fOL.toLowerCase()).to.be.eql("last");
         }
     });
-    const nodes = res.body.data[queryName].nodes;
-    const edges = res.body.data[queryName].edges;
-    const pageInfo = res.body.data[queryName].pageInfo;
+    const items = res.body.data[queryName];
+    const nodes = items.nodes;
+    const edges = items.edges;
+    const pageInfo = items.pageInfo;
     expect(nodes.length).to.be.eql(value);
     expect(edges.length).to.be.eql(value);
     cy.get('@orgData').then((orgRes) => {
@@ -177,7 +178,7 @@ Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number
             expect(pageInfo.startCursor).to.be.eql(orgPageInfo.startCursor, 'Verify startCursor');
             expect(pageInfo.endCursor).not.to.be.eql(orgPageInfo.endCursor, 'Verify endCursor');
             expect(pageInfo.endCursor).to.be.eql(orgEdges[value - 1].cursor, 'Verify endCursor');
-            for(var i = 0; i < value; i++){
+            for (var i = 0; i < value; i++) {
                 expect(nodes[i][idFormat]).to.be.eql(orgNodes[i][idFormat], 'Verifying included nodes');
                 expect(edges[i].cursor).to.be.eql(orgEdges[i].cursor, 'Verifying included cursors');
                 expect(edges[i].node[idFormat]).to.be.eql(orgEdges[i].node[idFormat], "Verifying edge's included nodes");
@@ -186,20 +187,24 @@ Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number
         } else if (firstOrLast.toLowerCase() === "last") {
             var f = value + 1;
             const totalLength = orgRes.totalCount > 25 ? orgNodes.length : orgRes.totalCount;
-            if (value === totalLength / 2){
+            if (value === totalLength / 2) {
                 f = value;
             }
             expect(pageInfo.startCursor).not.to.be.eql(orgPageInfo.startCursor, 'Verify startCursor');
-            expect(pageInfo.startCursor).to.be.eql(orgEdges[f].cursor, 'Verify startCursor');
-            expect(pageInfo.endCursor).to.be.eql(orgPageInfo.endCursor, 'Verify endCursor');
-            for(var i = 0; i < value; i++){
-                expect(nodes[i][idFormat]).to.be.eql(orgNodes[f][idFormat], 'Verifying included nodes');
-                expect(edges[i].cursor).to.be.eql(orgEdges[f].cursor, 'Verifying included cursors');
-                expect(edges[i].node[idFormat]).to.be.eql(orgEdges[f].node[idFormat], "Verifying edge's included nodes");
-                expect(nodes[i][idFormat]).to.be.eql(orgEdges[f].node[idFormat], `Verifying node[${i}] matches original edge[${f}].node`);
-                f++;
-            }
-        } 
+            // The following only works when assuming we return all items and use specific subsets of the full list. 
+            // Querying large lists is problematic and non-implemented, so this will not necessarily be used.
+            if (items.totalCount === totalLength) {
+                expect(pageInfo.startCursor).to.be.eql(orgEdges[f].cursor, 'Verify startCursor');
+                expect(pageInfo.endCursor).to.be.eql(orgPageInfo.endCursor, 'Verify endCursor');
+                for (var i = 0; i < value; i++) {
+                    expect(nodes[i][idFormat]).to.be.eql(orgNodes[f][idFormat], 'Verifying included nodes');
+                    expect(edges[i].cursor).to.be.eql(orgEdges[f].cursor, 'Verifying included cursors');
+                    expect(edges[i].node[idFormat]).to.be.eql(orgEdges[f].node[idFormat], "Verifying edge's included nodes");
+                    expect(nodes[i][idFormat]).to.be.eql(orgEdges[f].node[idFormat], `Verifying node[${i}] matches original edge[${f}].node`);
+                    f++;
+                };
+            };
+        };
     });
 });
 
@@ -207,7 +212,7 @@ Cypress.Commands.add("verifyFirstOrLast", (res, queryName: string, value: number
  * COMMANDS FOR STARTDATE/ENDDATE TESTS
  */
 
-// Runs the query and grabs the createdDate from a random node, as long as the created date starts with 20 (aka was created in the 2000s)
+// Runs the query and grabs the created from a random node, as long as the created date starts with 20 (aka was created in the 2000s)
 Cypress.Commands.add('returnRandomDate', (gqlQuery: string, queryName: string, getLowerStart?: boolean, after?: string) => {
     Cypress.log({
         name: "returnRandomDate",
@@ -226,12 +231,16 @@ Cypress.Commands.add('returnRandomDate', (gqlQuery: string, queryName: string, g
         const { nodes } = res.body.data[queryName];
         assert.isNotEmpty(nodes, "Query returned nodes");
         const validValues = nodes.filter((node) => {
-            return node.createdDate.startsWith("20");
+            if (node.created) {
+                return node.created.startsWith("20");
+            } else {
+                return node.createdDate.startsWith("20");
+            }
         });
         assert.isNotEmpty(validValues, "There are existing valid items");
-        validValues.sort(function(a, b){
-            const dateA = new Date(a.createdDate);
-            const dateB = new Date(b.createdDate);
+        validValues.sort(function (a, b) {
+            const dateA = new Date(a.created);
+            const dateB = new Date(b.created);
             var returnVal;
             if (dateA < dateB) {
                 returnVal = -1;
@@ -247,20 +256,20 @@ Cypress.Commands.add('returnRandomDate', (gqlQuery: string, queryName: string, g
         if (after) {
             const afterDate = new Date(after);
             afterValues = validValues.filter((node) => {
-                const createdDate = new Date(node.createdDate);
-                return createdDate > afterDate;
+                const created = new Date(node.created);
+                return created > afterDate;
             });
             assert.isNotEmpty(afterValues, `There are items with a date after ${after}`);
             upperLimit = afterValues.length - 1;
         }
         const randomIndex = Cypress._.random(0, upperLimit);
         const randomNode = after && afterValues ? afterValues[randomIndex] : validValues[randomIndex];
-        const randomDate = randomNode.createdDate;
+        const randomDate = randomNode.created;
         return cy.wrap(randomDate);
     });
 });
 
-// Verifies that the createdDate of all nodes is before the provided startDate and/or after the provided endDate
+// Verifies that the created of all nodes is before the provided startDate and/or after the provided endDate
 Cypress.Commands.add("verifyDateInput", (res, queryName: string, startDate?: string, endDate?: string) => {
     Cypress.log({
         name: "verifyDateInput",
@@ -275,15 +284,15 @@ Cypress.Commands.add("verifyDateInput", (res, queryName: string, startDate?: str
         },
     });
     const { nodes } = res.body.data[queryName];
-    const start = startDate ? new Date(startDate): null;
-    const end = endDate ? new Date(endDate): null;
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
     nodes.forEach((node, index) => {
-        const createdDate = new Date(node.createdDate);
+        const created = new Date(node.created);
         if (startDate && start) {
-            expect(createdDate).to.be.gte(start, `Node[${index}].createdDate should be >= provided startDate`);
+            expect(created).to.be.gte(start, `Node[${index}].created should be >= provided startDate`);
         }
         if (endDate && end) {
-            expect(createdDate).to.be.lte(end, `Node[${index}].createdDate should be <= provided endDate`);
+            expect(created).to.be.lte(end, `Node[${index}].created should be <= provided endDate`);
         }
     });
 });
@@ -314,7 +323,7 @@ Cypress.Commands.add('returnRandomName', (gqlQuery: string, queryName: string) =
         var randomNode = res.body.data[queryName].nodes[randomIndex];
         if (queryName == "addresses") {
             duplicateArray = res.body.data[queryName].nodes.filter((val) => {
-                return val.contactDetails.firstName === randomNode.contactDetails.firstName;  
+                return val.contactDetails.firstName === randomNode.contactDetails.firstName;
             });
         } else {
             duplicateArray = res.body.data[queryName].nodes.filter((val) => {
@@ -327,35 +336,33 @@ Cypress.Commands.add('returnRandomName', (gqlQuery: string, queryName: string) =
                     return val.contactDetails.firstName !== randomNode.contactDetails.firstName;
                 });
                 randomIndex = 0;
-                if (uniqueArray.length == 1)
-                {
+                if (uniqueArray.length == 1) {
                     randomNode = uniqueArray[randomIndex];
                 }
                 else if (uniqueArray.length > 1) {
                     randomIndex = Cypress._.random(0, uniqueArray.length - 1);
                     randomNode = uniqueArray[randomIndex];
                 }
-               
+
             }
             return cy.wrap(randomNode.contactDetails.firstName);
         }
-        else{
+        else {
             if (duplicateArray.length > 1) {
                 const uniqueArray = res.body.data[queryName].nodes.filter((val) => {
                     return val.name !== randomNode.name;
                 });
                 randomIndex = 0;
-                if (uniqueArray.length == 1)
-                {
+                if (uniqueArray.length == 1) {
                     randomNode = uniqueArray[randomIndex];
                 }
                 else if (uniqueArray.length > 1) {
                     randomIndex = Cypress._.random(0, uniqueArray.length - 1);
                     randomNode = uniqueArray[randomIndex];
-                } 
+                }
             }
             return cy.wrap(randomNode.name);
-        }   
+        }
     });
 });
 
@@ -378,13 +385,13 @@ Cypress.Commands.add("validateNameSearch", (res, queryName: string, searchValue:
     expect(totalCount).to.be.gte(nodes.length);
     expect(totalCount).to.be.gte(edges.length);
     for (var i = 0; i < nodes.length; i++) {
-        if(queryName=="addresses"){
+        if (queryName == "addresses") {
             expect(nodes[i].contactDetails.firstName.toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
             expect(edges[i].node.contactDetails.firstName.toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
         }
-        else{
-        expect(nodes[i].name.toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
-        expect(edges[i].node.name.toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
+        else {
+            expect(nodes[i].name.toLowerCase()).to.include(searchValue.toLowerCase(), `Node[${i}]`);
+            expect(edges[i].node.name.toLowerCase()).to.include(searchValue.toLowerCase(), `Edge[${i}]`);
         }
     }
 });
@@ -406,7 +413,7 @@ Cypress.Commands.add("returnRandomInfoName", (gqlQuery: string, queryName: strin
 
     function runNameFilter(node) {
         var info = node[infoName].filter((val) => {
-            return val.languageCode === "Standard" &&  val.name !== "";
+            return val.languageCode === "Standard" && val.name !== "";
         });
         if (info.length < 1) {
             info = node[infoName].filter((val) => {
@@ -478,7 +485,7 @@ Cypress.Commands.add("validateInfoNameSearch", (res, queryName: string, infoName
         });
         expect(infoArray.length).to.be.gte(1, `Node[${i}]`);
         var edgeInfoArray = edges[i].node[infoName].filter((val) => {
-            return  val.name.toLowerCase().includes(searchValue.toLowerCase());
+            return val.name.toLowerCase().includes(searchValue.toLowerCase());
         });
         expect(edgeInfoArray.length).to.be.gte(1, `Edge[${i}]`);
         expect(infoArray.length).to.be.eql(edgeInfoArray.length);
@@ -521,7 +528,7 @@ Cypress.Commands.add('returnRandomId', (gqlQuery: string, queryName: string, idN
 });
 
 // Runs the query and grabs a random nodes to return multiple ids. Pass in the id name for queries whose id field names aren't standard 
-Cypress.Commands.add('returnMultipleRandomIds', (numberOfIds:number, gqlQuery: string, queryName: string, idName?: string) => {
+Cypress.Commands.add('returnMultipleRandomIds', (numberOfIds: number, gqlQuery: string, queryName: string, idName?: string) => {
     Cypress.log({
         name: "returnMultipleRandomIds ",
         message: queryName + `${idName ? ", " + idName : ""}`,
@@ -533,71 +540,67 @@ Cypress.Commands.add('returnMultipleRandomIds', (numberOfIds:number, gqlQuery: s
             };
         },
     });
-       cy.postAndValidate(gqlQuery, queryName).then((res) => {
-     
-        var totalCount = res.body.data[queryName].totalCount ;
+    cy.postAndValidate(gqlQuery, queryName).then((res) => {
+
+        var totalCount = res.body.data[queryName].totalCount;
 
         if (totalCount > 25) {
             var insertIndex = gqlQuery.indexOf("orderBy");
             gqlQuery = gqlQuery.slice(0, insertIndex) + `first: ${totalCount}, ` + gqlQuery.slice(insertIndex);
-              cy.postAndValidate(gqlQuery, queryName).then((resp) => {
-             return  returnIds(resp,totalCount,numberOfIds)
+            cy.postAndValidate(gqlQuery, queryName).then((resp) => {
+                return returnIds(resp, totalCount, numberOfIds)
             });
         }
-        else{
-            return  returnIds(res,totalCount,numberOfIds);
+        else {
+            return returnIds(res, totalCount, numberOfIds);
         }
     });
-    function returnIds(res,totalCount:number,numberOfIds:number){
+    function returnIds(res, totalCount: number, numberOfIds: number) {
         var randomIndex = [];
-        var quot=0, rem=0, c=0;
-        if(totalCount>=numberOfIds)
-        {
-         quot = Math.floor(totalCount/numberOfIds);  
-         rem = totalCount%numberOfIds;
-         for(var i = 0;i < totalCount-rem;i+=quot)
-         { 
-             if(i==totalCount-quot-1)
-             {
-                randomIndex[c] = Cypress._.random(i,i+quot+rem-1);
-                c++;
-                
-             }
-             else{
-             randomIndex[c] = Cypress._.random(i,i+quot-1);
-             c++;
-             }
-         }
+        var quot = 0, rem = 0, c = 0;
+        if (totalCount >= numberOfIds) {
+            quot = Math.floor(totalCount / numberOfIds);
+            rem = totalCount % numberOfIds;
+            for (var i = 0; i < totalCount - rem; i += quot) {
+                if (i == totalCount - quot - 1) {
+                    randomIndex[c] = Cypress._.random(i, i + quot + rem - 1);
+                    c++;
+
+                }
+                else {
+                    randomIndex[c] = Cypress._.random(i, i + quot - 1);
+                    c++;
+                }
+            }
         }
-        else{
+        else {
             numberOfIds = totalCount;
-            expect(numberOfIds).to.be.eql(totalCount,"Number Of iDs greater than totalCount hence returning only the ids available")
-            quot = 1; 
-            for(var i = 0;i < totalCount;i+=quot)
-            { 
-                   randomIndex[c]= Cypress._.random(i,i+quot-1);
-                   c++;
+            expect(numberOfIds).to.be.eql(totalCount, "Number Of iDs greater than totalCount hence returning only the ids available")
+            quot = 1;
+            for (var i = 0; i < totalCount; i += quot) {
+                randomIndex[c] = Cypress._.random(i, i + quot - 1);
+                c++;
             }
         }
         var randomNodes = []
-        for(var i = 0;i < numberOfIds;i++){
-         randomNodes[i] = res.body.data[queryName].nodes[randomIndex[i]];
+        for (var i = 0; i < numberOfIds; i++) {
+            randomNodes[i] = res.body.data[queryName].nodes[randomIndex[i]];
         }
-        var id=[];
-        for(var i = 0;i < numberOfIds;i++){
-        if (!idName) {
-            id[i] = randomNodes[i].id;
-        } else {
-            if (idName.includes(".id")) {
-                var split = idName.split(".");
-                id[i] = randomNodes[i][split[0]][split[1]];
+        var id = [];
+        for (var i = 0; i < numberOfIds; i++) {
+            if (!idName) {
+                id[i] = randomNodes[i].id;
             } else {
-                id[i] = randomNodes[i][idName];
+                if (idName.includes(".id")) {
+                    var split = idName.split(".");
+                    id[i] = randomNodes[i][split[0]][split[1]];
+                } else {
+                    id[i] = randomNodes[i][idName];
+                }
             }
         }
+        return cy.wrap(id);
     }
-    return cy.wrap(id);
-}
 
 });
 
@@ -658,28 +661,27 @@ Cypress.Commands.add("validateMultipleIdSearch", (res, queryName: string, idValu
         },
     });
     const totalCount = res.body.data[queryName].totalCount;
-   var node,edge;
     const nodes = res.body.data[queryName].nodes;
     const edges = res.body.data[queryName].edges;
     expect(totalCount).to.be.eql(nodes.length);
     expect(totalCount).to.be.eql(edges.length);
     for (var i = 0; i < nodes.length; i++) {
-    var targetNode;
-      if(!idName){
-        targetNode = nodes.filter((item) => {
-            const id = item.id;
-            return id === idValue[i];
-        });
-      
-       }
+        var targetNode;
+        if (!idName) {
+            targetNode = nodes.filter((item) => {
+                const id = item.id;
+                return id === idValue[i];
+            });
+
+        }
         else {
-           if (idName.includes(".id")) {
+            if (idName.includes(".id")) {
                 var split = idName.split(".");
                 targetNode = nodes.filter((item) => {
                     const id = item[split[0]][split[1]];
                     return id === idValue[i];
                 });
-               
+
             } else {
                 targetNode = nodes.filter((item) => {
                     const id = item.idName;
@@ -715,15 +717,15 @@ Cypress.Commands.add("returnRandomCursor", (gqlQuery: string, queryName: string,
         if (totalCount > 2) {
             const lowerBound = laterHalf ? Math.ceil((totalCount - 1) / 2) : 0;
             const upperBound = laterHalf ? totalCount - 1 : Math.floor((totalCount - 1) / 2);
-            Cypress.log({message: `Indices ${lowerBound}, ${upperBound}`});
+            Cypress.log({ message: `Indices ${lowerBound}, ${upperBound}` });
             randomIndex = Cypress._.random(lowerBound, upperBound);
         } else if (totalCount === 2) {
             randomIndex = laterHalf ? 1 : 0;
         }
-        Cypress.log({message: `Random Index ${randomIndex}`});
+        Cypress.log({ message: `Random Index ${randomIndex}` });
         const randomEdge = res.body.data[queryName].edges[randomIndex];
         cy.wrap(res.body.data[queryName]).as('orgData');
-        cy.wrap(res.body.data[queryName].totalCount).as('orgCount');
+        cy.wrap(res.body.data[queryName].nodes.length).as('orgCount');
         cy.wrap(randomIndex).as('cursorIndex');
         return cy.wrap(randomEdge.cursor);
     });
@@ -768,9 +770,9 @@ Cypress.Commands.add("validateBeforeCursor", (newData, data, index, firstLast?: 
         },
     });
 
-    const {edges, nodes, totalCount, pageInfo} = newData;
+    const { edges, nodes, totalCount, pageInfo } = newData;
     // Confirm expected total count
-     expect(totalCount).to.be.eql(index, `Verify totalCount is ${index}`);
+    expect(totalCount).to.be.eql(index, `Verify totalCount is ${index}`);
     // Confirm expected node/edge count
     var includedStart = 0;
     var excludedStart = index;
@@ -824,7 +826,7 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
         },
     });
 
-    const {edges, nodes, totalCount, pageInfo} = newData;
+    const { edges, nodes, totalCount, pageInfo } = newData;
     expect(totalCount).to.be.eql(data.totalCount - (index + 1), `Verify totalCount is ${data.totalCount - (index + 1)}`);
     var includedStart = index + 1;
     var excludedAfter = data.length;
@@ -848,7 +850,7 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
         expect(nodes).to.deep.include(data.nodes[i]);
         expect(edges).to.deep.include(data.edges[i]);
     }
-    for(var f = 0; f < includedStart; f++) {
+    for (var f = 0; f < includedStart; f++) {
         expect(nodes).not.to.deep.include(data.nodes[f]);
         expect(edges).not.to.deep.include(data.edges[f]);
     }
@@ -859,8 +861,10 @@ Cypress.Commands.add("validateAfterCursor", (newData, data, index, firstLast?: s
         }
     }
     if (nodes.length !== 1 && edges.length !== 1) {
-        expect(pageInfo.startCursor).not.to.be.eql(sCursor);
-        expect(pageInfo.endCursor).to.eql(eCursor);
+        if (data.totalCount <= 50) {
+            expect(pageInfo.startCursor).not.to.be.eql(sCursor);
+            expect(pageInfo.endCursor).to.eql(eCursor);
+        }
     }
 });
 
@@ -880,18 +884,17 @@ Cypress.Commands.add("validateCursor", (res, queryName: string, beforeAfter: str
             };
         },
     });
-
     const edges = res.body.data[queryName].edges;
     const nodes = res.body.data[queryName].nodes;
     const totalCount = res.body.data[queryName].totalCount;
     const pageInfo = res.body.data[queryName].pageInfo;
     cy.get('@cursorIndex').then((index: number) => {
         cy.get('@orgData').then((data) => {
-            cy.confirmCursorEffects({edges, nodes, totalCount}, data, index).then(() => {
+            cy.confirmCursorEffects({ edges, nodes, totalCount }, data, index).then(() => {
                 if (beforeAfter === "before") {
-                    cy.validateBeforeCursor({edges, nodes, totalCount, pageInfo}, data, index, firstLast, value);
+                    cy.validateBeforeCursor({ edges, nodes, totalCount, pageInfo }, data, index, firstLast, value);
                 } else if (beforeAfter === "after") {
-                    cy.validateAfterCursor({edges, nodes, totalCount, pageInfo}, data, index, firstLast, value);
+                    cy.validateAfterCursor({ edges, nodes, totalCount, pageInfo }, data, index, firstLast, value);
                 }
             });
         });
@@ -922,7 +925,6 @@ Cypress.Commands.add("validateValues", (res, queryName: string) => {
             assert.exists(item.values);
             // validate values as an array
             assert.isArray(item.values);
-            expect(item.values.length).to.be.gte(1);
             item.values.forEach((val) => {
                 expect(val).to.have.property('displayOrder');
                 if (val.displayOrder !== null) {
@@ -957,7 +959,7 @@ Cypress.Commands.add("validateValues", (res, queryName: string) => {
                     }
                 }
             });
-        });    
+        });
     }
 });
 
@@ -988,11 +990,11 @@ Cypress.Commands.add("verifyPageInfo", (res, queryName: string, expectNext?: boo
         expect(pageInfo.hasPreviousPage).to.be.true;
     }
     expect(pageInfo.startCursor).to.be.eql(edges[0].cursor);
-    expect(pageInfo.endCursor).to.be.eql(edges[edges.length-1].cursor);
+    expect(pageInfo.endCursor).to.be.eql(edges[edges.length - 1].cursor);
 });
 
 // Runs the query and grabs the number of IDs required
-Cypress.Commands.add('returnMultipleIds', (idCount :number, gqlQuery: string, queryName: string, idName?: string) => {
+Cypress.Commands.add('returnMultipleIds', (idCount: number, gqlQuery: string, queryName: string, idName?: string) => {
     Cypress.log({
         name: "returnMultipleIds",
         message: queryName + `${idName ? ", " + idName : ""}`,
@@ -1008,16 +1010,16 @@ Cypress.Commands.add('returnMultipleIds', (idCount :number, gqlQuery: string, qu
     return cy.postAndValidate(gqlQuery, queryName).then((res) => {
         var totalCount = res.body.data[queryName].totalCount;
         var ids = [];
-        if(idCount <= 25){
-            if(totalCount >= idCount){
+        if (idCount <= 25) {
+            if (totalCount >= idCount) {
                 totalCount = idCount;
-                for(let i = 0; i < idCount; i++){
+                for (let i = 0; i < idCount; i++) {
                     ids[i] = res.body.data[queryName].nodes[i].id;
                 }
             }
-            else{
+            else {
                 cy.log("Only " + totalCount + " ids are found, validating with " + totalCount + " ids");
-                for(let i = 0; i < totalCount; i++){
+                for (let i = 0; i < totalCount; i++) {
                     ids[i] = res.body.data[queryName].nodes[i].id;
                 }
             }
@@ -1027,15 +1029,15 @@ Cypress.Commands.add('returnMultipleIds', (idCount :number, gqlQuery: string, qu
             gqlQuery = gqlQuery.slice(0, insertIndex) + `first: ${idCount},` + gqlQuery.slice(insertIndex);
             return cy.postAndValidate(gqlQuery, queryName).then((resp) => {
                 totalCount = res.body.data[queryName].totalCount;
-                if(totalCount >= idCount){
+                if (totalCount >= idCount) {
                     totalCount = idCount;
-                    for(let i = 0; i < idCount; i++){
+                    for (let i = 0; i < idCount; i++) {
                         ids[i] = resp.body.data[queryName].nodes[i].id;
                     }
                 }
-                else{
+                else {
                     cy.log("Only " + totalCount + " ids are found, validating with " + totalCount + " ids");
-                    for(let i = 0; i < totalCount; i++){
+                    for (let i = 0; i < totalCount; i++) {
                         ids[i] = resp.body.data[queryName].nodes[i].id;
                     }
                 }

@@ -11,7 +11,7 @@ describe('Mutation: updateManufacturer', () => {
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = 'updateManufacturer';
     const createName = 'createManufacturer';
-	const deleteMutName = "deleteManufacturer";
+    const deleteMutName = "deleteManufacturer";
     const queryName = "manufacturers";
     const itemPath = 'manufacturer';
     const infoName = "manufacturerInfo";
@@ -26,6 +26,7 @@ describe('Mutation: updateManufacturer', () => {
             }
         }
     `;
+    var alreadyDeleted = false;
 
     const addExtraItemIds = (extIds: SupplementalItemRecord[]) => {
         extIds.forEach((id) => {
@@ -33,13 +34,13 @@ describe('Mutation: updateManufacturer', () => {
         });
     };
 
-	var deleteItemsAfter = undefined as boolean | undefined;
+    var deleteItemsAfter = undefined as boolean | undefined;
     before(() => {
-		deleteItemsAfter = Cypress.env("deleteItemsAfter");
-		cy.deleteCypressItems(queryName, deleteMutName, infoName);
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems(queryName, deleteMutName, infoName);
     });
 
-	beforeEach(() => {
+    beforeEach(() => {
         const name = `Cypress ${mutationName} Test #${itemCount}`;
         const input = `{${infoName}: [{name: "${name}", description: "Cypress testing for ${mutationName}", languageCode: "Standard"}] }`;
         cy.createAndGetId(createName, itemPath, input).then((returnedId: string) => {
@@ -47,12 +48,16 @@ describe('Mutation: updateManufacturer', () => {
             itemCount++;
             id = returnedId;
         });
-	});
+    });
 
     afterEach(() => {
-		if (!deleteItemsAfter) {
-			return;
-		}
+        if (!deleteItemsAfter) {
+            return;
+        }
+        if (alreadyDeleted) {
+            alreadyDeleted = false;
+            return;
+        }
         // Delete any supplemental items we created
         cy.deleteSupplementalItems(extraIds).then(() => {
             extraIds = [];
@@ -75,6 +80,18 @@ describe('Mutation: updateManufacturer', () => {
 
         it("Mutation will fail with invalid 'id' input", () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
+        });
+
+        it("Mutation will fail with deleted 'id' input", () => {
+            const mutation = `mutation {
+                ${mutationName}(input: { id: "${id}", ${infoName}: [{name: "Cypress ${mutationName} Deleted Id Test", languageCode: "Standard"}] }) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath).then(() => {
+                alreadyDeleted = true;
+            })
+
         });
 
         it("Mutation will fail if the only input provided is 'id'", () => {
@@ -124,7 +141,7 @@ describe('Mutation: updateManufacturer', () => {
 
         it("Mutation will succeed with valid 'id', 'name', and 'languageCode' input", () => {
             updateCount++;
-            const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard"}];
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, languageCode: "Standard" }];
             const mutation = `mutation {
                 ${mutationName}(input: { id: "${id}", ${infoName}: ${toFormattedString(info)}}) {
                     ${standardMutationBody}
@@ -154,8 +171,8 @@ describe('Mutation: updateManufacturer', () => {
     context("Testing customData input and optional input", () => {
         it("Mutation with all required input and 'customData' input updates item with customData", () => {
             updateCount++;
-            const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}];
-            const customData = {data: `${itemPath} customData`, canDelete: true};
+            const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard" }];
+            const customData = { data: `${itemPath} customData`, canDelete: true };
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -194,15 +211,15 @@ describe('Mutation: updateManufacturer', () => {
         });
 
         it("Mutation with all required input and 'customData' input will overwrite the customData on an existing object", () => {
-            const info = [{name: `Cypress ${mutationName} customData extra`, description: `${mutationName} CD cypress test`, languageCode: "Standard"}];
-            const customData = {data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+            const info = [{ name: `Cypress ${mutationName} customData extra`, description: `${mutationName} CD cypress test`, languageCode: "Standard" }];
+            const customData = { data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S'] };
             const input = `{${infoName}: ${toFormattedString(info)}, customData: ${toFormattedString(customData)}}`;
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: info[0].name, queryName: queryName});
-                const newInfo = [{name: `Cypress ${mutationName} CD extra updated`, description: `${mutationName} CD cypress test`, languageCode: "Standard"}];
-                const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
+                extraIds.push({ itemId: createdItem.id, deleteName: deleteMutName, itemName: info[0].name, queryName: queryName });
+                const newInfo = [{ name: `Cypress ${mutationName} CD extra updated`, description: `${mutationName} CD cypress test`, languageCode: "Standard" }];
+                const newCustomData = { data: `${itemPath} customData`, newDataField: { canDelete: true } };
                 const mutation = `mutation {
                     ${mutationName}(
                         input: {
@@ -246,19 +263,19 @@ describe('Mutation: updateManufacturer', () => {
             const today = new Date();
             const createdDate = today.toISOString();
             const info = [
-                {name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE"},
-                {name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}
+                { name: "Zypresse translate to German", description: "Translate desc to German", languageCode: "de-DE" },
+                { name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard" }
             ];
             const displayOrder = Cypress._.random(1, 20);
             const seoData = [{
                 searchEngineFriendlyPageName: "",
-                metaKeywords:  "",
+                metaKeywords: "",
                 metaDescription: "",
                 metaTitle: "",
                 languageCode: "de-DE"
             }, {
                 searchEngineFriendlyPageName: "Cypress Input",
-                metaKeywords:  "Cypress",
+                metaKeywords: "Cypress",
                 metaDescription: "Cypress Input metaTag",
                 metaTitle: "Cypress Input test",
                 languageCode: "Standard"
@@ -330,7 +347,7 @@ describe('Mutation: updateManufacturer', () => {
 
     context("Testing PriceRange input", () => {
         it("Mutation will fail if priceRange.priceFrom.amount is > than priceRange.priceTo.amount", () => {
-            const info = [{name: `Cypress Invalid PriceRange Amount ${mutationName}`, languageCode: "Standard"}];
+            const info = [{ name: `Cypress Invalid PriceRange Amount ${mutationName}`, languageCode: "Standard" }];
             const priceRange = {
                 priceFrom: {
                     amount: Cypress._.random(10000, 20000),
@@ -392,7 +409,7 @@ describe('Mutation: updateManufacturer', () => {
         });
 
         it("Mutation will fail if the currency of priceRange.priceFrom and priceRange.priceTo are not the same", () => {
-            const info = [{name: `Cypress PriceRange.PriceFrom Currency ${mutationName}`, languageCode: "Standard"}];
+            const info = [{ name: `Cypress PriceRange.PriceFrom Currency ${mutationName}`, languageCode: "Standard" }];
             const priceRange = {
                 priceFrom: {
                     amount: Cypress._.random(100, 9999),
@@ -451,7 +468,7 @@ describe('Mutation: updateManufacturer', () => {
                 expect(res.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
                 assert.notExists(res.body.data[mutationName][itemPath], `Expect mutation not to return a ${itemPath}`);
 
-                const secondInfo = [{name: `Cypress PriceRange.PriceTo Currency ${mutationName}`, languageCode: "Standard"}];
+                const secondInfo = [{ name: `Cypress PriceRange.PriceTo Currency ${mutationName}`, languageCode: "Standard" }];
                 const secondPriceRange = {
                     priceFrom: {
                         amount: Cypress._.random(100, 9999),
@@ -495,7 +512,7 @@ describe('Mutation: updateManufacturer', () => {
         });
 
         it("Mutation will successfully save all priceRange properties even when priceRangeFiltering = false", () => {
-            const info = [{name: `Cypress PriceRange false ${mutationName}`, languageCode: "Standard"}];
+            const info = [{ name: `Cypress PriceRange false ${mutationName}`, languageCode: "Standard" }];
             const priceRange = {
                 priceRangeFiltering: false,
                 manuallyPriceRange: false,
@@ -571,7 +588,7 @@ describe('Mutation: updateManufacturer', () => {
         });
 
         it("Mutation will successfully save the priceRange input", () => {
-            const info = [{name: `Cypress PriceRange ${mutationName}`, languageCode: "Standard"}];
+            const info = [{ name: `Cypress PriceRange ${mutationName}`, languageCode: "Standard" }];
             const priceRange = {
                 priceRangeFiltering: Cypress._.random(0, 1) === 1,
                 manuallyPriceRange: Cypress._.random(0, 1) === 1,
@@ -652,12 +669,12 @@ describe('Mutation: updateManufacturer', () => {
             const extraCreate = "createDiscount";
             const extraPath = "discount";
             const extraQuery = "discounts";
-            const extraItemInput = {name: `Cypress ${mutationName} discount`, discountAmount: {amount: 15, currency: "USD"}, discountType: "ASSIGNED_TO_MANUFACTURERS"};
+            const extraItemInput = { name: `Cypress ${mutationName} discount`, discountAmount: { amount: 15, currency: "USD" }, discountType: "ASSIGNED_TO_MANUFACTURERS" };
             cy.createAssociatedItems(2, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
                 addExtraItemIds(deletionIds);
                 updateCount++;
-                const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}];
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard" }];
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -721,13 +738,13 @@ describe('Mutation: updateManufacturer', () => {
             const extraCreate = "createCustomerRole";
             const extraPath = "customerRole";
             const extraQuery = "customerRoles";
-            const extraItemInput = {name: `Cypress ${mutationName} role`};
+            const extraItemInput = { name: `Cypress ${mutationName} role` };
             cy.createAssociatedItems(2, extraCreate, extraPath, extraQuery, extraItemInput).then((results) => {
                 const { deletionIds, items, itemIds } = results;
                 addExtraItemIds(deletionIds);
                 updateCount++;
-                const info = [{name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}];
-                const roleBasedAccess = {enabled: true, roleIds: itemIds};
+                const info = [{ name: `Cypress ${mutationName} Update ${updateCount}`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard" }];
+                const roleBasedAccess = { enabled: true, roleIds: itemIds };
                 const mutation = `mutation {
                     ${mutationName}(
                         input: { 
@@ -755,7 +772,7 @@ describe('Mutation: updateManufacturer', () => {
                     }
                 }`;
                 cy.postMutAndValidate(mutation, mutationName, itemPath).then((res) => {
-                    const roleAccess = {enabled: roleBasedAccess.enabled, roles: items};
+                    const roleAccess = { enabled: roleBasedAccess.enabled, roles: items };
                     const propNames = [infoName, "roleBasedAccess"];
                     const propValues = [info, roleAccess];
                     cy.confirmMutationSuccess(res, mutationName, itemPath, propNames, propValues).then(() => {

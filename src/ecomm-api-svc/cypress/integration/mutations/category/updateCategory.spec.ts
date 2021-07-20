@@ -97,6 +97,17 @@ describe('Mutation: updateCategory', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
+        it("Mutation will fail with deleted 'id' input", () => {
+            const info = [{name: `Cypress ${mutationName} Deleted Id Test`, description: `${mutationName} cypress test #${updateCount}`, languageCode: "Standard"}];
+            const mutation = `mutation {
+                ${mutationName}(input: { id: "${id}", ${infoName}: ${toFormattedString(info)}}) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath )
+            
+        });
+
         it("Mutation will fail if the only input provided is 'id'", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { id: "${id}" }) {
