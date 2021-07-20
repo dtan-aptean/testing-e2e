@@ -103,7 +103,6 @@ describe('Mutation: updateWarehouse', () => {
 
         });
 
-        // TODO: failing ecause of 200 status code instead of 400
         it("Mutation will fail if the only input provided is 'id'", () => {
             const mutation = `mutation {
                 ${mutationName}(
