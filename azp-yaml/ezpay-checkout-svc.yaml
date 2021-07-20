@@ -1,0 +1,25 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - src/ezpay-checkout-svc/
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: e2e-integration-tests
+
+stages:
+  - stage: ezpay_checkout_svc
+    displayName: Build and push ezpay checkout svc cypress test docker image
+    dependsOn: []
+
+    jobs:
+    - template: ./templates/cypress-test-docker-build-push.yaml
+      parameters:
+        packageName: ezpay-checkout-svc 
+        repositoryName: cypress-ezpay-checkout-svc     

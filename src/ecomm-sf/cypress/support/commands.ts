@@ -194,20 +194,24 @@ Cypress.Commands.add("clickRowBtn", { prevSubject: 'element' }, (subject, button
 });
 
 // Logs in with the configured username/password
-Cypress.Commands.add("login", () => {
+Cypress.Commands.add("login", (loginEmail?: string, loginPassword?: string) => {
   Cypress.log({
     name: "login",
   });
   cy.on("uncaught:exception", (err, runnable) => {
     return false;
   });
+  var email = loginEmail ? loginEmail : Cypress.config("username");
+  var password = loginPassword ? loginPassword : Cypress.config("password");
   cy.get(".header-links").then(($el) => {
     if (!$el[0].innerText.includes('LOG OUT')) {
-      cy.get(".header-links").find(".ico-login").click({force: true});
+      cy.get(".header-links").find(".ico-login").click({ force: true });
       cy.wait(200);
-      cy.get(".email").type(Cypress.config("username"));
-      cy.get(".password").type(Cypress.config("password"));
-      cy.get(".login-button").click();
+      cy.get("#Email").type(email, { force: true });
+      cy.get("#Password").type(password, { force: true });
+      cy.get(".login-button").click({ force: true });
+      cy.wait(200);
+      cy.setTheme();
     }
   });
 });
@@ -1753,4 +1757,77 @@ Cypress.Commands.add("changeDefaultCurrency", (language, currency) => {
         cy.wrap(orgVal).as("originalValue");
       });
     });
+});
+
+// Register in to the storefront
+Cypress.Commands.add("register", (registerEmail?: string, registerPassword?: string) => {
+  Cypress.log({
+    name: "Register"
+  });
+  cy.on("uncaught:exception", (err, runnable) => {
+    return false;
+  });
+  var email = registerEmail ? registerEmail : "cypress.tester" + Cypress._.random(0, 1000000) + "@email.com";
+  var password = registerPassword ? registerPassword : "CypressUser";
+  cy.get(".header-links").then(($el) => {
+    if ($el[0].innerText.includes('LOG OUT')) {
+      cy.wrap($el).find(".ico-logout").click({ force: true });
+      cy.get(".header-links").then(($el) => {
+        cy.wrap($el).find(".ico-register").click({ force: true });
+        cy.wait(200);
+        cy.get("#FirstName").type("Cypress", { force: true });
+        cy.get("#LastName").type("Tester", { force: true });
+        cy.get("#Email").type(email, { force: true });
+        cy.get("#StreetAddress").type("11360 US-1", { force: true });
+        cy.get("#ZipPostalCode").type("33408", { force: true });
+        cy.get("#County").type("United States", { force: true });
+        cy.get("#City").type("Palm Beach Gardens", { force: true });
+        cy.get("#Password").type(password, { force: true });
+        cy.get("#ConfirmPassword").type(password, { force: true });
+        cy.get("#register-button").click({ force: true });
+        cy.wait(200);
+        cy.get(".result").should("contain.text", "Your registration completed");
+        cy.setTheme();
+      });
+    }
+    else {
+      cy.wrap($el).find(".ico-register").click({ force: true });
+      cy.wait(200);
+      cy.get("#FirstName").type("Cypress", { force: true });
+      cy.get("#LastName").type("Tester", { force: true });
+      cy.get("#Email").type(email, { force: true });
+      cy.get("#StreetAddress").type("11360 US-1", { force: true });
+      cy.get("#ZipPostalCode").type("33408", { force: true });
+      cy.get("#County").type("United States", { force: true });
+      cy.get("#City").type("Palm Beach Gardens", { force: true });
+      cy.get("#Password").type(password, { force: true });
+      cy.get("#ConfirmPassword").type(password, { force: true });
+      cy.get("#register-button").click({ force: true });
+      cy.wait(200);
+      cy.get(".result").should("contain.text", "Your registration completed");
+      cy.setTheme();
+    }
+  });
+  cy.wrap({ loginEmail: email, loginPassword: password });
+});
+
+// Set the theme 
+Cypress.Commands.add("setTheme", (originalTheme?: string) => {
+  const currentTheme = Cypress.$("#store-theme").find("option:selected").text();
+  if (!Cypress.env("storedTheme")) {
+    Cypress.env("storedTheme", currentTheme);
+  }
+  if (originalTheme) {
+    Cypress.log({
+      name: "setTheme",
+      message: `Resetting theme to ${originalTheme}`
+    });
+    cy.get("#store-theme").select(originalTheme);
+  } else if (currentTheme !== "Aptean Default") {
+    Cypress.log({
+      name: "setTheme",
+      message: "Setting theme to Aptean default"
+    });
+    cy.get("#store-theme").select("Aptean Default");
+  }
 });
