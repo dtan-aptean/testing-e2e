@@ -482,7 +482,7 @@ describe("Payer Portal - Payments Due Table", function () {
       });
     });
 
-    it.only("Creating payment request with discount amount and discount end date should add data to discount end column in mobile view", () => {      
+    it("Creating payment request with discount amount and discount end date should add data to discount end column in mobile view", () => {      
       cy.viewport('iphone-x');
       let amount = Math.trunc(Math.random() * 10000);
       let discount = Math.trunc(Math.random() * 500);
