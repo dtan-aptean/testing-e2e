@@ -28,31 +28,37 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=last-three-months]").find("a").first().click();
       cy.get('[type="radio"]').should("exist");
 
-      //selecting download as csv
-      cy.get('[type="radio"]').first().check();
-      cy.get("a")
-        .parent()
-        .contains("DOWNLOAD")
-        .should("have.attr", "href")
-        .and("include", ".csv")
-        .then((href) => {
-          cy.request("GET", href).then((response) => {
-            cy.expect(response.status).to.eq(200);
-          });
-        });
+      cy.get("body").then(($body) => {
+        if ($body.find("span:contains(Download as CSV)").length) {
+          //selecting download as csv
+          cy.get('[type="radio"]').first().check();
+          cy.get("a")
+            .parent()
+            .contains("DOWNLOAD")
+            .should("have.attr", "href")
+            .and("include", ".csv")
+            .then((href) => {
+              cy.request("GET", href).then((response) => {
+                cy.expect(response.status).to.eq(200);
+              });
+            });
+        }
 
-      //selecting download as pdf
-      cy.get('[type="radio"]').last().check();
-      cy.get("a")
-        .parent()
-        .contains("DOWNLOAD")
-        .should("have.attr", "href")
-        .and("include", ".pdf")
-        .then((href) => {
-          cy.request("GET", href).then((response) => {
-            cy.expect(response.status).to.eq(200);
-          });
-        });
+        if ($body.find("span:contains(Download as PDF)").length) {
+          //selecting download as pdf
+          cy.get('[type="radio"]').last().check();
+          cy.get("a")
+            .parent()
+            .contains("DOWNLOAD")
+            .should("have.attr", "href")
+            .and("include", ".pdf")
+            .then((href) => {
+              cy.request("GET", href).then((response) => {
+                cy.expect(response.status).to.eq(200);
+              });
+            });
+        }
+      });
 
       //closing the dialog
       cy.get("button").contains("CANCEL").should("be.visible").click();
@@ -80,31 +86,37 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=year-list").find("svg").eq(1).click();
       cy.get('[type="radio"]').should("exist");
 
-      //selecting download as csv
-      cy.get('[type="radio"]').eq(0).check({ force: true });
-      cy.get("a")
-        .parent()
-        .contains("DOWNLOAD")
-        .should("have.attr", "href")
-        .and("include", ".csv")
-        .then((href) => {
-          cy.request("GET", href).then((response) => {
-            cy.expect(response.status).to.eq(200);
-          });
-        });
+      cy.get("body").then(($body) => {
+        if ($body.find("span:contains(Download as CSV)").length) {
+          //selecting download as csv
+          cy.get('[type="radio"]').first().check({ force: true });
+          cy.get("a")
+            .parent()
+            .contains("DOWNLOAD")
+            .should("have.attr", "href")
+            .and("include", ".csv")
+            .then((href) => {
+              cy.request("GET", href).then((response) => {
+                cy.expect(response.status).to.eq(200);
+              });
+            });
+        }
 
-      //selecting download as pdf
-      cy.get('[type="radio"]').eq(1).check({ force: true });
-      cy.get("a")
-        .parent()
-        .contains("DOWNLOAD")
-        .should("have.attr", "href")
-        .and("include", ".pdf")
-        .then((href) => {
-          cy.request("GET", href).then((response) => {
-            cy.expect(response.status).to.eq(200);
-          });
-        });
+        if ($body.find("span:contains(Download as PDF)").length) {
+          //selecting download as pdf
+          cy.get('[type="radio"]').last().check({ force: true });
+          cy.get("a")
+            .parent()
+            .contains("DOWNLOAD")
+            .should("have.attr", "href")
+            .and("include", ".pdf")
+            .then((href) => {
+              cy.request("GET", href).then((response) => {
+                cy.expect(response.status).to.eq(200);
+              });
+            });
+        }
+      });
     });
 
     it("can close the statement dialog and go back to viewing the home page", () => {

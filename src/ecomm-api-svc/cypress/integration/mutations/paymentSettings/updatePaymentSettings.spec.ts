@@ -177,6 +177,23 @@ describe('Mutation: updatePaymentSettings', () => {
             });
         });
 
+        it("Mutation will fail with deleted 'id' input", () => {
+            const extraMutationName = "createCompany"
+            const extraItemPath = "company"
+            const extraInput = `{ name: "Cypress ${extraMutationName} Test", integrationKey: "Cypress${Math.random().toString(36).slice(2)}" }`
+            cy.createAndGetId(extraMutationName, extraItemPath, extraInput).then((companyId) => {
+                const input = `{companyId: "${companyId}" ,hasTerms: false }`
+                cy.createAndGetId("createPaymentSettings", itemPath, input).then((id) => {
+                    const mutation = `mutation {
+                        ${mutationName}(input: { id: "${id}", companyId: "${companyId}" ,hasTerms: false }) {
+                            ${standardMutationBody}
+                        }
+                    }`;
+                    cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath )
+                });
+            }); 
+        });
+
         it("Mutation will fail if the only input provided is 'id'", () => {
             createCompanyAndSettings("Id Only", "lone-id").then((creations) => {
                 const mutation = `mutation {

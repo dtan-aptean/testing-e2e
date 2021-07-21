@@ -5,11 +5,16 @@
   "doNotPrepEnv": false,
   "doNotResetEnv": false,
   "env": {
+    "apiUrl": "#{ECOMM_API_SVC_BASE_URL}#",
+    "x-aptean-apim": "#{ECOMM_APIM}#",
+    "x-aptean-tenant": "#{ECOMM_TENANT_ID}#",
+    "x-aptean-tenant-secret": "#{ECOMM_TENANT_SECRET}#",
+    "gqlTimeout": 20000,
     "runtimeEnv": "local",
     "storageAccountConnString": "#{STORAGE_ACCOUNT_CONN_STRING}#" 
   },
   "chromeWebSecurity": false,
-  "defaultCommandTimeout": 10000,
+  "defaultCommandTimeout": 60000,
   "supportFile": "cypress/support/index.ts",
   "video": false,
   "reporter": "cypress-mochawesome-reporter",

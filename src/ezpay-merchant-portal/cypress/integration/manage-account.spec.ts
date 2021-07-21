@@ -30,6 +30,7 @@ describe("Merchant portal", function () {
     });
 
     it("should pass if able to add/edit an account", () => {
+      cy.scrollTo("bottom");
       cy.get("[data-cy=payout-settings-section]").should("be.visible");
 
       // click on add account
@@ -138,6 +139,7 @@ describe("Merchant portal", function () {
     });
 
     it("should not be able to edit frequency if frequency is daily, and can edit otherwise", () => {
+      cy.scrollTo("bottom");
       //Get the value of frequency
       let frequency = undefined;
       cy.get("[data-cy=frequency-value]").then(($el) => {

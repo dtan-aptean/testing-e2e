@@ -336,7 +336,9 @@ Cypress.Commands.add("validateMutationRes", (gqlMut: string, res, mutationName: 
     expect(res.body.data[mutationName].code).not.to.eql("ERROR", `Expect ${mutationName}.code not be ERROR`);
     // Validate message
     assert.isString(res.body.data[mutationName].message, `Expect ${mutationName}.message to be a string`);
-    expect(res.body.data[mutationName].message).to.eql(successMessage, `Expect ${mutationName}.message to be the correct success message`);
+    if (!mutationName.includes('Address')) {
+        expect(res.body.data[mutationName].message).to.eql(successMessage, `Expect ${mutationName}.message to be the correct success message`);
+    };
     // Validate error
     assert.isNull(res.body.data[mutationName].errors, `Expect ${mutationName}.errors to be null`);
     // Delete mutations don't return an item.
@@ -405,7 +407,9 @@ Cypress.Commands.add("confirmMutationError", (res, mutationName: string, itemPat
     expect(res.body.data[mutationName].code).to.eql("ERROR", `Expect ${mutationName}.code to be ERROR`);
     // Validate message
     assert.isString(res.body.data[mutationName].message, `Expect ${mutationName}.message to be a string`);
-    expect(res.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
+    if (!mutationName.includes('Address')) {
+        expect(res.body.data[mutationName].message).to.eql(failureMessage, `Expect ${mutationName}.message to be the correct failure message`);
+    }
     // Validate response item
     if (itemPath) {
         // Since delete mutations don't have an item returned, itemPath is optional
@@ -656,7 +660,8 @@ Cypress.Commands.add("createAssociatedItems", (
     itemPath: string,
     queryName: string,
     inputBase,
-    additionalResFields?
+    additionalResFields?,
+    altUrl?: string
 ) => {
     Cypress.log({
         name: "createAssociatedItems",
@@ -668,7 +673,8 @@ Cypress.Commands.add("createAssociatedItems", (
                 "Query name": queryName,
                 "Item path": itemPath,
                 "Input base": toFormattedString(inputBase, true),
-                "Additional response fields": additionalResFields ? additionalResFields : "Not provided"
+                "Additional response fields": additionalResFields ? additionalResFields : "Not provided",
+                "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
             };
         }
     });
@@ -721,8 +727,8 @@ Cypress.Commands.add("createAssociatedItems", (
     const fullResBodies = [];
     var infoName = getInfoName(inputBase);
     var nameBase = infoName ? inputBase[infoName][0].name : getNameBase();
-    const createAndPush = (item, name) => {
-        cy.createAndGetId(createName, itemPath, toFormattedString(item), additionalResFields).then((returnedBody) => {
+    const createAndPush = (item, name, altUrl) => {
+        cy.createAndGetId(createName, itemPath, toFormattedString(item), additionalResFields, altUrl).then((returnedBody) => {
             const returnedId = additionalResFields ? returnedBody.id : returnedBody;
             createdIds.push(returnedId);
             item.id = returnedId;
@@ -745,7 +751,7 @@ Cypress.Commands.add("createAssociatedItems", (
         var name = numberToMake !== 1 ? incrementNameBase(nameBase, i) : nameBase;
         var item = createInput(inputBase, name, infoName);
         cy.wait(4000);
-        createAndPush(item, name);
+        createAndPush(item, name, altUrl);
     };
     const resObject = { deletionIds: deletionIds, items: createdItems, itemIds: createdIds } as { deletionIds: SupplementalItemRecord[], items: any[], itemIds: string[], fullItems?: any[] };
     if (additionalResFields) {
@@ -836,6 +842,8 @@ Cypress.Commands.add("queryForDeleted", (asTest: boolean, itemName: string, item
         nameField = `company {
             name
         }`;
+    } else if (queryName === 'customers') {
+        nameField = `email`;
     }
     var searchQuery = `{
         ${queryName}(searchString: "${itemName}", orderBy: {direction: ASC, field: ${defaultField(queryName)}}) {
@@ -1003,7 +1011,7 @@ Cypress.Commands.add("deleteItem", (mutationName: string, id: string, altUrl?: s
         },
     });
     var mutation = `mutation {
-        ${mutationName}(input: { id: "${id}" }) {
+        ${mutationName}(input: { ${mutationName === "deleteRefund" ? "orderId" : "id"}: "${id}" }) {
             ${codeMessageError}
         }
     }`;
@@ -1417,30 +1425,4 @@ Cypress.Commands.add("confirmUsingQuery", (query: string, queryName: string, ite
         expect(propNames.length).to.be.eql(values.length, "Same number of properties and values passed in");
         compareExpectedToResults(node, propNames, values);
     });
-});
-
-Cypress.Commands.add("createAndGetMultipleIds", (NumberToMake: number, createName: string, itemPath: string, input: string, altUrl?: String) => {
-    Cypress.log({
-        name: "createAndGetMultipleIds",
-        message: `Creating ${itemPath}`,
-        consoleProps: () => {
-            return {
-                "Mutation": createName,
-                "Response item path": itemPath,
-                "Input string": input,
-                "URL used": altUrl ? altUrl : Cypress.config("baseUrl")
-            };
-        }
-    });
-    const createdIds = [];
-    const createAndPush = () => {
-        cy.createAndGetId(createName, itemPath, input).then((returnedBody) => {
-            const returnedId = returnedBody;
-            createdIds.push(returnedId);
-        });
-    }
-    for (var i = 0; i < NumberToMake; i++) {
-        createAndPush(createName, itemPath, input);
-    }
-    return cy.wrap(createdIds);
 });

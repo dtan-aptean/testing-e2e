@@ -10,7 +10,7 @@ describe('Mutation: updateWarehouse', () => {
     var extraIds = [] as SupplementalItemRecord[];
     const mutationName = "updateWarehouse";
     const createName = "createWarehouse";
-	const deleteMutName = "deleteWarehouse";
+    const deleteMutName = "deleteWarehouse";
     const queryName = "warehouses";
     const itemPath = "warehouse";
     const standardMutationBody = `
@@ -30,13 +30,15 @@ describe('Mutation: updateWarehouse', () => {
         }
     `;
 
-	var deleteItemsAfter = undefined as boolean | undefined;
+    var deleteItemsAfter = undefined as boolean | undefined;
+    var alreadyDeleted = false;
+
     before(() => {
-		deleteItemsAfter = Cypress.env("deleteItemsAfter");
-		cy.deleteCypressItems(queryName, deleteMutName);
+        deleteItemsAfter = Cypress.env("deleteItemsAfter");
+        cy.deleteCypressItems(queryName, deleteMutName);
     });
 
-	beforeEach(() => {
+    beforeEach(() => {
         const name = `Cypress ${mutationName} Test #${itemCount}`;
         // Address of Leamy Lake Park in Canada
         const input = `{name: "${name}", address: { city: "Gatineau", country: "CA", line1: "Leamy Lake Pkwy", line2: "", postalCode: "J8X 3P5", region: "Quebec" }}`;
@@ -45,12 +47,16 @@ describe('Mutation: updateWarehouse', () => {
             id = returnedId;
             itemCount++;
         });
-	});
+    });
 
     afterEach(() => {
-		if (!deleteItemsAfter) {
-			return;
-		}
+        if (!deleteItemsAfter) {
+            return;
+        }
+        if (alreadyDeleted) {
+            alreadyDeleted = false;
+            return;
+        }
         if (id !== "") {
             // Delete any supplemental items we created
             cy.deleteSupplementalItems(extraIds).then(() => {
@@ -74,9 +80,40 @@ describe('Mutation: updateWarehouse', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
 
-        // TODO: failing ecause of 200 status code instead of 400
+        it("Mutation will fail with deleted 'id' input", () => {
+            const address = {
+                country: "US",
+                postalCode: "30022",
+                region: "Georgia"
+            };
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${id}"
+                        name: "Cypress ${mutationName} deleted Id Test"
+                        address: ${toFormattedString(address)}
+                    }
+                ) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath).then(() => {
+                alreadyDeleted = true;
+            })
+
+        });
+
         it("Mutation will fail if the only input provided is 'id'", () => {
-            cy.mutationOnlyId(id, mutationName, standardMutationBody);
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${id}"
+                    }
+                ) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.postAndConfirmMutationError(mutation, mutationName, itemPath);
         });
 
         it("Mutation will fail with invalid 'Name' input", () => {
@@ -135,7 +172,7 @@ describe('Mutation: updateWarehouse', () => {
             const name = `Cypress ${mutationName} basic required`;
             const address = {
                 country: "US",
-                postalCode: "30022", 
+                postalCode: "30022",
                 region: "Georgia"
             };
             const mutation = `mutation {
@@ -251,10 +288,10 @@ describe('Mutation: updateWarehouse', () => {
             const name = `Cypress ${mutationName} customData`;
             const address = {
                 country: "US",
-                postalCode: "30022", 
+                postalCode: "30022",
                 region: "Georgia"
             };
-            const customData = {data: `${itemPath} customData`, canDelete: true};
+            const customData = { data: `${itemPath} customData`, canDelete: true };
             const mutation = `mutation {
                 ${mutationName}(
                     input: {
@@ -305,22 +342,22 @@ describe('Mutation: updateWarehouse', () => {
             const name = `Cypress ${mutationName} customData extra`;
             const address = {
                 country: "US",
-                postalCode: "30022", 
+                postalCode: "30022",
                 region: "Georgia"
             };
-            const customData = {data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S']};
+            const customData = { data: `${itemPath} customData`, extraData: ['C', 'Y', 'P', 'R', 'E', 'S', 'S'] };
             const input = `{name: "${name}", address: ${toFormattedString(address)}, customData: ${toFormattedString(customData)}}`;
             cy.createAndGetId(createName, itemPath, input, "customData").then((createdItem) => {
                 assert.exists(createdItem.id);
                 assert.exists(createdItem.customData);
-                extraIds.push({itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName});
+                extraIds.push({ itemId: createdItem.id, deleteName: deleteMutName, itemName: name, queryName: queryName });
                 const newName = `Cypress ${mutationName} CD extra updated`;
                 const newAddress = {
                     country: "CA",
                     postalCode: "J8X 3P5",
                     region: "Quebec"
                 };
-                const newCustomData = {data: `${itemPath} customData`, newDataField: { canDelete: true }};
+                const newCustomData = { data: `${itemPath} customData`, newDataField: { canDelete: true } };
                 const mutation = `mutation {
                     ${mutationName}(
                         input: {
@@ -375,7 +412,7 @@ describe('Mutation: updateWarehouse', () => {
                 country: "US",
                 line1: "4325 Alexander Dr",
                 line2: "#100",
-                postalCode: "30022", 
+                postalCode: "30022",
                 region: "Georgia"
             };
             const mutation = `mutation {

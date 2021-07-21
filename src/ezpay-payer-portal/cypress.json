@@ -21,7 +21,7 @@
     "storageAccountConnString": "#{STORAGE_ACCOUNT_CONN_STRING}#"    
   },
   "chromeWebSecurity": false,
-  "defaultCommandTimeout": 10000,
+  "defaultCommandTimeout": 60000,
   "supportFile": "cypress/support/index.ts",
   "video": false,
   "reporter": "cypress-mochawesome-reporter",

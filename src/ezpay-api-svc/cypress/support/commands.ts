@@ -70,6 +70,17 @@ Cypress.Commands.add("postGQLWithoutTenantSecret", (query) => {
   });
 });
 
+// -- This will post GQL query without tenant secret --
+Cypress.Commands.add("postGQLWithHeaders", (query, headers) => {
+  return cy.request({
+    method: "POST",
+    url: "/graphql",
+    headers: headers,
+    body: { query },
+    failOnStatusCode: false,
+  });
+});
+
 //-- This will post GQL query with bearer token --
 Cypress.Commands.add("postGQLBearer", (query) => {
   return cy.request({

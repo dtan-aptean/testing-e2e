@@ -19,6 +19,7 @@ import 'cypress-mochawesome-reporter/register';
 import './commands';
 import './setupCommands';
 import './shippingCommands';
+import './apiCommands';
 
 /**
  * These hooks will prepare the environment with required products and categories before the tests run
@@ -32,7 +33,7 @@ import './shippingCommands';
 
 before(() => {
     if (!Cypress.config("doNotPrepEnv")) {
-        Cypress.log({displayName: "Index.ts", message: "Preparing enviornment"});
+        Cypress.log({ displayName: "Index.ts", message: "Preparing enviornment" });
         cy.prepareEnvironment();
     } else if (!Cypress.env("userDetails")) {
         // User details contains user first/last name and company, retrieved from public store account details
@@ -43,7 +44,7 @@ before(() => {
 
 if (!Cypress.config("doNotResetEnv")) {
     after(() => {
-        Cypress.log({displayName: "Index.ts", message: "Resetting enviornment"});
+        Cypress.log({ displayName: "Index.ts", message: "Resetting enviornment" });
         cy.revertEnvironment();
     });
 }

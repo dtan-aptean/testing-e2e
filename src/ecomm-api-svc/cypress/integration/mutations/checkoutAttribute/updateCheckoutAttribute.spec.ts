@@ -82,6 +82,23 @@ describe('Mutation: updateCheckoutAttribute', () => {
             cy.mutationInvalidId(mutationName, standardMutationBody);
         });
         
+        it("Mutation will fail with deleted 'id' input", () => {
+            const values = [{name: 'Cypress CA v1'}, {name: 'Cypress CA v2'}];
+            const mutation = `mutation {
+                ${mutationName}(
+                    input: {
+                        id: "${id}"
+                        name: "Cypress ${mutationName} eleted Id Test"
+                        values: ${toFormattedString(values)}
+                    }
+                ) {
+                    ${standardMutationBody}
+                }
+            }`;
+            cy.mutationDeletedId(id, mutationName, deleteMutName, mutation, itemPath )
+            
+        });
+
         it("Mutation will fail if the only input provided is 'id'", () => {
             const mutation = `mutation {
                 ${mutationName}(input: { id: "${id}" }) {

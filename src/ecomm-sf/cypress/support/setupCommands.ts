@@ -1078,7 +1078,6 @@ Cypress.Commands.add("fetchUserDetails", () => {
     name: "fetchUserDetails",
     message: "Fetching and storing user's first name, last name, and company"
   });
-
   cy.visit("/");
   cy.login();
   cy.wait(1000);

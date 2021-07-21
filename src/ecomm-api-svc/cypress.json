@@ -1,27 +1,27 @@
 {
-    "baseUrl": "#{ECOMM_API_SVC_BASE_URL}#", 
-    "chromeWebSecurity": false,
-    "defaultCommandTimeout": 10000,
-    "env": {
-      "x-aptean-apim": "#{ECOMM_APIM}#",
-      "x-aptean-tenant": "#{ECOMM_TENANT_ID}#",
-      "x-aptean-tenant-secret": "#{ECOMM_TENANT_SECRET}#",
-      "gqlTimeout": 5000,
-      "storefrontUrl": "#{ECOMM_PORTAL_BASE_URL}#",
-      "storefrontLogin": "#{ECOMM_USERNAME}#",
-      "storefrontPassword": "#{ECOMM_PASSWORD}#",
-      "runtimeEnv": "local",
-      "storageAccountConnString": "#{STORAGE_ACCOUNT_CONN_STRING}#"
-    }, 
-    "supportFile": "cypress/support/index.ts",
-    "video": false,
-    "reporter": "cypress-mochawesome-reporter",
-    "reporterOptions": {
-      "reportDir": "/e2e/cypress/report",
-      "charts": true,
-      "reportPageTitle": "ecomm-api-svc",
-      "embeddedScreenshots": false
-    },
-    "screenshotsFolder": "/e2e/cypress/screenshots",
-    "retries": 2           
+  "baseUrl": "#{ECOMM_API_SVC_BASE_URL}#",
+  "chromeWebSecurity": false,
+  "defaultCommandTimeout": 60000,
+  "env": {
+    "x-aptean-apim": "#{ECOMM_APIM}#",
+    "x-aptean-tenant": "#{ECOMM_TENANT_ID}#",
+    "x-aptean-tenant-secret": "#{ECOMM_TENANT_SECRET}#",
+    "gqlTimeout": 5000,
+    "storefrontUrl": "#{ECOMM_PORTAL_BASE_URL}#",
+    "storefrontLogin": "#{ECOMM_USERNAME}#",
+    "storefrontPassword": "#{ECOMM_PASSWORD}#",
+    "runtimeEnv": "local",
+    "storageAccountConnString": "#{STORAGE_ACCOUNT_CONN_STRING}#"
+  },
+  "supportFile": "cypress/support/index.ts",
+  "video": false,
+  "reporter": "cypress-mochawesome-reporter",
+  "reporterOptions": {
+    "reportDir": "/e2e/cypress/report",
+    "charts": true,
+    "reportPageTitle": "ecomm-api-svc",
+    "embeddedScreenshots": false
+  },
+  "screenshotsFolder": "/e2e/cypress/screenshots",
+  "retries": 2
 }
