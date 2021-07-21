@@ -10,10 +10,11 @@ describe("B2B Customer Address", () => {
   var type = '';
   const queryName = "companies";
   const createMutName = "createCompany";
+  const deleteMutName = "deleteCompany";
   const itemPath = 'company';
-  const loginEmail = generateRandomString("b2btester") + "@address.com";
+  const loginEmail = generateRandomString("cypress.tester") + "@address.com";
   const loginPassword = generateRandomString("Cypress");
-  const companyName = generateRandomString("B2B Test Company");
+  const companyName = generateRandomString("Cypress Address Company");
   const companyKey = generateRandomString("cypress");
   const companyInformation = {
     id: id,
@@ -62,6 +63,7 @@ describe("B2B Customer Address", () => {
       cy.get("[name='save']").click();
       cy.get(".alert").should("be.visible");
       cy.get("a").contains("Logout").click({ force: true });
+      cy.login(loginEmail, loginPassword);
       cy.visit("/Admin/Company/List");
       cy.get(".alert").should("contain.text", "You do not have permission to perform the selected operation");
       const gqlQuery = `{
@@ -250,7 +252,7 @@ describe("B2B Customer Address", () => {
   }
 
   before(() => {
-    cy.deleteCypressItems(queryName, deleteMutName, undefined, "B2B", apiUrl);
+    cy.deleteCypressItems(queryName, deleteMutName, undefined, "Cypress Address", apiUrl);
     cy.deleteCypressItems("customers", "deleteCustomer", undefined, "@address", apiUrl);
     createB2BCustomer(companyName, companyKey);
   });
@@ -283,7 +285,7 @@ describe("B2B Customer Address", () => {
       });
     });
 
-    it("New billing address entered during checkout should not be available in company & customer address", () => {
+    it("New billing address entered during checkout should not be available in company address", () => {
       cy.addToCartAndCheckout();
       cy.get("input[name=ShipToSameAddress]")
         .should("have.value", "true");
@@ -498,7 +500,7 @@ describe("B2B Customer Address", () => {
           .should("not.have.class", ".info > .city-state-zip");
         cy.get("#billingAddresses > .address-item")
           .should("not.have.class", ".info > .country");
-        cy.deleteSpecialCypressItems("addresses", mutationName, companyInformation.id, "support", apiUrl);
+        cy.deleteSpecialCypressItems("addresses", mutationName, companyInformation.id, "companyId", undefined, apiUrl);
       });
     });
 
@@ -508,8 +510,15 @@ describe("B2B Customer Address", () => {
         cy.addToCartAndCheckout();
         cy.get("#ShipToSameAddress")
           .click();
+        cy.get("#BillingNewAddress_CountryId")
+          .select("United States");
+        cy.get("#BillingNewAddress_StateProvinceId")
+          .select("Florida");
+        cy.get("#BillingNewAddress_PhoneNumber")
+          .type("+15618448448");
         cy.get(".new-address-next-step-button")
           .eq(0).click();
+        cy.wait(5000);
         cy.get("#ShippingNewAddress_FirstName")
           .should("have.value", first);
         cy.get("#ShippingNewAddress_LastName")
@@ -525,12 +534,19 @@ describe("B2B Customer Address", () => {
       });
     });
 
-    it("New shipping address entered during checkout should not be available in company & customer address", () => {
+    it("New shipping address entered during checkout should not be available in company address", () => {
       cy.addToCartAndCheckout();
       cy.get("#ShipToSameAddress")
         .click();
+      cy.get("#BillingNewAddress_CountryId")
+        .select("United States");
+      cy.get("#BillingNewAddress_StateProvinceId")
+        .select("Florida");
+      cy.get("#BillingNewAddress_PhoneNumber")
+        .type("+15618448448");
       cy.get(".new-address-next-step-button")
         .eq(0).click();
+      cy.wait(5000);
       cy.get("#ShippingNewAddress_CountryId")
         .select("United States");
       cy.get("#ShippingNewAddress_StateProvinceId")
@@ -603,8 +619,15 @@ describe("B2B Customer Address", () => {
       cy.addToCartAndCheckout();
       cy.get("#ShipToSameAddress")
         .click();
+      cy.get("#BillingNewAddress_CountryId")
+        .select("United States");
+      cy.get("#BillingNewAddress_StateProvinceId")
+        .select("Florida");
+      cy.get("#BillingNewAddress_PhoneNumber")
+        .type("+15618448448");
       cy.get(".new-address-next-step-button")
         .eq(0).click();
+      cy.wait(5000);
       cy.get("#ShippingNewAddress_CountryId")
         .select("United States");
       cy.get("#ShippingNewAddress_StateProvinceId")
@@ -708,13 +731,22 @@ describe("B2B Customer Address", () => {
         .click();
       cy.get(".new-address-next-step-button")
         .eq(0).click();
+      cy.get("#BillingNewAddress_CountryId")
+        .select("United States");
+      cy.get("#BillingNewAddress_StateProvinceId")
+        .select("Florida");
+      cy.get("#BillingNewAddress_PhoneNumber")
+        .type("+15618448448");
+      cy.get(".new-address-next-step-button")
+        .eq(0).click();
+      cy.wait(5000);
       var shippingAddress = firstName + " " + lastName + ", " + line1 + ", " + city + ", " + region + " " + postalCode + ", " + "United States";
       cy.get("#shipping-address-select")
         .contains(shippingAddress)
         .should("be.visible");
     });
 
-    it("Delete a shipping address from API and verify if it's not present under checkout billing address", () => {
+    it("Delete a shipping address from API and verify if it's not present under checkout shipping address", () => {
       const mutationName = "deleteAddress";
       const mutation =
         `mutation {
@@ -746,7 +778,7 @@ describe("B2B Customer Address", () => {
           .should("not.have.class", ".info > .city-state-zip");
         cy.get("#shipingAddresses > .address-item")
           .should("not.have.class", ".info > .country");
-        cy.deleteSpecialCypressItems("addresses", mutationName, companyInformation.id, "support", apiUrl);
+        cy.deleteSpecialCypressItems("addresses", mutationName, companyInformation.id, "companyId", undefined, apiUrl);
       });
     });
   });
