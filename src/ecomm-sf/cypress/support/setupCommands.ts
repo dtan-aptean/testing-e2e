@@ -917,6 +917,7 @@ Cypress.Commands.add("setupProducts", () => {
           // Price
           cy.openPanel("#product-price").then(() => {
             cy.get("#Price").clear({ force: true }).type(price, { force: true });
+            cy.get("#IsTaxExempt").check({ force: true });
             // seo Codes
             cy.openPanel("#product-seo").then(() => {
               cy.get("#product-seo")
@@ -1081,7 +1082,7 @@ Cypress.Commands.add("fetchUserDetails", () => {
   cy.visit("/");
   cy.login();
   cy.wait(1000);
-  cy.log("GET THEM DEETS");
+  cy.log("Fetching details");
   cy.wait(2000).then(() => {
     if (Cypress.$("#account-links").length > 0) {
       cy.get("#account-links").click({ force: true });

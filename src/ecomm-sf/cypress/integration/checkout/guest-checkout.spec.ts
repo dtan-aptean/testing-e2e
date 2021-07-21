@@ -4,13 +4,14 @@
 describe("Ecommerce", function () {
   context("Guest Checkout", () => {
     beforeEach(() => {
-      cy.logout();
       cy.visit("/");
+      cy.logout();
       cy.clearCart();
       cy.visit("/");
     });
 
     it("Clicking a category brings us to the appropriate page", () => {
+      cy.wait(1000);
       cy.testCategory();
     });
 
@@ -169,7 +170,7 @@ describe("Ecommerce", function () {
       cy.clearCart();
     });
 
-    it.only("Empty fields show errors during checkout", () => {
+    it("Empty fields show errors during checkout", () => {
       cy.addToCartAndCheckout();
       cy.get(".checkout-as-guest-button").click();
       cy.wait(500);
@@ -286,29 +287,17 @@ describe("Ecommerce", function () {
       cy.get(".shipping-method-next-step-button").click();
       cy.wait(1000);
 
-      // Payment Method
-      cy.get("#payment-method-block").find("#paymentmethod_1").check();
-      cy.get(".payment-method-next-step-button").click();
-      cy.wait(200);
-      // Payment Information
-      cy.get("#CreditCardType").select("Discover");
-      cy.get("#CardholderName").type("Cypress McTester")
-      cy.get("#CardNumber")
-        .type("6011111111111117");
-      cy.get("#ExpireMonth")
-        .select("03");
-      cy.get("#ExpireYear")
-        .select("2024");
-      cy.get("#CardCode")
-        .type("123");
-      cy.get(".payment-info-next-step-button").click();
-      cy.wait(1000);
+      cy.filloutPayment();
 
       // Compare information
       cy.get(".billing-info")
-        .children(".info-list")
-        .find("li")
-        .then(($li) => {
+        .then(($div) => {
+          var $li;
+          if ($div.children(".info-list").length > 0) {
+            $li = $div.children(".info-list").find("li");
+          } else {
+            $li = $div.find("li");
+          }
           const name = $li[0].innerText;
           const email = $li[1].innerText;
           const phone = $li[2].innerText;
@@ -316,9 +305,13 @@ describe("Ecommerce", function () {
           const address1 = $li[4].innerText;
           const region = $li[5].innerText;
           cy.get(".shipping-info")
-            .children(".info-list")
-            .find("li")
-            .then(($il) => {
+            .then(($vid) => {
+              var $il;
+              if ($vid.children(".info-list").length > 0) {
+                $il = $vid.children(".info-list").find("li");
+              } else {
+                $il = $vid.find("li");
+              }
               expect(name).not.to.equal($il[0].innerText);
               expect(email).not.to.equal($il[1].innerText);
               expect(phone).not.to.equal($il[2].innerText);
@@ -357,23 +350,7 @@ describe("Ecommerce", function () {
       cy.get(".shipping-method-next-step-button").click();
       cy.wait(1000);
 
-      // Payment Method
-      cy.get("#payment-method-block").find("#paymentmethod_1").check();
-      cy.get(".payment-method-next-step-button").click();
-      cy.wait(200);
-      // Payment Information
-      cy.get("#CreditCardType").select("Discover");
-      cy.get("#CardholderName").type("Cypress McTester")
-      cy.get("#CardNumber")
-        .type("6011111111111117");
-      cy.get("#ExpireMonth")
-        .select("03");
-      cy.get("#ExpireYear")
-        .select("2024");
-      cy.get("#CardCode")
-        .type("123");
-      cy.get(".payment-info-next-step-button").click();
-      cy.wait(1000);
+      cy.filloutPayment();
 
       // Confirm order
       cy.get(".confirm-order-next-step-button")

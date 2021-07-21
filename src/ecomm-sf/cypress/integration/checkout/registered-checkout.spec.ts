@@ -31,23 +31,21 @@ describe("Ecommerce", function () {
       cy.get(".add-to-cart-button").addToCart();
       cy.wait(10000);
       // Get current amount of shopping cart
-      cy.get(".header-links")
-        .find(".cart-qty")
+      cy.get(".cart-qty")
         .then(($amt) => {
           const quantity = $amt.text().replace("(", "").replace(")", "");
-          cy.get(".header-links").find(".ico-cart").click();
+          cy.goToCart();
           cy.wait(10000).then(() => {
             cy.getCartBtn().then(($el) => {
-              if ($el[0].innerHTML.includes("input")) {
-                cy.wrap($el).check();
-                cy.get(".update-cart-button").click();
+              if ($el[0].tagName === "INPUT") {
+                cy.wrap($el).check({ force: true });
+                cy.get(".update-cart-button").click({ force: true });
               } else {
-                cy.wrap($el).click();
+                cy.wrap($el).click({ force: true });
               }
               cy.wait(10000);
               cy.contains("Your Shopping Cart is empty!");
-              cy.get(".header-links")
-                .find(".cart-qty")
+              cy.get(".cart-qty")
                 .then(($qty) => {
                   const newQty = $qty.text().replace("(", "").replace(")", "");
                   expect(parseInt(newQty)).to.be.lessThan(parseFloat(quantity));
@@ -68,8 +66,7 @@ describe("Ecommerce", function () {
       cy.wait(10000);
       cy.goToCart();
       cy.get(".cart > tbody").find("tr").eq(0).as("target");
-      cy.get(".header-links")
-        .find(".cart-qty")
+      cy.get(".cart-qty")
         .then(($amt) => {
           const quantity = $amt.text().replace("(", "").replace(")", "");
           cy.get("@target")
@@ -111,8 +108,7 @@ describe("Ecommerce", function () {
                           const cartTotal = $newRows.filter(".order-total")[0].cells[1].innerText
                             .replace(",", "")
                             .replace("$", "");
-                          cy.get(".header-links")
-                            .find(".cart-qty")
+                          cy.get(".cart-qty")
                             .then(($qty) => {
                               const newQuantity = $qty
                                 .text()
@@ -320,29 +316,17 @@ describe("Ecommerce", function () {
       cy.get(".shipping-method-next-step-button").click();
       cy.wait(1000);
 
-      // Payment Method
-      cy.get("#payment-method-block").find("#paymentmethod_1").check();
-      cy.get(".payment-method-next-step-button").click();
-      cy.wait(200);
-      // Payment Information
-      cy.get("#CreditCardType").select("Discover");
-      cy.get("#CardholderName").type("Cypress McTester")
-      cy.get("#CardNumber")
-        .type("6011111111111117");
-      cy.get("#ExpireMonth")
-        .select("03");
-      cy.get("#ExpireYear")
-        .select("2024");
-      cy.get("#CardCode")
-        .type("123");
-      cy.get(".payment-info-next-step-button").click();
-      cy.wait(1000);
+      cy.filloutPayment();
 
       // Compare information
       cy.get(".billing-info")
-        .children(".info-list")
-        .find("li")
-        .then(($li) => {
+        .then(($div) => {
+          var $li;
+          if ($div.children(".info-list").length > 0) {
+            $li = $div.children(".info-list").find("li");
+          } else {
+            $li = $div.find("li");
+          }
           const name = $li[0].innerText;
           const email = $li[1].innerText;
           const phone = $li[2].innerText;
@@ -350,9 +334,13 @@ describe("Ecommerce", function () {
           const address1 = $li[4].innerText;
           const region = $li[5].innerText;
           cy.get(".shipping-info")
-            .children(".info-list")
-            .find("li")
-            .then(($il) => {
+            .then(($vid) => {
+              var $il;
+              if ($vid.children(".info-list").length > 0) {
+                $il = $vid.children(".info-list").find("li");
+              } else {
+                $il = $vid.find("li");
+              }
               expect(name).not.to.equal($il[0].innerText);
               expect(email).not.to.equal($il[1].innerText);
               expect(phone).not.to.equal($il[2].innerText);
@@ -389,23 +377,7 @@ describe("Ecommerce", function () {
       cy.get(".shipping-method-next-step-button").click();
       cy.wait(1000);
 
-      // Payment Method
-      cy.get("#payment-method-block").find("#paymentmethod_1").check();
-      cy.get(".payment-method-next-step-button").click();
-      cy.wait(200);
-      // Payment Information
-      cy.get("#CreditCardType").select("Discover");
-      cy.get("#CardholderName").type("Cypress McTester")
-      cy.get("#CardNumber")
-        .type("6011111111111117");
-      cy.get("#ExpireMonth")
-        .select("03");
-      cy.get("#ExpireYear")
-        .select("2024");
-      cy.get("#CardCode")
-        .type("123");
-      cy.get(".payment-info-next-step-button").click();
-      cy.wait(1000);
+      cy.filloutPayment();
 
       // Confirm order
       cy.get(".confirm-order-next-step-button")

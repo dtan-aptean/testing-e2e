@@ -18,7 +18,7 @@ const getDiscountRow = (discountName: string) => {
   const filter = (index, item) => {
     return item.cells[0].innerText === discountName;
   };
-  return cy.findTableItem("#discounts-grid", "discounts-grid_next", filter);
+  return cy.findTableItem("#discounts-grid", "#discounts-grid_next", filter);
 };
 
 // Searches the table and clicks edit if it finds the discount
@@ -80,8 +80,8 @@ const addProductOrCategory = (
     nextButtonId = "#categories-grid_next";
   }
   cy.get(panelId).then((panel) => {
-    if (panel[0].innerHTML.includes("collapsed-card")) {
-      cy.wrap(panel).find(".toggle-icon").parent().click();
+    if (panel.hasClass("collapsed-card")) {
+      cy.wrap(panel).find(".toggle-icon").parent().click({ force: true });
       cy.get(panelId).should("not.contain.html", "collapsed-card");
     }
     cy.get(buttonId).then((button) => {
@@ -99,7 +99,8 @@ const addProductOrCategory = (
         cy.get("@popup").should("be.called");
         cy.allowLoad();
         cy.get(searchId).type(prodCatName);
-        cy.get(searchButtonId).click();
+        cy.get(searchButtonId).click({ force: true });
+        cy.wait(100);
         cy.allowLoad();
         const rowFilter = (index, item) => {
           return item.cells[1].innerText === prodCatName;
@@ -139,17 +140,20 @@ const getOriginalPrice = () => {
 const addProductsToCart = () => {
   cy.goToPublic();
   cy.clearCart();
+  cy.goToHome();
   cy.goToProduct(secondProduct, secondCategory);
   getOriginalPrice().then((altProductPrice) => {
-    cy.get(".add-to-cart-button").click();
+    cy.get(".add-to-cart-button").addToCart({ force: true });
     cy.allowLoad();
+    cy.goToHome();
     cy.goToProduct(mainProductOne, mainCategory);
     getOriginalPrice().then((firstProductPrice) => {
-      cy.get(".add-to-cart-button").click();
+      cy.get(".add-to-cart-button").addToCart({ force: true });
       cy.allowLoad();
+      cy.goToHome();
       cy.goToProduct(mainProductTwo, mainCategory);
       getOriginalPrice().then((secondProductPrice) => {
-        cy.get(".add-to-cart-button").click();
+        cy.get(".add-to-cart-button").addToCart({ force: true });
         cy.allowLoad();
         cy.wrap({ altProductPrice, firstProductPrice, secondProductPrice }).as("productPrices");
         cy.goToCart();
@@ -242,33 +246,51 @@ const verifyCost = (
   totalOrSubTotal: string
 ) => {
   cy.goToCart();
+  cy.revealCartTotal();
   var expectedSubTotal = 0;
   itemCosts.forEach((item) => {
     expectedSubTotal += item;
   });
-  const expectedDiscount =
-    discount < 1 ? expectedSubTotal * discount : discount;
-  const expectedTotal = expectedSubTotal - expectedDiscount;
-  var discountLocation;
-  if (totalOrSubTotal === "subtotal") {
-    discountLocation = ".order-subtotal-discount";
-  } else if (totalOrSubTotal === "total") {
-    discountLocation = ".discount-total";
-  }
-  const currencyFormat = new Intl.NumberFormat("en", {
-    style: "currency",
-    currency: "USD",
-    currencyDisplay: "symbol",
+  cy.checkoutAttributes().then((attributeCost) => {
+    expectedSubTotal += attributeCost;
+  
+    const expectedDiscount =
+      discount < 1 ? expectedSubTotal * discount : discount;
+    const expectedTotal = expectedSubTotal - expectedDiscount;
+    var discountLocation;
+    if (totalOrSubTotal === "subtotal") {
+      discountLocation = ".order-subtotal-discount";
+    } else if (totalOrSubTotal === "total") {
+      discountLocation = ".discount-total";
+    }
+    const currencyFormat = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      currencyDisplay: "symbol",
+    });
+    const moneyPattern = /([a-z]|\s)/g;
+    cy.get(".order-subtotal")
+      .find(".value-summary")
+      .invoke("text")
+      .then(($subtotalText) => {
+        const formattedText = $subtotalText.replace(moneyPattern, "");
+        cy.wrap(formattedText).should("eql", currencyFormat.format(expectedSubTotal));
+      });
+    cy.get(`${discountLocation}`)
+      .find(".value-summary")
+      .invoke("text")
+      .then(($discountText) => {
+        const formattedText = $discountText.replace(moneyPattern, "");
+        cy.wrap(formattedText).should("eql", `-${currencyFormat.format(expectedDiscount)}`);
+      });
+    cy.get(".order-total")
+      .find(".value-summary")
+      .invoke("text")
+      .then(($totalText) => {
+        const formattedText = $totalText.replace(moneyPattern, "");
+        cy.wrap(formattedText).should("eql", currencyFormat.format(expectedTotal));
+      });
   });
-  cy.get(".order-subtotal")
-    .find(".value-summary")
-    .should("have.text", currencyFormat.format(expectedSubTotal));
-  cy.get(`${discountLocation}`)
-    .find(".value-summary")
-    .should("have.text", `-${currencyFormat.format(expectedDiscount)}`);
-  cy.get(".order-total")
-    .find(".value-summary")
-    .should("have.text", currencyFormat.format(expectedTotal));
 };
 // Verifies the subtotal or total of the cart. To be used when a total/subtotal discount shouldn't apply, such as expiration
 const verifyFailure = (
@@ -280,29 +302,43 @@ const verifyFailure = (
   itemCosts.forEach((item) => {
     expectedSubTotal += item;
   });
-  const expectedDiscount =
-    discount < 1 ? expectedSubTotal * discount : discount;
-  var discountLocation;
-  if (totalOrSubTotal === "subtotal") {
-    discountLocation = ".order-subtotal-discount";
-  } else if (totalOrSubTotal === "total") {
-    discountLocation = ".discount-total";
-  }
-  const currencyFormat = new Intl.NumberFormat("en", {
-    style: "currency",
-    currency: "USD",
-    currencyDisplay: "symbol",
+  cy.revealCartTotal().then(() => {
+    cy.checkoutAttributes().then((attributeCost) => {
+      expectedSubTotal += attributeCost;
+      const expectedDiscount =
+        discount < 1 ? expectedSubTotal * discount : discount;
+      var discountLocation;
+      if (totalOrSubTotal === "subtotal") {
+        discountLocation = ".order-subtotal-discount";
+      } else if (totalOrSubTotal === "total") {
+        discountLocation = ".discount-total";
+      }
+      const currencyFormat = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        currencyDisplay: "symbol",
+      });
+      const moneyPattern = /([a-z]|\s)/g;
+      cy.get(".order-subtotal")
+        .find(".value-summary")
+        .invoke("text")
+        .then(($subtotalText) => {
+          const formattedText = $subtotalText.replace(moneyPattern, "");
+          cy.wrap(formattedText).should("eql", currencyFormat.format(expectedSubTotal));
+        });
+      cy.get(".order-total")
+        .find(".value-summary")
+        .invoke("text")
+        .then(($totalText) => {
+          const formattedText = $totalText.replace(moneyPattern, "");
+          cy.wrap(formattedText).should("eql", currencyFormat.format(expectedSubTotal));
+        });
+      cy.get(".cart-total")
+        .find("tbody")
+        .should("not.contain.html", `${discountLocation}`)
+        .and("not.contain.text", `-${currencyFormat.format(expectedDiscount)}`);
+    });
   });
-  cy.get(".order-subtotal")
-    .find(".value-summary")
-    .should("have.text", currencyFormat.format(expectedSubTotal));
-  cy.get(".order-total")
-    .find(".value-summary")
-    .should("have.text", currencyFormat.format(expectedSubTotal));
-  cy.get(".cart-total")
-    .find("tbody")
-    .should("not.contain.html", `${discountLocation}`)
-    .and("not.contain.text", `-${currencyFormat.format(expectedDiscount)}`);
 };
 // Checks a product page for the discount display. Use expected to control whether it should be there or not
 const checkProductForDiscount = (
@@ -535,15 +571,20 @@ const verifyCartAndSubtotal = (
       });
     })
     .then(() => {
-      cy.get(".order-subtotal")
-        .find(".value-summary")
-        .should(
-          "have.text",
-          cartSubtotal.toLocaleString("en-US", {
-            currency: "USD",
-            style: "currency",
-          })
-        );
+      cy.revealCartTotal().then(() => {
+        cy.checkoutAttributes().then((attributeCost) => {
+          cartSubtotal += attributeCost;
+          cy.get(".order-subtotal")
+            .find(".value-summary")
+            .should(
+              "have.text",
+              cartSubtotal.toLocaleString("en-US", {
+                currency: "USD",
+                style: "currency",
+              })
+            );
+        });
+      });
     });
 };
 // Clears cart and deletes the discount if it's found, then goes to eComm public store home. Called in the beforeEach
@@ -564,8 +605,14 @@ const monthDay = today.toLocaleString("en-US", {month: "2-digit", day: "2-digit"
 
 describe("Ecommerce", function () {
   before(() => {
+    /**
+     * TODO:
+     * Create a setup command to ensure there is always a free shipping method available,
+     * so that the shipping method doesn't add to the price and interfere with the tests
+     */
     cy.setupDiscounts();
   });
+
   context("Discounts", () => {
     after(() => {
       cy.revertDiscounts();
@@ -580,60 +627,59 @@ describe("Ecommerce", function () {
       }
     });
 
-    // TODO: UPDATE FOR 4.4
-    it.skip("Changing the discount type changes the display of some fields", () => {
+    it("Changing the discount type changes the display of some fields", () => {
       cy.goToDiscounts();
       cy.get(".content-header").find("a").contains("Add new").click();
       // Starting State
       cy.get("#DiscountTypeId").select("Assigned to order total");
       cy.get("#AppliedToSubCategories").should("not.be.visible");
       cy.get("#pnlMaximumDiscountedQuantity").should("not.be.visible");
-      cy.get("#discount-applied-to-products-panel").should("not.be.visible");
-      cy.get("#discount-applied-to-categories-panel").should("not.be.visible");
-      cy.get("#discount-applied-to-manufacturers-panel").should(
+      cy.get("#discount-applied-to-products").should("not.be.visible");
+      cy.get("#discount-applied-to-categories").should("not.be.visible");
+      cy.get("#discount-applied-to-manufacturers").should(
         "not.be.visible"
       );
       // Products
       cy.get("#DiscountTypeId").select("Assigned to products");
       cy.get("#AppliedToSubCategories").should("not.be.visible");
       cy.get("#pnlMaximumDiscountedQuantity").should("be.visible");
-      cy.get("#discount-applied-to-products-panel").should("be.visible");
-      cy.get("#discount-applied-to-categories-panel").should("not.be.visible");
-      cy.get("#discount-applied-to-manufacturers-panel").should(
+      cy.get("#discount-applied-to-products").should("be.visible");
+      cy.get("#discount-applied-to-categories").should("not.be.visible");
+      cy.get("#discount-applied-to-manufacturers").should(
         "not.be.visible"
       );
       // Categories
       cy.get("#DiscountTypeId").select("Assigned to categories");
       cy.get("#AppliedToSubCategories").should("be.visible");
       cy.get("#pnlMaximumDiscountedQuantity").should("be.visible");
-      cy.get("#discount-applied-to-products-panel").should("not.be.visible");
-      cy.get("#discount-applied-to-categories-panel").should("be.visible");
-      cy.get("#discount-applied-to-manufacturers-panel").should(
+      cy.get("#discount-applied-to-products").should("not.be.visible");
+      cy.get("#discount-applied-to-categories").should("be.visible");
+      cy.get("#discount-applied-to-manufacturers").should(
         "not.be.visible"
       );
       // Manufacturers
       cy.get("#DiscountTypeId").select("Assigned to manufacturers");
       cy.get("#AppliedToSubCategories").should("not.be.visible");
       cy.get("#pnlMaximumDiscountedQuantity").should("be.visible");
-      cy.get("#discount-applied-to-products-panel").should("not.be.visible");
-      cy.get("#discount-applied-to-categories-panel").should("not.be.visible");
-      cy.get("#discount-applied-to-manufacturers-panel").should("be.visible");
+      cy.get("#discount-applied-to-products").should("not.be.visible");
+      cy.get("#discount-applied-to-categories").should("not.be.visible");
+      cy.get("#discount-applied-to-manufacturers").should("be.visible");
       // Shipping
       cy.get("#DiscountTypeId").select("Assigned to shipping");
       cy.get("#AppliedToSubCategories").should("not.be.visible");
       cy.get("#pnlMaximumDiscountedQuantity").should("not.be.visible");
-      cy.get("#discount-applied-to-products-panel").should("not.be.visible");
-      cy.get("#discount-applied-to-categories-panel").should("not.be.visible");
-      cy.get("#discount-applied-to-manufacturers-panel").should(
+      cy.get("#discount-applied-to-products").should("not.be.visible");
+      cy.get("#discount-applied-to-categories").should("not.be.visible");
+      cy.get("#discount-applied-to-manufacturers").should(
         "not.be.visible"
       );
       // Order subtotal
       cy.get("#DiscountTypeId").select("Assigned to order subtotal");
       cy.get("#AppliedToSubCategories").should("not.be.visible");
       cy.get("#pnlMaximumDiscountedQuantity").should("not.be.visible");
-      cy.get("#discount-applied-to-products-panel").should("not.be.visible");
-      cy.get("#discount-applied-to-categories-panel").should("not.be.visible");
-      cy.get("#discount-applied-to-manufacturers-panel").should(
+      cy.get("#discount-applied-to-products").should("not.be.visible");
+      cy.get("#discount-applied-to-categories").should("not.be.visible");
+      cy.get("#discount-applied-to-manufacturers").should(
         "not.be.visible"
       );
     });
@@ -833,10 +879,10 @@ describe("Ecommerce", function () {
       deleteDiscount(deletedDiscount.name);
       cy.goToPublic();
       cy.goToProduct(mainProductOne);
-      cy.get(".add-to-cart-button").click();
+      cy.get(".add-to-cart-button").addToCart();
       cy.goToCart();
-      cy.get("#discountcouponcode").type(deletedDiscount.code);
-      cy.get("#applydiscountcouponcode").click();
+      cy.get("#discountcouponcode").scrollIntoView().type(deletedDiscount.code, { force: true });
+      cy.get("#applydiscountcouponcode").scrollIntoView().click({ force: true });
       cy.get(".coupon-box").should("contain.html", "message-failure");
       cy.get(".coupon-box")
         .find(".message-failure")
@@ -1053,7 +1099,6 @@ describe("Ecommerce", function () {
       });
     });
     
-    // TODO: Issue with order total on cart page being "Calculated during checkout". Effects the first 5 tests below
     it("Percentage discount is applied correctly", () => {
       const percentageDiscount = {
         name: "Cypress Percentage Discount",
@@ -1108,8 +1153,8 @@ describe("Ecommerce", function () {
       cy.get("@returnValue").then((returnValue) => {
         const { value, altProductPrice, firstProductPrice, secondProductPrice } = returnValue;
         cy.goToCart();
-        cy.get("#discountcouponcode").type(inDateDiscount.code);
-        cy.get("#applydiscountcouponcode").click();
+        cy.get("#discountcouponcode").type(inDateDiscount.code, { force: true });
+        cy.get("#applydiscountcouponcode").click({ force: true });
         cy.get(".message-success").should(
           "contain.text",
           "The coupon code was applied"
@@ -1135,8 +1180,8 @@ describe("Ecommerce", function () {
       cy.get("@returnValue").then((returnValue) => {
         const { value, altProductPrice, firstProductPrice, secondProductPrice } = returnValue;
         cy.goToCart();
-        cy.get("#discountcouponcode").type(expiredDiscount.code);
-        cy.get("#applydiscountcouponcode").click();
+        cy.get("#discountcouponcode").type(expiredDiscount.code, { force: true });
+        cy.get("#applydiscountcouponcode").click({ force: true });
         cy.get(".message-failure").should(
           "contain.text",
           "Sorry, this offer is expired"
@@ -1164,6 +1209,7 @@ describe("Ecommerce", function () {
       });
     });
 
+    // TODO: ADJUST FOR THEMES: Prisma
     it("Product discounts display on the product's page", () => {
       const baldCypressDisplay = {
         name: "Bald Cypress Display",
@@ -1192,6 +1238,7 @@ describe("Ecommerce", function () {
       checkProductForDiscount(false);
     });
 
+    // TODO: ADJUST FOR THEMES: Prisma
     it("Category discounts appear on the category page", () => {
       const treesDiscount = {
         name: "Cypress Trees Display",
@@ -1289,8 +1336,8 @@ describe("Ecommerce", function () {
       const discount = parseDiscountAmount(checkoutDiscount);
       addProductsToCart();
       cy.get("@productPrices").then((prices) => {
-        cy.get("#termsofservice").click();
-        cy.get(".checkout-button").click();
+        cy.get("#termsofservice").click({ force: true });
+        cy.get(".checkout-button").click({ force: true });
         cy.wait(500);
         cy.getToConfirmOrder();
         verifyCartAndSubtotal(discount,  Object.values(prices), {
@@ -1310,7 +1357,7 @@ describe("Ecommerce", function () {
       });
     });
 
-    it("Category discounts are successful throughout discounts", () => {
+    it("Category discounts are successful throughout checkout", () => {
       const cypressCategoryCheckout = {
         name: "Cypress Trees Checkout",
         discountType: "Assigned to categories",
@@ -1328,8 +1375,8 @@ describe("Ecommerce", function () {
       const discount = parseDiscountAmount(cypressCategoryCheckout);
       addProductsToCart();
       cy.get("@productPrices").then((prices) => {
-        cy.get("#termsofservice").click();
-        cy.get(".checkout-button").click();
+        cy.get("#termsofservice").click({ force: true });
+        cy.get(".checkout-button").click({ force: true });
         cy.wait(500);
         cy.getToConfirmOrder();
         cy.wait(1000);

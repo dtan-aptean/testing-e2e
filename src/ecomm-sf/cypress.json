@@ -2,16 +2,12 @@
   "baseUrl": "#{ECOMM_PORTAL_BASE_URL}#",
   "username": "#{ECOMM_USERNAME}#",
   "password": "#{ECOMM_PASSWORD}#",
-  "campaignReceiver": "#{ECOMM_CAMPAIGN_RECEIVER}#",  
   "doNotPrepEnv": false,
   "doNotResetEnv": false,
   "env": {
     "runtimeEnv": "local",
     "storageAccountConnString": "#{STORAGE_ACCOUNT_CONN_STRING}#" 
   },
-  "defaultCategory": "Cypress Trees",
-  "defaultCategoryUrl": "cypress",
-  "defaultLanguage": "English",  
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
   "supportFile": "cypress/support/index.ts",

@@ -257,6 +257,8 @@ Cypress.Commands.add("login", () => {
         cy.get(".my-account-dropdown").find(".ico-login").click({ force: true });
         cy.wait(1000);
         login();
+      } else {
+        cy.log("Already logged in");
       }
     });
   } else if (Cypress.$("#header-links-opener").length > 0) {
@@ -266,6 +268,8 @@ Cypress.Commands.add("login", () => {
         cy.get(".header-links").find(".ico-login").click({ force: true });
         cy.wait(1000);
         login();
+      } else {
+        cy.log("Already logged in");
       }
     });
   } else {
@@ -274,6 +278,8 @@ Cypress.Commands.add("login", () => {
         cy.get(".header-links").find(".ico-login").click({ force: true });
         cy.wait(1000);
         login();
+      } else {
+        cy.log("Already logged in");
       }
     });
   }
@@ -294,6 +300,8 @@ Cypress.Commands.add("logout", () => {
       if ($el[0].innerText.includes('Log out')) {
         cy.get(".my-account-dropdown").find(".ico-logout").click({ force: true });
         cy.wait(1000);
+      } else {
+        cy.log("Already logged out");
       }
     });
   } else if (Cypress.$("#header-links-opener").length > 0) {
@@ -302,6 +310,8 @@ Cypress.Commands.add("logout", () => {
       if ($el[0].innerText.includes('LOG OUT')) {
         cy.get(".header-links").find(".ico-logout").click({ force: true });
         cy.wait(1000);
+      } else {
+        cy.log("Already logged out");
       }
     });
   } else {
@@ -309,6 +319,8 @@ Cypress.Commands.add("logout", () => {
       if ($el[0].innerText.includes('LOG OUT')) {
         cy.get(".header-links").find(".ico-logout").click({ force: true });
         cy.wait(1000);
+      } else {
+        cy.log("Already logged out");
       }
     });
   }
@@ -337,12 +349,15 @@ Cypress.Commands.add("clearCart", () => {
     name: "clearCart",
   });
   cy.goToCart();
+  if (Cypress.$(".flyout-cart").length > 0 && Cypress.$(".no-items-message").length > 0) {
+    return;
+  }
   cy.wait(500);
   cy.get(".order-summary-content").then(($div) => {
     if (!$div[0].innerHTML.includes("no-data")) {
       cy.get(".coupon-box").then(($box) => {
         if ($box[0].innerHTML.includes("remove-discount-button")) {
-          cy.get(".remove-discount-button").click();
+          cy.get(".remove-discount-button").click({ force: true });
           cy.wait(200);
         }
         cy.get(".cart").find("tbody").then((tbody) => {
@@ -386,8 +401,13 @@ Cypress.Commands.add("clearCart", () => {
 
 // Get the visible top-menu. Cypress may display the mobile or desktop top-menu depending on screen size.
 Cypress.Commands.add("getVisibleMenu", () => {
-  if (Cypress.$(".menu-toggle:visible").length === 0) {
+  if (Cypress.$(".menu-toggle").length > 0 && Cypress.$(".menu-toggle:visible").length) {
     return cy.get(".top-menu.notmobile").then(cy.wrap);
+  } else if (Cypress.$(".menu-title").length > 0){
+    cy.get(".responsive-nav-wrapper").find(".menu-title").click({ force: true });
+    cy.get(".mega-menu-responsive").contains("Products").click({ force: true });
+    cy.wait(200);
+    return cy.get(".mega-menu-responsive").contains("Products").siblings(".sublist-wrap").children(".sublist").then(cy.wrap);
   } else {
     cy.get(".menu-toggle").click();
     return cy.get(".top-menu.mobile").then(cy.wrap);
@@ -432,12 +452,15 @@ Cypress.Commands.add("goToCategory", (categoryName) => {
       };
     },
   });
-  cy.contains(categoryName || mainCategory).eq(0).click({ force: true });
-  /* cy.getVisibleMenu()
-    .find("li")
-    .contains(categoryName || mainCategory)
-    .click(); */
-  cy.wait(500);
+  if (Cypress.$(`:contains('${categoryName || mainCategory}')`).length > 0) {
+    cy.contains(categoryName || mainCategory).eq(0).click({ force: true });
+  } else {
+    cy.getVisibleMenu()
+      .find("li")
+      .contains(categoryName || mainCategory)
+      .click();
+    cy.wait(500);
+  }
 });
 
 /**
@@ -464,10 +487,13 @@ Cypress.Commands.add("goToProduct", (productName, categoryName?) => {
     })
     .as("targetProduct");
   cy.get("@targetProduct")
-    //    .find(".details")
     .scrollIntoView()
     .should("be.visible");
-  cy.get("@targetProduct").find(".product-title").find("a").click();
+  cy.get("@targetProduct")
+    .find(".product-title")
+    .find("a")
+    .scrollIntoView()
+    .click({force: true});
   cy.wait(10000);
 });
 
@@ -547,6 +573,17 @@ Cypress.Commands.add("goToPublic", () => {
   cy.wait(1000);
   cy.location("pathname").should("not.contain", "Admin");
 });
+
+// Goes to home page
+Cypress.Commands.add("goToHome", () => {
+  Cypress.log({
+    name: "goToHome",
+  });
+  cy.get(".header-logo").scrollIntoView();
+  cy.get(".header-logo").find("a").click({ force: true });
+  cy.wait(1000);
+});
+
 
 // Checks to make sure English is the language. Used for navigating the sidebar in Admin.
 Cypress.Commands.add("correctLanguage", () => {
@@ -869,7 +906,7 @@ Cypress.Commands.add("findTableItem", (tableId: string, nextButtonId: string, fi
             i = $li.length;
             return row;
           } else {
-            if (i !== $li.length - 2) {
+            if (i < $li.length - 2) {
               // Go to the next page if not on the last page
               cy.get(nextButtonId).find("a").click();
               cy.wait(1000);
@@ -1364,7 +1401,7 @@ Cypress.Commands.add("filloutPayment", () => {
         cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-expiration-year").type("24");
         cy.getIframeBody("#credit-card-iframe_iframe").find("#text-input-cvv-number").type("123");
         cy.get("#submit-credit-card-button").click();
-        cy.wait(5000); // Allow iFrame to finish sumbitting
+        cy.wait(10000); // Allow iFrame to finish sumbitting
         cy.get(".payment-info-next-step-button").click();
         return cy.wait('@paymentSaved');
       }
@@ -1386,49 +1423,83 @@ Cypress.Commands.add("filloutPayment", () => {
   });
 });
 
+Cypress.Commands.add("checkoutAttributes", () => {
+  Cypress.log({
+    name: "checkoutAttributes",
+  });
+
+  var addedCost = 0;
+  if (Cypress.$(".checkout-attributes").length > 0) {
+    return cy.get(".checkout-attributes")
+      .find("dd")
+      .each(($dd) => {
+        const select = $dd.find("select");
+        if (select.length > 0){
+          if (select.find("option:contains('---')").length > 0) {
+            cy.wrap(select).select("---", { force: true });
+            cy.wait(100);
+          } else {
+            var text = select.find("option:selected").text();
+            const costPattern = /\[.\$\d+\.\d+.*\]/g;
+            const moneyPattern = /[^0-9.]/g;
+            var fullCost = text.match(costPattern);
+            var trueCost = fullCost?.toString().replace(moneyPattern, "");
+            addedCost += Number(trueCost);
+          }
+        }
+      }).then(() => {
+        cy.wait(1000);
+        return cy.wrap(addedCost)
+      });
+  } else {
+    return cy.wrap(addedCost);
+  }
+});
+
+Cypress.Commands.add("revealCartTotal", () => {
+  Cypress.log({
+    name: "revealCartTotal",
+  });
+  //cy.intercept("POST", "/checkout/OpcSavePaymentInfo/").as('shippingSaved');
+  if (Cypress.$(".order-total").text().toLowerCase().includes("calculated during checkout") || Cypress.$(".order-total").find(".value-summary").length === 0) {
+    cy.get("#termsofservice").click({ force: true });
+    cy.get(".checkout-button").click({ force: true });
+    cy.wait(1500);
+    if (Cypress.$(".checkout-as-guest-button").length > 0) {
+      cy.get(".checkout-as-guest-button").click();
+      cy.wait(500);
+    }
+    if (Cypress.$("#ShipToSameAddress").length > 0 && Cypress.$("#ShipToSameAddress").prop("checked") === false) {
+      cy.get("#ShipToSameAddress").toggle();
+    }
+    cy.fillOutBilling().then(() => {
+      if (Cypress.$("#shipping-methods-form").find(".method-name").text().includes("Ground")) {
+        cy.get(".method-name:contains('Ground')").eq(0).find("input").check({ force: true });
+      } else {
+        cy.get(".method-name").eq(0).find("input").check({ force: true });
+      }
+      cy.get(".shipping-method-next-step-button").click({ force: true });
+      cy.wait(1000);
+
+      cy.goToCart()
+    });
+  }
+});
+
 // Progresses through checkout to get to confirm order.
 Cypress.Commands.add("getToConfirmOrder", () => {
   Cypress.log({
     name: "getToConfirmOrder",
   });
-  cy.get("#co-billing-form").then(($el) => {
-    const select = $el.find(".select-billing-address");
-    if (select.length === 0) {
-      // Inputting Aptean's address
-      cy.get("#BillingNewAddress_CountryId").select("United States");
-      cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
-      cy.get("#BillingNewAddress_City").type("Alpharetta");
-      cy.get("#BillingNewAddress_Address1").type("4325 Alexander Dr #100");
-      cy.get("#BillingNewAddress_ZipPostalCode").type("30022");
-      cy.get("#BillingNewAddress_PhoneNumber").type("5555555555");
-      cy.get("#BillingNewAddress_FaxNumber").type("8888888888");
-      cy.get(".field-validation-error").should("have.length", 0);
-    }
-  });
-  cy.get(".new-address-next-step-button").eq(0).click();
-  cy.wait(200);
+  cy.fillOutBilling();
 
   // Pick shipping method
-  cy.get("#shippingoption_1").check();
+  cy.get("#shippingoption_1").check({ force: true });
   cy.get(".shipping-method-next-step-button").click();
   cy.wait(2000);
 
   // Payment Method
-  cy.get("#payment-method-block").find("#paymentmethod_1").check();
-  cy.get(".payment-method-next-step-button").click();
-  cy.wait(200);
-  // Payment Information
-  cy.get("#CreditCardType").select("Discover");
-  cy.get("#CardholderName").type("Cypress McTester")
-  cy.get("#CardNumber")
-    .type("6011111111111117");
-  cy.get("#ExpireMonth")
-    .select("03");
-  cy.get("#ExpireYear")
-    .select("2024");
-  cy.get("#CardCode")
-    .type("123");
-  cy.get(".payment-info-next-step-button").click();
+  cy.filloutPayment();
   cy.wait(1000);
   cy.get('.cart').should("exist").and("be.visible");
 });
@@ -1541,11 +1612,21 @@ Cypress.Commands.add("testCategory", () => {
   cy.location("pathname").should(
     "eq",
     `/en/${mainCategorySeo}`
-  );
-  cy.get(".page.category-page").should(
-    "contain.text",
-    mainCategory
-  );
+  ).then(() => {
+    if (Cypress.$(".master-column-wrapper").find(".page-title").length > 0) {
+      cy.get(".master-column-wrapper")
+        .find(".page-title")
+        .should(
+          "contain.text",
+          mainCategory
+        );
+    } else {
+      cy.get(".page.category-page").should(
+        "contain.text",
+        mainCategory
+      );
+    }
+  });
 });
 
 // Test going to product via Image
