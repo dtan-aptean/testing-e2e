@@ -101,7 +101,7 @@ const getNodes = (
     additionalInput?: string
 ) => {
     var nameField;
-    if (queryName === "paymentSettings") {
+    if (queryName === "paymentSettings" || queryName === "addresses") {
         nameField = "";
     } else if (queryName === "customers") {
         nameField = "email";

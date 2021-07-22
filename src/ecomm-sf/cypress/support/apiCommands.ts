@@ -73,7 +73,7 @@ const getNodes = (
     additionalInput?: string
 ) => {
     var nameField;
-    if (queryName === "paymentSettings" || "addresses") {
+    if (queryName === "paymentSettings" || queryName === "addresses") {
         nameField = "";
     } else if (queryName === "customers") {
         nameField = "email";
