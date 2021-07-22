@@ -60,16 +60,27 @@ describe("Ecommerce", function () {
         });
     });
 
-    // TODO: Set this up to handle when cart total is "Calculatd during checkout"
     it("Updating the quantity succesfully updates the price and amount", () => {
       cy.goToProduct("Bald Cypress");
       const count = Cypress._.random(2, 5);
       cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
-      cy.get(".qty-input").clear();
+      cy.get(".qty-input").clear({ force: true });
       cy.get(".qty-input").type(count.toString());
-      cy.get(".add-to-cart-button").addToCart();
+      cy.get(".add-to-cart-button").addToCart({ force: true });
       cy.wait(10000);
       cy.goToCart();
+      cy.revealCartTotal({
+        firstName: "Cypress",
+        lastName: "Standin",
+        email: "cypress.standin@testenvironment.com",
+        country: "United States",
+        region: "Georgia",
+        city: "Alpharetta",
+        address1: "4325 Alexander Dr #100",
+        postal: "30022",
+        phoneNum: "5555555555",
+        faxNum: "8888888888"
+      });
       cy.get(".cart > tbody").find("tr").eq(0).as("target");
       cy.get(".cart-qty")
         .then(($amt) => {
@@ -96,6 +107,18 @@ describe("Ecommerce", function () {
                   });
                   cy.get(".update-cart-button").click();
                   cy.wait(15000);
+                  cy.revealCartTotal({
+                    firstName: "Cypress",
+                    lastName: "Standin",
+                    email: "cypress.standin@testenvironment.com",
+                    country: "United States",
+                    region: "Georgia",
+                    city: "Alpharetta",
+                    address1: "4325 Alexander Dr #100",
+                    postal: "30022",
+                    phoneNum: "5555555555",
+                    faxNum: "8888888888"
+                  });
                   cy.get("@target")
                     .find("td")
                     .then(($newTd) => {

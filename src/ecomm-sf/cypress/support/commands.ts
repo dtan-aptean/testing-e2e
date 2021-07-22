@@ -1317,23 +1317,24 @@ Cypress.Commands.add("fillOutBilling", (
           cy.get("#ShipToSameAddress").toggle();
         }
       }
-      cy.get("#BillingNewAddress_FirstName").clear().type(billingInfo.firstName);
-      cy.get("#BillingNewAddress_LastName").clear().type(billingInfo.lastName);
-      cy.get("#BillingNewAddress_Email").clear().type(billingInfo.email);
+      cy.wait(500);
+      cy.get("#BillingNewAddress_FirstName").scrollIntoView().clear({ force: true }).type(billingInfo.firstName, { force: true });
+      cy.get("#BillingNewAddress_LastName").scrollIntoView().clear({ force: true }).type(billingInfo.lastName, { force: true });
+      cy.get("#BillingNewAddress_Email").scrollIntoView().clear({ force: true }).type(billingInfo.email, { force: true });
       if (billingInfo.company) {
-        cy.get("#BillingNewAddress_Company").clear().type(billingInfo.company);
+        cy.get("#BillingNewAddress_Company").scrollIntoView().clear({ force: true }).type(billingInfo.company, { force: true });
       }
-      cy.get("#BillingNewAddress_CountryId").select(billingInfo.country);
-      cy.get("#BillingNewAddress_StateProvinceId").select(billingInfo.region);
-      cy.get("#BillingNewAddress_City").type(billingInfo.city);
-      cy.get("#BillingNewAddress_Address1").type(billingInfo.address1);
+      cy.get("#BillingNewAddress_CountryId").scrollIntoView().select(billingInfo.country, { force: true });
+      cy.get("#BillingNewAddress_StateProvinceId").scrollIntoView().select(billingInfo.region, { force: true });
+      cy.get("#BillingNewAddress_City").scrollIntoView().type(billingInfo.city, { force: true });
+      cy.get("#BillingNewAddress_Address1").scrollIntoView().type(billingInfo.address1, { force: true });
       if (billingInfo.address2) {
-        cy.get("#BillingNewAddress_Address2").type(billingInfo.address2);
+        cy.get("#BillingNewAddress_Address2").scrollIntoView().type(billingInfo.address2, { force: true });
       }
-      cy.get("#BillingNewAddress_ZipPostalCode").type(billingInfo.postal);
-      cy.get("#BillingNewAddress_PhoneNumber").type(billingInfo.phoneNum);
+      cy.get("#BillingNewAddress_ZipPostalCode").scrollIntoView().type(billingInfo.postal, { force: true });
+      cy.get("#BillingNewAddress_PhoneNumber").scrollIntoView().type(billingInfo.phoneNum, { force: true });
       if (billingInfo.faxNum) {
-        cy.get("#BillingNewAddress_FaxNumber").type(billingInfo.faxNum);
+        cy.get("#BillingNewAddress_FaxNumber").scrollIntoView().type(billingInfo.faxNum, { force: true });
       }
     } else {
       const userDetails = Cypress.env("userDetails");
@@ -1351,10 +1352,10 @@ Cypress.Commands.add("fillOutBilling", (
       } else if (!Cypress.$("#billing-address-select").text().includes(alphaAddress)) {
         cy.get("#billing-address-select").select("New Address");
         // Inputting Aptean's address
-        cy.get("#BillingNewAddress_FirstName").clear().type(userDetails.first);
-        cy.get("#BillingNewAddress_LastName").clear().type(userDetails.last);
-        cy.get("#BillingNewAddress_Email").clear().type(Cypress.config("username"));
-        cy.get("#BillingNewAddress_Company").clear().type(userDetails.company);
+        cy.get("#BillingNewAddress_FirstName").clear({ force: true }).type(userDetails.first);
+        cy.get("#BillingNewAddress_LastName").clear({ force: true }).type(userDetails.last);
+        cy.get("#BillingNewAddress_Email").clear({ force: true }).type(Cypress.config("username"));
+        cy.get("#BillingNewAddress_Company").clear({ force: true }).type(userDetails.company);
         cy.get("#BillingNewAddress_CountryId").select("United States");
         cy.get("#BillingNewAddress_StateProvinceId").select("Georgia");
         cy.get("#BillingNewAddress_City").type("Alpharetta");
@@ -1458,7 +1459,7 @@ Cypress.Commands.add("checkoutAttributes", () => {
   }
 });
 
-Cypress.Commands.add("revealCartTotal", () => {
+Cypress.Commands.add("revealCartTotal", (billingInfo?) => {
   Cypress.log({
     name: "revealCartTotal",
   });
@@ -1466,24 +1467,25 @@ Cypress.Commands.add("revealCartTotal", () => {
   if (Cypress.$(".order-total").text().toLowerCase().includes("calculated during checkout") || Cypress.$(".order-total").find(".value-summary").length === 0) {
     cy.get("#termsofservice").click({ force: true });
     cy.get(".checkout-button").click({ force: true });
-    cy.wait(1500);
-    if (Cypress.$(".checkout-as-guest-button").length > 0) {
-      cy.get(".checkout-as-guest-button").click();
-      cy.wait(500);
-    }
-    if (Cypress.$("#ShipToSameAddress").length > 0 && Cypress.$("#ShipToSameAddress").prop("checked") === false) {
-      cy.get("#ShipToSameAddress").toggle();
-    }
-    cy.fillOutBilling().then(() => {
-      if (Cypress.$("#shipping-methods-form").find(".method-name").text().includes("Ground")) {
-        cy.get(".method-name:contains('Ground')").eq(0).find("input").check({ force: true });
-      } else {
-        cy.get(".method-name").eq(0).find("input").check({ force: true });
+    cy.wait(1500).then(() => {
+      if (Cypress.$(".checkout-as-guest-button").length > 0) {
+        cy.get(".checkout-as-guest-button").scrollIntoView().click({ force: true });
+        cy.wait(500);
       }
-      cy.get(".shipping-method-next-step-button").click({ force: true });
-      cy.wait(1000);
-
-      cy.goToCart()
+        if (Cypress.$("#ShipToSameAddress").length > 0 && Cypress.$("#ShipToSameAddress").prop("checked") === false) {
+        cy.get("#ShipToSameAddress").toggle();
+      }
+      cy.fillOutBilling(billingInfo).then(() => {
+        if (Cypress.$("#shipping-methods-form").find(".method-name").text().includes("Ground")) {
+          cy.get(".method-name:contains('Ground')").eq(0).find("input").check({ force: true });
+        } else {
+          cy.get(".method-name").eq(0).find("input").check({ force: true });
+        }
+        cy.get(".shipping-method-next-step-button").click({ force: true });
+        cy.wait(1000);
+  
+        cy.goToCart()
+      });
     });
   }
 });

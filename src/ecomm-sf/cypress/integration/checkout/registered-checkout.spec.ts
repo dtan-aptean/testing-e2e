@@ -55,7 +55,6 @@ describe("Ecommerce", function () {
         });
     });
 
-    // TODO: Set this up to handle when cart total is "Calculatd during checkout"
     it("Updating the quantity succesfully updates the price and amount", () => {
       cy.goToProduct("Bald Cypress");
       const count = Cypress._.random(2, 5);
@@ -65,6 +64,18 @@ describe("Ecommerce", function () {
       cy.get(".add-to-cart-button").addToCart();
       cy.wait(10000);
       cy.goToCart();
+      cy.revealCartTotal({
+        firstName: "Cypress",
+        lastName: "Standin",
+        email: "cypress.standin@testenvironment.com",
+        country: "United States",
+        region: "Georgia",
+        city: "Alpharetta",
+        address1: "4325 Alexander Dr #100",
+        postal: "30022",
+        phoneNum: "5555555555",
+        faxNum: "8888888888"
+      });
       cy.get(".cart > tbody").find("tr").eq(0).as("target");
       cy.get(".cart-qty")
         .then(($amt) => {
@@ -92,6 +103,18 @@ describe("Ecommerce", function () {
                   });
                   cy.get(".update-cart-button").click();
                   cy.wait(15000);
+                  cy.revealCartTotal({
+                    firstName: "Cypress",
+                    lastName: "Standin",
+                    email: "cypress.standin@testenvironment.com",
+                    country: "United States",
+                    region: "Georgia",
+                    city: "Alpharetta",
+                    address1: "4325 Alexander Dr #100",
+                    postal: "30022",
+                    phoneNum: "5555555555",
+                    faxNum: "8888888888"
+                  });
                   cy.get("@target")
                     .find("td")
                     .then(($newTd) => {
@@ -148,31 +171,101 @@ describe("Ecommerce", function () {
         });
     });
 
-    // TODO: Set this up to handle when cart total is "Calculatd during checkout"
     it("User should receive points equal to total cost of cart", () => {
-      cy.goToProduct("Bald Cypress");
-      const count = Cypress._.random(1, 5);
-      cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
-      cy.get(".qty-input").clear();
-      cy.get(".qty-input").type(count.toString());
-      cy.get(".add-to-cart-button").addToCart();
+      // Make sure rewards points are enabled and get the value of them
+      cy.goToAdmin();
+      cy.get(".nav-sidebar").find("li").contains("Configuration").click({ force: true });
+      cy.get(".nav-sidebar")
+        .find("li")
+        .find(".nav-treeview")
+        .find("li")
+        .contains("Settings")
+        .click({ force: true });
+      cy.wait(200);
+      cy.get(".nav-sidebar")
+        .find("li")
+        .find(".nav-treeview")
+        .find("li")
+        .find(".nav-treeview")
+        .contains("Reward points")
+        .click({ force: true });
       cy.wait(500);
-      cy.goToCart();
-      cy.get(".order-total")
-        .find("td")
-        .eq(1)
-        .then(($td) => {
-          const dollarAmount = $td.text();
-          const numericalAmount = dollarAmount
-            .replace(",", "")
-            .replace("$", "");
-          const points = Math.floor(parseFloat(numericalAmount) / 10);
-          cy.get(".earn-reward-points")
-            .find("td")
-            .eq(1)
-            .find(".value-summary")
-            .should("have.text", `${points} points`);
-          cy.clearCart();
+      cy.allowLoad();
+      cy.enableAdvancedSettings();
+      cy.wait(100);
+      var saveNeeded = false;
+      var moneySteps = 10;
+      var pointsPer = 1;
+      cy.openPanel("#rewardpointssettings-common").then(() => {
+        if (Cypress.$("#Enabled").prop("checked") !== true) {
+          cy.get("#Enabled").check({force: true});
+          saveNeeded = true;
+        }
+
+        cy.openPanel("#rewardpointssettings-earning-reward-points");
+        cy.get("#PointsForPurchases_Amount").invoke("val").then(($moneyInput) => {
+          if (Number($moneyInput) === 0 || Number($moneyInput) > 10) {
+            cy.get("#PointsForPurchases_Amount").siblings(".k-input").clear({ force: true });
+            cy.get("#PointsForPurchases_Amount").clear({ force: true }).type("10", { force: true });
+            saveNeeded = true;
+            $moneyInput = "10";
+          } else {
+            moneySteps = Number($moneyInput);
+          }
+          cy.get("#PointsForPurchases_Points").invoke("val").then(($pointsInput) => {
+            if (Number($pointsInput) === 0 || Number($pointsInput) > 1) {
+              cy.get("#PointsForPurchases_Points").siblings(".k-input").clear({ force: true });
+              cy.get("#PointsForPurchases_Points").clear({ force: true }).type("1", { force: true });
+              saveNeeded = true;
+              $pointsInput = "1";
+            } else {
+              pointsPer = Number($pointsInput);
+            }
+            if (saveNeeded) {
+              cy.get("button[name=save]").click({force: true});
+              cy.wait(500);
+            }
+            return cy.goToPublic();
+          });
+        });
+      }).then(() => {
+        // Actually purchase items and validate points
+        cy.goToProduct("Bald Cypress");
+        const count = Cypress._.random(1, 5);
+        cy.get(".add-to-cart-button").scrollIntoView().should("be.visible");
+        cy.get(".qty-input").clear();
+        cy.get(".qty-input").type(count.toString());
+        cy.get(".add-to-cart-button").addToCart();
+        cy.wait(500);
+        cy.goToCart();
+        cy.revealCartTotal({
+          firstName: "Cypress",
+          lastName: "Standin",
+          email: "cypress.standin@testenvironment.com",
+          country: "United States",
+          region: "Georgia",
+          city: "Alpharetta",
+          address1: "4325 Alexander Dr #100",
+          postal: "30022",
+          phoneNum: "5555555555",
+          faxNum: "8888888888"
+        });
+        cy.get(".order-total")
+          .find("td")
+          .eq(1)
+          .then(($td) => {
+            const dollarAmount = $td.text();
+            const numericalAmount = dollarAmount
+              .replace(",", "")
+              .replace("$", "");
+            const points = Math.floor(Math.floor(parseFloat(numericalAmount) / moneySteps) * pointsPer);
+            cy.get(".earn-reward-points")
+              .find("td")
+              .eq(1)
+              .find(".value-summary")
+              .should("have.text", `${points} points`);
+            cy.clearCart();
+          });
         });
     });
 
@@ -187,7 +280,7 @@ describe("Ecommerce", function () {
       cy.clearCart();
     });
 
-    it("The billing information is already partially filled out when checking out", () => {
+    it.skip("The billing information is already partially filled out when checking out", () => {
       // User Details should have been picked up in the before hook of index.ts
       const userDetails = Cypress.env("userDetails");
       const firstName = userDetails.first;
@@ -261,6 +354,17 @@ describe("Ecommerce", function () {
       cy.wait(200);
       cy.get(".shipping-method-next-step-button").click();
       cy.wait(1000);
+      // Check ApteanPay payment method
+      cy.get("#payment-method-block").find("#paymentmethod_0").check();
+      // Test Credit card validation, should get errors
+      cy.get(".payment-method-next-step-button").click();
+      cy.wait(200);
+      cy.get(".payment-info-next-step-button").click();
+      cy.wait(10000);
+      cy.get(".message-error").find('ul').find('li').should('have.length', 1);
+
+      cy.get(".back-link:visible").find("a").click();
+      cy.wait(300);
       // Check credit card payment method
       cy.get("#payment-method-block").find("#paymentmethod_1").check();
       // Test Credit card validation, should get errors

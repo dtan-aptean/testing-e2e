@@ -312,14 +312,14 @@ Cypress.Commands.add("cleanupMessageQueue", () => {
   cleanupEmails();
 });
 
-const enableAdvancedSettings = () => {
+Cypress.Commands.add("enableAdvancedSettings", () => {
   return cy.get("body").then(($el) => {
     if ($el.hasClass("basic-settings-mode")) {
       cy.get("#advanced-settings-mode").click({ force: true });
       cy.wait(500);
     }
   });
-};
+});
 
 Cypress.Commands.add("openPanel", (panelId: string) => {
   return cy.get(panelId).then(($el) => {
@@ -333,7 +333,7 @@ Cypress.Commands.add("openPanel", (panelId: string) => {
 Cypress.Commands.add("switchEnabledDiscounts", (disableDiscounts: boolean) => {
   Cypress.log({ displayName: "switchEnabledDiscounts", message: "Verifying that discounts are enabled" });
   cy.visit("/Admin/Setting/Catalog");
-  enableAdvancedSettings().then(() => {
+  cy.enableAdvancedSettings().then(() => {
     cy.openPanel("#catalogsettings-performance").then(() => {
       if (disableDiscounts) {
         Cypress.log({ displayName: "switchEnabledDiscounts", message: "Disabling discounts" });
@@ -823,7 +823,7 @@ Cypress.Commands.add("setupCategories", () => {
     cy.get("a").contains("Add new").click({ force: true });
     cy.wait(5000);
     return cy.location("pathname").should("eql", "/Admin/Category/Create").then(() => {
-      enableAdvancedSettings().then(() => {
+      cy.enableAdvancedSettings().then(() => {
         cy.wait(2000);
         // Fill in name and description
         cy.openPanel("#category-info").then(() => {
@@ -897,7 +897,7 @@ Cypress.Commands.add("setupProducts", () => {
     cy.wait(5000);
     cy.wait("@productCreation");
     return cy.location("pathname").should("eql", "/Admin/Product/Create").then(() => {
-      enableAdvancedSettings().then(() => {
+      cy.enableAdvancedSettings().then(() => {
         cy.wait(2000);
         // Fill in name and description
         cy.openPanel("#product-info").then(() => {
