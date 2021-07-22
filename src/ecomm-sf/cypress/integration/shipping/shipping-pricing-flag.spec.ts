@@ -97,7 +97,6 @@ describe("Shipping Pricing Flag", () => {
         return cy.postMutAndValidate(mutation, createMutName, itemPath, apiUrl).then((res) => {
           companyId = res.body.data[createMutName][itemPath].id;
           storeCompanyDetails(res.body.data[createMutName][itemPath].id);
-          cy.log("Id: " + companyInformation.id);
           const propNames = ["name", "integrationKey", "customers"];
           const propValues = [companyName, companyKey, dummyCustomerId];
           cy.confirmMutationSuccess(res, createMutName, itemPath, propNames, propValues).then(() => {
@@ -126,7 +125,6 @@ describe("Shipping Pricing Flag", () => {
     const extraItemPath = "paymentSettings";
     const extraQuery = "paymentSettings";
     const companyDetails = { id: companyInformation.id, name: companyName, integrationKey: companyKey };
-    cy.log("Id: " + idToCreate);
     const mutation = `mutation {
       ${extraCreate}(input: {
         companyId: "${idToCreate}"
@@ -171,7 +169,6 @@ describe("Shipping Pricing Flag", () => {
     const extraItemPath = "paymentSettings";
     const extraQuery = "paymentSettings";
     const companyDetails = { id: companyInformation.id, name: companyName, integrationKey: companyKey };
-    cy.log("Id: " + cId);
     const mutation = `mutation {
       ${extraUpdate}(input: {
         id: "${pId}",
@@ -391,8 +388,6 @@ describe("Shipping Pricing Flag", () => {
         let shippingName = (value.split("("))[0].trim();
         let split1 = (value.split("("))[1];
         let shippingCost = (split1.split(")"))[0].trim();
-        cy.log(shippingName);
-        cy.log(shippingCost);
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
         cy.get(".payment-details")
@@ -497,8 +492,6 @@ describe("Shipping Pricing Flag", () => {
         let shippingName = (value.split("("))[0].trim();
         let split1 = (value.split("("))[1];
         let shippingCost = (split1.split(")"))[0].trim();
-        cy.log(shippingName);
-        cy.log(shippingCost);
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
         cy.get(".payment-details")
@@ -591,8 +584,6 @@ describe("Shipping Pricing Flag", () => {
         let shippingName = (value.split("("))[0].trim();
         let split1 = (value.split("("))[1];
         let shippingCost = (split1.split(")"))[0].trim();
-        cy.log(shippingName);
-        cy.log(shippingCost);
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
         cy.get(".payment-details")
@@ -691,7 +682,6 @@ describe("Shipping Pricing Flag", () => {
         .click({ force: true });
       cy.get("label[for=shippingoption_0]").invoke("text").then((value) => {
         let shippingName = value.trim();
-        cy.log(shippingName);
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
         cy.get(".payment-details")
@@ -788,7 +778,6 @@ describe("Shipping Pricing Flag", () => {
         .click({ force: true });
       cy.get("label[for=shippingoption_0]").invoke("text").then((value) => {
         let shippingName = value.trim();
-        cy.log(shippingName);
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
         cy.get(".payment-details")
@@ -873,7 +862,6 @@ describe("Shipping Pricing Flag", () => {
         .click({ force: true });
       cy.get("label[for=shippingoption_0]").invoke("text").then((value) => {
         let shippingName = value.trim();
-        cy.log(shippingName);
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
         cy.get(".payment-details")
