@@ -357,11 +357,11 @@ const checkProductForDiscount = (
         const origPrice = parseFloat($span.text().replace("$", ""));
         const discountAmount = percent ? origPrice * discount : discount;
         const discountPrice = origPrice - discountAmount;
-        cy.get(".discounted-price").find('span').eq(0).should(
+        cy.get(".discounted-price").children().eq(0).should(
           "contain.text",
           "Your price:"
         );
-        cy.get(".discounted-price").find('span').eq(1).should(
+        cy.get(".discounted-price").children().eq(1).should(
           "contain.text",
           discountPrice.toLocaleString("en-US", {
             currency: "USD",
@@ -1209,7 +1209,6 @@ describe("Ecommerce", function () {
       });
     });
 
-    // TODO: ADJUST FOR THEMES: Prisma
     it("Product discounts display on the product's page", () => {
       const baldCypressDisplay = {
         name: "Bald Cypress Display",
@@ -1238,7 +1237,6 @@ describe("Ecommerce", function () {
       checkProductForDiscount(false);
     });
 
-    // TODO: ADJUST FOR THEMES: Prisma
     it("Category discounts appear on the category page", () => {
       const treesDiscount = {
         name: "Cypress Trees Display",
