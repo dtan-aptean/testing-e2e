@@ -1,10 +1,16 @@
 {
-  "baseUrl": "https://tst.apteanecommerce.com/",
-  "username": "cypressjosh1@tester.com",
-  "password": "Aptean123",
+  "baseUrl": "#{ECOMM_PORTAL_BASE_URL}#",
+  "username": "#{ECOMM_USERNAME}#",
+  "password": "#{ECOMM_PASSWORD}#",
   "doNotPrepEnv": true,
   "doNotResetEnv": true,
-  "env": {},
+  "env": {
+    "apiUrl": "#{ECOMM_API_SVC_BASE_URL}#",
+    "x-aptean-apim": "#{ECOMM_APIM}#",
+    "x-aptean-tenant": "#{ECOMM_TENANT_ID}#",
+    "x-aptean-tenant-secret": "#{ECOMM_TENANT_SECRET}#",
+    "gqlTimeout": 20000
+  },
   "chromeWebSecurity": false,
   "defaultCommandTimeout": 10000,
   "supportFile": "cypress/support/index.ts"

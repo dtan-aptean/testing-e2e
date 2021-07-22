@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "cypress": "cypress open",
+    "cypress:dev": "cypress open --config-file cypress.dev.json",
     "cypress:run": "cypress run",
     "cypress:verify": "cypress verify"
   }
