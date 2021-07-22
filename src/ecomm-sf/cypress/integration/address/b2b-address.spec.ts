@@ -12,10 +12,10 @@ describe("B2B Customer Address", () => {
   const createMutName = "createCompany";
   const deleteMutName = "deleteCompany";
   const itemPath = 'company';
-  const loginEmail = generateRandomString("cypress.tester") + "@address.com";
-  const loginPassword = generateRandomString("Cypress");
-  const companyName = generateRandomString("Cypress Address Company");
-  const companyKey = generateRandomString("cypress");
+  const loginEmail = "cypress.tester@address.com";
+  const loginPassword = "CypressAddress";
+  const companyName = "Cypress Address Company";
+  const companyKey = "cypressaddress";
   const companyInformation = {
     id: id,
     name: companyName,
@@ -24,12 +24,6 @@ describe("B2B Customer Address", () => {
   const addressInformation = {
     id: id,
     type: type
-  };
-
-  function generateRandomString(value: string) {
-    let key = Cypress._.random(0, 1000000);
-    let integrationKey = value + key;
-    return integrationKey;
   };
 
   const storeCompanyDetails = (providedId: string) => {
