@@ -305,26 +305,26 @@ describe("Billing/Shipping Address", () => {
       cy.get("input[name=ShipToSameAddress]")
         .should("have.value", "true");
       cy.get("#BillingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#BillingNewAddress_PhoneNumber")
-        .type("+15618448448");
+        .type("+15618448448", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(0).click();
+        .eq(0).click({ force: true });
       cy.wait(5000);
       cy.get("#shippingoption_0")
-        .click();
+        .click({ force: true });
       cy.get(".shipping-method-next-step-button")
-        .click();
+        .click({ force: true });
       cy.get("#paymentmethod_1")
-        .click();
+        .click({ force: true });
       cy.get(".payment-method-next-step-button")
-        .click();
+        .click({ force: true });
       payByCreditCard("6011111111111117", "07", "23", "123");
       cy.get("#submit-credit-card-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.wait(10000)
         .get("#payment-success")
         .should(
@@ -333,16 +333,16 @@ describe("Billing/Shipping Address", () => {
         );
       cy.get(".payment-info-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".confirm-order-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".section > .title > strong")
         .should(
           "contain.text",
           "Your order has been successfully processed!"
         );
-      cy.get(".details-link > a").should("be.visible").click();
+      cy.get(".details-link > a").should("be.visible").click({ force: true });
       cy.get(".order-number > strong").should("contain.text", "Order #");
       cy.visit("/en/customer/addresses");
       cy.get("h1").
@@ -379,26 +379,26 @@ describe("Billing/Shipping Address", () => {
       cy.get("input[name=ShipToSameAddress]")
         .should("have.value", "true");
       cy.get("#BillingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#BillingNewAddress_PhoneNumber")
-        .type("+15617997600");
+        .type("+15617997600", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(0).click();
+        .eq(0).click({ force: true });
       cy.wait(5000);
       cy.get("#shippingoption_0")
-        .click();
+        .click({ force: true });
       cy.get(".shipping-method-next-step-button")
-        .click();
+        .click({ force: true });
       cy.get("#paymentmethod_1")
-        .click();
+        .click({ force: true });
       cy.get(".payment-method-next-step-button")
-        .click();
+        .click({ force: true });
       payByCreditCard("6011111111111117", "07", "23", "123");
       cy.get("#submit-credit-card-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.wait(10000)
         .get("#payment-success")
         .should(
@@ -407,29 +407,29 @@ describe("Billing/Shipping Address", () => {
         );
       cy.get(".payment-info-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".confirm-order-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".section > .title > strong")
         .should(
           "contain.text",
           "Your order has been successfully processed!"
         );
-      cy.get(".details-link > a").should("be.visible").click();
+      cy.get(".details-link > a").should("be.visible").click({ force: true });
       cy.get(".order-number > strong").should("contain.text", "Order #");
       fetchCustomerDetails().then((customerDetails) => {
         cy.goToProduct("Montezuma Cypress");
         cy.get(".add-to-cart-button")
-          .click();
+          .click({ force: true });
         cy.get(".productAddedToCartWindowCheckout")
           .click();
         cy.location("pathname")
           .should("eq", "/en/cart");
         cy.get("#termsofservice")
-          .click();
+          .click({ force: true });
         cy.get(".checkout-button")
-          .click();
+          .click({ force: true });
         cy.wait(500);
         const { first, last, city, address, zipCode } = customerDetails;
         cy.get(".checkout-data")
@@ -538,15 +538,15 @@ describe("Billing/Shipping Address", () => {
         const { first, last, city, address, zipCode } = customerDetails;
         cy.addToCartAndCheckout();
         cy.get("#ShipToSameAddress")
-          .click();
+          .click({ force: true });
         cy.get("#BillingNewAddress_CountryId")
-          .select("United States");
+          .select("United States", { force: true });
         cy.get("#BillingNewAddress_StateProvinceId")
-          .select("Florida");
+          .select("Florida", { force: true });
         cy.get("#BillingNewAddress_PhoneNumber")
-          .type("+15618448448");
+          .type("+15618448448", { force: true });
         cy.get(".new-address-next-step-button")
-          .eq(0).click();
+          .eq(0).click({ force: true });
         cy.wait(5000);
         cy.get("#ShippingNewAddress_FirstName")
           .should("have.value", first);
@@ -568,35 +568,35 @@ describe("Billing/Shipping Address", () => {
       cy.get("#ShipToSameAddress")
         .click();
       cy.get("#BillingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#BillingNewAddress_PhoneNumber")
-        .type("+15618448448");
+        .type("+15618448448", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(0).click();
+        .eq(0).click({ force: true });
       cy.wait(5000);
       cy.get("#ShippingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#ShippingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#ShippingNewAddress_PhoneNumber")
-        .type("+15618448448");
+        .type("+15618448448", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(1).click();
+        .eq(1).click({ force: true });
       cy.wait(5000);
       cy.get("#shippingoption_0")
-        .click();
+        .click({ force: true });
       cy.get(".shipping-method-next-step-button")
-        .click();
+        .click({ force: true });
       cy.get("#paymentmethod_1")
-        .click();
+        .click({ force: true });
       cy.get(".payment-method-next-step-button")
-        .click();
+        .click({ force: true });
       payByCreditCard("6011111111111117", "07", "23", "123");
       cy.get("#submit-credit-card-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.wait(10000)
         .get("#payment-success")
         .should(
@@ -605,16 +605,16 @@ describe("Billing/Shipping Address", () => {
         );
       cy.get(".payment-info-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".confirm-order-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".section > .title > strong")
         .should(
           "contain.text",
           "Your order has been successfully processed!"
         );
-      cy.get(".details-link > a").should("be.visible").click();
+      cy.get(".details-link > a").should("be.visible").click({ force: true });
       cy.get(".order-number > strong").should("contain.text", "Order #");
       cy.visit("/en/customer/addresses");
       cy.get("h1").
@@ -651,35 +651,35 @@ describe("Billing/Shipping Address", () => {
       cy.get("#ShipToSameAddress")
         .click();
       cy.get("#BillingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#BillingNewAddress_PhoneNumber")
-        .type("+15618448448");
+        .type("+15618448448", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(0).click();
+        .eq(0).click({ force: true });
       cy.wait(5000);
       cy.get("#ShippingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#ShippingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#ShippingNewAddress_PhoneNumber")
-        .type("+15617997600");
+        .type("+15617997600", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(1).click();
+        .eq(1).click({ force: true });
       cy.wait(5000);
       cy.get("#shippingoption_0")
-        .click();
+        .click({ force: true });
       cy.get(".shipping-method-next-step-button")
-        .click();
+        .click({ force: true });
       cy.get("#paymentmethod_1")
-        .click();
+        .click({ force: true });
       cy.get(".payment-method-next-step-button")
-        .click();
+        .click({ force: true });
       payByCreditCard("6011111111111117", "07", "23", "123");
       cy.get("#submit-credit-card-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.wait(10000)
         .get("#payment-success")
         .should(
@@ -688,41 +688,41 @@ describe("Billing/Shipping Address", () => {
         );
       cy.get(".payment-info-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".confirm-order-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".section > .title > strong")
         .should(
           "contain.text",
           "Your order has been successfully processed!"
         );
-      cy.get(".details-link > a").should("be.visible").click();
+      cy.get(".details-link > a").should("be.visible").click({ force: true });
       cy.get(".order-number > strong").should("contain.text", "Order #");
       fetchCustomerDetails().then((customerDetails) => {
         cy.goToProduct("Montezuma Cypress");
         cy.get(".add-to-cart-button")
-          .click();
+          .click({ force: true });
         cy.get(".productAddedToCartWindowCheckout")
           .click();
         cy.location("pathname")
           .should("eq", "/en/cart");
         cy.get("#termsofservice")
-          .click();
+          .click({ force: true });
         cy.get(".checkout-button")
-          .click();
+          .click({ force: true });
         cy.wait(500);
         const { first, last, city, address, zipCode } = customerDetails;
         cy.get("#ShipToSameAddress")
-          .click();
+          .click({ force: true });
         cy.get("#BillingNewAddress_CountryId")
-          .select("United States");
+          .select("United States", { force: true });
         cy.get("#BillingNewAddress_StateProvinceId")
-          .select("Florida");
+          .select("Florida", { force: true });
         cy.get("#BillingNewAddress_PhoneNumber")
-          .type("+15618448448");
+          .type("+15618448448", { force: true });
         cy.get(".new-address-next-step-button")
-          .eq(0).click();
+          .eq(0).click({ force: true });
         cy.get("#ShippingNewAddress_FirstName")
           .should("have.value", first);
         cy.get("#ShippingNewAddress_LastName")
@@ -768,13 +768,13 @@ describe("Billing/Shipping Address", () => {
       cy.get("#ShipToSameAddress")
         .click();
       cy.get("#BillingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#BillingNewAddress_PhoneNumber")
-        .type("+15618448448");
+        .type("+15618448448", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(0).click();
+        .eq(0).click({ force: true });
       cy.wait(5000);
       var shippingAddress = firstName + " " + lastName + ", " + line1 + ", " + city + ", " + region + " " + postalCode + ", " + "United States";
       cy.get("#shipping-address-select")
