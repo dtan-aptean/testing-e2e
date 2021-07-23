@@ -116,5 +116,49 @@ describe("Merchant portal", function () {
       cy.get("[data-cy=send-payment]").click();
       cy.get("[data-cy=payment-request-error]").should("be.visible");
     });
+
+    it('should show an error message for due dates that have already passed', () => {
+      const today = new Date();
+      const prevDate = `0101${today.getFullYear() - 2}`
+
+      cy.getInput("due-date").type(prevDate);
+      cy.contains("Due date must be in the future").should("be.visible");
+    });
+
+    it('should show an error message for due dates more than 90 days in the future', () => {
+      const today = new Date();
+      const futureDate = `0101${today.getFullYear() + 2}`
+
+      cy.getInput("due-date").type(futureDate);
+      cy.contains("Due date cannot be more than 90 days in the future").should("be.visible");
+    });
+
+    it('should be able to send a payment request with a valid due date', () => {
+      const amount = Cypress._.random(0, 1e3);
+      const invoicePath = "sample.pdf";
+      const referenceNumber = `${Date.now()
+        .toString()
+        .slice(-4)}-${Cypress._.random(0, 1e12)}`;
+      const validDate = new Date();
+      validDate.setDate(validDate.getDate() + 10);
+      const validDateString = `${("0" + (validDate.getMonth() + 1)).slice(-2)}${("0" + validDate.getDate()).slice(-2)}${validDate.getFullYear()}`;
+
+      // mandatory field validation for payment request
+      cy.get("[data-cy=payment-request-error]").should("not.exist");
+      cy.get("[data-cy=send-payment]").should("be.disabled");
+      cy.getInput("recipient-email")
+        .type("john.doe@aptean.com")
+        .should("have.value", "john.doe@aptean.com");
+      cy.getInput("amount")
+        .type(amount)
+        .should("have.value", amount.toString());
+      cy.getInput("reference-number")
+        .type(referenceNumber)
+        .should("have.value", referenceNumber.toString());
+      cy.getInput("due-date").type(validDateString);
+      cy.getInput("invoice").attachFile(invoicePath);
+
+      cy.get("[data-cy=send-payment]").should('be.enabled');
+    });
   });
 });
