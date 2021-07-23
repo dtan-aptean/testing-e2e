@@ -252,7 +252,7 @@ describe("Shipping Pricing Flag", () => {
     cy.clearCart();
   });
 
-  context("Extimate Shipping flag checks", () => {
+  context("Estimate Shipping flag checks", () => {
     it("Estimate Shipping button not be visible when flag is set to false from admin", () => {
       cy.visit("/Admin/Setting/Shipping");
       cy.openPanel("#product-info");
@@ -390,9 +390,9 @@ describe("Shipping Pricing Flag", () => {
         let shippingCost = (split1.split(")"))[0].trim();
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
-        cy.get(".payment-details")
-          .find("input")
-          .last()
+        cy.get("#payment-method-block")
+          .find("input[value='Aptean.Payments.BySavedSettings']")
+          .should("be.visible")
           .click({ force: true });
         cy.get(".payment-method-next-step-button")
           .click({ force: true });
@@ -495,9 +495,9 @@ describe("Shipping Pricing Flag", () => {
         let shippingCost = (split1.split(")"))[0].trim();
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
-        cy.get(".payment-details")
-          .find("input")
-          .last()
+        cy.get("#payment-method-block")
+          .find("input[value='Aptean.Payments.ByTerms']")
+          .should("be.visible")
           .click({ force: true });
         cy.get(".payment-method-next-step-button")
           .should("be.visible")
@@ -588,9 +588,9 @@ describe("Shipping Pricing Flag", () => {
         let shippingCost = (split1.split(")"))[0].trim();
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
-        cy.get(".payment-details")
-          .find("input")
-          .last()
+        cy.get("#payment-method-block")
+          .find("input[value='Aptean.Payments.BySavedSettings']")
+          .should("be.visible")
           .click({ force: true });
         cy.get(".payment-method-next-step-button")
           .click({ force: true });
@@ -636,7 +636,7 @@ describe("Shipping Pricing Flag", () => {
     });
   });
 
-  context.only("Shipping Pricing Flag = 'false'", () => {
+  context("Shipping Pricing Flag = 'false'", () => {
     it("Shipping Pricing Flag = 'false', hasTerms = 'false' immediateCapture = 'false'", () => {
       updatePaymentSettings(paymentInformation.id, companyInformation.id, false, false);
       cy.visit("/Admin/Setting/Shipping");
@@ -692,9 +692,9 @@ describe("Shipping Pricing Flag", () => {
         let shippingName = value.trim();
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
-        cy.get(".payment-details")
-          .find("input")
-          .last()
+        cy.get("#payment-method-block")
+          .find("input[value='Aptean.Payments.BySavedSettings']")
+          .should("be.visible")
           .click({ force: true });
         cy.get(".payment-method-next-step-button")
           .click({ force: true });
@@ -795,9 +795,9 @@ describe("Shipping Pricing Flag", () => {
         let shippingName = value.trim();
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
-        cy.get(".payment-details")
-          .find("input")
-          .last()
+        cy.get("#payment-method-block")
+          .find("input[value='Aptean.Payments.ByTerms']")
+          .should("be.visible")
           .click({ force: true });
         cy.get(".payment-method-next-step-button")
           .should("be.visible")
@@ -886,9 +886,9 @@ describe("Shipping Pricing Flag", () => {
         let shippingName = value.trim();
         cy.get(".shipping-method-next-step-button")
           .click({ force: true });
-        cy.get(".payment-details")
-          .find("input")
-          .last()
+        cy.get("#payment-method-block")
+          .find("input[value='Aptean.Payments.BySavedSettings']")
+          .should("be.visible")
           .click({ force: true });
         cy.get(".payment-method-next-step-button")
           .click({ force: true });
