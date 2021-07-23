@@ -4,7 +4,7 @@
 import { codeMessageError } from "../../support/apiCommands";
 
 var apiUrl = Cypress.env('apiUrl');
-describe("Shipping Pricing Flag", () => {
+describe("Payment Terms", () => {
   var companyId = '';
   var paymentId = '';
   const hasTerms = false;
