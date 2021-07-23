@@ -1829,3 +1829,11 @@ Cypress.Commands.add("setTheme", (originalTheme?: string) => {
     cy.get("#store-theme").select("Aptean Default");
   }
 });
+
+//Clear storefront cache
+Cypress.Commands.add("clearCache", () => {
+  cy.visit("/");
+  cy.visit("/Admin");
+  cy.get(".fa-cogs").eq(0).click();
+  cy.get(".input-group-append").click();
+});

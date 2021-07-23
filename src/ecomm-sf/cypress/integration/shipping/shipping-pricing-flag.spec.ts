@@ -439,6 +439,7 @@ describe("Shipping Pricing Flag", () => {
 
     it("Shipping Pricing Flag = 'true', hasTerms = 'true' immediateCapture = 'false'", () => {
       updatePaymentSettings(paymentInformation.id, companyInformation.id, true, false);
+      cy.clearCache();
       cy.visit("/Admin/Setting/Shipping");
       cy.openPanel("#product-info");
       cy.get("#CalculateShippingPrice").then(($el) => {
@@ -531,6 +532,7 @@ describe("Shipping Pricing Flag", () => {
 
     it("Shipping Pricing Flag = 'true', hasTerms = 'false' immediateCapture = 'true'", () => {
       updatePaymentSettings(paymentInformation.id, companyInformation.id, false, true);
+      cy.clearCache();
       cy.visit("/Admin/Setting/Shipping");
       cy.openPanel("#product-info");
       cy.get("#CalculateShippingPrice").then(($el) => {
@@ -634,7 +636,7 @@ describe("Shipping Pricing Flag", () => {
     });
   });
 
-  context("Shipping Pricing Flag = 'false'", () => {
+  context.only("Shipping Pricing Flag = 'false'", () => {
     it("Shipping Pricing Flag = 'false', hasTerms = 'false' immediateCapture = 'false'", () => {
       updatePaymentSettings(paymentInformation.id, companyInformation.id, false, false);
       cy.visit("/Admin/Setting/Shipping");
@@ -651,12 +653,18 @@ describe("Shipping Pricing Flag", () => {
       });
       cy.visit("/");
       cy.goToProduct("Montezuma Cypress");
+      cy.get(".overview")
+        .should("not.have.class", ".product-estimate-shipping")
+      cy.get(".overview")
+        .should("not.have.class", ".open-estimate-shipping-popup")
       cy.get(".add-to-cart-button")
         .click({ force: true });
       cy.get(".productAddedToCartWindowCheckout")
         .click();
       cy.location("pathname")
         .should("eq", "/en/cart");
+      cy.get(".common-buttons")
+        .should("not.have.class", ".estimate-shipping-button");
       cy.get(".shipping-cost")
         .find(".cart-total-right")
         .should("contain.text", "Will be determined at time of delivery");
@@ -733,6 +741,7 @@ describe("Shipping Pricing Flag", () => {
 
     it("Shipping Pricing Flag = 'false', hasTerms = 'true' immediateCapture = 'false'", () => {
       updatePaymentSettings(paymentInformation.id, companyInformation.id, true, false);
+      cy.clearCache();
       cy.visit("/Admin/Setting/Shipping");
       cy.openPanel("#product-info");
       cy.get("#CalculateShippingPrice").then(($el) => {
@@ -747,12 +756,18 @@ describe("Shipping Pricing Flag", () => {
       });
       cy.visit("/");
       cy.goToProduct("Montezuma Cypress");
+      cy.get(".overview")
+        .should("not.have.class", ".product-estimate-shipping")
+      cy.get(".overview")
+        .should("not.have.class", ".open-estimate-shipping-popup")
       cy.get(".add-to-cart-button")
         .click({ force: true });
       cy.get(".productAddedToCartWindowCheckout")
         .click();
       cy.location("pathname")
         .should("eq", "/en/cart");
+      cy.get(".common-buttons")
+        .should("not.have.class", ".estimate-shipping-button");
       cy.get(".shipping-cost")
         .find(".cart-total-right")
         .should("contain.text", "Will be determined at time of delivery");
@@ -817,6 +832,7 @@ describe("Shipping Pricing Flag", () => {
 
     it("Shipping Pricing Flag = 'false', hasTerms = 'false' immediateCapture = 'true'", () => {
       updatePaymentSettings(paymentInformation.id, companyInformation.id, false, true);
+      cy.clearCache();
       cy.visit("/Admin/Setting/Shipping");
       cy.openPanel("#product-info");
       cy.get("#CalculateShippingPrice").then(($el) => {
@@ -831,12 +847,18 @@ describe("Shipping Pricing Flag", () => {
       });
       cy.visit("/");
       cy.goToProduct("Montezuma Cypress");
+      cy.get(".overview")
+        .should("not.have.class", ".product-estimate-shipping")
+      cy.get(".overview")
+        .should("not.have.class", ".open-estimate-shipping-popup")
       cy.get(".add-to-cart-button")
         .click({ force: true });
       cy.get(".productAddedToCartWindowCheckout")
         .click();
       cy.location("pathname")
         .should("eq", "/en/cart");
+      cy.get(".common-buttons")
+        .should("not.have.class", ".estimate-shipping-button");
       cy.get(".shipping-cost")
         .find(".cart-total-right")
         .should("contain.text", "Will be determined at time of delivery");
