@@ -156,7 +156,7 @@ describe("Query: payments", () => {
     queryCursorRecursive({
       endCursor: "",
       tempResultCount: 0,
-      maxDepth: 100,
+      maxDepth: 1000,
       depth: 0,
     });
   });
