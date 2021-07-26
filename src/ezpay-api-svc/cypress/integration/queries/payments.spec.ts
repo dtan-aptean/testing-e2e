@@ -156,7 +156,7 @@ describe("Query: payments", () => {
     queryCursorRecursive({
       endCursor: "",
       tempResultCount: 0,
-      maxDepth: 1000,
+      maxDepth: 100,
       depth: 0,
     });
   });
@@ -173,7 +173,7 @@ export function queryCursorRecursive(options: {
   expect(depth).to.be.lessThan(maxDepth);
 
   let gqlQuery = `query {
-    payments(orderBy: {direction:DESC, field:TIMESTAMP}, after: "${endCursor}"){
+    payments(orderBy: {direction:DESC, field:TIMESTAMP}, after: "${endCursor}", startDate: "2021-01-01" endDate: "2021-06-01"){
       totalCount
       pageInfo {
         hasPreviousPage
