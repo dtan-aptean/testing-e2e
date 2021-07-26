@@ -266,7 +266,7 @@ describe("Billing/Shipping Address", () => {
     createB2BCustomer(companyName, companyKey);
   });
 
-  context("B2B Billing address tests", () => {
+  context("Billing address tests", () => {
     beforeEach(() => {
       cy.visit("/");
       cy.get(".header-links").then(($el) => {
@@ -302,8 +302,12 @@ describe("Billing/Shipping Address", () => {
 
     it("New billing address entered during checkout should not be available in company address", () => {
       cy.addToCartAndCheckout();
-      cy.get("input[name=ShipToSameAddress]")
-        .should("have.value", "true");
+      cy.get("#ShipToSameAddress").then(($el) => {
+        if (!($el.attr("checked"))) {
+          cy.get("#ShipToSameAddress")
+            .click({ force: true });
+        };
+      });
       cy.get("#BillingNewAddress_CountryId")
         .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
@@ -317,7 +321,9 @@ describe("Billing/Shipping Address", () => {
         .click({ force: true });
       cy.get(".shipping-method-next-step-button")
         .click({ force: true });
-      cy.get("#paymentmethod_1")
+      cy.get("#payment-method-block")
+        .find("input[value='Aptean.Payments.BySavedSettings']")
+        .should("be.visible")
         .click({ force: true });
       cy.get(".payment-method-next-step-button")
         .click({ force: true });
@@ -376,8 +382,12 @@ describe("Billing/Shipping Address", () => {
 
     it("Newly added billing address should not be present during next checkout", () => {
       cy.addToCartAndCheckout();
-      cy.get("input[name=ShipToSameAddress]")
-        .should("have.value", "true");
+      cy.get("#ShipToSameAddress").then(($el) => {
+        if (!($el.attr("checked"))) {
+          cy.get("#ShipToSameAddress")
+            .click({ force: true });
+        };
+      });
       cy.get("#BillingNewAddress_CountryId")
         .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
@@ -391,7 +401,9 @@ describe("Billing/Shipping Address", () => {
         .click({ force: true });
       cy.get(".shipping-method-next-step-button")
         .click({ force: true });
-      cy.get("#paymentmethod_1")
+      cy.get("#payment-method-block")
+        .find("input[value='Aptean.Payments.BySavedSettings']")
+        .should("be.visible")
         .click({ force: true });
       cy.get(".payment-method-next-step-button")
         .click({ force: true });
@@ -521,7 +533,7 @@ describe("Billing/Shipping Address", () => {
     });
   });
 
-  context("B2B Shipping address tests", () => {
+  context("Shipping address tests", () => {
     beforeEach(() => {
       cy.visit("/");
       cy.get(".header-links").then(($el) => {
@@ -537,8 +549,12 @@ describe("Billing/Shipping Address", () => {
       fetchCustomerDetails().then((customerDetails) => {
         const { first, last, city, address, zipCode } = customerDetails;
         cy.addToCartAndCheckout();
-        cy.get("#ShipToSameAddress")
-          .click({ force: true });
+        cy.get("#ShipToSameAddress").then(($el) => {
+          if ($el.attr("checked")) {
+            cy.get("#ShipToSameAddress")
+              .click({ force: true });
+          };
+        });
         cy.get("#BillingNewAddress_CountryId")
           .select("United States", { force: true });
         cy.get("#BillingNewAddress_StateProvinceId")
@@ -565,8 +581,12 @@ describe("Billing/Shipping Address", () => {
 
     it("New shipping address entered during checkout should not be available in company address", () => {
       cy.addToCartAndCheckout();
-      cy.get("#ShipToSameAddress")
-        .click();
+      cy.get("#ShipToSameAddress").then(($el) => {
+        if ($el.attr("checked")) {
+          cy.get("#ShipToSameAddress")
+            .click({ force: true });
+        };
+      });
       cy.get("#BillingNewAddress_CountryId")
         .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
@@ -589,7 +609,9 @@ describe("Billing/Shipping Address", () => {
         .click({ force: true });
       cy.get(".shipping-method-next-step-button")
         .click({ force: true });
-      cy.get("#paymentmethod_1")
+      cy.get("#payment-method-block")
+        .find("input[value='Aptean.Payments.BySavedSettings']")
+        .should("be.visible")
         .click({ force: true });
       cy.get(".payment-method-next-step-button")
         .click({ force: true });
@@ -648,8 +670,12 @@ describe("Billing/Shipping Address", () => {
 
     it("Newly added shipping address should not be present during next checkout", () => {
       cy.addToCartAndCheckout();
-      cy.get("#ShipToSameAddress")
-        .click();
+      cy.get("#ShipToSameAddress").then(($el) => {
+        if ($el.attr("checked")) {
+          cy.get("#ShipToSameAddress")
+            .click({ force: true });
+        };
+      });
       cy.get("#BillingNewAddress_CountryId")
         .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
@@ -672,7 +698,9 @@ describe("Billing/Shipping Address", () => {
         .click({ force: true });
       cy.get(".shipping-method-next-step-button")
         .click({ force: true });
-      cy.get("#paymentmethod_1")
+      cy.get("#payment-method-block")
+        .find("input[value='Aptean.Payments.BySavedSettings']")
+        .should("be.visible")
         .click({ force: true });
       cy.get(".payment-method-next-step-button")
         .click({ force: true });
@@ -713,8 +741,12 @@ describe("Billing/Shipping Address", () => {
           .click({ force: true });
         cy.wait(500);
         const { first, last, city, address, zipCode } = customerDetails;
-        cy.get("#ShipToSameAddress")
-          .click({ force: true });
+        cy.get("#ShipToSameAddress").then(($el) => {
+          if ($el.attr("checked")) {
+            cy.get("#ShipToSameAddress")
+              .click({ force: true });
+          };
+        });
         cy.get("#BillingNewAddress_CountryId")
           .select("United States", { force: true });
         cy.get("#BillingNewAddress_StateProvinceId")
@@ -765,8 +797,12 @@ describe("Billing/Shipping Address", () => {
       cy.get("#shippingAddresses > .address-item > .info > .country")
         .should("contain.text", "United States");
       cy.addToCartAndCheckout();
-      cy.get("#ShipToSameAddress")
-        .click();
+      cy.get("#ShipToSameAddress").then(($el) => {
+        if ($el.attr("checked")) {
+          cy.get("#ShipToSameAddress")
+            .click({ force: true });
+        };
+      });
       cy.get("#BillingNewAddress_CountryId")
         .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
