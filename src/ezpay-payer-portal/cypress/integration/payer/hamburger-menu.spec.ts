@@ -18,12 +18,6 @@ describe("Payer Portal - Hamburger Menu", () => {
 
         //opening the add address modal
 
-        //In case the default address is selected
-        cy.get("[data-cy=payment-method-add]").then(($modal) => {
-        if (!$modal.find("[data-cy=add-address]").length) {
-           cy.get("[data-cy=address-list-icon]").click();
-        }
-        });
         cy.get("[data-cy=add-address]").click();
         cy.get("[data-cy=billing-address-modal]").should("be.visible");
 
@@ -120,12 +114,6 @@ describe("Payer Portal - Hamburger Menu", () => {
       
             //opening the add address modal
       
-            //In case the default address is selected
-            cy.get("[data-cy=payment-method-add]").then(($modal) => {
-              if (!$modal.find("[data-cy=add-address]").length) {
-                cy.get("[data-cy=address-list-icon]").click();
-              }
-            });
             cy.get("[data-cy=add-address]").click();
             cy.get("[data-cy=billing-address-modal]").should("be.visible");
       
@@ -150,12 +138,6 @@ describe("Payer Portal - Hamburger Menu", () => {
         
                 //opening the add address modal
         
-                //In case the default address is selected
-                cy.get("[data-cy=payment-method-add]").then(($modal) => {
-                    if (!$modal.find("[data-cy=add-address]").length) {
-                    cy.get("[data-cy=address-list-icon]").click();
-                    }
-                });
                 cy.get("[data-cy=add-address]").click();
                 cy.get("[data-cy=billing-address-modal]").should("be.visible");
         
@@ -180,12 +162,6 @@ describe("Payer Portal - Hamburger Menu", () => {
         
             //opening the add address modal
         
-            //In case the default address is selected
-            cy.get("[data-cy=payment-method-add]").then(($modal) => {
-                if (!$modal.find("[data-cy=add-address]").length) {
-                cy.get("[data-cy=address-list-icon]").click();
-                }
-            });
             cy.get("[data-cy=add-address]").click();
             cy.get("[data-cy=billing-address-modal]").should("be.visible");
         
@@ -199,12 +175,6 @@ describe("Payer Portal - Hamburger Menu", () => {
                 .last()
                 .should("be.enabled")
                 .click({ force: true });
-        
-            cy.get("[data-cy=payment-method-add]").then(($modal) => {
-                if (!$modal.find("[data-cy=add-address]").length) {
-                cy.get("[data-cy=address-list-icon]").click();
-                }
-            });
         
             cy.get("[data-cy=address-details]")
                 .last()
@@ -248,7 +218,7 @@ describe("Payer Portal - Hamburger Menu", () => {
             });
         });
     
-        it("When a payment method is set to default then add address list should be collapsed", () => {
+        it("When a payment method is set to default then add address list should have selected addreess", () => {
             cy.get('[data-cy=menu-icon]').click();
             cy.get("body").then(($body) => {
                 if ($body.find("[data-cy=add-credit-card]").length) {
@@ -257,10 +227,8 @@ describe("Payer Portal - Hamburger Menu", () => {
                 } else if ($body.find("[data-cy=add-bank-account]").length) {
                 cy.get("[data-cy=add-bank-account]").click();
                 }
-                cy.get("[data-cy=payment-method-add]")
-                .should("exist")
-                .should("be.visible");
-                cy.get("[data-cy=add-address]").should("not.exist");
+                cy.get('input[type="radio"]:checked')
+                .should("exist");
             });
         });
     
