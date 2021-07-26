@@ -103,7 +103,7 @@ describe('Checkout service: hosted page', () => {
             // click on confirm
             cy.get("#confirm-payment", {timeout: 20000}).click();
 
-            cy.wait(5000);
+            cy.wait(10000);
 
             // request completed session and receive 410 Gone
             cy.request({
