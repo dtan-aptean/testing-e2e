@@ -153,11 +153,23 @@ describe("Query: payments", () => {
   });
 
   it("should pass if the query cursor is working as expected", () => {
+    let startDateObject = new Date();
+    startDateObject.setDate(startDateObject.getDate() - 180);
+    const startDate = startDateObject.toISOString();
+
+    const endDate = new Date().toISOString();
+
+    cy.log(
+      `Querying payments between startDate: ${startDate} and endDate: ${endDate}`
+    );
+
     queryCursorRecursive({
       endCursor: "",
       tempResultCount: 0,
       maxDepth: 100,
       depth: 0,
+      startDate: startDate,
+      endDate,
     });
   });
 });
@@ -167,13 +179,15 @@ export function queryCursorRecursive(options: {
   tempResultCount: number;
   maxDepth: number;
   depth: number;
+  startDate: string;
+  endDate: string;
 }) {
-  const { endCursor, maxDepth, depth } = options;
+  const { endCursor, maxDepth, depth, startDate, endDate } = options;
   let { tempResultCount } = options;
   expect(depth).to.be.lessThan(maxDepth);
 
   let gqlQuery = `query {
-    payments(orderBy: {direction:DESC, field:TIMESTAMP}, after: "${endCursor}", startDate: "2021-01-01" endDate: "2021-06-01"){
+    payments(orderBy: {direction:DESC, field:TIMESTAMP}, after: "${endCursor}", startDate: "${startDate}" endDate: "${endDate}"){
       totalCount
       pageInfo {
         hasPreviousPage
@@ -210,6 +224,8 @@ export function queryCursorRecursive(options: {
         tempResultCount: tempResultCount,
         maxDepth: maxDepth,
         depth: depth + 1,
+        startDate,
+        endDate,
       });
     } else {
       assert.equal(tempResultCount, totalCount);
