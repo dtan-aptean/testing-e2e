@@ -56,11 +56,8 @@ describe("Payer Portal - Recent Payments Table", function () {
         cy.wait(3000);
         //confirming the payment is being created
         cy.get("table")
-          .find("tr")
-          .eq(1)
-          .find("td")
-          .eq(0)
-          .should("contain", response.referenceNumber);
+          .find(`tr:contains(${response.referenceNumber})`)
+          .should("exist");
       });
     });
 
@@ -178,10 +175,14 @@ describe("Payer Portal - Recent Payments Table", function () {
         .eq(0)
         .within(() => cy.get('a[href="#"]').click());
       //contains payment history
-      cy.get("[data-cy=recent-payment-details-modal]")
-        .should("exist")
-        .should("be.visible")
-        .should("contain", "Payment History");
+      cy.get("[data-cy=recent-payment-details-modal]").then(($modal) => {
+        if ($modal.find('div:contains("Completed")').length) {
+          cy.get("[data-cy=recent-payment-details-modal]")
+            .should("exist")
+            .should("be.visible")
+            .should("contain", "Payment History");
+        }
+      });
     });
   });
 });

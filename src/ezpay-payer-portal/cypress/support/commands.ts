@@ -183,12 +183,6 @@ Cypress.Commands.add(
           .should("exist")
           .should("be.visible");
         //opening the add address modal
-        //In case the default address is selected
-        cy.get("[data-cy=payment-method-add]").then(($modal) => {
-          if (!$modal.find("[data-cy=add-address]").length) {
-            cy.get("[data-cy=address-list-icon]").click();
-          }
-        });
         cy.get("[data-cy=add-address]").click();
         cy.get("[data-cy=billing-address-modal]").should("be.visible");
         // Entering the address details
