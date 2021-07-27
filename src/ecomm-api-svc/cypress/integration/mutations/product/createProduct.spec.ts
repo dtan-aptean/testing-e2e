@@ -156,7 +156,7 @@ describe('Mutation: createProduct', () => {
         // Added these values under context so that any possible future tests can use them
         const backOrderModeValues = ["NO_BACK_ORDERS", "ALLOW_QTY_BELOW_0", "ALLOW_QTY_BELOW_0_AND_NOTIFY_CUSTOMER"];
 
-        it.only("Mutation with all required input and 'customData' input creates item with customData", () => {
+        it("Mutation with all required input and 'customData' input creates item with customData", () => {
             const info = [{ name: "Cypress Product customData", languageCode: "Standard" }];
             const customData = { data: `${itemPath} customData`, canDelete: true };
             const mutation = `mutation {
@@ -553,6 +553,7 @@ describe('Mutation: createProduct', () => {
                             ${infoName}: ${toFormattedString(info)}
                             sku: "${sku}"
                             manufacturerPartNumber: "${manufacturerPartNumber}"
+                            priceInformation: ${toFormattedString(priceInformation)}
                             shippingInformation: ${toFormattedString(shippingInformation)}
                             inventoryInformation: ${toFormattedString(inventoryInfo)}
                             cartInformation : ${toFormattedString(cartInfo)}
@@ -630,9 +631,7 @@ describe('Mutation: createProduct', () => {
                                 nodes {
                                     id
                                     sku
-                                    manufacturerInformation {
-                                        partNumber
-                                    }
+                                    manufacturerPartNumber
                                     shippingInformation {
                                         weight
                                         height

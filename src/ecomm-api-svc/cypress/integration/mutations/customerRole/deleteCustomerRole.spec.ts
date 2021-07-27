@@ -93,7 +93,9 @@ describe('Mutation: deleteCustomerRole', () => {
                 }
             }`;
             cy.postAndConfirmMutationError(createMut, createName, "customerRole").then((resp) => {
-                expect(resp.body.data[createName].errors[0].message.toLowerCase()).to.include("invalid aptean id");
+                // Make sure that the message has "unique" in it
+                expect(resp.body.data[createName].errors[0].message.toLowerCase()).to.include("unique");
+                expect(resp.body.data[createName].errors[0].message).to.eql("Customer Role Name is Required and should be unique.");
                 const mutation = `mutation {
                     ${mutationName}(input: { id: "${id}" }) {
                         ${codeMessageError}

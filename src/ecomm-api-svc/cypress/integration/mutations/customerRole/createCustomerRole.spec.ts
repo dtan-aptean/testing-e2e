@@ -114,7 +114,8 @@ describe('Mutation: createCustomerRole', () => {
                         }`;
                         cy.postAndConfirmMutationError(mutationTwo, mutationName, itemPath).then((resp) => {
                             // Make sure that the message has "unique" in it
-                            expect(resp.body.data[mutationName].errors[0].message.toLowerCase()).to.include("invalid aptean id");
+                            expect(resp.body.data[mutationName].errors[0].message.toLowerCase()).to.include("unique");
+                            expect(resp.body.data[mutationName].errors[0].message).to.eql("Customer Role Name is Required and should be unique.");
                         });
                     });
                 });
