@@ -25,7 +25,7 @@ module.exports = (on, config) => {
   const dateSubFolder = new Date().toISOString().substring(0, 19);
   const storageConnString = config.env.storageAccountConnString;
   config.screenshotsFolder = `${config.screenshotsFolder}/${dateSubFolder}`;
-  config.reporterOptions.reportDir = `${config.reporterOptions.reportDir}/${dateSubFolder}`
+  config.reporterOptions.reportDir = `${config.reporterOptions.reportDir}/${dateSubFolder}`;
 
   on('before:run', async (details) => {
     console.log('override before:run');
@@ -64,13 +64,10 @@ module.exports = (on, config) => {
             "uri": `https://stcypressdev001.blob.core.windows.net/ecomm-api-svc-cypress-report/${dateSubFolder}/index.html`
           }]
         }]
-      }]
-      }]
-  }]
+      });
+    }
   });
-}
-  });
-return config;
+  return config;
 };
 
 const walk = (dir, done) => {
