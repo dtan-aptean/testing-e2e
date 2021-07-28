@@ -5,42 +5,37 @@ import { toFormattedString } from "../../support/apiCommands";
 import { codeMessageError } from "../../support/apiCommands";
 
 var apiUrl = Cypress.env('apiUrl');
-describe("B2B Customer Address", () => {
-  var id = '';
+describe("Billing/Shipping Address", () => {
+  var companyId = '';
+  var addressId = '';
   var type = '';
   const queryName = "companies";
   const createMutName = "createCompany";
   const deleteMutName = "deleteCompany";
   const itemPath = 'company';
-  const loginEmail = generateRandomString("cypress.tester") + "@address.com";
-  const loginPassword = generateRandomString("Cypress");
-  const companyName = generateRandomString("Cypress Address Company");
-  const companyKey = generateRandomString("cypress");
+  const loginEmail = "cypress.tester@address.com";
+  const loginPassword = "CypressAddress";
+  const companyName = "Cypress Address Company";
+  const companyKey = "cypressaddress";
   const companyInformation = {
-    id: id,
+    id: companyId,
     name: companyName,
     integrationKey: companyKey
   };
   const addressInformation = {
-    id: id,
+    id: addressId,
     type: type
   };
 
-  function generateRandomString(value: string) {
-    let key = Cypress._.random(0, 1000000);
-    let integrationKey = value + key;
-    return integrationKey;
-  };
-
   const storeCompanyDetails = (providedId: string) => {
-    id = providedId;
-    companyInformation.id = id;
+    companyId = providedId;
+    companyInformation.id = companyId;
   };
 
-  const storeAddressId = (addressId: string, addressType: string) => {
-    id = addressId;
+  const storeAddressId = (providedId: string, addressType: string) => {
+    addressId = providedId;
     type = addressType;
-    addressInformation.id = id;
+    addressInformation.id = addressId;
     addressInformation.type = type;
   };
 
@@ -97,7 +92,7 @@ describe("B2B Customer Address", () => {
                         }
                     }`;
         return cy.postMutAndValidate(mutation, createMutName, itemPath, apiUrl).then((res) => {
-          id = res.body.data[createMutName][itemPath].id;
+          companyId = res.body.data[createMutName][itemPath].id;
           storeCompanyDetails(res.body.data[createMutName][itemPath].id);
           const propNames = ["name", "integrationKey", "customers"];
           const propValues = [companyName, companyKey, dummyCustomerId];
@@ -115,7 +110,7 @@ describe("B2B Customer Address", () => {
                               }
                             }
                           }`;
-            cy.confirmUsingQuery(query, queryName, id, propNames, propValues, apiUrl);
+            cy.confirmUsingQuery(query, queryName, companyInformation.id, propNames, propValues, apiUrl);
           });
         });
       });
@@ -158,7 +153,7 @@ describe("B2B Customer Address", () => {
     },
   ) => {
     const mutation = `mutation {
-        createAddress (input: { companyId: "${companyId}", addressType: ${addressType}
+        createAddress (input: { companyId: "${companyInformation.id}", addressType: ${addressType}
             description: "${addressDescription}"
             contactDetails: {
                 firstName: "${firstName}", lastName: "${lastName}", email: "${email}"
@@ -182,13 +177,13 @@ describe("B2B Customer Address", () => {
         }
     }`;
     cy.postMutAndValidate(mutation, "createAddress", "addressInfo", apiUrl).then((res) => {
-      id = res.body.data["createAddress"]["addressInfo"].id;
-      storeAddressId(id, addressType);
+      addressId = res.body.data["createAddress"]["addressInfo"].id;
+      storeAddressId(addressId, addressType);
       const propNames = ["company", "addressType", "description", "contactDetails"];
       const propValues = [companyInformation, addressType, addressDescription, contactDetails];
       cy.confirmMutationSuccess(res, "createAddress", "addressInfo", propNames, propValues).then(() => {
         const query = `{
-                addresses(companyId: "${companyId}", ids: "${id}", orderBy: {direction: ASC, field: NAME}) {
+                addresses(companyId: "${companyInformation.id}", ids: "${addressId}", orderBy: {direction: ASC, field: NAME}) {
                     nodes {
                         id
                         addressType
@@ -204,26 +199,40 @@ describe("B2B Customer Address", () => {
                     }
                 }
             }`;
-        cy.confirmUsingQuery(query, "addresses", id, propNames, propValues, apiUrl);
+        cy.confirmUsingQuery(query, "addresses", addressId, propNames, propValues, apiUrl);
       });
     });
   };
 
   const fetchCustomerDetails = () => {
-    cy.get(".ico-account").click();
-    return cy.get("#FirstName").invoke("val").then((userFirstName) => {
-      return cy.get("#LastName").invoke("val").then((userLastName) => {
-        return cy.get("#Company").invoke("val").then((userCompany) => {
-          return cy.get("#StreetAddress").invoke("val").then((userAddress) => {
-            return cy.get("#ZipPostalCode").invoke("val").then((userZipCode) => {
-              return cy.get("#City").invoke("val").then((userCity) => {
-                return cy.wrap({
-                  first: userFirstName,
-                  last: userLastName,
-                  company: userCompany,
-                  address: userAddress,
-                  zipCode: userZipCode,
-                  city: userCity
+    cy.visit("/");
+    return cy.wait(2000).then(() => {
+      if (Cypress.$("#account-links").length > 0) {
+        cy.get("#account-links").click({ force: true });
+        cy.wait(1000);
+        cy.get(".my-account-link").click({ force: true });
+      } else if (Cypress.$("#header-links-opener").length > 0) {
+        cy.get("#header-links-opener").click({ force: true });
+        cy.wait(1000);
+        cy.get(".header-links").find(".ico-account").click({ force: true });
+      } else {
+        cy.get(".ico-account").click({ force: true });
+      }
+    }).then(() => {
+      return cy.get("#FirstName").invoke("val").then((userFirstName) => {
+        return cy.get("#LastName").invoke("val").then((userLastName) => {
+          return cy.get("#Company").invoke("val").then((userCompany) => {
+            return cy.get("#StreetAddress").invoke("val").then((userAddress) => {
+              return cy.get("#ZipPostalCode").invoke("val").then((userZipCode) => {
+                return cy.get("#City").invoke("val").then((userCity) => {
+                  return cy.wrap({
+                    first: userFirstName,
+                    last: userLastName,
+                    company: userCompany,
+                    address: userAddress,
+                    zipCode: userZipCode,
+                    city: userCity
+                  });
                 });
               });
             });
@@ -257,14 +266,20 @@ describe("B2B Customer Address", () => {
     createB2BCustomer(companyName, companyKey);
   });
 
-  context("B2B Billing address tests", () => {
+  context("Billing address tests", () => {
     beforeEach(() => {
       cy.visit("/");
+      cy.get(".header-links").then(($el) => {
+        if ($el.find(".ico-logout").length > 0) {
+          cy.wrap($el).find(".ico-logout").click({ force: true });
+        }
+      });
       cy.login(loginEmail, loginPassword);
       cy.clearCart();
     });
 
     it("Billing address should be partially filled when there is no billing address for the company", () => {
+      cy.clearCache();
       fetchCustomerDetails().then((customerDetails) => {
         const { first, last, city, address, zipCode } = customerDetails;
         cy.addToCartAndCheckout();
@@ -287,29 +302,35 @@ describe("B2B Customer Address", () => {
 
     it("New billing address entered during checkout should not be available in company address", () => {
       cy.addToCartAndCheckout();
-      cy.get("input[name=ShipToSameAddress]")
-        .should("have.value", "true");
+      cy.get("#ShipToSameAddress").then(($el) => {
+        if (!($el.attr("checked"))) {
+          cy.get("#ShipToSameAddress")
+            .click({ force: true });
+        };
+      });
       cy.get("#BillingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#BillingNewAddress_PhoneNumber")
-        .type("+15618448448");
+        .type("+15618448448", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(0).click();
+        .eq(0).click({ force: true });
       cy.wait(5000);
       cy.get("#shippingoption_0")
-        .click();
+        .click({ force: true });
       cy.get(".shipping-method-next-step-button")
-        .click();
-      cy.get("#paymentmethod_1")
-        .click();
+        .click({ force: true });
+      cy.get("#payment-method-block")
+        .find("input[value='Aptean.Payments.BySavedSettings']")
+        .should("be.visible")
+        .click({ force: true });
       cy.get(".payment-method-next-step-button")
-        .click();
+        .click({ force: true });
       payByCreditCard("6011111111111117", "07", "23", "123");
       cy.get("#submit-credit-card-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.wait(10000)
         .get("#payment-success")
         .should(
@@ -318,16 +339,16 @@ describe("B2B Customer Address", () => {
         );
       cy.get(".payment-info-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".confirm-order-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".section > .title > strong")
         .should(
           "contain.text",
           "Your order has been successfully processed!"
         );
-      cy.get(".details-link > a").should("be.visible").click();
+      cy.get(".details-link > a").should("be.visible").click({ force: true });
       cy.get(".order-number > strong").should("contain.text", "Order #");
       cy.visit("/en/customer/addresses");
       cy.get("h1").
@@ -361,29 +382,35 @@ describe("B2B Customer Address", () => {
 
     it("Newly added billing address should not be present during next checkout", () => {
       cy.addToCartAndCheckout();
-      cy.get("input[name=ShipToSameAddress]")
-        .should("have.value", "true");
+      cy.get("#ShipToSameAddress").then(($el) => {
+        if (!($el.attr("checked"))) {
+          cy.get("#ShipToSameAddress")
+            .click({ force: true });
+        };
+      });
       cy.get("#BillingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#BillingNewAddress_PhoneNumber")
-        .type("+15617997600");
+        .type("+15617997600", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(0).click();
+        .eq(0).click({ force: true });
       cy.wait(5000);
       cy.get("#shippingoption_0")
-        .click();
+        .click({ force: true });
       cy.get(".shipping-method-next-step-button")
-        .click();
-      cy.get("#paymentmethod_1")
-        .click();
+        .click({ force: true });
+      cy.get("#payment-method-block")
+        .find("input[value='Aptean.Payments.BySavedSettings']")
+        .should("be.visible")
+        .click({ force: true });
       cy.get(".payment-method-next-step-button")
-        .click();
+        .click({ force: true });
       payByCreditCard("6011111111111117", "07", "23", "123");
       cy.get("#submit-credit-card-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.wait(10000)
         .get("#payment-success")
         .should(
@@ -392,29 +419,29 @@ describe("B2B Customer Address", () => {
         );
       cy.get(".payment-info-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".confirm-order-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".section > .title > strong")
         .should(
           "contain.text",
           "Your order has been successfully processed!"
         );
-      cy.get(".details-link > a").should("be.visible").click();
+      cy.get(".details-link > a").should("be.visible").click({ force: true });
       cy.get(".order-number > strong").should("contain.text", "Order #");
       fetchCustomerDetails().then((customerDetails) => {
         cy.goToProduct("Montezuma Cypress");
         cy.get(".add-to-cart-button")
-          .click();
+          .click({ force: true });
         cy.get(".productAddedToCartWindowCheckout")
           .click();
         cy.location("pathname")
           .should("eq", "/en/cart");
         cy.get("#termsofservice")
-          .click();
+          .click({ force: true });
         cy.get(".checkout-button")
-          .click();
+          .click({ force: true });
         cy.wait(500);
         const { first, last, city, address, zipCode } = customerDetails;
         cy.get(".checkout-data")
@@ -440,6 +467,7 @@ describe("B2B Customer Address", () => {
       let addressDescription: (string) = "Billing address";
       cy.log(toFormattedString(companyInformation));
       createAddress(addressTypeBilling, addressDescription, companyInformation.id, companyInformation);
+      cy.clearCache();
       cy.visit("/en/customer/addresses");
       cy.get("h1")
         .should("have.text", "My account - Companies");
@@ -480,7 +508,7 @@ describe("B2B Customer Address", () => {
         let addressDescription: (string) = "Billing support address";
         cy.log(toFormattedString(companyInformation));
         createAddress(addressTypeBilling, addressDescription, companyInformation.id, companyInformation);
-        cy.visit("/en/customer/addresses");
+        cy.clearCache();
         cy.visit("/en/customer/addresses");
         cy.get("h1")
           .should("have.text", "My account - Companies");
@@ -503,21 +531,38 @@ describe("B2B Customer Address", () => {
         cy.deleteSpecialCypressItems("addresses", mutationName, companyInformation.id, "companyId", undefined, apiUrl);
       });
     });
+  });
+
+  context("Shipping address tests", () => {
+    beforeEach(() => {
+      cy.visit("/");
+      cy.get(".header-links").then(($el) => {
+        if ($el.find(".ico-logout").length > 0) {
+          cy.wrap($el).find(".ico-logout").click({ force: true });
+        }
+      });
+      cy.login(loginEmail, loginPassword);
+      cy.clearCart();
+    });
 
     it("Shipping address should be partially filled when there is no shipping address for the company", () => {
       fetchCustomerDetails().then((customerDetails) => {
         const { first, last, city, address, zipCode } = customerDetails;
         cy.addToCartAndCheckout();
-        cy.get("#ShipToSameAddress")
-          .click();
+        cy.get("#ShipToSameAddress").then(($el) => {
+          if ($el.attr("checked")) {
+            cy.get("#ShipToSameAddress")
+              .click({ force: true });
+          };
+        });
         cy.get("#BillingNewAddress_CountryId")
-          .select("United States");
+          .select("United States", { force: true });
         cy.get("#BillingNewAddress_StateProvinceId")
-          .select("Florida");
+          .select("Florida", { force: true });
         cy.get("#BillingNewAddress_PhoneNumber")
-          .type("+15618448448");
+          .type("+15618448448", { force: true });
         cy.get(".new-address-next-step-button")
-          .eq(0).click();
+          .eq(0).click({ force: true });
         cy.wait(5000);
         cy.get("#ShippingNewAddress_FirstName")
           .should("have.value", first);
@@ -536,36 +581,44 @@ describe("B2B Customer Address", () => {
 
     it("New shipping address entered during checkout should not be available in company address", () => {
       cy.addToCartAndCheckout();
-      cy.get("#ShipToSameAddress")
-        .click();
+      cy.get("#ShipToSameAddress").then(($el) => {
+        if ($el.attr("checked")) {
+          cy.get("#ShipToSameAddress")
+            .click({ force: true });
+        };
+      });
       cy.get("#BillingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#BillingNewAddress_PhoneNumber")
-        .type("+15618448448");
+        .type("+15618448448", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(0).click();
+        .eq(0).click({ force: true });
       cy.wait(5000);
       cy.get("#ShippingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#ShippingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#ShippingNewAddress_PhoneNumber")
-        .type("+15618448448");
+        .type("+15618448448", { force: true });
+      cy.get(".new-address-next-step-button")
+        .eq(1).click({ force: true });
       cy.wait(5000);
       cy.get("#shippingoption_0")
-        .click();
+        .click({ force: true });
       cy.get(".shipping-method-next-step-button")
-        .click();
-      cy.get("#paymentmethod_1")
-        .click();
+        .click({ force: true });
+      cy.get("#payment-method-block")
+        .find("input[value='Aptean.Payments.BySavedSettings']")
+        .should("be.visible")
+        .click({ force: true });
       cy.get(".payment-method-next-step-button")
-        .click();
+        .click({ force: true });
       payByCreditCard("6011111111111117", "07", "23", "123");
       cy.get("#submit-credit-card-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.wait(10000)
         .get("#payment-success")
         .should(
@@ -574,16 +627,16 @@ describe("B2B Customer Address", () => {
         );
       cy.get(".payment-info-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".confirm-order-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".section > .title > strong")
         .should(
           "contain.text",
           "Your order has been successfully processed!"
         );
-      cy.get(".details-link > a").should("be.visible").click();
+      cy.get(".details-link > a").should("be.visible").click({ force: true });
       cy.get(".order-number > strong").should("contain.text", "Order #");
       cy.visit("/en/customer/addresses");
       cy.get("h1").
@@ -617,38 +670,44 @@ describe("B2B Customer Address", () => {
 
     it("Newly added shipping address should not be present during next checkout", () => {
       cy.addToCartAndCheckout();
-      cy.get("#ShipToSameAddress")
-        .click();
+      cy.get("#ShipToSameAddress").then(($el) => {
+        if ($el.attr("checked")) {
+          cy.get("#ShipToSameAddress")
+            .click({ force: true });
+        };
+      });
       cy.get("#BillingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#BillingNewAddress_PhoneNumber")
-        .type("+15618448448");
+        .type("+15618448448", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(0).click();
+        .eq(0).click({ force: true });
       cy.wait(5000);
       cy.get("#ShippingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#ShippingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#ShippingNewAddress_PhoneNumber")
-        .type("+15617997600");
+        .type("+15617997600", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(1).click();
+        .eq(1).click({ force: true });
       cy.wait(5000);
       cy.get("#shippingoption_0")
-        .click();
+        .click({ force: true });
       cy.get(".shipping-method-next-step-button")
-        .click();
-      cy.get("#paymentmethod_1")
-        .click();
+        .click({ force: true });
+      cy.get("#payment-method-block")
+        .find("input[value='Aptean.Payments.BySavedSettings']")
+        .should("be.visible")
+        .click({ force: true });
       cy.get(".payment-method-next-step-button")
-        .click();
+        .click({ force: true });
       payByCreditCard("6011111111111117", "07", "23", "123");
       cy.get("#submit-credit-card-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.wait(10000)
         .get("#payment-success")
         .should(
@@ -657,35 +716,45 @@ describe("B2B Customer Address", () => {
         );
       cy.get(".payment-info-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".confirm-order-next-step-button")
         .should("be.visible")
-        .click();
+        .click({ force: true });
       cy.get(".section > .title > strong")
         .should(
           "contain.text",
           "Your order has been successfully processed!"
         );
-      cy.get(".details-link > a").should("be.visible").click();
+      cy.get(".details-link > a").should("be.visible").click({ force: true });
       cy.get(".order-number > strong").should("contain.text", "Order #");
       fetchCustomerDetails().then((customerDetails) => {
         cy.goToProduct("Montezuma Cypress");
         cy.get(".add-to-cart-button")
-          .click();
+          .click({ force: true });
         cy.get(".productAddedToCartWindowCheckout")
           .click();
         cy.location("pathname")
           .should("eq", "/en/cart");
         cy.get("#termsofservice")
-          .click();
+          .click({ force: true });
         cy.get(".checkout-button")
-          .click();
+          .click({ force: true });
         cy.wait(500);
         const { first, last, city, address, zipCode } = customerDetails;
-        cy.get("#ShipToSameAddress")
-          .click();
+        cy.get("#ShipToSameAddress").then(($el) => {
+          if ($el.attr("checked")) {
+            cy.get("#ShipToSameAddress")
+              .click({ force: true });
+          };
+        });
+        cy.get("#BillingNewAddress_CountryId")
+          .select("United States", { force: true });
+        cy.get("#BillingNewAddress_StateProvinceId")
+          .select("Florida", { force: true });
+        cy.get("#BillingNewAddress_PhoneNumber")
+          .type("+15618448448", { force: true });
         cy.get(".new-address-next-step-button")
-          .eq(0).click();
+          .eq(0).click({ force: true });
         cy.get("#ShippingNewAddress_FirstName")
           .should("have.value", first);
         cy.get("#ShippingNewAddress_LastName")
@@ -707,38 +776,41 @@ describe("B2B Customer Address", () => {
       let addressDescription: (string) = "Shipping address";
       cy.log(toFormattedString(companyInformation));
       createAddress(addressTypeBilling, addressDescription, companyInformation.id, companyInformation);
+      cy.clearCache();
       cy.visit("/en/customer/addresses");
       cy.get("h1")
         .should("have.text", "My account - Companies");
-      cy.get("#shipingAddresses > .address-item > .title")
+      cy.get("#shippingAddresses > .address-item > .title")
         .should("contain.text", "Shipping Addresses");
-      cy.get("#shipingAddresses > .address-item > .info > .name")
+      cy.get("#shippingAddresses > .address-item > .info > .name")
         .should("contain.text", addressDescription)
-      cy.get("#shipingAddresses > .address-item > .info > .email")
+      cy.get("#shippingAddresses > .address-item > .info > .email")
         .should("contain.text", email);
-      cy.get("#shipingAddresses > .address-item > .info > .integration-key")
+      cy.get("#shippingAddresses > .address-item > .info > .integration-key")
         .should("contain.text", companyKey);
-      cy.get("#shipingAddresses > .address-item > .info > .address1")
+      cy.get("#shippingAddresses > .address-item > .info > .address1")
         .should("contain.text", line1);
-      cy.get("#shipingAddresses > .address-item > .info > .address2")
+      cy.get("#shippingAddresses > .address-item > .info > .address2")
         .should("contain.text", line2);
-      cy.get("#shipingAddresses > .address-item > .info > .city-state-zip")
+      cy.get("#shippingAddresses > .address-item > .info > .city-state-zip")
         .should("contain.text", cityStateZip);
-      cy.get("#shipingAddresses > .address-item > .info > .country")
+      cy.get("#shippingAddresses > .address-item > .info > .country")
         .should("contain.text", "United States");
       cy.addToCartAndCheckout();
-      cy.get("#ShipToSameAddress")
-        .click();
-      cy.get(".new-address-next-step-button")
-        .eq(0).click();
+      cy.get("#ShipToSameAddress").then(($el) => {
+        if ($el.attr("checked")) {
+          cy.get("#ShipToSameAddress")
+            .click({ force: true });
+        };
+      });
       cy.get("#BillingNewAddress_CountryId")
-        .select("United States");
+        .select("United States", { force: true });
       cy.get("#BillingNewAddress_StateProvinceId")
-        .select("Florida");
+        .select("Florida", { force: true });
       cy.get("#BillingNewAddress_PhoneNumber")
-        .type("+15618448448");
+        .type("+15618448448", { force: true });
       cy.get(".new-address-next-step-button")
-        .eq(0).click();
+        .eq(0).click({ force: true });
       cy.wait(5000);
       var shippingAddress = firstName + " " + lastName + ", " + line1 + ", " + city + ", " + region + " " + postalCode + ", " + "United States";
       cy.get("#shipping-address-select")
@@ -760,23 +832,24 @@ describe("B2B Customer Address", () => {
         let addressDescription: (string) = "Shipping support address";
         cy.log(toFormattedString(companyInformation));
         createAddress(addressTypeBilling, addressDescription, companyInformation.id, companyInformation);
+        cy.clearCache();
         cy.visit("/en/customer/addresses");
         cy.visit("/en/customer/addresses");
         cy.get("h1")
           .should("have.text", "My account - Companies");
-        cy.get("#shipingAddresses > .address-item")
+        cy.get("#shippingAddresses > .address-item")
           .should("not.have.class", ".info > .name");
-        cy.get("#shipingAddresses > .address-item")
+        cy.get("#shippingAddresses > .address-item")
           .should("not.have.class", ".info > .email");
-        cy.get("#shipingAddresses > .address-item")
+        cy.get("#shippingAddresses > .address-item")
           .should("not.have.class", ".info > .integration-key");
-        cy.get("#shipingAddresses > .address-item")
+        cy.get("#shippingAddresses > .address-item")
           .should("not.have.class", ".info > .address1");
-        cy.get("#shipingAddresses > .address-item")
+        cy.get("#shippingAddresses > .address-item")
           .should("not.have.class", ".info > .address2");
-        cy.get("#shipingAddresses > .address-item")
+        cy.get("#shippingAddresses > .address-item")
           .should("not.have.class", ".info > .city-state-zip");
-        cy.get("#shipingAddresses > .address-item")
+        cy.get("#shippingAddresses > .address-item")
           .should("not.have.class", ".info > .country");
         cy.deleteSpecialCypressItems("addresses", mutationName, companyInformation.id, "companyId", undefined, apiUrl);
       });

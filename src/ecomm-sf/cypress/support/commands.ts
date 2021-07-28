@@ -247,7 +247,7 @@ Cypress.Commands.add("clearCart", () => {
               .each(($tr, $i, $all) => {
                 cy.wrap($tr).find("input[name=removefromcart]:visible").check();
               }).then(() => {
-                cy.get(".update-cart-button").click();
+                cy.get(".update-cart-button").click({ force: true });
                 cy.wait(500);
               });
           } else {
@@ -1770,7 +1770,7 @@ Cypress.Commands.add("register", (registerEmail?: string, registerPassword?: str
   var email = registerEmail ? registerEmail : "cypress.tester" + Cypress._.random(0, 1000000) + "@email.com";
   var password = registerPassword ? registerPassword : "CypressUser";
   cy.get(".header-links").then(($el) => {
-    if ($el[0].innerText.includes('LOG OUT')) {
+    if ($el.find(".ico-logout").length > 0) {
       cy.wrap($el).find(".ico-logout").click({ force: true });
       cy.get(".header-links").then(($el) => {
         cy.wrap($el).find(".ico-register").click({ force: true });
@@ -1787,7 +1787,6 @@ Cypress.Commands.add("register", (registerEmail?: string, registerPassword?: str
         cy.get("#register-button").click({ force: true });
         cy.wait(200);
         cy.get(".result").should("contain.text", "Your registration completed");
-        cy.setTheme();
       });
     }
     else {
@@ -1805,7 +1804,6 @@ Cypress.Commands.add("register", (registerEmail?: string, registerPassword?: str
       cy.get("#register-button").click({ force: true });
       cy.wait(200);
       cy.get(".result").should("contain.text", "Your registration completed");
-      cy.setTheme();
     }
   });
   cy.wrap({ loginEmail: email, loginPassword: password });
@@ -1830,4 +1828,12 @@ Cypress.Commands.add("setTheme", (originalTheme?: string) => {
     });
     cy.get("#store-theme").select("Aptean Default");
   }
+});
+
+//Clear storefront cache
+Cypress.Commands.add("clearCache", () => {
+  cy.visit("/");
+  cy.visit("/Admin");
+  cy.get(".fa-cogs").eq(0).click();
+  cy.get(".input-group-append").click();
 });
